@@ -7,6 +7,7 @@ __status__ = 'dev'  # options are: dev, test, prod
 
 import pandas as pd
 import numpy as np
+from scripts.utilsTimestamp import *
 
 def assignMultiColToDType(dataFrame, cols, dType):
     dictDType = dict.fromkeys(cols, dType)
@@ -14,7 +15,7 @@ def assignMultiColToDType(dataFrame, cols, dType):
     return(dfOut)
 
 
-def assignTSToCol(df, colYear, colMonth, colDay, colHour, colMin, colName):
+def assignTSToColViaDay(df, colYear, colMonth, colDay, colHour, colMin, colName):
     dfOut = df.copy()
     dfOut[colName] = [pd.Timestamp(year=dfOut.loc[x, colYear],
                                            month=dfOut.loc[x, colMonth],
@@ -23,40 +24,29 @@ def assignTSToCol(df, colYear, colMonth, colDay, colHour, colMin, colName):
                                            minute=dfOut.loc[x, colMin]) for x in dfOut.index]
     return(dfOut)
 
+def assignTSToColViaCWeek(df, colYear, colWeek, colDay, colHour, colMin, colName):
+    dfOut = df.copy()
+    dfOut[colName] = pd.to_datetime(df.loc[:, colYear], format='%Y') + \
+                     pd.to_timedelta(df.loc[:, colWeek] * 7, unit='days') + \
+                     pd.to_timedelta(df.loc[:, colDay], unit='days') + \
+                     pd.to_timedelta(df.loc[:, colHour], unit='hour') + \
+                     pd.to_timedelta(df.loc[:, colMin], unit='minute')
+    return dfOut
 
-def assignTSAndDuration(df, colYear, colMonth, colDay, colHour_st, colMin_st, colHour_en, colMin_en):
-
-    dfOutRaw = df.copy()
-    dfOutSt = assignTSToCol(dfOutRaw, colYear, colMonth, colDay, colHour_st, colMin_st, 'timestamp_st')
-    dfOut = assignTSToCol(dfOutSt, colYear, colMonth, colDay, colHour_en, colMin_en, 'timestamp_en')
-
-    # manipulation of timestamps if the trip starts or ends at the day after the collection day
-    for idx in dfOut.index:
-        if dfOut.loc[idx, 'st_dat'] == 1:
-            dfOut.loc[idx, 'timestamp_st'] = dfOut.loc[idx, 'timestamp_st'] + pd.Timedelta(days=1)
-
-        if dfOut.loc[idx, 'en_dat'] == 1:
-            dfOut.loc[idx, 'timestamp_en'] = dfOut.loc[idx, 'timestamp_en'] + pd.Timedelta(days=1)
-
-    dfOut['duration'] = [dfOut.loc[x, 'timestamp_en'] - dfOut.loc[x, 'timestamp_st'] for x in dfOut.index]
-    return(dfOut)
+def calcHourlyShares(data, ts_st, ts_en):
+    duration = tripDuration(data.loc[:, ts_st], data.loc[:, ts_en])
+    data.loc[:, 'shareStartHour'], data.loc[:, 'shareEndHour'] = calcDistanceShares(data, duration)
+    data.loc[:, 'noOfFullHours'] = numberOfFullHours(data.loc[:, ts_st], data.loc[:, ts_en])
+    data.loc[:, 'fullHourTripLength'] = calcFullHourTripLength(duration, data.loc[:, 'noOfFullHours'],
+                                                               data.loc[:, 'wegkm'])
+    return data
 
 
-def initiateHourArray(df, columns, nHours):
-    """
-    Sets up an empty dataframe to be filled with hourly data.
-
-    :param df: DataFrame from MiD results
-    :param columns: List of column names
-    :param nHours: integer giving the number of columns that should be added to the dataframe
-    :return: dataframe with columns given and nHours additional columns appended with 0s
-    """
-    df_h = df.copy()
-    df_h.reset_index(levels=0, inplace=True)
-    df_h = df_h.loc[:, columns]
-    df_emptyArray = pd.DataFrame(np.zeros((df.shape[0], nHours)))  # create an empty array and transform to dataframe
-    df_h = pd.concat([df_h, df_emptyArray], axis=1, ignore_index=True)
-    return(df_h)
+def fillDataframe(data, hourlyArray):
+    hourlyArray.loc[:, data.loc[:, 'W_SZS']] = data.loc[:, 'shareStartHour'] * data.loc[:, 'wegkm']
+    hourlyArray.loc[:, data.loc[:, 'W_AZS']] = data.loc[:, 'shareStartEnd'] * data.loc[:, 'wegkm']
+    fullHourRange = data.apply(range(start=data.loc[:, 'W_SZS'] + 1, stop=data.loc[:, 'W_AZS']), axis=1)
+    hourlyArray.loc[:, fullHourRange] = data.loc[:,]
 
 
 def fillInHourlyTrips(dfData, dfZeros, colVal='wegkm_k', nHours=24):

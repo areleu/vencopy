@@ -23,9 +23,12 @@ Indices and tables
     intro
     installation
     start
+    codestyle
+    architecture
     functions
     filtering
     outputProfileSpecification
+    howToContribute
 
 
 Documentation
@@ -33,7 +36,10 @@ Documentation
 * :ref:`intro`.
 * :ref:`installation`.
 * :ref:`start`.
+* :ref:`codestyle`.
+* :ref:`architecture`.
 * :ref:`functions`.
 * :ref:`filtering`.
 * :ref:`outputProfileSpecification`.
+* :ref:`howToContribute`.
 

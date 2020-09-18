@@ -8,26 +8,23 @@ Installation and Set-up
 ===================================
 
 
+Requirements and boundary conditions
+VencoPy runs on Unix and Windows-based operating systems. It requires an installed version of python and the package, dependency and environment management tool conda as well as access to the internet for setting up the environment (downloading the required packages). VencoPy is consistent with the software application class 1 of the DLR software categorization. Versioning is based on 
+major, minor and fix (X.Y.Z) changes versioning system via git-labels.
+
 This part of the documentation holds a step-by-step installation guide for VencoPy. 
 
 1.  Set-up your environment. For this, open a console, navigate to the folder of your VencoPy repo and
-    carry out one of the two below::
+    enter the following command::
         
-        conda create --name <env> 
-        conda activate <env>
+        conda create --file <requirementsFile.yml>
+        conda activate <VencoPy_preRelease>
     
-    Navigate to your checked out repository and then type in::
-        
-        conda install --file <requirements.txt>
-    
-2.  Configure your config files and set correct links. 
-    You will find your config file in your repo under /config/VencoPy_conf.yaml Therein, you have to link to all folders
-    and input files. Some folders that are in your repo are given relative, others are given absolute. Input filenames
-    have to be given. 
-    Additionally you have to set the link to your config file in venco_main.py (basically the first thing that is done 
-    after imports). 
+2.  Configure your config files if you want to use absolute links. This is only needed if you want to reference your own
+    local data or want to post-process VencoPy results and write them to a model input folder somewhere on your drive.
+    You will find your config file in your repo under /config/config.yaml Input filenames have to be set. 
 
-3.  You're now ready to run VencoPy for the first time by running::
+3.  You're now ready to run VencoPy for the first time by typing::
         
         python venco_main.py
 

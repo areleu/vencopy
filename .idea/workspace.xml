@@ -2,9 +2,18 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="ecd0004f-94bb-43f5-9ca2-d220fe3ef765" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/scripts/utilsTimestamp.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/LICENSE" beforeDir="false" afterPath="$PROJECT_DIR$/LICENSE" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/config.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/config/config.yaml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/inputData/VencoPy_scalarInput.xlsx" beforeDir="false" afterPath="$PROJECT_DIR$/inputData/VencoPy_scalarInput.xlsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/functions.rst" beforeDir="false" afterPath="$PROJECT_DIR$/source/functions.rst" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/parseMiD.py" beforeDir="false" afterPath="$PROJECT_DIR$/parseMiD.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/utilsParsing.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/utilsParsing.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/source/index.rst" beforeDir="false" afterPath="$PROJECT_DIR$/source/index.rst" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/installation.rst" beforeDir="false" afterPath="$PROJECT_DIR$/source/installation.rst" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/intro.rst" beforeDir="false" afterPath="$PROJECT_DIR$/source/intro.rst" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -17,8 +26,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/venco_main.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1826">
-              <caret line="116" selection-start-line="116" selection-end-line="116" />
+            <state relative-caret-position="360">
+              <caret line="21" column="22" selection-start-line="21" selection-start-column="22" selection-end-line="21" selection-end-column="22" />
               <folding>
                 <element signature="e#232#262#0" expanded="true" />
               </folding>
@@ -27,107 +36,16 @@
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/scripts/libPreprocessing.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="72">
-              <caret line="3" column="31" selection-start-line="3" selection-start-column="31" selection-end-line="3" selection-end-column="31" />
-              <folding>
-                <element signature="e#297#312#0" expanded="true" />
-                <element signature="e#450#1311#0" />
-                <element signature="e#450#1147#1" />
-                <element signature="e#1407#2556#0" />
-                <element signature="e#1407#1894#1" />
-                <element signature="e#2088#2281#0" />
-                <element signature="e#2382#2533#0" />
-                <element signature="e#2396#2532#0" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/config/config.yaml">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="168">
-              <caret line="7" selection-start-line="7" selection-end-line="7" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/scripts/libProfileCalculation.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="448">
+            <state relative-caret-position="3768">
               <caret line="166" selection-start-line="166" selection-end-line="166" />
               <folding>
                 <element signature="e#205#298#0" />
-                <element signature="e#540#1572#0" />
-                <element signature="e#540#977#1" />
-                <element signature="e#1633#2197#0" />
-                <element signature="e#1633#2022#1" />
-                <element signature="e#5062#7856#0" />
-                <element signature="e#5039#6119#1" />
-                <element signature="e#6551#7750#0" />
-                <element signature="e#6645#7624#0" />
-                <element signature="e#6656#6848#0" />
-                <element signature="e#6912#7803#0" />
-                <element signature="e#4762#6083#0" />
-                <element signature="e#5956#6557#1" />
                 <element signature="e#5549#5759#0" />
                 <element signature="e#5576#5759#0" />
-                <element signature="e#6999#7088#0" />
-                <element signature="e#8987#12504#0" />
-                <element signature="e#10279#11569#1" />
-                <element signature="e#11575#11672#0" />
-                <element signature="e#11107#12405#0" />
-                <element signature="e#11147#12298#0" />
-                <element signature="e#11185#11365#0" />
-                <element signature="e#11378#12398#0" />
-                <element signature="e#14406#15156#0" />
-                <element signature="e#14406#14820#1" />
-                <element signature="e#15490#18410#0" />
-                <element signature="e#15490#16839#1" />
-                <element signature="e#18575#20164#0" />
-                <element signature="e#18575#19313#1" />
-                <element signature="e#19679#20131#0" />
-                <element signature="e#20280#21866#0" />
-                <element signature="e#20280#21133#1" />
-                <element signature="e#21243#21361#0" />
-                <element signature="e#21438#21603#0" />
-                <element signature="e#21639#21811#0" />
-                <element signature="e#21645#21765#0" />
                 <element signature="e#19701#20225#0" />
                 <element signature="e#19701#20143#1" />
-                <element signature="e#22715#24419#0" />
-                <element signature="e#22715#23648#1" />
-                <element signature="e#23777#24106#0" />
-                <element signature="e#24126#24379#0" />
-                <element signature="e#24126#24217#0" />
-                <element signature="e#24501#25686#0" />
-                <element signature="e#24574#25119#1" />
-                <element signature="e#25199#25298#0" />
-                <element signature="e#23098#23424#0" />
-                <element signature="e#23099#23164#0" />
-                <element signature="e#27059#27854#0" />
-                <element signature="e#27059#27322#1" />
-                <element signature="e#24363#24425#0" />
-                <element signature="e#24600#25905#0" />
-                <element signature="e#27917#28392#1" />
-                <element signature="e#25122#25361#0" />
-                <element signature="e#25397#25612#0" />
-                <element signature="e#25631#25845#0" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/scripts/libLogging.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="72">
-              <caret line="3" column="38" selection-start-line="3" selection-start-column="38" selection-end-line="3" selection-end-column="38" />
-              <folding>
-                <element signature="e#208#224#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -136,99 +54,85 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/scripts/libInput.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="120">
-              <caret line="5" column="28" selection-start-line="5" selection-start-column="28" selection-end-line="5" selection-end-column="28" />
+            <state relative-caret-position="648">
+              <caret line="50" selection-start-line="50" selection-end-line="50" />
               <folding>
-                <element signature="e#278#289#0" expanded="true" />
-                <element signature="e#1795#2503#0" />
-                <element signature="e#1795#2235#1" />
-                <element signature="e#2545#2874#0" />
-                <element signature="e#2545#2734#1" />
-                <element signature="e#2913#3305#0" />
-                <element signature="e#2913#3164#1" />
-                <element signature="e#3180#3227#0" />
-                <element signature="e#3351#3621#0" />
-                <element signature="e#3351#3519#1" />
+                <element signature="e#457#1558#0" />
+                <element signature="e#457#674#1" />
+                <element signature="e#690#1538#0" />
+                <element signature="e#1920#2628#0" />
+                <element signature="e#1920#2360#1" />
+                <element signature="e#2670#2999#0" />
+                <element signature="e#2670#2859#1" />
+                <element signature="e#3038#3430#0" />
+                <element signature="e#3038#3289#1" />
+                <element signature="e#3305#3352#0" />
+                <element signature="e#3476#3746#0" />
+                <element signature="e#3476#3644#1" />
+                <element signature="e#3788#5237#0" />
+                <element signature="e#3788#4614#1" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/scripts/libOutput.py">
+        <entry file="file://$USER_HOME$/Documents/01 Modellentwicklung/VencoPy/preReleaseVersions/VencoPy_0.0.8/config/config.yaml">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="360">
-              <caret line="37" selection-start-line="37" selection-end-line="37" />
-              <folding>
-                <element signature="e#622#1410#0" />
-                <element signature="e#1544#3321#0" />
-                <element signature="e#3377#5235#0" />
-                <element signature="e#5354#6219#0" />
-                <element signature="e#6322#7523#0" />
-                <element signature="e#7516#7744#0" />
-                <element signature="e#7831#8202#0" />
-              </folding>
+            <state relative-caret-position="311">
+              <caret line="18" selection-start-line="18" selection-end-line="18" />
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/parseMiD.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="247">
+              <caret line="33" lean-forward="true" selection-start-line="33" selection-end-line="33" />
+              <folding>
+                <element signature="e#232#266#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/scripts/utilsParsing.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="528">
-              <caret line="81" selection-start-line="81" selection-end-line="81" />
+            <state relative-caret-position="242">
+              <caret line="49" lean-forward="true" selection-start-line="49" selection-end-line="49" />
               <folding>
-                <element signature="e#276#372#0" />
-                <element signature="e#455#860#0" />
-                <element signature="e#494#842#0" />
-                <element signature="e#970#1729#0" />
-                <element signature="e#1329#1603#0" />
-                <element signature="e#1780#2424#0" />
-                <element signature="e#1780#2120#1" />
-                <element signature="e#2500#3462#0" />
-                <element signature="e#2500#2962#1" />
-                <element signature="e#3034#3438#0" />
-                <element signature="e#3281#3438#0" />
-                <element signature="e#3511#4151#0" />
-                <element signature="e#3553#4151#0" />
-                <element signature="e#3621#4151#0" />
+                <element signature="e#1980#2942#0" />
+                <element signature="e#2991#3631#0" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/scripts/libPlotting.py">
+        <entry file="file://$PROJECT_DIR$/scripts/utilsTimestamp.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="672">
-              <caret line="88" selection-start-line="88" selection-end-line="88" />
-              <folding>
-                <element signature="e#180#295#0" />
-                <element signature="e#715#873#0" />
-                <element signature="e#982#1408#0" />
-                <element signature="e#1484#1707#0" />
-                <element signature="e#1752#2097#0" />
-                <element signature="e#1788#2074#0" />
-                <element signature="e#2100#2211#0" />
-                <element signature="e#2391#3708#0" />
-                <element signature="e#3753#4972#0" />
-                <element signature="e#4013#4929#0" />
-                <element signature="e#4217#4422#0" />
-                <element signature="e#4559#4929#0" />
-                <element signature="e#4681#4810#0" />
-              </folding>
+            <state relative-caret-position="215">
+              <caret line="48" selection-start-line="48" selection-end-line="48" />
             </state>
           </provider>
         </entry>
       </file>
     </leaf>
   </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
   <component name="FindInProjectRecents">
     <findStrings>
       <find>Cons</find>
       <find>filterConsProfiles</find>
       <find>, boolIndices, critCol='indexCons'</find>
-      <find>\</find>
       <find>VencoPy_conf</find>
       <find>readVencOConfig</find>
       <find>Electric consumption</find>
@@ -246,11 +150,11 @@
       <find>idx</find>
       <find>where</find>
       <find>np.where</find>
+      <find>\</find>
     </findStrings>
     <replaceStrings>
       <replace>Agg</replace>
       <replace>aggregateProfiles</replace>
-      <replace>/</replace>
       <replace>@logit(level=Level.DEBUG)</replace>
       <replace>0</replace>
       <replace>nHours - 1</replace>
@@ -259,6 +163,7 @@
       <replace>config</replace>
       <replace>iHour</replace>
       <replace>'</replace>
+      <replace>/</replace>
     </replaceStrings>
   </component>
   <component name="Git.Settings">
@@ -276,29 +181,25 @@
         <option value="$USER_HOME$/.jupyter/jupyter_nbconvert_config.py" />
         <option value="$PROJECT_DIR$/venco_main.py" />
         <option value="$PROJECT_DIR$/scripts/libPreprocessing.py" />
-        <option value="$PROJECT_DIR$/config/config.yaml" />
         <option value="$PROJECT_DIR$/scripts/libProfileCalculation.py" />
         <option value="$PROJECT_DIR$/scripts/libLogging.py" />
         <option value="$PROJECT_DIR$/scripts/libInput.py" />
         <option value="$PROJECT_DIR$/scripts/libOutput.py" />
-      </list>
-    </option>
-  </component>
-  <component name="ProjectConfigurationFiles">
-    <option name="files">
-      <list>
-        <option value="$PROJECT_DIR$/.idea/vencopy_repo.iml" />
-        <option value="$PROJECT_DIR$/.idea/vcs.xml" />
-        <option value="$PROJECT_DIR$/.idea/misc.xml" />
-        <option value="$PROJECT_DIR$/.idea/modules.xml" />
+        <option value="$PROJECT_DIR$/config/config.yaml" />
+        <option value="$PROJECT_DIR$/utilsTimestamp.py" />
+        <option value="$PROJECT_DIR$/parseMiD.py" />
+        <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch_1.py" />
+        <option value="$PROJECT_DIR$/../REMix-OaM/OptiMo/projects/prj_BEniVer/beniver/data/sus_Base/dataProcess/REMixMacro.py" />
+        <option value="$PROJECT_DIR$/scripts/utilsTimestamp.py" />
+        <option value="$PROJECT_DIR$/scripts/utilsParsing.py" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds" extendedState="6">
-    <option name="x" value="1912" />
+    <option name="x" value="2311" />
     <option name="y" value="-8" />
     <option name="width" value="1936" />
-    <option name="height" value="1056" />
+    <option name="height" value="1055" />
   </component>
   <component name="ProjectView">
     <navigator proportions="" version="1">
@@ -321,8 +222,17 @@
   </component>
   <component name="PropertiesComponent">
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
-    <property name="last_opened_file_path" value="$USER_HOME$/Documents/01 Modellentwicklung/VencoPy/preReleaseVersions/VencoPy_0.0.8" />
-    <property name="settings.editor.selected.configurable" value="preferences.keymap" />
+    <property name="com.intellij.ide.scratch.LRUPopupBuilder$1/New Scratch File" value="Python" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../REMix-OaM/OptiMo/projects/prj_BEniVer/beniver/data/sus_Base/dataProcess" />
+    <property name="settings.editor.selected.configurable" value="MTConfigurable" />
+  </component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\REMix-OaM\OptiMo\projects\prj_BEniVer\beniver\data\sus_Base\dataProcess" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\vencopy_repo\scripts" />
+    </key>
   </component>
   <component name="RunDashboard">
     <option name="ruleStates">
@@ -336,7 +246,70 @@
       </list>
     </option>
   </component>
-  <component name="RunManager">
+  <component name="RunManager" selected="Python.parseMiD">
+    <configuration name="REMixMacro" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="vencopy_repo" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/../REMix-OaM/OptiMo/projects/prj_BEniVer/beniver/data/sus_Base/dataProcess" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/../REMix-OaM/OptiMo/projects/prj_BEniVer/beniver/data/sus_Base/dataProcess/REMixMacro.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="parseMiD" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="vencopy_repo" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/parseMiD.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="scratch_1" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="vencopy_repo" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$APPLICATION_CONFIG_DIR$/scratches" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$APPLICATION_CONFIG_DIR$/scratches/scratch_1.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <configuration name="venco_main" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="vencopy_repo" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -360,6 +333,9 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.parseMiD" />
+        <item itemvalue="Python.REMixMacro" />
+        <item itemvalue="Python.scratch_1" />
         <item itemvalue="Python.venco_main" />
       </list>
     </recent_temporary>
@@ -403,14 +379,15 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="1912" y="-8" width="1936" height="1056" extended-state="6" />
+    <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.483835" visible="true" weight="0.15279241" />
-      <window_info id="Structure" order="1" sideWeight="0.516165" side_tool="true" visible="true" weight="0.15279241" />
+      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.4817073" visible="true" weight="0.15279241" />
+      <window_info id="Structure" order="1" sideWeight="0.51829267" side_tool="true" weight="0.15279241" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" weight="0.32914925" />
-      <window_info anchor="bottom" id="Run" order="2" weight="0.27201784" />
-      <window_info anchor="bottom" id="Debug" order="3" weight="0.34448162" />
+      <window_info anchor="bottom" id="Run" order="2" weight="0.49944258" />
+      <window_info active="true" anchor="bottom" id="Debug" order="3" visible="true" weight="0.3779264" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="6" weight="0.32936078" />
@@ -422,6 +399,25 @@
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
     </layout>
+    <layout-to-restore>
+      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.4817073" visible="true" weight="0.15279241" />
+      <window_info id="Structure" order="1" sideWeight="0.51829267" side_tool="true" weight="0.15279241" />
+      <window_info id="Favorites" order="2" side_tool="true" />
+      <window_info anchor="bottom" id="Message" order="0" />
+      <window_info anchor="bottom" id="Find" order="1" weight="0.32914925" />
+      <window_info anchor="bottom" id="Run" order="2" weight="0.49944258" />
+      <window_info active="true" anchor="bottom" id="Debug" order="3" visible="true" weight="0.49275362" />
+      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
+      <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
+      <window_info anchor="bottom" id="TODO" order="6" weight="0.32936078" />
+      <window_info anchor="bottom" id="Version Control" order="7" weight="0.32936078" />
+      <window_info anchor="bottom" id="Terminal" order="8" weight="0.32936078" />
+      <window_info anchor="bottom" id="Event Log" order="9" side_tool="true" />
+      <window_info anchor="bottom" id="Python Console" order="10" weight="0.39330545" />
+      <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
+      <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
+      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
+    </layout-to-restore>
   </component>
   <component name="Vcs.Log.Tabs.Properties">
     <option name="TAB_STATES">
@@ -476,53 +472,80 @@
           <line>163</line>
           <option name="timeStamp" value="35" />
         </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/parseMiD.py</url>
+          <line>34</line>
+          <option name="timeStamp" value="44" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/../REMix-OaM/OptiMo/projects/prj_BEniVer/beniver/data/sus_Base/dataProcess/REMixMacro.py</url>
+          <line>29</line>
+          <option name="timeStamp" value="61" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/scripts/utilsParsing.py</url>
+          <line>47</line>
+          <option name="timeStamp" value="62" />
+        </line-breakpoint>
       </breakpoints>
+      <default-breakpoints>
+        <breakpoint type="python-exception">
+          <properties notifyOnTerminate="true" exception="BaseException">
+            <option name="notifyOnTerminate" value="true" />
+          </properties>
+        </breakpoint>
+      </default-breakpoints>
     </breakpoint-manager>
   </component>
   <component name="debuggerHistoryManager">
     <expressions id="evaluateCodeFragment">
       <expression>
-        <expression-string>driveProfilesFuelAux[0]</expression-string>
+        <expression-string>dataRaw = pd.read_excel('BEniVer_module_reFlucNoStor.xlsx', sheet_name=sheet, index_col=0)</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>profileOutNew = corrFactor * profile</expression-string>
+        <expression-string>dataRaw = pd.read_excel(BEniVer_module_reFlucNoStor.xlsx, sheet_name=sheet, index_col=0)</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>profilesOutNew = profilesIn.apply(sum, axis=0) / lenProfiles</expression-string>
+        <expression-string>dataRaw = pd.read_excel(path, sheet_name=sheet, index_col=0)</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>profilesIn.apply(sum, axis=0)</expression-string>
+        <expression-string>for idx in exportInfo.index:
+    print(exportInfo.loc[idx,:])</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>profilesIn.apply(sum, axis=1)</expression-string>
+        <expression-string>for idx in exportInfo.index:
+    print(idx)</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>profilesOut</expression-string>
+        <expression-string>for idx in exportInfo.index:
+    print(exportInfo.iloc[idx,:])</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>filterCons['bolSuffBat'].value_counts()</expression-string>
+        <expression-string>for idx in exportInfo.index:
+    print(exportInfo[idx])</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>filterCons['bolConsumption'].value_counts()</expression-string>
+        <expression-string>for idx in exportInfo:
+    print(idx)</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>filterCons['bolMinDailyMileage'].value_counts()</expression-string>
+        <expression-string>len(replacementRaw)</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
       </expression>
@@ -576,13 +599,6 @@
     </expressions>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/../ProgramData/Miniconda3/envs/VencoPy/Lib/site-packages/pandas/core/generic.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="380">
-          <caret line="1897" selection-start-line="1897" selection-end-line="1897" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$USER_HOME$/Documents/01 Modellentwicklung/ioProc/ioProc_beforePackaging/actions/plotting.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-1630" />
@@ -601,13 +617,6 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/config/VencoPy_conf.yaml" />
     <entry file="file://$PROJECT_DIR$/config/timeseriesREMix.yaml" />
-    <entry file="file://$PROJECT_DIR$/../ProgramData/Miniconda3/envs/VencoPy/Lib/site-packages/pandas/core/indexes/base.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="67632">
-          <caret line="2898" selection-start-line="2898" selection-end-line="2898" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/scripts/timeseriesREMix.yaml">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="120">
@@ -630,10 +639,166 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/scripts/lib.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="5256">
+          <caret line="221" column="26" selection-start-line="221" selection-start-column="26" selection-end-line="221" selection-end-column="26" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../advancedPython/advanced-python-course/lectures/l4_decorators_and_recursion/lecture.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="96">
+          <caret line="4" selection-start-line="4" selection-end-line="4" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/source/conf.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/scripts/libLogging.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="72">
+          <caret line="3" column="38" selection-start-line="3" selection-start-column="38" selection-end-line="3" selection-end-column="38" />
+          <folding>
+            <element signature="e#208#224#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/scripts/libOutput.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="696">
+          <caret line="37" selection-start-line="37" selection-end-line="37" />
+          <folding>
+            <element signature="e#1544#3321#0" />
+            <element signature="e#5354#6219#0" />
+            <element signature="e#6322#7523#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../ProgramData/Miniconda3/envs/VencoPy/Lib/site-packages/pandas/core/indexes/base.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="214">
+          <caret line="2890" selection-start-line="2890" selection-end-line="2890" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/scripts/libPreprocessing.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="72">
+          <caret line="3" column="31" selection-start-line="3" selection-start-column="31" selection-end-line="3" selection-end-column="31" />
+          <folding>
+            <element signature="e#297#312#0" expanded="true" />
+            <element signature="e#450#1147#1" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../ProgramData/Miniconda3/envs/VencoPy/Lib/site-packages/pandas/core/internals/construction.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1532">
+          <caret line="747" selection-start-line="747" selection-end-line="747" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_1.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="48">
+          <caret line="6" lean-forward="true" selection-start-line="6" selection-end-line="6" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../ProgramData/Miniconda3/envs/VencoPy/Lib/site-packages/pandas/core/generic.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="359">
+          <caret line="5129" selection-start-line="5129" selection-end-line="5129" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/venco_main.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="360">
+          <caret line="21" column="22" selection-start-line="21" selection-start-column="22" selection-end-line="21" selection-end-column="22" />
+          <folding>
+            <element signature="e#232#262#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/scripts/libProfileCalculation.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="3768">
+          <caret line="166" selection-start-line="166" selection-end-line="166" />
+          <folding>
+            <element signature="e#205#298#0" />
+            <element signature="e#5549#5759#0" />
+            <element signature="e#5576#5759#0" />
+            <element signature="e#19701#20225#0" />
+            <element signature="e#19701#20143#1" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/scripts/libInput.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="648">
+          <caret line="50" selection-start-line="50" selection-end-line="50" />
+          <folding>
+            <element signature="e#457#1558#0" />
+            <element signature="e#457#674#1" />
+            <element signature="e#690#1538#0" />
+            <element signature="e#1920#2628#0" />
+            <element signature="e#1920#2360#1" />
+            <element signature="e#2670#2999#0" />
+            <element signature="e#2670#2859#1" />
+            <element signature="e#3038#3430#0" />
+            <element signature="e#3038#3289#1" />
+            <element signature="e#3305#3352#0" />
+            <element signature="e#3476#3746#0" />
+            <element signature="e#3476#3644#1" />
+            <element signature="e#3788#5237#0" />
+            <element signature="e#3788#4614#1" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/config/config.yaml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="504">
+          <caret line="21" column="14" selection-start-line="21" selection-start-column="14" selection-end-line="21" selection-end-column="14" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../CPC_repo/cpc/src/harmonization_tool/main.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="572">
+          <caret line="45" lean-forward="true" selection-start-line="45" selection-end-line="45" />
+          <folding>
+            <element signature="e#0#92#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../ProgramData/Miniconda3/envs/VencoPy/Lib/codecs.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="212">
+          <caret line="311" selection-start-line="311" selection-end-line="311" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../REMix-OaM/OptiMo/projects/prj_BEniVer/beniver/data/sus_Base/dataProcess/REMixMacro.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="209">
+          <caret line="25" column="45" lean-forward="true" selection-start-line="25" selection-start-column="45" selection-end-line="25" selection-end-column="45" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/scripts/libPlotting.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="672">
-          <caret line="88" selection-start-line="88" selection-end-line="88" />
+        <state relative-caret-position="785">
+          <caret line="61" selection-start-line="61" selection-end-line="61" />
           <folding>
             <element signature="e#180#295#0" />
             <element signature="e#715#873#0" />
@@ -652,186 +817,37 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/scripts/lib.py">
+    <entry file="file://$USER_HOME$/Documents/01 Modellentwicklung/VencoPy/preReleaseVersions/VencoPy_0.0.8/config/config.yaml">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="5256">
-          <caret line="221" column="26" selection-start-line="221" selection-start-column="26" selection-end-line="221" selection-end-column="26" />
+        <state relative-caret-position="311">
+          <caret line="18" selection-start-line="18" selection-end-line="18" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../advancedPython/advanced-python-course/lectures/l4_decorators_and_recursion/lecture.py">
+    <entry file="file://$PROJECT_DIR$/scripts/utilsTimestamp.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="96">
-          <caret line="4" selection-start-line="4" selection-end-line="4" />
+        <state relative-caret-position="215">
+          <caret line="48" selection-start-line="48" selection-end-line="48" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/parseMiD.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="247">
+          <caret line="33" lean-forward="true" selection-start-line="33" selection-end-line="33" />
+          <folding>
+            <element signature="e#232#266#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/scripts/utilsParsing.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="528">
-          <caret line="81" selection-start-line="81" selection-end-line="81" />
+        <state relative-caret-position="242">
+          <caret line="49" lean-forward="true" selection-start-line="49" selection-end-line="49" />
           <folding>
-            <element signature="e#276#372#0" />
-            <element signature="e#455#860#0" />
-            <element signature="e#494#842#0" />
-            <element signature="e#970#1729#0" />
-            <element signature="e#1329#1603#0" />
-            <element signature="e#1780#2424#0" />
-            <element signature="e#1780#2120#1" />
-            <element signature="e#2500#3462#0" />
-            <element signature="e#2500#2962#1" />
-            <element signature="e#3034#3438#0" />
-            <element signature="e#3281#3438#0" />
-            <element signature="e#3511#4151#0" />
-            <element signature="e#3553#4151#0" />
-            <element signature="e#3621#4151#0" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/scripts/libPreprocessing.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="72">
-          <caret line="3" column="31" selection-start-line="3" selection-start-column="31" selection-end-line="3" selection-end-column="31" />
-          <folding>
-            <element signature="e#297#312#0" expanded="true" />
-            <element signature="e#450#1311#0" />
-            <element signature="e#450#1147#1" />
-            <element signature="e#1407#2556#0" />
-            <element signature="e#1407#1894#1" />
-            <element signature="e#2088#2281#0" />
-            <element signature="e#2382#2533#0" />
-            <element signature="e#2396#2532#0" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/config/config.yaml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="168">
-          <caret line="7" selection-start-line="7" selection-end-line="7" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/scripts/libLogging.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="72">
-          <caret line="3" column="38" selection-start-line="3" selection-start-column="38" selection-end-line="3" selection-end-column="38" />
-          <folding>
-            <element signature="e#208#224#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/scripts/libInput.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="120">
-          <caret line="5" column="28" selection-start-line="5" selection-start-column="28" selection-end-line="5" selection-end-column="28" />
-          <folding>
-            <element signature="e#278#289#0" expanded="true" />
-            <element signature="e#1795#2503#0" />
-            <element signature="e#1795#2235#1" />
-            <element signature="e#2545#2874#0" />
-            <element signature="e#2545#2734#1" />
-            <element signature="e#2913#3305#0" />
-            <element signature="e#2913#3164#1" />
-            <element signature="e#3180#3227#0" />
-            <element signature="e#3351#3621#0" />
-            <element signature="e#3351#3519#1" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/scripts/libOutput.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="360">
-          <caret line="37" selection-start-line="37" selection-end-line="37" />
-          <folding>
-            <element signature="e#622#1410#0" />
-            <element signature="e#1544#3321#0" />
-            <element signature="e#3377#5235#0" />
-            <element signature="e#5354#6219#0" />
-            <element signature="e#6322#7523#0" />
-            <element signature="e#7516#7744#0" />
-            <element signature="e#7831#8202#0" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/venco_main.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1826">
-          <caret line="116" selection-start-line="116" selection-end-line="116" />
-          <folding>
-            <element signature="e#232#262#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/source/conf.py">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/scripts/libProfileCalculation.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="448">
-          <caret line="166" selection-start-line="166" selection-end-line="166" />
-          <folding>
-            <element signature="e#205#298#0" />
-            <element signature="e#540#1572#0" />
-            <element signature="e#540#977#1" />
-            <element signature="e#1633#2197#0" />
-            <element signature="e#1633#2022#1" />
-            <element signature="e#5062#7856#0" />
-            <element signature="e#5039#6119#1" />
-            <element signature="e#6551#7750#0" />
-            <element signature="e#6645#7624#0" />
-            <element signature="e#6656#6848#0" />
-            <element signature="e#6912#7803#0" />
-            <element signature="e#4762#6083#0" />
-            <element signature="e#5956#6557#1" />
-            <element signature="e#5549#5759#0" />
-            <element signature="e#5576#5759#0" />
-            <element signature="e#6999#7088#0" />
-            <element signature="e#8987#12504#0" />
-            <element signature="e#10279#11569#1" />
-            <element signature="e#11575#11672#0" />
-            <element signature="e#11107#12405#0" />
-            <element signature="e#11147#12298#0" />
-            <element signature="e#11185#11365#0" />
-            <element signature="e#11378#12398#0" />
-            <element signature="e#14406#15156#0" />
-            <element signature="e#14406#14820#1" />
-            <element signature="e#15490#18410#0" />
-            <element signature="e#15490#16839#1" />
-            <element signature="e#18575#20164#0" />
-            <element signature="e#18575#19313#1" />
-            <element signature="e#19679#20131#0" />
-            <element signature="e#20280#21866#0" />
-            <element signature="e#20280#21133#1" />
-            <element signature="e#21243#21361#0" />
-            <element signature="e#21438#21603#0" />
-            <element signature="e#21639#21811#0" />
-            <element signature="e#21645#21765#0" />
-            <element signature="e#19701#20225#0" />
-            <element signature="e#19701#20143#1" />
-            <element signature="e#22715#24419#0" />
-            <element signature="e#22715#23648#1" />
-            <element signature="e#23777#24106#0" />
-            <element signature="e#24126#24379#0" />
-            <element signature="e#24126#24217#0" />
-            <element signature="e#24501#25686#0" />
-            <element signature="e#24574#25119#1" />
-            <element signature="e#25199#25298#0" />
-            <element signature="e#23098#23424#0" />
-            <element signature="e#23099#23164#0" />
-            <element signature="e#27059#27854#0" />
-            <element signature="e#27059#27322#1" />
-            <element signature="e#24363#24425#0" />
-            <element signature="e#24600#25905#0" />
-            <element signature="e#27917#28392#1" />
-            <element signature="e#25122#25361#0" />
-            <element signature="e#25397#25612#0" />
-            <element signature="e#25631#25845#0" />
+            <element signature="e#1980#2942#0" />
+            <element signature="e#2991#3631#0" />
           </folding>
         </state>
       </provider>

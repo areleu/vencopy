@@ -20,12 +20,16 @@ linksRelative:
 # During first configuration, optionally fill in absolute links on your system e.g. if you want to have post processed
 # output written to an energy system model input folder
 linksAbsolute:
-    someLinkOnHardDrive: C:/REMix-OaM/OptiMo/projects/wulf_ni/paperModelCouplingCURRENT_repairCheckout/data/sus_base/data/timeSeriesGlobal
+    folderMiD2017: C:/Users/wulf_ni/Documents/11 Data/Transport data/Germany/MiD/2017/proprietary/CSV
+    folderMiD2008: C:/Users/wulf_ni/Documents/11 Data/Transport data/Germany/MiD/2008/MiD 2008_DVD/Daten/STATA/STATA_Public Use File
 
 files:
     inputDataScalars: VencoPy_scalarInput.xlsx
     inputDataDriveProfiles: inputProfiles_Drive.csv
     inputDataPlugProfiles: inputProfiles_Plug.csv
+    MiD2017households: MiD2017_Regional_Haushalte.csv
+    MiD2017persons: MiD2017_Regional_Personen.csv
+    MiD2017trips: MiD2017_Regional_Wege.csv
 
 labels:
     technologyLabel: BEV-S
