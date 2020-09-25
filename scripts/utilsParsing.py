@@ -15,6 +15,17 @@ def assignMultiColToDType(dataFrame, cols, dType):
     return(dfOut)
 
 
+def replaceDayNumbersByStrings(data):
+    dict = {1: 'MON',
+            2: 'TUE',
+            3: 'WED',
+            4: 'THU',
+            5: 'FRI',
+            6: 'SAT',
+            7: 'SUN'}
+    return data.replace(dict)
+
+
 def assignTSToColViaDay(df, colYear, colMonth, colDay, colHour, colMin, colName):
     dfOut = df.copy()
     dfOut[colName] = [pd.Timestamp(year=dfOut.loc[x, colYear],
@@ -41,14 +52,53 @@ def calcHourlyShares(data, ts_st, ts_en):
                                                                data.loc[:, 'wegkm'])
     return data
 
+def initiateColRange(row):
+    if row['W_SZS'] + 1 < row['W_AZS']:
+        return range(row['W_SZS']+1, row['W_AZS'])  # The hour of arrival (W_AZS) will not be indexed further below but is part of the range() object
+    else:
+        return None
 
-def fillDataframe(data, hourlyArray):
-    hourlyArray.loc[:, data.loc[:, 'W_SZS']] = data.loc[:, 'shareStartHour'] * data.loc[:, 'wegkm']
-    hourlyArray.loc[:, data.loc[:, 'W_AZS']] = data.loc[:, 'shareStartEnd'] * data.loc[:, 'wegkm']
-    fullHourRange = data.apply(range(start=data.loc[:, 'W_SZS'] + 1, stop=data.loc[:, 'W_AZS']), axis=1)
-    hourlyArray.loc[:, fullHourRange] = data.loc[:,]
+class FillHourValues:
+    def __init__(self, data, rangeFunction):
+        # self.data = data
+        self.startHour = data['W_SZS']
+        self.distanceStartHour = data['shareStartHour'] * data['wegkm']
+        self.endHour = data['W_AZS']
+        self.distanceEndHour = data['shareEndHour'] * data['wegkm']
+        self.fullHourCols = data.apply(rangeFunction, axis=1)
+        self.fullHourRange = data['fullHourTripLength']
+
+    def __call__(self, row):
+        idx = row.name
+        row[self.startHour[idx]] = self.distanceStartHour[idx]
+        if self.endHour[idx] != self.startHour[idx]:
+            row[self.endHour[idx]] = self.distanceEndHour[idx]
+        if isinstance(self.fullHourCols[idx], range):
+            row[self.fullHourCols[idx]] = self.fullHourRange[idx]
+        return row
 
 
+def fillDataframe(hourlyArray, fillFunction):
+    hourlyArray = hourlyArray.apply(fillFunction, axis=1)
+    return hourlyArray
+
+
+def mergeTrips(tripData):
+    # uniqueHHPersons = tripData.loc[:, 'HP_ID_Reg'].unique()
+    # dataDay = pd.DataFrame(index=uniqueHHPersons, columns=tripData.columns)
+    dataDay = tripData.groupby(['HP_ID_Reg']).sum()
+    dataDay = dataDay.drop('W_ID', axis=1)
+    return dataDay
+
+def mergeVariables(data, variableData, variables):
+    variableDataUnique = variableData.loc[~variableData['HP_ID_Reg'].duplicated(), :]
+    variables.append('HP_ID_Reg')
+    variableDataMerge = variableDataUnique.loc[:, variables].set_index('HP_ID_Reg')
+    mergedData = pd.concat([variableDataMerge, data], axis=1)
+    return mergedData
+
+
+# Old functions
 def fillInHourlyTrips(dfData, dfZeros, colVal='wegkm_k', nHours=24):
     """
     Fills in an array with hourly columns in a given dfZeros with values from dfData's column colVal.
@@ -69,7 +119,6 @@ def fillInHourlyTrips(dfData, dfZeros, colVal='wegkm_k', nHours=24):
             dfZerosOut.loc[rowsNextDayStart, hour + 24] = dfData.loc[rowsNextDayStart, colVal]
 
     return(dfZerosOut)
-
 
 def fillInMultiHourTrips(dfFill, dfData):
     pass
