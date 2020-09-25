@@ -52,6 +52,9 @@ if __name__ == '__main__':
     # Class instantiating of callable class
     fillHourValues = FillHourValues(data=tripDataClean, rangeFunction=initiateColRange)
     driveDataTrips = fillDataframe(emptyDF, fillFunction=fillHourValues)
+
+    tripPurposes = assignTripPurposes(driveDataTrips, tripDataClean)
+
     driveDataTrips.loc[:, ['HP_ID_Reg', 'W_ID']] = pd.DataFrame(tripDataClean.loc[:, ['HP_ID_Reg', 'W_ID']], dtype=int)
     driveDataDays = mergeTrips(driveDataTrips)
 

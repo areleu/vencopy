@@ -98,7 +98,18 @@ def mergeVariables(data, variableData, variables):
     return mergedData
 
 
-# Old functions
+def assignTripPurposes(driveData, tripData):
+    # assign hours where drivData != 0/NA to 'driving'
+    # assign hours before first trip to 'home'
+    # assign hours after each trip to respective trip purpose from tripData
+    pass
+
+
+
+
+
+# SANDBOX / OLD FUNCTION
+#==================================
 def fillInHourlyTrips(dfData, dfZeros, colVal='wegkm_k', nHours=24):
     """
     Fills in an array with hourly columns in a given dfZeros with values from dfData's column colVal.

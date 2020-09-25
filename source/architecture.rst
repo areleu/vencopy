@@ -25,12 +25,12 @@ Quality values
      - Description
    * - 1. Learnability
      - The highest priority of VencoPy is to provide a straight-forward easy-to-apply tool to estimate electric vehicle fleets' load shifting potential. 
-   * - 2. Reproducability
+   * - 2. Readibility
+     - Future developments should not impair the linear process structure of the main venco script file. Where a solution significantly contributes to the learnability (e.g. an additional library), this may motivate a deviation from this principle 
+   * - 3. Reproducibility
      - Reproducibility is achieved by transparent versioning of the VencoPy releases as well as its well-defined input definition.
-   * - 3. Reliability
+   * - 4. Reliability
      - Reliability is tested on various machines before release. However, in its alpha-version no special error catching routines are implemented.
-   * - 4. Maintainability
-     - Through its simple and straightforward design, VencoPy is easily maintained. Repeating methods or calls are unified where learnability is not threatened.
    * - 5. Performance
      - Performance is not a high priority, since runtimes are quite quick. However, basic coding principles are applied to not unnecessarily overload the code or methods in the code. 
 

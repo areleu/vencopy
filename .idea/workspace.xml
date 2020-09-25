@@ -2,8 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="ecd0004f-94bb-43f5-9ca2-d220fe3ef765" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/evaluateDriveProfiles.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/parseMiD.py" beforeDir="false" afterPath="$PROJECT_DIR$/parseMiD.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/scripts/utilsParsing.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/utilsParsing.py" afterDir="false" />
     </list>
@@ -18,65 +16,10 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/venco_main.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2664">
-              <caret line="117" column="7" selection-start-line="117" selection-start-column="7" selection-end-line="117" selection-end-column="7" />
+            <state relative-caret-position="188">
+              <caret line="57" column="59" selection-start-line="57" selection-start-column="59" selection-end-line="57" selection-end-column="59" />
               <folding>
                 <element signature="e#232#262#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/scripts/libOutput.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2568">
-              <caret line="195" column="8" selection-start-line="195" selection-start-column="8" selection-end-line="195" selection-end-column="29" />
-              <folding>
-                <element signature="e#1544#3321#0" />
-                <element signature="e#5354#6219#0" />
-                <element signature="e#6322#7523#0" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/scripts/libProfileCalculation.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2880">
-              <caret line="129" column="4" selection-start-line="129" selection-start-column="4" selection-end-line="129" selection-end-column="4" />
-              <folding>
-                <element signature="e#205#298#0" />
-                <element signature="e#5549#5759#0" />
-                <element signature="e#5576#5759#0" />
-                <element signature="e#19701#20225#0" />
-                <element signature="e#19701#20143#1" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/scripts/libInput.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="648">
-              <caret line="50" selection-start-line="50" selection-end-line="50" />
-              <folding>
-                <element signature="e#457#1558#0" />
-                <element signature="e#457#674#1" />
-                <element signature="e#690#1538#0" />
-                <element signature="e#1920#2628#0" />
-                <element signature="e#1920#2360#1" />
-                <element signature="e#2670#2999#0" />
-                <element signature="e#2670#2859#1" />
-                <element signature="e#3038#3430#0" />
-                <element signature="e#3038#3289#1" />
-                <element signature="e#3305#3352#0" />
-                <element signature="e#3476#3746#0" />
-                <element signature="e#3476#3644#1" />
-                <element signature="e#3788#5237#0" />
-                <element signature="e#3788#4614#1" />
               </folding>
             </state>
           </provider>
@@ -92,31 +35,19 @@
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/parseMiD.py">
+        <entry file="file://$PROJECT_DIR$/scripts/readInAndProcessMID.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1320">
-              <caret line="58" selection-start-line="58" selection-end-line="58" />
-              <folding>
-                <element signature="e#232#266#0" expanded="true" />
-              </folding>
+            <state relative-caret-position="1104">
+              <caret line="52" selection-start-line="52" selection-end-line="52" />
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/scripts/utilsParsing.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2208">
-              <caret line="94" column="33" selection-start-line="94" selection-start-column="33" selection-end-line="94" selection-end-column="33" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/evaluateDriveProfiles.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="260">
-              <caret line="44" lean-forward="true" selection-start-line="44" selection-end-line="44" />
+            <state relative-caret-position="307">
+              <caret line="84" selection-start-line="84" selection-end-line="84" />
               <folding>
                 <element signature="e#198#217#0" expanded="true" />
               </folding>
@@ -125,9 +56,54 @@
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/parseMiD.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="273">
+              <caret line="55" column="38" selection-start-line="55" selection-start-column="38" selection-end-line="55" selection-end-column="38" />
+              <folding>
+                <element signature="e#232#266#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/scripts/utilsParsing.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="292">
+              <caret line="103" column="75" selection-start-line="103" selection-start-column="75" selection-end-line="103" selection-end-column="75" />
+              <folding>
+                <element signature="e#313#409#0" />
+                <element signature="e#454#633#0" />
+                <element signature="e#461#603#0" />
+                <element signature="e#722#1127#0" />
+                <element signature="e#761#1109#0" />
+                <element signature="e#1216#1619#0" />
+                <element signature="e#1667#2127#0" />
+                <element signature="e#2160#2375#0" />
+                <element signature="e#2403#3175#0" />
+                <element signature="e#2452#2804#0" />
+                <element signature="e#2843#3175#0" />
+                <element signature="e#3228#3304#0" />
+                <element signature="e#3337#3586#0" />
+                <element signature="e#3337#3394#0" />
+                <element signature="e#3643#3926#0" />
+                <element signature="e#4018#4980#0" />
+                <element signature="e#4018#4480#1" />
+                <element signature="e#4552#4956#0" />
+                <element signature="e#4799#4956#0" />
+                <element signature="e#5028#5668#0" />
+                <element signature="e#5070#5668#0" />
+                <element signature="e#5138#5668#0" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/scripts/utilsTimestamp.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="840">
+            <state relative-caret-position="811">
               <caret line="36" column="4" selection-start-line="36" selection-start-column="4" selection-end-line="36" selection-end-column="4" />
             </state>
           </provider>
@@ -207,9 +183,9 @@
         <option value="$PROJECT_DIR$/../REMix-OaM/OptiMo/projects/prj_BEniVer/beniver/data/sus_Base/dataProcess/REMixMacro.py" />
         <option value="$PROJECT_DIR$/scripts/utilsTimestamp.py" />
         <option value="$APPLICATION_CONFIG_DIR$/idea.properties" />
+        <option value="$PROJECT_DIR$/evaluateDriveProfiles.py" />
         <option value="$PROJECT_DIR$/parseMiD.py" />
         <option value="$PROJECT_DIR$/scripts/utilsParsing.py" />
-        <option value="$PROJECT_DIR$/evaluateDriveProfiles.py" />
       </list>
     </option>
   </component>
@@ -231,6 +207,11 @@
             <path>
               <item name="vencopy_repo" type="b2602c69:ProjectViewProjectNode" />
               <item name="vencopy_repo" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="vencopy_repo" type="b2602c69:ProjectViewProjectNode" />
+              <item name="vencopy_repo" type="462c0819:PsiDirectoryNode" />
+              <item name="scripts" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
@@ -264,7 +245,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.evaluateDriveProfiles">
+  <component name="RunManager" selected="Python.parseMiD">
     <configuration name="REMixMacro" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="vencopy_repo" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -372,8 +353,8 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.evaluateDriveProfiles" />
         <item itemvalue="Python.parseMiD" />
+        <item itemvalue="Python.evaluateDriveProfiles" />
         <item itemvalue="Python.REMixMacro" />
         <item itemvalue="Python.scratch_1" />
         <item itemvalue="Python.venco_main" />
@@ -418,15 +399,14 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="1912" y="-8" width="1936" height="1056" extended-state="7" />
-    <editor active="true" />
+    <frame x="1912" y="-8" width="1936" height="1056" extended-state="6" />
     <layout>
       <window_info content_ui="combo" id="Project" order="0" sideWeight="0.4817073" visible="true" weight="0.15279241" />
       <window_info id="Structure" order="1" sideWeight="0.51829267" side_tool="true" weight="0.15279241" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" weight="0.32914925" />
-      <window_info anchor="bottom" id="Run" order="2" weight="0.49944258" />
+      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.49944258" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.38684505" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
@@ -526,6 +506,16 @@
           <url>file://$PROJECT_DIR$/evaluateDriveProfiles.py</url>
           <line>84</line>
           <option name="timeStamp" value="104" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/parseMiD.py</url>
+          <line>62</line>
+          <option name="timeStamp" value="105" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/parseMiD.py</url>
+          <line>55</line>
+          <option name="timeStamp" value="106" />
         </line-breakpoint>
       </breakpoints>
       <default-breakpoints>
@@ -816,8 +806,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/venco_main.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2664">
-          <caret line="117" column="7" selection-start-line="117" selection-start-column="7" selection-end-line="117" selection-end-column="7" />
+        <state relative-caret-position="188">
+          <caret line="57" column="59" selection-start-line="57" selection-start-column="59" selection-end-line="57" selection-end-column="59" />
           <folding>
             <element signature="e#232#262#0" expanded="true" />
           </folding>
@@ -826,7 +816,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/scripts/libOutput.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2568">
+        <state relative-caret-position="668">
           <caret line="195" column="8" selection-start-line="195" selection-start-column="8" selection-end-line="195" selection-end-column="29" />
           <folding>
             <element signature="e#1544#3321#0" />
@@ -838,8 +828,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/scripts/libProfileCalculation.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2880">
-          <caret line="129" column="4" selection-start-line="129" selection-start-column="4" selection-end-line="129" selection-end-column="4" />
+        <state relative-caret-position="62">
+          <caret line="242" column="18" selection-start-line="242" selection-start-column="18" selection-end-line="242" selection-end-column="18" />
           <folding>
             <element signature="e#205#298#0" />
             <element signature="e#5549#5759#0" />
@@ -852,7 +842,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/scripts/libInput.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="648">
+        <state relative-caret-position="288">
           <caret line="50" selection-start-line="50" selection-end-line="50" />
           <folding>
             <element signature="e#457#1558#0" />
@@ -880,10 +870,34 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/scripts/utilsTimestamp.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="811">
+          <caret line="36" column="4" selection-start-line="36" selection-start-column="4" selection-end-line="36" selection-end-column="4" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/evaluateDriveProfiles.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="307">
+          <caret line="84" selection-start-line="84" selection-end-line="84" />
+          <folding>
+            <element signature="e#198#217#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/scripts/readInAndProcessMID.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1104">
+          <caret line="52" selection-start-line="52" selection-end-line="52" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/parseMiD.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1320">
-          <caret line="58" selection-start-line="58" selection-end-line="58" />
+        <state relative-caret-position="273">
+          <caret line="55" column="38" selection-start-line="55" selection-start-column="38" selection-end-line="55" selection-end-column="38" />
           <folding>
             <element signature="e#232#266#0" expanded="true" />
           </folding>
@@ -892,24 +906,31 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/scripts/utilsParsing.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2208">
-          <caret line="94" column="33" selection-start-line="94" selection-start-column="33" selection-end-line="94" selection-end-column="33" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/scripts/utilsTimestamp.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="840">
-          <caret line="36" column="4" selection-start-line="36" selection-start-column="4" selection-end-line="36" selection-end-column="4" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/evaluateDriveProfiles.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="260">
-          <caret line="44" lean-forward="true" selection-start-line="44" selection-end-line="44" />
+        <state relative-caret-position="292">
+          <caret line="103" column="75" selection-start-line="103" selection-start-column="75" selection-end-line="103" selection-end-column="75" />
           <folding>
-            <element signature="e#198#217#0" expanded="true" />
+            <element signature="e#313#409#0" />
+            <element signature="e#454#633#0" />
+            <element signature="e#461#603#0" />
+            <element signature="e#722#1127#0" />
+            <element signature="e#761#1109#0" />
+            <element signature="e#1216#1619#0" />
+            <element signature="e#1667#2127#0" />
+            <element signature="e#2160#2375#0" />
+            <element signature="e#2403#3175#0" />
+            <element signature="e#2452#2804#0" />
+            <element signature="e#2843#3175#0" />
+            <element signature="e#3228#3304#0" />
+            <element signature="e#3337#3586#0" />
+            <element signature="e#3337#3394#0" />
+            <element signature="e#3643#3926#0" />
+            <element signature="e#4018#4980#0" />
+            <element signature="e#4018#4480#1" />
+            <element signature="e#4552#4956#0" />
+            <element signature="e#4799#4956#0" />
+            <element signature="e#5028#5668#0" />
+            <element signature="e#5070#5668#0" />
+            <element signature="e#5138#5668#0" />
           </folding>
         </state>
       </provider>
