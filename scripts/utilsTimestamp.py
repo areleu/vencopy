@@ -14,6 +14,7 @@ def tripDuration(timestampStart, timestampEnd):
 def calcHourShareStart(timestampStart, timestampEnd, duration):
     isSameHourTrip = timestampStart.dt.hour == timestampEnd.dt.hour
     shareSameHour = (timestampEnd.dt.minute - timestampStart.dt.minute) / (duration.dt.seconds / 60)
+    shareSameHour[duration == pd.Timedelta(0)] = 1  # Set share of first hour to 1 for trips with reported duration of 0
     share = shareSameHour.where(isSameHourTrip, (60 - timestampStart.dt.minute) / (duration.dt.seconds / 60))
     return share, isSameHourTrip
 
@@ -28,11 +29,18 @@ def calcDistanceShares(data, duration):
     return shareHourStart, shareHourEnd
 
 def numberOfFullHours(timestampStart, timestampEnd):
-    numberOfHours = timestampEnd.dt.hour - (timestampStart.dt.hour + 1)
-    return numberOfHours.where(numberOfHours >= 0, other=0)
+    timedeltaTrip = timestampEnd - timestampStart
+    numberOfHours = timedeltaTrip.apply(lambda x: x.components.hours)
+    numberOfDays = timedeltaTrip.apply(lambda x: x.components.days)
+    minLeftFirstHour = pd.to_timedelta(60 - timestampStart.dt.minute, unit='m')
+    hasFullHourAfterFirstHour = (timedeltaTrip - minLeftFirstHour) >= pd.Timedelta(1, unit='h')
+    numberOfHours = numberOfHours.where(hasFullHourAfterFirstHour, other=0)
+    return numberOfHours.where(numberOfDays != -1, other=0)
 
 def calcFullHourTripLength(duration, numberOfFullHours, tripLength):
-    return (numberOfFullHours / (duration.dt.seconds / 3600)) * tripLength
+    fullHourTripLength = (numberOfFullHours / (duration.dt.seconds / 3600)) * tripLength
+    fullHourTripLength.loc[duration == pd.Timedelta(0)] = 0  # set trip length to 0 that would otherwise be NaN
+    return fullHourTripLength
 
 def initiateHourDataframe(indexCol, nHours):
     """

@@ -24,15 +24,15 @@ Quality values
    * - Value prioriy
      - Description
    * - 1. Learnability
-     - The highest priority of VencoPy is to provide a straight-forward easy-to-apply tool to estimate electric vehicle fleets' load shifting potential. 
+     - The highest priority of VencoPy is to provide an easy-to-apply tool for scientists (not primarily developpers) to estimate electric vehicle fleets' load shifting potential. Hence, easy to understand approaches, code structures and explicit formulations are favored.
    * - 2. Readibility
-     - Future developments should not impair the linear process structure of the main venco script file. Where a solution significantly contributes to the learnability (e.g. an additional library), this may motivate a deviation from this principle 
+     - The readability of the code, especially the linear flow structure of the main VencoPy file should be preserved. Source code and equations should be easy to read and understand. Splitting of statements is favored over convoluted one-liners. Significant learnability improvements (e.g. through an additional library), may motivate a deviation from this principle. 
    * - 3. Reproducibility
-     - Reproducibility is achieved by transparent versioning of the VencoPy releases as well as its well-defined input definition.
+     - The model has to be deterministic and reproducible both on the scientific and on the technical level. Hence, all example and test artifacts have to be part of the git repository. Source code revisions should be used to reference reproducible states of the source code. 
    * - 4. Reliability
-     - Reliability is tested on various machines before release. However, in its alpha-version no special error catching routines are implemented.
+     - The software has to operate without crashes and should terminate early, if scientific requirements are not met. Testing and asserting expectations in code is encouraged. However, in its alpha-version no special error catching routines are implemented.
    * - 5. Performance
-     - Performance is not a high priority, since runtimes are quite quick. However, basic coding principles are applied to not unnecessarily overload the code or methods in the code. 
+     - Performance is not a high priority, since runtimes are quite quick. However, basic performance considerations like efficient formulation and application of libraries and algorithms should be taken into account. 
 
 
 Organizational information

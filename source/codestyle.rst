@@ -7,8 +7,6 @@
 Codestyle guideline
 ===================================
 
-# General framework and degree of object-orientation
-
 
 VencoPy sticks to the codestyle conventions used in the department of energy system analysis at DLR mainly put forward 
 by Benjamin Fuchs. We use PEP-8 with the exception of lowerCamelCase for variable and method names and UpperCamelCase 

@@ -2,8 +2,10 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="ecd0004f-94bb-43f5-9ca2-d220fe3ef765" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/parseMiD.py" beforeDir="false" afterPath="$PROJECT_DIR$/parseMiD.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/scripts/utilsParsing.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/utilsParsing.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/utilsTimestamp.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/utilsTimestamp.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -16,7 +18,7 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/venco_main.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="188">
+            <state relative-caret-position="1224">
               <caret line="57" column="59" selection-start-line="57" selection-start-column="59" selection-end-line="57" selection-end-column="59" />
               <folding>
                 <element signature="e#232#262#0" expanded="true" />
@@ -26,10 +28,10 @@
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$USER_HOME$/Documents/01 Modellentwicklung/VencoPy/preReleaseVersions/VencoPy_0.0.8/config/config.yaml">
+        <entry file="file://$PROJECT_DIR$/config/config.yaml">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="432">
-              <caret line="18" selection-start-line="18" selection-end-line="18" />
+            <state relative-caret-position="720">
+              <caret line="30" column="49" selection-start-line="30" selection-start-column="49" selection-end-line="30" selection-end-column="49" />
             </state>
           </provider>
         </entry>
@@ -46,7 +48,7 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/evaluateDriveProfiles.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="307">
+            <state relative-caret-position="1968">
               <caret line="84" selection-start-line="84" selection-end-line="84" />
               <folding>
                 <element signature="e#198#217#0" expanded="true" />
@@ -58,8 +60,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/parseMiD.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="273">
-              <caret line="55" column="38" selection-start-line="55" selection-start-column="38" selection-end-line="55" selection-end-column="38" />
+            <state relative-caret-position="1392">
+              <caret line="61" column="53" selection-start-line="61" selection-start-column="53" selection-end-line="61" selection-end-column="53" />
               <folding>
                 <element signature="e#232#266#0" expanded="true" />
               </folding>
@@ -67,11 +69,11 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/scripts/utilsParsing.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="292">
-              <caret line="103" column="75" selection-start-line="103" selection-start-column="75" selection-end-line="103" selection-end-column="75" />
+            <state relative-caret-position="402">
+              <caret line="113" selection-start-line="113" selection-end-line="113" />
               <folding>
                 <element signature="e#313#409#0" />
                 <element signature="e#454#633#0" />
@@ -79,22 +81,24 @@
                 <element signature="e#722#1127#0" />
                 <element signature="e#761#1109#0" />
                 <element signature="e#1216#1619#0" />
-                <element signature="e#1667#2127#0" />
-                <element signature="e#2160#2375#0" />
-                <element signature="e#2403#3175#0" />
-                <element signature="e#2452#2804#0" />
-                <element signature="e#2843#3175#0" />
-                <element signature="e#3228#3304#0" />
-                <element signature="e#3337#3586#0" />
-                <element signature="e#3337#3394#0" />
-                <element signature="e#3643#3926#0" />
-                <element signature="e#4018#4980#0" />
-                <element signature="e#4018#4480#1" />
-                <element signature="e#4552#4956#0" />
-                <element signature="e#4799#4956#0" />
-                <element signature="e#5028#5668#0" />
-                <element signature="e#5070#5668#0" />
-                <element signature="e#5138#5668#0" />
+                <element signature="e#1653#1801#0" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/../REMix-OaM/OptiMo/projects/prj_BEniVer/beniver/data/sus_Base/dataProcess/REMixMacro.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="197">
+              <caret line="85" lean-forward="true" selection-start-line="85" selection-end-line="85" />
+              <folding>
+                <element signature="e#232#244#0" expanded="true" />
+                <element signature="e#1155#1157#0" />
+                <element signature="e#1247#1442#0" />
+                <element signature="e#1462#1655#0" />
+                <element signature="e#2066#3063#0" />
+                <element signature="e#1342#1473#0" />
               </folding>
             </state>
           </provider>
@@ -103,8 +107,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/scripts/utilsTimestamp.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="811">
-              <caret line="36" column="4" selection-start-line="36" selection-start-column="4" selection-end-line="36" selection-end-column="4" />
+            <state relative-caret-position="984">
+              <caret line="42" selection-start-line="42" selection-end-line="42" />
             </state>
           </provider>
         </entry>
@@ -180,17 +184,17 @@
         <option value="$PROJECT_DIR$/config/config.yaml" />
         <option value="$PROJECT_DIR$/utilsTimestamp.py" />
         <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch_1.py" />
-        <option value="$PROJECT_DIR$/../REMix-OaM/OptiMo/projects/prj_BEniVer/beniver/data/sus_Base/dataProcess/REMixMacro.py" />
-        <option value="$PROJECT_DIR$/scripts/utilsTimestamp.py" />
         <option value="$APPLICATION_CONFIG_DIR$/idea.properties" />
         <option value="$PROJECT_DIR$/evaluateDriveProfiles.py" />
+        <option value="$PROJECT_DIR$/scripts/utilsTimestamp.py" />
         <option value="$PROJECT_DIR$/parseMiD.py" />
         <option value="$PROJECT_DIR$/scripts/utilsParsing.py" />
+        <option value="$PROJECT_DIR$/../REMix-OaM/OptiMo/projects/prj_BEniVer/beniver/data/sus_Base/dataProcess/REMixMacro.py" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds" extendedState="7">
-    <option name="x" value="1813" />
+    <option name="x" value="1854" />
     <option name="y" value="-8" />
     <option name="width" value="1936" />
     <option name="height" value="1056" />
@@ -200,7 +204,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -211,19 +214,20 @@
             <path>
               <item name="vencopy_repo" type="b2602c69:ProjectViewProjectNode" />
               <item name="vencopy_repo" type="462c0819:PsiDirectoryNode" />
-              <item name="scripts" type="462c0819:PsiDirectoryNode" />
+              <item name="config" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
         </subPane>
       </pane>
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="com.intellij.ide.scratch.LRUPopupBuilder$1/New Scratch File" value="Python" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$/../REMix-OaM/OptiMo/projects/prj_BEniVer/beniver/data/sus_Base/dataProcess" />
-    <property name="settings.editor.selected.configurable" value="configurable.group.build" />
+    <property name="settings.editor.selected.configurable" value="MTConfigurable" />
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
@@ -245,7 +249,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.parseMiD">
+  <component name="RunManager" selected="Python.REMixMacro">
     <configuration name="REMixMacro" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="vencopy_repo" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -353,9 +357,9 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.REMixMacro" />
         <item itemvalue="Python.parseMiD" />
         <item itemvalue="Python.evaluateDriveProfiles" />
-        <item itemvalue="Python.REMixMacro" />
         <item itemvalue="Python.scratch_1" />
         <item itemvalue="Python.venco_main" />
       </list>
@@ -399,15 +403,16 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="1912" y="-8" width="1936" height="1056" extended-state="6" />
+    <frame x="1912" y="-8" width="1936" height="1056" extended-state="7" />
+    <editor active="true" />
     <layout>
       <window_info content_ui="combo" id="Project" order="0" sideWeight="0.4817073" visible="true" weight="0.15279241" />
       <window_info id="Structure" order="1" sideWeight="0.51829267" side_tool="true" weight="0.15279241" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" weight="0.32914925" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.49944258" />
-      <window_info anchor="bottom" id="Debug" order="3" weight="0.38684505" />
+      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.57859534" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.49832776" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="6" weight="0.32936078" />
@@ -493,11 +498,6 @@
           <option name="timeStamp" value="35" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/../REMix-OaM/OptiMo/projects/prj_BEniVer/beniver/data/sus_Base/dataProcess/REMixMacro.py</url>
-          <line>29</line>
-          <option name="timeStamp" value="61" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/evaluateDriveProfiles.py</url>
           <line>92</line>
           <option name="timeStamp" value="96" />
@@ -509,13 +509,23 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/parseMiD.py</url>
-          <line>62</line>
+          <line>72</line>
           <option name="timeStamp" value="105" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/parseMiD.py</url>
-          <line>55</line>
-          <option name="timeStamp" value="106" />
+          <url>file://$PROJECT_DIR$/scripts/utilsParsing.py</url>
+          <line>129</line>
+          <option name="timeStamp" value="134" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/scripts/utilsParsing.py</url>
+          <line>149</line>
+          <option name="timeStamp" value="136" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/scripts/utilsParsing.py</url>
+          <line>144</line>
+          <option name="timeStamp" value="138" />
         </line-breakpoint>
       </breakpoints>
       <default-breakpoints>
@@ -530,47 +540,47 @@
   <component name="debuggerHistoryManager">
     <expressions id="evaluateCodeFragment">
       <expression>
-        <expression-string>driveDataWeekday.loc[driveDataWeekday.loc[:,'Day'] == 'THU', ['mid08sum', 'mid17sum']].plot.line(ax=ax[0,0])</expression-string>
+        <expression-string>valid.astype('int')</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>driveDataWeekday.reset_index(level=0)</expression-string>
+        <expression-string>valid.astype('Int32')</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>variableData.loc[~variableData['HP_ID_Reg'].duplicated(), :]</expression-string>
+        <expression-string>valid.convert_dtypes().dtypes</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>len(variableDataUnique)</expression-string>
+        <expression-string>valid.dtypes = 'Int64'</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>len(variableData.loc[~variableData['HP_ID_Reg'].duplicated(), :])</expression-string>
+        <expression-string>valid.dtypes</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>variableData.loc[variableData['HP_ID_Reg'].duplicated(), :]</expression-string>
+        <expression-string>a.apply(lambda x: x.astype('int'))</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>variableData.loc[variableData['W_ID'].duplicated(), :]</expression-string>
+        <expression-string>a.apply(lambda x: x.astype('Int'))</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>variableData.loc[variableData['W_ID'].duplicated, :]</expression-string>
+        <expression-string>a.apply(lambda x: x.astype('Int64'), axis=1)</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>driveDataWeekday.loc[('FRI', '0'), 'HelloWorld'] = 5</expression-string>
+        <expression-string>a.apply(lambda x: x.astype('Int64'))</expression-string>
         <language-id>Python</language-id>
         <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
       </expression>
@@ -730,13 +740,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/config/config.yaml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="504">
-          <caret line="21" column="14" selection-start-line="21" selection-start-column="14" selection-end-line="21" selection-end-column="14" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/../CPC_repo/cpc/src/harmonization_tool/main.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="572">
@@ -744,13 +747,6 @@
           <folding>
             <element signature="e#0#92#0" expanded="true" />
           </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../REMix-OaM/OptiMo/projects/prj_BEniVer/beniver/data/sus_Base/dataProcess/REMixMacro.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="209">
-          <caret line="25" column="45" lean-forward="true" selection-start-line="25" selection-start-column="45" selection-end-line="25" selection-end-column="45" />
         </state>
       </provider>
     </entry>
@@ -801,16 +797,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="212">
           <caret line="311" selection-start-line="311" selection-end-line="311" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/venco_main.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="188">
-          <caret line="57" column="59" selection-start-line="57" selection-start-column="59" selection-end-line="57" selection-end-column="59" />
-          <folding>
-            <element signature="e#232#262#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -865,25 +851,25 @@
     </entry>
     <entry file="file://$USER_HOME$/Documents/01 Modellentwicklung/VencoPy/preReleaseVersions/VencoPy_0.0.8/config/config.yaml">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="432">
-          <caret line="18" selection-start-line="18" selection-end-line="18" />
+        <state relative-caret-position="264">
+          <caret line="23" lean-forward="true" selection-start-line="23" selection-end-line="23" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/scripts/utilsTimestamp.py">
+    <entry file="file://$PROJECT_DIR$/venco_main.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="811">
-          <caret line="36" column="4" selection-start-line="36" selection-start-column="4" selection-end-line="36" selection-end-column="4" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/evaluateDriveProfiles.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="307">
-          <caret line="84" selection-start-line="84" selection-end-line="84" />
+        <state relative-caret-position="1224">
+          <caret line="57" column="59" selection-start-line="57" selection-start-column="59" selection-end-line="57" selection-end-column="59" />
           <folding>
-            <element signature="e#198#217#0" expanded="true" />
+            <element signature="e#232#262#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/config/config.yaml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="720">
+          <caret line="30" column="49" selection-start-line="30" selection-start-column="49" selection-end-line="30" selection-end-column="49" />
         </state>
       </provider>
     </entry>
@@ -894,20 +880,37 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/evaluateDriveProfiles.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1968">
+          <caret line="84" selection-start-line="84" selection-end-line="84" />
+          <folding>
+            <element signature="e#198#217#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/parseMiD.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="273">
-          <caret line="55" column="38" selection-start-line="55" selection-start-column="38" selection-end-line="55" selection-end-column="38" />
+        <state relative-caret-position="1392">
+          <caret line="61" column="53" selection-start-line="61" selection-start-column="53" selection-end-line="61" selection-end-column="53" />
           <folding>
             <element signature="e#232#266#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/scripts/utilsTimestamp.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="984">
+          <caret line="42" selection-start-line="42" selection-end-line="42" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/scripts/utilsParsing.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="292">
-          <caret line="103" column="75" selection-start-line="103" selection-start-column="75" selection-end-line="103" selection-end-column="75" />
+        <state relative-caret-position="402">
+          <caret line="113" selection-start-line="113" selection-end-line="113" />
           <folding>
             <element signature="e#313#409#0" />
             <element signature="e#454#633#0" />
@@ -915,22 +918,22 @@
             <element signature="e#722#1127#0" />
             <element signature="e#761#1109#0" />
             <element signature="e#1216#1619#0" />
-            <element signature="e#1667#2127#0" />
-            <element signature="e#2160#2375#0" />
-            <element signature="e#2403#3175#0" />
-            <element signature="e#2452#2804#0" />
-            <element signature="e#2843#3175#0" />
-            <element signature="e#3228#3304#0" />
-            <element signature="e#3337#3586#0" />
-            <element signature="e#3337#3394#0" />
-            <element signature="e#3643#3926#0" />
-            <element signature="e#4018#4980#0" />
-            <element signature="e#4018#4480#1" />
-            <element signature="e#4552#4956#0" />
-            <element signature="e#4799#4956#0" />
-            <element signature="e#5028#5668#0" />
-            <element signature="e#5070#5668#0" />
-            <element signature="e#5138#5668#0" />
+            <element signature="e#1653#1801#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../REMix-OaM/OptiMo/projects/prj_BEniVer/beniver/data/sus_Base/dataProcess/REMixMacro.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="197">
+          <caret line="85" lean-forward="true" selection-start-line="85" selection-end-line="85" />
+          <folding>
+            <element signature="e#232#244#0" expanded="true" />
+            <element signature="e#1155#1157#0" />
+            <element signature="e#1247#1442#0" />
+            <element signature="e#1462#1655#0" />
+            <element signature="e#2066#3063#0" />
+            <element signature="e#1342#1473#0" />
           </folding>
         </state>
       </provider>

@@ -24,12 +24,12 @@ if __name__ == '__main__':
 
     tripData = tripData_raw.loc[tripData_raw.loc[:, 'W_VM_G'] == 1, ['HP_ID_Reg', 'W_ID', 'W_GEW', 'W_HOCH', 'W_SZ',
                                                 'W_AZ', 'zweck', 'wegkm', 'ST_JAHR', 'ST_MONAT', 'ST_WOCHE', 'ST_WOTAG',
-                                                'W_SZS', 'W_SZM', 'W_AZS', 'W_AZM', 'weg_intermod']]
+                                                'W_SZS', 'W_SZM', 'W_AZS', 'W_AZM', 'W_FOLGETAG', 'weg_intermod']]
 
     # Dataset filtering
     tripData = tripData.loc[(tripData['W_SZS'] != 99) & (tripData['W_AZS'] != 99), :]
     tripData = tripData.loc[(tripData['W_SZS'] != 701) & (tripData['W_AZS'] != 701), :]
-    tripData = tripData.loc[tripData['W_SZ'] <= tripData['W_AZ'],:]
+    tripData = tripData.loc[tripData['W_SZ'] <= tripData['W_AZ'], :]
     tripData = tripData.loc[(tripData['wegkm'] < 1000), :]  # 9994, 9999 and 70703 are values for implausible, missing or non-detailed values
     tripData = tripData.loc[tripData['weg_intermod'] != 1, :]
 
@@ -39,6 +39,7 @@ if __name__ == '__main__':
     tripDataWDate = assignTSToColViaCWeek(tripData, 'ST_JAHR', 'ST_WOCHE', 'ST_WOTAG', 'W_SZS', 'W_SZM', 'timestamp_st')
     tripDataWDate = assignTSToColViaCWeek(tripDataWDate, 'ST_JAHR', 'ST_WOCHE', 'ST_WOTAG', 'W_AZS', 'W_AZM',
                                           'timestamp_en')
+    tripDataNightTrips = updateEndTimestamp(tripDataWDate)
 
     tripDataWHourlyShares = calcHourlyShares(tripDataWDate, ts_st='timestamp_st', ts_en='timestamp_en')
 
@@ -53,10 +54,19 @@ if __name__ == '__main__':
     fillHourValues = FillHourValues(data=tripDataClean, rangeFunction=initiateColRange)
     driveDataTrips = fillDataframe(emptyDF, fillFunction=fillHourValues)
 
-    tripPurposes = assignTripPurposes(driveDataTrips, tripDataClean)
+
+
 
     driveDataTrips.loc[:, ['HP_ID_Reg', 'W_ID']] = pd.DataFrame(tripDataClean.loc[:, ['HP_ID_Reg', 'W_ID']], dtype=int)
     driveDataDays = mergeTrips(driveDataTrips)
+    tripPurposesDriving = assignDriving(driveDataDays)
+    purposeDataDays = fillDayPurposes(tripDataClean, tripPurposesDriving)
+
+
+    # fillTripPurposes = FillTripPurposes(tripData=tripDataClean,
+    #                                     mergedDayTrips=driveDataDays,
+    #                                     rangeFunction=initiateColRange)
+    # tripPurposes = fillDataframe(tripPurposes, tripDataClean)
 
     indexedData = mergeVariables(data=driveDataDays, variableData=tripDataClean, variables=['ST_WOTAG_str', 'W_GEW', 'W_HOCH'])
 
