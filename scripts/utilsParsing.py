@@ -147,13 +147,17 @@ def fillDayPurposes(tripData, purposeDataDays):
             hpID = tripData.loc[idx, 'HP_ID_Reg']
             allWIDs = list(tripData.loc[tripData['HP_ID_Reg'] == hpID, 'W_ID'])
 
-        if tripData.loc[idx, 'W_ID'] == 1:
-            purposeDataDays.loc[hpID, range(0, tripData.loc[idx, 'W_SZS']-1)] = 'HOME'
-        elif tripData.loc[idx, 'W_ID'] != max(allWIDs):
-            hoursBetween = range(tripData.loc[idxOld, 'W_AZS'], tripData.loc[idx, 'W_SZS']-1)
-            purposeDataDays.loc[hpID, hoursBetween] = tripData.loc[idxOld, 'zweck']
+        if tripData.loc[idx, 'W_ID'] == 1:  # Differentiate if trip starts in first half hour or not
+            if pd.to_datetime(tripData.loc[idx, 'W_SZ']).minute <= 30:
+                purposeDataDays.loc[hpID, range(0, tripData.loc[idx, 'W_SZS'])] = 'HOME'
+            else:
+                purposeDataDays.loc[hpID, range(0, tripData.loc[idx, 'W_SZS']+1)] = 'HOME'
         else:
-            purposeDataDays.loc[hpID, range(tripData.loc[idx, 'W_AZS'], len(purposeDataDays.columns))] = 'HOME'
+            purposeHourStart = determinePurposeStartHour(tripData.loc[idxOld, 'W_SZ'], tripData.loc[idxOld, 'W_AZ'])
+            hoursBetween = range(purposeHourStart, tripData.loc[idx, 'W_SZS'])
+            purposeDataDays.loc[hpID, hoursBetween] = tripData.loc[idxOld, 'zweck']
+            if tripData.loc[idx, 'W_ID'] != max(allWIDs):
+                purposeDataDays.loc[hpID, range(tripData.loc[idx, 'W_AZS'], len(purposeDataDays.columns))] = 'HOME'
 
         idxOld = idx
 

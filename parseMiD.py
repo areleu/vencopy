@@ -22,16 +22,17 @@ if __name__ == '__main__':
     # personData_raw = pd.read_csv(pathlib.Path(config['linksAbsolute']['folderMiD2017']) / config['files']['MiD2017persons'], sep=';')
     tripData_raw = pd.read_csv(pathlib.Path(config['linksAbsolute']['folderMiD2017']) / config['files']['MiD2017trips'], sep=';', decimal=',')
 
+    # W_VM_G=1 -> Only motorized individual vehicle trips
     tripData = tripData_raw.loc[tripData_raw.loc[:, 'W_VM_G'] == 1, ['HP_ID_Reg', 'W_ID', 'W_GEW', 'W_HOCH', 'W_SZ',
                                                 'W_AZ', 'zweck', 'wegkm', 'ST_JAHR', 'ST_MONAT', 'ST_WOCHE', 'ST_WOTAG',
                                                 'W_SZS', 'W_SZM', 'W_AZS', 'W_AZM', 'W_FOLGETAG', 'weg_intermod']]
 
     # Dataset filtering
-    tripData = tripData.loc[(tripData['W_SZS'] != 99) & (tripData['W_AZS'] != 99), :]
+    tripData = tripData.loc[(tripData['W_SZS'] != 99) & (tripData['W_AZS'] != 99), :]  # beginning and end hour must be available
     tripData = tripData.loc[(tripData['W_SZS'] != 701) & (tripData['W_AZS'] != 701), :]
-    tripData = tripData.loc[tripData['W_SZ'] <= tripData['W_AZ'], :]
+    tripData = tripData.loc[tripData['W_SZ'] <= tripData['W_AZ'], :]  # departure must be before arrival
     tripData = tripData.loc[(tripData['wegkm'] < 1000), :]  # 9994, 9999 and 70703 are values for implausible, missing or non-detailed values
-    tripData = tripData.loc[tripData['weg_intermod'] != 1, :]
+    tripData = tripData.loc[tripData['weg_intermod'] != 1, :]  # no intermodal trips
 
     tripData.loc[:, 'ST_WOTAG_str'] = replaceDayNumbersByStrings(tripData.loc[:, 'ST_WOTAG'])
     tripData['indexCol'] = tripData['HP_ID_Reg'].astype('string') + '__' + tripData['W_ID'].astype('string')

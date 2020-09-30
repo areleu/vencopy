@@ -7,6 +7,7 @@ __license__ = 'BSD-3-Clause'
 
 import pandas as pd
 import numpy as np
+import warnings
 
 def tripDuration(timestampStart, timestampEnd):
     return timestampEnd - timestampStart
@@ -54,3 +55,23 @@ def initiateHourDataframe(indexCol, nHours):
     return(emptyDf)
 
 
+def determinePurposeStartHour(departure, arrival):
+    tsDeparture = pd.to_datetime(departure)
+    tsArrival = pd.to_datetime(arrival)
+    if tsDeparture.hour == tsArrival.hour:
+        if tsArrival.minute >= 30:  # Cases 3, 4, 5
+            startHour = tsDeparture.hour + 1  # Cases 3,5
+        else:  # tsArrival.minute < 30:
+            startHour = tsDeparture.hour  # Case 4
+    else:  # inter-hour trip
+        if tsArrival.minute <= 30:
+            startHour = tsArrival.hour  # Cases 1a and b
+        else:  # tsArrival.minute > 30:
+            startHour = tsArrival.hour + 1  # Cases 2a and b
+    return startHour
+
+
+def determinePurposeHourRange(departure, arrival):
+    tripDuration = arrival-departure
+    startHour = determinePurposeStartHour(departure, tripDuration)
+    return range(startHour, endHour)
