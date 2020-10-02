@@ -23,7 +23,7 @@ if __name__ == '__main__':
     config = yaml.load(open(linkConfig), Loader=yaml.SafeLoader)
     linkDict, scalars, driveProfilesRaw, plugProfilesRaw = readVencoInput(config)
     outputConfig = yaml.load(open(linkDict['linkOutputConfig']), Loader=yaml.SafeLoader)
-    indices = ['CASEID', 'PKWID']
+    indices = ['HP_ID_Reg', 'ST_WOTAG_str']  #  ['CASEID', 'PKWID']
     driveProfiles, plugProfiles = indexProfile(driveProfilesRaw, plugProfilesRaw, indices)
     scalarsProc = procScalars(driveProfilesRaw, plugProfilesRaw, driveProfiles, plugProfiles)
 
@@ -61,7 +61,7 @@ if __name__ == '__main__':
                                             driveProfilesFuelAux,
                                             randNoPerProfile,
                                             scalars,
-                                            fuelDriveTolerance=0.001,
+                                            fuelDriveTolerance=1,
                                             isBEV=True)
 
     # Additional fuel consumption is subtracted from the consumption
@@ -102,6 +102,7 @@ if __name__ == '__main__':
     socMinNorm, socMaxNorm = normalizeProfiles(scalars, SOCMin, SOCMax,
                                                normReferenceParam='Battery capacity')
 
+    # Result output
     profileDictOut = dict(uncontrolledCharging=chargeProfilesUncontrolledCorr,
                           electricityDemandDriving=electricPowerProfilesCorr, SOCMax=socMaxNorm, SOCMin=socMinNorm,
                           gridConnectionShare=plugProfilesAgg, auxFuelDriveProfile=driveProfilesFuelAuxCorr)
@@ -115,6 +116,23 @@ if __name__ == '__main__':
     #                         config['postprocessing']['hoursClone'], config['labels']['technologyLabel'],
     #                         strAdd='_MR1_alpha1_batCap40_cons15')
 
-    linePlot(profileDictOut, linkOutput=linkDict['linkPlots'],
-             show=True, write=True, filename='MR1_alpha1_batCap40_cons15')
+    linePlot(profileDictOut, linkOutput=linkDict['linkPlots'], config=config,
+             show=True, write=True, filename='allPlotsMiD17')
 
+    # Separately plot flow and state profiles
+    profileDictConnectionShare = dict(gridConnectionShare=plugProfilesAgg)
+
+    profileDictFlowsNorm = dict(uncontrolledCharging=chargeProfilesUncontrolledCorr,
+                          electricityDemandDriving=electricPowerProfilesCorr, gridConnectionShare=plugProfilesAgg)
+    profileDictFlowsAbs = dict(uncontrolledCharging=chargeProfilesUncontrolledAgg,
+                                electricityDemandDriving=electricPowerProfilesAgg)
+
+    profileDictStateNorm = dict(SOCMax=socMaxNorm, SOCMin=socMinNorm)
+    profileDictStateAbs = dict(SOCMax=SOCMax, SOCMin=SOCMin)
+
+    profileDictList = [profileDictConnectionShare, profileDictFlowsAbs, profileDictStateAbs]
+
+    separateLinePlots(profileDictList, config,
+                        show=True, write=True,
+                        ylabel=['Average EV connection share', 'Average EV flow in kW', 'Average EV SOC in kWh'],
+                        filenames=['MiD17_connection', 'MiD17_flows', 'MiD17_state'])

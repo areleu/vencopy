@@ -16,6 +16,8 @@ linksRelative:
     scripts: ./scripts/
     config: ./config/
     outputConfig: ./config/outputConfigREMix.yaml
+    sesData: ./output/sesAnalysis/data/
+    sesPlots: ./output/sesAnalysis/plots/
 
 # During first configuration, optionally fill in absolute links on your system e.g. if you want to have post processed
 # output written to an energy system model input folder
@@ -24,18 +26,48 @@ linksAbsolute:
     folderMiD2008: C:/Users/wulf_ni/Documents/11 Data/Transport data/Germany/MiD/2008/MiD 2008_DVD/Daten/STATA/STATA_Public Use File
 
 files:
-    inputDataScalars: VencoPy_scalarInput.xlsx
-    inputDataDriveProfiles: inputProfiles_Drive.csv
-    inputDataPlugProfiles: inputProfiles_Plug.csv
+    inputDataScalars: VencoPy_scalarInputSES.xlsx
+    inputDataDriveProfiles: inputProfiles_Drive_MiD17woWeights.csv  # inputProfiles_Drive.csv
+    inputDataPlugProfiles: inputProfiles_Plug_MiD17woWeights.csv  # inputProfiles_Plug.csv
     MiD2017households: MiD2017_Regional_Haushalte.csv
     MiD2017persons: MiD2017_Regional_Personen.csv
     MiD2017trips: MiD2017_Regional_Wege.csv
+    mid2017purposes: inputProfiles_Purpose_MiD17.csv
 
 labels:
     technologyLabel: BEV-S
     outputFileName: VencoPy_MR1_alpha1_batCap40_cons15
+    strAdd: 37kW
 
 postprocessing:
     hoursClone: 8760
 
-midTripPurposes:
+midTripPurposeReplacements:
+    1: 'WORK'  # Erreichen des Arbeitsplatzes
+    2: 'WORK'  # dienstlich/geschäftlich
+    3: 'SCHOOL'  # Erreichen der Ausbildungsstätte/Schule
+    4: 'SHOPPING'  # Einkauf
+    5: 'SHOPPING'  # private Erledigung
+    6: 'LEISURE'  # Bringen/Holen/Begleiten von Personen
+    7: 'LEISURE'  # Freizeitaktivität
+    8: 'HOME'  # nach Hause
+    9: 'HOME'  # Rückweg vom vorherigen Weg
+    10: 'OTHER'  # anderer Zweck
+    99: 'NA'  # keine Angabe
+
+chargingInfrastructureDistributions:  # Probabilities given for each location aka trip purpose
+    'DRIVING': 'FALSCH'
+    'HOME': 'WAHR'
+    'WORK': 'FALSCH'
+    'SCHOOL': 'FALSCH'
+    'SHOPPING': 'FALSCH'
+    'LEISURE': 'FALSCH'
+    'OTHER': 'FALSCH'
+    'NA': 'FALSCH'
+
+plotConfig:
+    font.family: sans-serif
+    font.weight: normal
+    font.size: 14
+    axes.labelsize: 18
+    axes.labelpad: 8.0

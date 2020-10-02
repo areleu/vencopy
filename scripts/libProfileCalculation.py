@@ -388,6 +388,8 @@ def socProfileSelection(profilesMin, profilesMax, filter, alpha):
     :return: Returns the two profiles 'SOCMax' and 'SOCMin' in the same time resolution as input profiles.
     """
 
+    profilesMin = profilesMin.convert_dtypes()
+    profilesMax = profilesMax.convert_dtypes()
     noProfiles = len(profilesMin)
     noProfilesFilter = int(alpha / 100 * noProfiles)
     if filter == 'singleValue':
@@ -443,7 +445,7 @@ def aggregateProfiles(profilesIn):
     """
 
     # Typecasting is necessary for aggregation of boolean profiles
-    # profilesOut = profilesIn.iloc[0, :].astype('float64', copy=True)
+    profilesIn = profilesIn.loc[~profilesIn.apply(lambda x: x.isna(), axis=0).any(axis=1),:]
     lenProfiles = len(profilesIn)
     profilesOut = profilesIn.apply(sum, axis=0) / lenProfiles
     return profilesOut

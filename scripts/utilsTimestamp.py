@@ -56,18 +56,16 @@ def initiateHourDataframe(indexCol, nHours):
 
 
 def determinePurposeStartHour(departure, arrival):
-    tsDeparture = pd.to_datetime(departure)
-    tsArrival = pd.to_datetime(arrival)
-    if tsDeparture.hour == tsArrival.hour:
-        if tsArrival.minute >= 30:  # Cases 3, 4, 5
-            startHour = tsDeparture.hour + 1  # Cases 3,5
-        else:  # tsArrival.minute < 30:
-            startHour = tsDeparture.hour  # Case 4
+    if departure.hour == arrival.hour:
+        if arrival.minute >= 30:  # Cases 3, 4, 5
+            startHour = departure.hour + 1  # Cases 3,5
+        else:  # arrival.minute < 30:
+            startHour = departure.hour  # Case 4
     else:  # inter-hour trip
-        if tsArrival.minute <= 30:
-            startHour = tsArrival.hour  # Cases 1a and b
-        else:  # tsArrival.minute > 30:
-            startHour = tsArrival.hour + 1  # Cases 2a and b
+        if arrival.minute <= 30:
+            startHour = arrival.hour  # Cases 1a and b
+        else:  # arrival.minute > 30:
+            startHour = arrival.hour + 1  # Cases 2a and b
     return startHour
 
 

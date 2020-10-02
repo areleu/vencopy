@@ -182,15 +182,28 @@ def composeStringDict(pre, names, post):
 
 
 @logit
-def linePlot(profileDict, linkOutput, show=True, write=True, filename=''):
+def linePlot(profileDict, linkOutput, config, show=True, write=True, ylabel='Normalized profiles', filename=''):
+    plt.rcParams.update(config['plotConfig'])  # set plot layout
     fig, ax = plt.subplots()
     for iKey, iVal in profileDict.items():
         sns.lineplot(iVal.index, iVal, label=iKey, sort=False)
+    ax.set_ylim(bottom=0)
     ax.set_xlabel('Hour')
-    ax.set_ylabel('Normalized profiles')
-    ax.legend(loc='upper center', ncol=2, bbox_to_anchor=(0.5, 1.1))
-    filePlot = linkOutput / pathlib.Path(filename + '.png')
+    ax.set_ylabel(ylabel)
+    ax.legend(loc='upper center', bbox_to_anchor=(0.5, 1.3))  # ncol=2,
+    plt.tight_layout()
+    filePlot = linkOutput / pathlib.Path(filename + '_' + config['labels']['strAdd'] + '.png')
     if show:
         plt.show()
     if write:
         fig.savefig(filePlot)
+
+@logit
+def separateLinePlots(profileDictList, config, show=True, write=True, ylabel=[], filenames=[]):
+    for iDict, iYLabel, iName in zip(profileDictList, ylabel, filenames):
+        writeProfilesToCSV(outputFolder=config['linksRelative']['sesData'],
+                       profileDictOut=iDict,
+                       singleFile=False,
+                       strAdd='_mid08')
+        linePlot(iDict, linkOutput=config['linksRelative']['sesPlots'], config=config,
+                    show=show, write=write, ylabel=iYLabel, filename=iName)

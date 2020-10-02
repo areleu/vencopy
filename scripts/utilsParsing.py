@@ -25,6 +25,8 @@ def replaceDayNumbersByStrings(data):
             7: 'SUN'}
     return data.replace(dict)
 
+def replacePurposes(dataSeries, replacementDict):
+    return dataSeries.replace(replacementDict)
 
 def assignTSToColViaDay(df, colYear, colMonth, colDay, colHour, colMin, colName):
     dfOut = df.copy()
@@ -81,11 +83,9 @@ class FillHourValues:
             row[self.fullHourCols[idx]] = self.fullHourRange[idx]
         return row
 
-
 def fillDataframe(hourlyArray, fillFunction):
     hourlyArray = hourlyArray.apply(fillFunction, axis=1)
     return hourlyArray
-
 
 def mergeTrips(tripData):
     # uniqueHHPersons = tripData.loc[:, 'HP_ID_Reg'].unique()
@@ -140,6 +140,8 @@ class FillTripPurposes:
 
 
 def fillDayPurposes(tripData, purposeDataDays):
+    tripData.loc[:, 'W_SZ_datetime'] = pd.to_datetime(tripData.loc[:, 'W_SZ'])
+    tripData.loc[:, 'W_AZ_datetime'] = pd.to_datetime(tripData.loc[:, 'W_AZ'])
     hpID = str()
     for idx in tripData.index:
         isSameHPID = hpID == tripData.loc[idx, 'HP_ID_Reg']
@@ -148,19 +150,19 @@ def fillDayPurposes(tripData, purposeDataDays):
             allWIDs = list(tripData.loc[tripData['HP_ID_Reg'] == hpID, 'W_ID'])
 
         if tripData.loc[idx, 'W_ID'] == 1:  # Differentiate if trip starts in first half hour or not
-            if pd.to_datetime(tripData.loc[idx, 'W_SZ']).minute <= 30:
+            if tripData.loc[idx, 'W_SZ_datetime'].minute <= 30:
                 purposeDataDays.loc[hpID, range(0, tripData.loc[idx, 'W_SZS'])] = 'HOME'
             else:
                 purposeDataDays.loc[hpID, range(0, tripData.loc[idx, 'W_SZS']+1)] = 'HOME'
         else:
-            purposeHourStart = determinePurposeStartHour(tripData.loc[idxOld, 'W_SZ'], tripData.loc[idxOld, 'W_AZ'])
-            hoursBetween = range(purposeHourStart, tripData.loc[idx, 'W_SZS'])
-            purposeDataDays.loc[hpID, hoursBetween] = tripData.loc[idxOld, 'zweck']
-            if tripData.loc[idx, 'W_ID'] != max(allWIDs):
+            purposeHourStart = determinePurposeStartHour(tripData.loc[idxOld, 'W_SZ_datetime'], tripData.loc[idxOld, 'W_AZ_datetime'])
+            hoursBetween = range(purposeHourStart, tripData.loc[idx, 'W_SZS'])  # FIXME: case differentiation on arrival hour
+            purposeDataDays.loc[hpID, hoursBetween] = tripData.loc[idxOld, 'zweck_str']
+            if tripData.loc[idx, 'W_ID'] == max(allWIDs):
                 purposeDataDays.loc[hpID, range(tripData.loc[idx, 'W_AZS'], len(purposeDataDays.columns))] = 'HOME'
 
         idxOld = idx
-
+    return purposeDataDays
 
 
 
