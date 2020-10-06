@@ -22,22 +22,27 @@ linksRelative:
 # During first configuration, optionally fill in absolute links on your system e.g. if you want to have post processed
 # output written to an energy system model input folder
 linksAbsolute:
-    folderMiD2017: C:/Users/wulf_ni/Documents/11 Data/Transport data/Germany/MiD/2017/proprietary/CSV
+    folderMiD2017_B1: C:/Users/wulf_ni/Documents/11 Data/Transport data/Germany/MiD/2017/proprietary/B1/CSV
+    folderMiD2017_B2: C:/Users/wulf_ni/Documents/11 Data/Transport data/Germany/MiD/2017/proprietary/B2/CSV
     folderMiD2008: C:/Users/wulf_ni/Documents/11 Data/Transport data/Germany/MiD/2008/MiD 2008_DVD/Daten/STATA/STATA_Public Use File
 
 files:
     inputDataScalars: VencoPy_scalarInputSES.xlsx
-    inputDataDriveProfiles: inputProfiles_Drive_MiD17woWeights.csv  # inputProfiles_Drive.csv
-    inputDataPlugProfiles: inputProfiles_Plug_MiD17woWeights.csv  # inputProfiles_Plug.csv
+#    inputDataDriveProfiles: inputProfiles_Drive_MiD17_woWeights.csv
+#    inputDataPlugProfiles: inputProfiles_Plug_MiD17_woWeights.csv
+    inputDataDriveProfiles: inputProfiles_Drive_MiD08.csv
+    inputDataPlugProfiles: inputProfiles_Plug_MiD08.csv
     MiD2017households: MiD2017_Regional_Haushalte.csv
     MiD2017persons: MiD2017_Regional_Personen.csv
     MiD2017trips: MiD2017_Regional_Wege.csv
     mid2017purposes: inputProfiles_Purpose_MiD17.csv
+    mid2008trips: MiD_procCS_caseID-weekday-weight-activity.xlsx
+    mid2008purposes: MiD_procCS_caseID-weekday-weight-activity.xlsx
 
 labels:
     technologyLabel: BEV-S
     outputFileName: VencoPy_MR1_alpha1_batCap40_cons15
-    strAdd: 37kW
+    strAdd: 11kW
 
 postprocessing:
     hoursClone: 8760
@@ -64,6 +69,18 @@ chargingInfrastructureDistributions:  # Probabilities given for each location ak
     'LEISURE': 'FALSCH'
     'OTHER': 'FALSCH'
     'NA': 'FALSCH'
+
+chargingInfrastructureDistributionsSchimmy:  # Identifiers from the evaluation of MID08 by Christoph Schimeczek
+    'driving': 'FALSCH'
+    'home': 'WAHR'
+    'work': 'FALSCH'
+    'school': 'FALSCH'
+    'shop': 'FALSCH'
+    'private': 'FALSCH'
+    'recreation': 'FALSCH'
+    'other': 'FALSCH'
+    'n/a': 'FALSCH'
+    nan: 'FALSCH'
 
 plotConfig:
     font.family: sans-serif

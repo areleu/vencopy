@@ -23,9 +23,12 @@ if __name__ == '__main__':
     config = yaml.load(open(linkConfig), Loader=yaml.SafeLoader)
     linkDict, scalars, driveProfilesRaw, plugProfilesRaw = readVencoInput(config)
     outputConfig = yaml.load(open(linkDict['linkOutputConfig']), Loader=yaml.SafeLoader)
-    indices = ['HP_ID_Reg', 'ST_WOTAG_str']  #  ['CASEID', 'PKWID']
+    indices = ['VEHICLE', 'Day', 'Weight']  # ['HP_ID_Reg', 'ST_WOTAG_str'] ['CASEID', 'PKWID']
     driveProfiles, plugProfiles = indexProfile(driveProfilesRaw, plugProfilesRaw, indices)
     scalarsProc = procScalars(driveProfilesRaw, plugProfilesRaw, driveProfiles, plugProfiles)
+
+    driveProfiles = driveProfiles.query("Day == 'THU'")
+    plugProfiles = plugProfiles.query("Day == 'THU'")
 
     consumptionProfiles = calcConsumptionProfiles(driveProfiles, scalars)
 
@@ -35,7 +38,7 @@ if __name__ == '__main__':
                                               consumptionProfiles,
                                               scalars,
                                               scalarsProc,
-                                              nIter=20)
+                                              nIter=7)
 
     chargeProfilesUncontrolled = calcChargeProfilesUncontrolled(chargeMaxProfiles,
                                                                 scalarsProc)
@@ -51,7 +54,7 @@ if __name__ == '__main__':
                                               driveProfilesFuelAux,
                                               scalars,
                                               scalarsProc,
-                                              nIter=20)
+                                              nIter=3)
 
     randNoPerProfile = createRandNo(driveProfiles)
 
@@ -135,4 +138,5 @@ if __name__ == '__main__':
     separateLinePlots(profileDictList, config,
                         show=True, write=True,
                         ylabel=['Average EV connection share', 'Average EV flow in kW', 'Average EV SOC in kWh'],
-                        filenames=['MiD17_connection', 'MiD17_flows', 'MiD17_state'])
+                        filenames=['MiD08_connection_THU', 'MiD08_flows_THU', 'MiD08_state_THU'],
+                        ylim=[1, 0.9, 50])

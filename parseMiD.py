@@ -23,7 +23,7 @@ if __name__ == '__main__':
     config = yaml.load(open(linkConfig), Loader=yaml.SafeLoader)
     # hhData_raw = pd.read_csv(pathlib.Path(config['linksAbsolute']['folderMiD2017']) / config['files']['MiD2017households'], sep=';')
     # personData_raw = pd.read_csv(pathlib.Path(config['linksAbsolute']['folderMiD2017']) / config['files']['MiD2017persons'], sep=';')
-    tripData_raw = pd.read_csv(pathlib.Path(config['linksAbsolute']['folderMiD2017']) / config['files']['MiD2017trips'], sep=';', decimal=',')
+    tripData_raw = pd.read_csv(pathlib.Path(config['linksAbsolute']['folderMiD2017_B2']) / config['files']['MiD2017trips'], sep=';', decimal=',')
     end = time.time()
     print(f'Raw data read-in finished, took {end-start} seconds.')
 
@@ -41,7 +41,17 @@ if __name__ == '__main__':
     tripData = tripData.loc[(tripData['W_SZ'] != ' ') & (tripData['W_AZ'] != ' '), :]  # Timestamps must be strings
     tripData = tripData.loc[(tripData['wegkm'] < 1000), :]  # 9994, 9999 and 70703 are values for implausible, missing or non-detailed values
     tripData = tripData.loc[tripData['weg_intermod'] != 1, :]  # no intermodal trips
+    end = time.time()
+    print(f'Done with simple filtering and replaments, took {end-start} seconds.')
 
+    start = time.time()
+    print('Starting to filter out trips without first trip ID (W_ID == 1)')
+    tripData = filterOutTripsBelongingToMultiModalDays(tripData)
+    end = time.time()
+    print(f'Done with filtering out trip w/o first trip ID, took {end-start} seconds.')
+
+    start = time.time()
+    print('Starting to assign Hours')  # FIXME Currently, trips starting before 12:00 and ending at 13:00 have an endhour share of 0 and a fullHour. Change this to the respective share for two-hour trips
     # Variable replacements
     tripData.loc[:, 'ST_WOTAG_str'] = replaceDayNumbersByStrings(tripData.loc[:, 'ST_WOTAG'])
     tripData.loc[:, 'zweck_str'] = replacePurposes(tripData.loc[:, 'zweck'], config['midTripPurposeReplacements'])
@@ -55,7 +65,7 @@ if __name__ == '__main__':
     print(f'Done with filtering and replaments, took {end-start} seconds.')
 
     start = time.time()
-    print('Starting to calculate hourly shares')
+    print('Starting to calculate hourly shares')  # FIXME Currently, trips starting before 12:00 and ending at 13:00 have an endhour share of 0 and a fullHour. Change this to the respective share for two-hour trips
     tripDataWHourlyShares = calcHourlyShares(tripDataWDate, ts_st='timestamp_st', ts_en='timestamp_en')
 
     # ToDo: Fix implausible trips where shareStartHour = NAN or a share with shareEndHour and noOfFullHours both =0
@@ -75,7 +85,7 @@ if __name__ == '__main__':
     driveDataTrips = fillDataframe(emptyDF, fillFunction=fillHourValues)
 
     driveDataTrips.loc[:, ['HP_ID_Reg', 'W_ID']] = pd.DataFrame(tripDataClean.loc[:, ['HP_ID_Reg', 'W_ID']], dtype=int)
-    driveDataDays = mergeTrips(driveDataTrips)
+    driveDataDays = mergeTrips(driveDataTrips)  # FIXME: What happens if two trips overlap?
     end = time.time()
     print(f'Done with daily trip diary data compilation, took {end-start} seconds.')
 
