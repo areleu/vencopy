@@ -1,4 +1,4 @@
-__version__ = '0.0.1'
+__version__ = '0.0.2'
 __maintainer__ = 'Niklas Wulff'
 __email__ = 'Niklas.Wulff@dlr.de'
 __birthdate__ = '21.09.2020'
@@ -24,7 +24,8 @@ def wavg(data, avg_name, weight_name):
     except ZeroDivisionError:
         return d.mean()
 
-if __name__ == '__main__':
+
+def evaluateDriveProfiles():
     normPlotting = False
     dailyMileageGermany2008 = 3.080e9  # pkm/d
     dailyMileageGermany2017 = 3.214e9  # pkm/d
@@ -125,3 +126,7 @@ if __name__ == '__main__':
     dualViolinPlot(data17, x=data17.loc[:,'Hour'].astype('int32'), y='Value', hue=None, write='MiD17_drive_diffHour')
     dualViolinPlot(data17_TuSa, x=data17_TuSa.loc[:,'Hour'].astype('int32'), y='Value', hue='Day', write='MiD17_drive_diffHourDay')
     print('end')
+
+
+if __name__ == '__main__':
+    evaluateDriveProfiles()

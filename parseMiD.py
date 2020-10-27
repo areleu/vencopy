@@ -15,7 +15,7 @@ import time
 
 # ToDo: Hebefaktoren einrechnen bei nicht-detaillierter Erfassung (siehe MID-Nuterhandbuch, S. 33f.)
 
-if __name__ == '__main__':
+def parseMiD():
     #----- data and config read-in -----
     start = time.time()
     print('Starting read-in of data and config')
@@ -92,9 +92,13 @@ if __name__ == '__main__':
     start = time.time()
     print('Starting with trip purpose assignment')
     tripPurposesDriving = assignDriving(driveDataDays)
-    purposeDataDays = fillDayPurposes(tripDataClean, tripPurposesDriving)
-    end = time.time()
-    print(f'Done with trip purpose assignemnt, took {end-start} seconds.')
+    tripDataDatetime = hoursToDatetime(tripDataClean)
+    end1 = time.time()
+    print(f'Done with hoursToDatetime, took {end1-start} seconds.')
+
+    purposeDataDays = fillDayPurposes(tripDataDatetime, tripPurposesDriving)
+    end2 = time.time()
+    print(f'Done with trip purpose assignemnt, took {end2-start} seconds.')
 
     start = time.time()
     print('Starting with indexing and write out of trip mileage and purposes')
@@ -111,3 +115,6 @@ if __name__ == '__main__':
     end = time.time()
     print(f'Done with indexing and write-out, took {end-start} seconds.')
 
+
+if __name__ == '__main__':
+    parseMiD()

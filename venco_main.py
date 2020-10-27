@@ -17,7 +17,7 @@ import pathlib
 
 #ToDo: Maybe consolidate selection actions to one aggregation and one filtering action
 
-if __name__ == '__main__':
+def vencoRun():
     #----- data and config read-in -----
     linkConfig = pathlib.Path.cwd() / 'config' / 'config.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
     config = yaml.load(open(linkConfig), Loader=yaml.SafeLoader)
@@ -140,3 +140,7 @@ if __name__ == '__main__':
                         ylabel=['Average EV connection share', 'Average EV flow in kW', 'Average EV SOC in kWh'],
                         filenames=['MiD08_connection_THU', 'MiD08_flows_THU', 'MiD08_state_THU'],
                         ylim=[1, 0.9, 50])
+
+
+if __name__ == '__main__':
+    vencoRun()
