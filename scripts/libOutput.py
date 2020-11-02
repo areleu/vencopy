@@ -183,7 +183,7 @@ def composeStringDict(pre, names, post):
 
 @logit
 def linePlot(profileDict, linkOutput, config, show=True, write=True, ylabel='Normalized profiles', ylim=None, filename=''):
-    plt.rcParams.update(config['plotConfig'])  # set plot layout
+    plt.rcParams.update(config['plotConfig']['plotRCParameters'])  # set plot layout
     fig, ax = plt.subplots()
     for iKey, iVal in profileDict.items():
         sns.lineplot(iVal.index, iVal, label=iKey, sort=False)

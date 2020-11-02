@@ -17,18 +17,16 @@ import pathlib
 
 #ToDo: Maybe consolidate selection actions to one aggregation and one filtering action
 
-def vencoRun():
+def vencoRun(config, dataset='MiD17'):
     #----- data and config read-in -----
-    linkConfig = pathlib.Path.cwd() / 'config' / 'config.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
-    config = yaml.load(open(linkConfig), Loader=yaml.SafeLoader)
-    linkDict, scalars, driveProfilesRaw, plugProfilesRaw = readVencoInput(config)
+    linkDict, scalars, driveProfilesRaw, plugProfilesRaw = readVencoInput(config, dataset)
     outputConfig = yaml.load(open(linkDict['linkOutputConfig']), Loader=yaml.SafeLoader)
-    indices = ['VEHICLE', 'Day', 'Weight']  # ['HP_ID_Reg', 'ST_WOTAG_str'] ['CASEID', 'PKWID']
-    driveProfiles, plugProfiles = indexProfile(driveProfilesRaw, plugProfilesRaw, indices)
+    # indices = ['VEHICLE', 'Day', 'Weight']  # ['HP_ID_Reg', 'ST_WOTAG_str'] ['CASEID', 'PKWID']
+    driveProfiles, plugProfiles = indexDriveAndPlugData(driveProfilesRaw, plugProfilesRaw, config['numberOfHours'])
     scalarsProc = procScalars(driveProfilesRaw, plugProfilesRaw, driveProfiles, plugProfiles)
 
-    driveProfiles = driveProfiles.query("Day == 'THU'")
-    plugProfiles = plugProfiles.query("Day == 'THU'")
+    # driveProfiles = driveProfiles.query("Day == 'THU'")
+    # plugProfiles = plugProfiles.query("Day == 'THU'")
 
     consumptionProfiles = calcConsumptionProfiles(driveProfiles, scalars)
 
@@ -143,4 +141,6 @@ def vencoRun():
 
 
 if __name__ == '__main__':
+    linkConfig = pathlib.Path.cwd() / 'config' / 'config.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
+    config = yaml.load(open(linkConfig), Loader=yaml.SafeLoader)
     vencoRun()

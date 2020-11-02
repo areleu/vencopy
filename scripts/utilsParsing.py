@@ -14,10 +14,38 @@ def assignMultiColToDType(dataFrame, cols, dType):
     dfOut = dataFrame.astype(dictDType)
     return(dfOut)
 
+def harmonizeVariables(data, dataset, config):
+    replacementDict = createReplacementDict(dataset, config['midVariables'])
+    dataRenamed = data.rename(columns=replacementDict)
+    if dataset == 'MiD08':
+        dataRenamed['hhPersonID'] = dataRenamed['hhid'].astype('string') + '__' + \
+                                    dataRenamed['hhPersonID'].astype('string')
+    return dataRenamed
+
+def createReplacementDict(dataset, dictRaw):
+    if dataset in dictRaw['dataset']:
+        listIndex = dictRaw['dataset'].index(dataset)
+        return {val[listIndex]: key for (key, val) in dictRaw.items()}
+    else:
+        raise ValueError(f'Dataset {dataset} not specified in MiD variable dictionary.')
+
+def removeNA(variables:list):
+    variables.remove('NA')
+    if 'NA' in variables:
+        removeNA(variables)
+
+def createListOfVariables(dataset:str, config):
+    listIndex = config['midVariables']['dataset'].index(dataset)
+    variables = [key if not val[listIndex] == 'NA' else 'NA' for key, val in config['midVariables'].items()]
+    variables.remove('dataset')
+    if 'NA' in variables:
+        removeNA(variables)
+    return variables
+
 def filterOutTripsBelongingToMultiModalDays(data):
-    hpIDs = pd.Series(data.loc[:, 'HP_ID_Reg'].unique())
-    idsWFirstTrip = data.loc[data.loc[:, 'W_ID'] == 1, 'HP_ID_Reg']
-    return data.loc[data.loc[:, 'HP_ID_Reg'].isin(idsWFirstTrip), :]
+    hpIDs = pd.Series(data.loc[:, 'hhPersonID'].unique())
+    idsWFirstTrip = data.loc[data.loc[:, 'tripID'] == 1, 'hhPersonID']
+    return data.loc[data.loc[:, 'hhPersonID'].isin(idsWFirstTrip), :]
 
 def replaceDayNumbersByStrings(data):
     dict = {1: 'MON',
@@ -51,7 +79,7 @@ def assignTSToColViaCWeek(df, colYear, colWeek, colDay, colHour, colMin, colName
     return dfOut
 
 def updateEndTimestamp(df):
-    endsFollowingDay = df['W_FOLGETAG'] == 1
+    endsFollowingDay = df['tripEndNextDay'] == 1
     df.loc[endsFollowingDay, 'timestamp_en'] = df.loc[endsFollowingDay, 'timestamp_en'] + pd.offsets.Day(1)
 
 def calcHourlyShares(data, ts_st, ts_en):
@@ -59,22 +87,22 @@ def calcHourlyShares(data, ts_st, ts_en):
     data.loc[:, 'shareStartHour'], data.loc[:, 'shareEndHour'] = calcDistanceShares(data, duration)
     data.loc[:, 'noOfFullHours'] = numberOfFullHours(data.loc[:, ts_st], data.loc[:, ts_en])
     data.loc[:, 'fullHourTripLength'] = calcFullHourTripLength(duration, data.loc[:, 'noOfFullHours'],
-                                                               data.loc[:, 'wegkm'])
+                                                               data.loc[:, 'tripDistance'])
     return data
 
 def initiateColRange(row):
-    if row['W_SZS'] + 1 < row['W_AZS']:
-        return range(row['W_SZS']+1, row['W_AZS'])  # The hour of arrival (W_AZS) will not be indexed further below but is part of the range() object
+    if row['tripStartHour'] + 1 < row['tripEndHour']:
+        return range(row['tripStartHour'] + 1, row['tripEndHour'])  # The hour of arrival (tripEndHour) will not be indexed further below but is part of the range() object
     else:
         return None
 
 class FillHourValues:
     def __init__(self, data, rangeFunction):
         # self.data = data
-        self.startHour = data['W_SZS']
-        self.distanceStartHour = data['shareStartHour'] * data['wegkm']
-        self.endHour = data['W_AZS']
-        self.distanceEndHour = data['shareEndHour'] * data['wegkm']
+        self.startHour = data['tripStartHour']
+        self.distanceStartHour = data['shareStartHour'] * data['tripDistance']
+        self.endHour = data['tripEndHour']
+        self.distanceEndHour = data['shareEndHour'] * data['tripDistance']
         self.fullHourCols = data.apply(rangeFunction, axis=1)
         self.fullHourRange = data['fullHourTripLength']
 
@@ -92,16 +120,16 @@ def fillDataframe(hourlyArray, fillFunction):
     return hourlyArray
 
 def mergeTrips(tripData):
-    # uniqueHHPersons = tripData.loc[:, 'HP_ID_Reg'].unique()
+    # uniqueHHPersons = tripData.loc[:, 'hhPersonID'].unique()
     # dataDay = pd.DataFrame(index=uniqueHHPersons, columns=tripData.columns)
-    dataDay = tripData.groupby(['HP_ID_Reg']).sum()
-    dataDay = dataDay.drop('W_ID', axis=1)
+    dataDay = tripData.groupby(['hhPersonID']).sum()
+    dataDay = dataDay.drop('tripID', axis=1)
     return dataDay
 
 def mergeVariables(data, variableData, variables):
-    variableDataUnique = variableData.loc[~variableData['HP_ID_Reg'].duplicated(), :]
-    variables.append('HP_ID_Reg')
-    variableDataMerge = variableDataUnique.loc[:, variables].set_index('HP_ID_Reg')
+    variableDataUnique = variableData.loc[~variableData['hhPersonID'].duplicated(), :]
+    variables.append('hhPersonID')
+    variableDataMerge = variableDataUnique.loc[:, variables].set_index('hhPersonID')
     mergedData = pd.concat([variableDataMerge, data], axis=1)
     return mergedData
 
@@ -120,18 +148,18 @@ def assignHome(driveData):
     pass
 
 def assignPurpose(driveData, tripData):
-    firstHour = tripData['W_SZS']
-    lastHour = tripData['W_AZS']
-    tripPurpose = tripData['zweck']
+    firstHour = tripData['tripStartHour']
+    lastHour = tripData['tripEndHour']
+    tripPurpose = tripData['tripPurpose']
 
 
 class FillTripPurposes:
     def __init__(self, tripData, mergedDayTrips, rangeFunction=initiateColRange):
-        self.startHour = tripData['W_SZS']
-        self.endHour = tripData['W_AZS']
+        self.startHour = tripData['tripStartHour']
+        self.endHour = tripData['tripEndHour']
         self.tripHourCols = tripData.apply(rangeFunction, axis=1)
-        self.purpose = tripData['zweck']
-        self.tripDict = tripData.loc[:, ['HP_ID_Reg', 'W_ID']].groupby(['HP_ID_Reg']).list()
+        self.purpose = tripData['tripPurpose']
+        self.tripDict = tripData.loc[:, ['hhPersonID', 'tripID']].groupby(['hhPersonID']).list()
 
     def __call__(self, row):
         idx = row.name
@@ -144,8 +172,8 @@ class FillTripPurposes:
 
 
 def hoursToDatetime(tripData):
-    tripData.loc[:, 'W_SZ_datetime'] = pd.to_datetime(tripData.loc[:, 'W_SZ'])
-    tripData.loc[:, 'W_AZ_datetime'] = pd.to_datetime(tripData.loc[:, 'W_AZ'])
+    tripData.loc[:, 'W_SZ_datetime'] = pd.to_datetime(tripData.loc[:, 'tripStartClock'])
+    tripData.loc[:, 'W_AZ_datetime'] = pd.to_datetime(tripData.loc[:, 'tripEndClock'])
     return tripData
 
 def fillDayPurposes(tripData, purposeDataDays):  #FixMe: Ask Ben for performance improvements
@@ -153,35 +181,35 @@ def fillDayPurposes(tripData, purposeDataDays):  #FixMe: Ask Ben for performance
     maxWID = int()
     maxHour = len(purposeDataDays.columns)
     for idx in tripData.index:
-        isSameHPID = hpID == tripData.loc[idx, 'HP_ID_Reg']
+        isSameHPID = hpID == tripData.loc[idx, 'hhPersonID']
         if not isSameHPID:
-            hpID = tripData.loc[idx, 'HP_ID_Reg']
-            allWIDs = list(tripData.loc[tripData['HP_ID_Reg'] == hpID, 'W_ID'])
+            hpID = tripData.loc[idx, 'hhPersonID']
+            allWIDs = list(tripData.loc[tripData['hhPersonID'] == hpID, 'tripID'])
             maxWID = max(allWIDs)
-        if tripData.loc[idx, 'W_ID'] == 1:  # Differentiate if trip starts in first half hour or not
-            if tripData.loc[idx, 'W_SZ_datetime'].minute <= 30:
-                purposeDataDays.loc[hpID, range(0, tripData.loc[idx, 'W_SZS'])] = 'HOME'
+        if tripData.loc[idx, 'tripID'] == 1:  # Differentiate if trip starts in first half hour or not
+            if tripData.loc[idx, 'timestamp_st'].minute <= 30:
+                purposeDataDays.loc[hpID, range(0, tripData.loc[idx, 'tripStartHour'])] = 'HOME'
             else:
-                purposeDataDays.loc[hpID, range(0, tripData.loc[idx, 'W_SZS'] + 1)] = 'HOME'
-            if tripData.loc[idx, 'W_ID'] == maxWID:
-                if tripData.loc[idx, 'W_AZ_datetime'].minute <= 30:
-                    purposeDataDays.loc[hpID, range(tripData.loc[idx, 'W_AZS'], maxHour)] = 'HOME'
+                purposeDataDays.loc[hpID, range(0, tripData.loc[idx, 'tripStartHour'] + 1)] = 'HOME'
+            if tripData.loc[idx, 'tripID'] == maxWID:
+                if tripData.loc[idx, 'timestamp_en'].minute <= 30:
+                    purposeDataDays.loc[hpID, range(tripData.loc[idx, 'tripEndHour'], maxHour)] = 'HOME'
                 else:
-                    purposeDataDays.loc[hpID, range(tripData.loc[idx, 'W_AZS'] + 1, maxHour)] = 'HOME'
+                    purposeDataDays.loc[hpID, range(tripData.loc[idx, 'tripEndHour'] + 1, maxHour)] = 'HOME'
         else:
-            purposeHourStart = determinePurposeStartHour(tripData.loc[idxOld, 'W_SZ_datetime'],
-                                                         tripData.loc[idxOld, 'W_AZ_datetime'])
-            if tripData.loc[idx, 'W_SZ_datetime'].minute <= 30:
-                hoursBetween = range(purposeHourStart, tripData.loc[idx, 'W_SZS'])  # FIXME: case differentiation on arrival hour
+            purposeHourStart = determinePurposeStartHour(tripData.loc[idxOld, 'timestamp_st'],
+                                                         tripData.loc[idxOld, 'timestamp_en'])
+            if tripData.loc[idx, 'timestamp_st'].minute <= 30:
+                hoursBetween = range(purposeHourStart, tripData.loc[idx, 'tripStartHour'])  # FIXME: case differentiation on arrival hour
             else:
                 hoursBetween = range(purposeHourStart,
-                                     tripData.loc[idx, 'W_SZS'] + 1)
+                                     tripData.loc[idx, 'tripStartHour'] + 1)
             purposeDataDays.loc[hpID, hoursBetween] = tripData.loc[idxOld, 'zweck_str']
-            if tripData.loc[idx, 'W_ID'] == maxWID:
-                if tripData.loc[idx, 'W_AZ_datetime'].minute <= 30:
-                    purposeDataDays.loc[hpID, range(tripData.loc[idx, 'W_AZS'], maxHour)] = 'HOME'
+            if tripData.loc[idx, 'tripID'] == maxWID:
+                if tripData.loc[idx, 'timestamp_en'].minute <= 30:
+                    purposeDataDays.loc[hpID, range(tripData.loc[idx, 'tripEndHour'], maxHour)] = 'HOME'
                 else:
-                    purposeDataDays.loc[hpID, range(tripData.loc[idx, 'W_AZS'] + 1, maxHour)] = 'HOME'
+                    purposeDataDays.loc[hpID, range(tripData.loc[idx, 'tripEndHour'] + 1, maxHour)] = 'HOME'
 
         idxOld = idx
     return purposeDataDays

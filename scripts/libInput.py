@@ -16,7 +16,7 @@ from enum import Enum, auto
 import pathlib
 
 @logit
-def initializeLinkMgr(config):
+def initializeLinkMgr(config, dataset):
     """
     Setup link manager based on a VencoPy config file.
 
@@ -27,9 +27,9 @@ def initializeLinkMgr(config):
     linkDict = {'linkScalars': pathlib.Path(config['linksRelative']['input']) /
                                pathlib.Path(config['files']['inputDataScalars']),
                 'linkDriveProfiles': pathlib.Path(config['linksRelative']['input']) /
-                                     pathlib.Path(config['files']['inputDataDriveProfiles']),
+                                     pathlib.Path(config['files'][dataset]['inputDataDriveProfiles']),
                 'linkPlugProfiles': pathlib.Path(config['linksRelative']['input']) /
-                                    pathlib.Path(config['files']['inputDataPlugProfiles']),
+                                    pathlib.Path(config['files'][dataset]['inputDataPlugProfiles']),
                 'linkOutputConfig': pathlib.Path(config['linksRelative']['outputConfig']),
                 'linkOutputAnnual': pathlib.Path(config['linksRelative']['resultsAnnual']),
                 'linkPlots': pathlib.Path(config['linksRelative']['plots']),
@@ -113,7 +113,7 @@ def readInputBoolean(filePath):
 
 
 @logit
-def readVencoInput(config):
+def readVencoInput(config, dataset):
     """
     Initializing action for VencoPy-specific config-file, link dictionary and data read-in. The config file has
     to be a dictionary in a .yaml file containing three categories: linksRelative, linksAbsolute and files. Each
@@ -126,7 +126,7 @@ def readVencoInput(config):
     data, the latter three ones in a raw data format.
     """
 
-    linkDict = initializeLinkMgr(config)
+    linkDict = initializeLinkMgr(config, dataset)
 
     # review: have you considered using the logging module for these kind of outputs?
     print('Reading Venco input scalars, drive profiles and boolean plug profiles')

@@ -18,20 +18,26 @@ from evaluateDriveProfiles import evaluateDriveProfiles
 from evaluateTripPurposes import evaluateTripPurposes
 from venco_main import vencoRun
 
+# Set dataset and config to analyze
+dataset = 'MiD08'
+linkConfig = pathlib.Path.cwd() / 'config' / 'config.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
+config = yaml.load(open(linkConfig), Loader=yaml.SafeLoader)
+
 # Raw MiD2-017 dataset to hourly drive and purpose profiles
-parseMiD()
+parseMiD(dataset, config)
 
 # Assign charging infrastructure for both 2008 (from CS) and 2017 purpose profiles
 # In config under key chargingInfrastructureDistributions
-assignSimpleChargeInfra()
+assignSimpleChargeInfra(config=config, dataset=dataset)
 
 # FixME: evaluate trip purposes
+# FixME: Merging of variables of original dataset is possible
 # Evaluate drive and trip purpose profiles
-evaluateDriveProfiles()
-#evaluateTripPurposes()
+# evaluateDriveProfiles(config)
+# evaluateTripPurposes(config)
 
 # FixME: Implement one VencoPy run for MiD08 and one for MiD17
 # Estimate charging flexibility based on driving profiles and charge connection
-vencoRun()
+vencoRun(config=config, dataset=dataset)
 
 

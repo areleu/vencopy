@@ -12,8 +12,13 @@ import warnings
 from .libLogging import logit
 from .libLogging import logger
 
+def indexDriveAndPlugData(driveProfiles_raw, plugProfiles_raw, nHours):
+    driveProfiles = indexProfile(driveProfiles_raw, nHours)
+    plugProfiles = indexProfile(plugProfiles_raw, nHours)
+    return driveProfiles, plugProfiles
+
 @logit
-def indexProfile(driveProfiles_raw, plugProfiles_raw, indices):
+def indexProfile(data, nHours):
     """
     Takes raw data as input and indices different profiles with the specified index columns und an unstacked form.
 
@@ -25,12 +30,16 @@ def indexProfile(driveProfiles_raw, plugProfiles_raw, indices):
     :return: Two indexed dataframes with index columns as given in argument indices separated from data columns
     """
 
-    driveProfiles = driveProfiles_raw.set_index(list(indices))
-    plugProfiles = plugProfiles_raw.set_index(list(indices))
+    indexCols = findIndexCols(data, nHours)
+    dataIndexed = data.set_index(list(indexCols))
+
     # Typecast column indices to int for later looping over a range
-    driveProfiles.columns = driveProfiles.columns.astype(int)
-    plugProfiles.columns = plugProfiles.columns.astype(int)
-    return driveProfiles, plugProfiles
+    dataIndexed.columns = dataIndexed.columns.astype(int)
+    return dataIndexed
+
+def findIndexCols(data, nHours):
+    dataCols = [str(i) for i in range(0, nHours+1)]
+    return data.columns[~data.columns.isin(dataCols)]
 
 @logit
 def procScalars(driveProfiles_raw, plugProfiles_raw, driveProfiles, plugProfiles):

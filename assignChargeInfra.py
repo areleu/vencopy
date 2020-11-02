@@ -12,14 +12,12 @@ from scripts.libInput import *
 
 # FIXME Add distributions and charging power ratings
 
-def assignSimpleChargeInfra():
-    linkConfig = pathlib.Path.cwd() / 'config' / 'config.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
-    config = yaml.load(open(linkConfig), Loader=yaml.SafeLoader)
 
+def assignSimpleChargeInfra(config, dataset='MiD17'):
     # Processing MID file resulting from Christoph Schimeczeks SQL-Parsing of MID2008
     # MiD08 Purposes
     print('Starting with charge connection of MiD08')
-    linkPurposes = Path(config['linksRelative']['input']) / config['files']['mid2008purposes']
+    linkPurposes = Path(config['linksRelative']['input']) / config['files']['MiD08']['purposesProcessed']
     purposeDayData_raw = pd.read_excel(linkPurposes, sheet_name='Places')
     chargeAvailability = purposeDayData_raw.replace(config['chargingInfrastructureDistributionsSchimmy'])
     chargeAvailability.set_index(['VEHICLE', 'Day', 'Weight'], inplace=True)
@@ -29,7 +27,7 @@ def assignSimpleChargeInfra():
 
     # MiD08 Trips
     print('Starting with trip weight concatenation of MiD08')
-    linkTrips = Path(config['linksRelative']['input']) / config['files']['mid2008trips']
+    linkTrips = Path(config['linksRelative']['input']) / config['files']['MiD08']['tripsProcessed']
     tripDayData_raw = pd.read_excel(linkTrips, sheet_name='DistancesInKm')
     tripData = tripDayData_raw.set_index('VEHICLE')
     tripData = pd.concat([tripData, chargeAvailability.loc[:, ['Day', 'Weight']]], axis=1)
@@ -37,10 +35,13 @@ def assignSimpleChargeInfra():
 
     # MiD17 Purposes
     print('Starting with charge connection replacement of MiD17')
-    purposeDayData_raw = pd.read_csv(Path(config['linksRelative']['input']) / config['files']['mid2017purposes'])
+    purposeDayData_raw = pd.read_csv(Path(config['linksRelative']['input']) / config['files'][dataset]['purposesProcessed'])
     chargeAvailability = purposeDayData_raw.replace(config['chargingInfrastructureDistributions'])
-    chargeAvailability.to_csv(Path(config['linksRelative']['input']) / 'inputProfiles_Plug_MiD17.csv')
+    filenameOut = 'inputProfiles_Plug_runTest_' + dataset + '.csv'
+    chargeAvailability.to_csv(Path(config['linksRelative']['input']) / filenameOut)
     print('end')
 
 if __name__ == '__main__':
-    assignSimpleChargeInfra()
+    linkConfig = Path.cwd() / 'config' / 'config.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
+    config = yaml.load(open(linkConfig), Loader=yaml.SafeLoader)
+    assignSimpleChargeInfra(config=config)

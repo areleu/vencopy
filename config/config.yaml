@@ -7,10 +7,12 @@
 # __status__ = 'dev'  # options are: dev, test, prod
 
 # This config holds all relative paths and filenames for VENCO
+numberOfHours: 24
 
 linksRelative:
     input: ./inputData/
     plots: ./output/plots/
+    plotsMiDAna: ./output/plotsMIDAna/
     resultsDaily: ./output/dailyTimeseries/
     resultsAnnual: ./output/annualTimeseries/
     scripts: ./scripts/
@@ -23,21 +25,54 @@ linksRelative:
 # output written to an energy system model input folder
 linksAbsolute:
     folderMiD2017_B1: C:/Users/wulf_ni/Documents/11 Data/Transport data/Germany/MiD/2017/proprietary/B1/CSV
-    folderMiD2017_B2: C:/Users/wulf_ni/Documents/11 Data/Transport data/Germany/MiD/2017/proprietary/B2/CSV
-    folderMiD2008: C:/Users/wulf_ni/Documents/11 Data/Transport data/Germany/MiD/2008/MiD 2008_DVD/Daten/STATA/STATA_Public Use File
+    MiD17: C:/Users/wulf_ni/Documents/11 Data/Transport data/Germany/MiD/2017/proprietary/B2/CSV
+    MiD08: C:/Users/wulf_ni/Documents/11 Data/Transport data/Germany/MiD/2008/MiD 2008_DVD/Daten/STATA/STATA_Public Use File
 
 files:
     inputDataScalars: VencoPy_scalarInputSES.xlsx
 #    inputDataDriveProfiles: inputProfiles_Drive_MiD17_woWeights.csv
 #    inputDataPlugProfiles: inputProfiles_Plug_MiD17_woWeights.csv
-    inputDataDriveProfiles: inputProfiles_Drive_MiD08.csv
-    inputDataPlugProfiles: inputProfiles_Plug_MiD08.csv
-    MiD2017households: MiD2017_Regional_Haushalte.csv
-    MiD2017persons: MiD2017_Regional_Personen.csv
-    MiD2017trips: MiD2017_Regional_Wege.csv
-    mid2017purposes: inputProfiles_Purpose_MiD17.csv
-    mid2008trips: MiD_procCS_caseID-weekday-weight-activity.xlsx
-    mid2008purposes: MiD_procCS_caseID-weekday-weight-activity.xlsx
+    MiD17:
+        householdsDataRaw: MiD2017_Regional_Haushalte.csv
+        personsDataRaw: MiD2017_Regional_Personen.csv
+        tripsDataRaw: MiD2017_Regional_Wege.csv
+        purposesProcessed: inputProfiles_Purpose_runTest_MiD17.csv
+        inputDataDriveProfiles: inputProfiles_Drive_runTest_MiD17.csv
+        inputDataPlugProfiles: inputProfiles_Plug_runTest_MiD17.csv
+    MiD08:
+        householdsDataRaw: MiD2008_PUF_Haushalte.dta
+        personDataRaw: MiD2008_PUF_Personen.dta
+        tripsDataRaw: MiD2008_PUF_Wege.dta
+        tripsProcessedOld: MiD_procCS_caseID-weekday-weight-activity.xlsx
+        purposesProcessedOld: MiD_procCS_caseID-weekday-weight-activity.xlsx
+        purposesProcessed: inputProfiles_Purpose_runTest_MiD08.csv
+        inputDataDriveProfiles: inputProfiles_Drive_runTest_MiD08.csv
+        inputDataPlugProfiles: inputProfiles_Plug_runTest_MiD08.csv
+#        inputDataDriveProfiles: inputProfiles_Drive_MiD08.csv
+#        inputDataPlugProfiles: inputProfiles_Plug_MiD08.csv
+
+midVariables:
+    dataset: ['MiD08', 'MiD17']
+    isMIVDriver: ['pkw_f','W_VM_G']
+    hhPersonID: ['pid','hhPersonID']
+    tripID: ['wid', 'tripID']
+    tripWeight: ['w_gew','W_GEW']
+    tripScaleFactor: ['NA', 'W_HOCH']
+    tripStartClock: ['st_time', 'W_SZ']
+    tripEndClock: ['en_time', 'W_AZ']
+    tripPurpose: ['w04', 'zweck']
+    tripDistance: ['wegkm_k', 'wegkm']
+    tripStartYear: ['stich_j', 'ST_JAHR']
+    tripStartMonth: ['stich_m', 'ST_MONAT']
+    tripStartWeek: ['stichwo', 'ST_WOCHE']
+    tripStartWeekday: ['stichtag', 'ST_WOTAG']
+    tripStartHour: ['st_std', 'W_SZS']
+    tripStartMinute: ['st_min', 'W_SZM']
+    tripEndHour: ['en_std', 'W_AZS']
+    tripEndMinute: ['en_min', 'W_AZM']
+    tripEndNextDay: ['en_dat', 'W_FOLGETAG']
+    tripIsIntermodal: ['NA', 'weg_intermod']
+
 
 labels:
     technologyLabel: BEV-S
@@ -83,8 +118,11 @@ chargingInfrastructureDistributionsSchimmy:  # Identifiers from the evaluation o
     nan: 'FALSCH'
 
 plotConfig:
-    font.family: sans-serif
-    font.weight: normal
-    font.size: 14
-    axes.labelsize: 18
-    axes.labelpad: 8.0
+    show: True
+    save: True
+    plotRCParameters:
+        font.family: sans-serif
+        font.weight: normal
+        font.size: 14
+        axes.labelsize: 18
+        axes.labelpad: 8.0
