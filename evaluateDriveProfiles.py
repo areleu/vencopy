@@ -10,7 +10,7 @@ from pathlib import Path
 import seaborn as sns
 import matplotlib.pyplot as plt
 from scripts.libPlotting import *
-
+from scripts.utilsParsing import createFileString
 
 # Some functions
 def wavg(data, avg_name, weight_name):
@@ -32,13 +32,15 @@ def evaluateDriveProfiles(config, weightPlot=False):
     dailyMileageGermany2008 = 3.080e9  # pkm/d
     dailyMileageGermany2017 = 3.214e9  # pkm/d
     hourVec = [str(i) for i in range(0, 24)]
-    driveData_mid2008 = pd.read_csv(Path(config['linksRelative']['input']) / config['files']['MiD08']['inputDataDriveProfiles'])
-    driveData_mid2017 = pd.read_csv(Path(config['linksRelative']['input']) / config['files']['MiD17']['inputDataDriveProfiles'])
+    driveData_mid2008 = pd.read_csv(Path(config['linksRelative']['input']) /
+                                    createFileString(config=config, fileKey='inputDataDriveProfiles', dataset='MiD08'))
+    driveData_mid2017 = pd.read_csv(Path(config['linksRelative']['input']) /
+                                    createFileString(config=config, fileKey='inputDataDriveProfiles', dataset='MiD17'))
 
     data08_raw = driveData_mid2008.drop(columns=['hhPersonID']).set_index('ST_WOTAG_str', append=True).stack()  # 'tripWeight', 'tripScaleFactor'
     data08 = data08_raw.reset_index([1, 2])
     data08.columns = ['Day', 'Hour', 'Value']
-    data17_raw = driveData_mid2017.drop(columns=['HP_ID_Reg']).set_index('ST_WOTAG_str', append=True).stack()  # 'tripWeight', 'tripScaleFactor'
+    data17_raw = driveData_mid2017.drop(columns=['hhPersonID']).set_index('ST_WOTAG_str', append=True).stack()  # 'tripWeight', 'tripScaleFactor'
     data17 = data17_raw.reset_index([1, 2])
     data17.columns = ['Day', 'Hour', 'Value']
 
@@ -67,11 +69,12 @@ def evaluateDriveProfiles(config, weightPlot=False):
 
     if config['plotConfig']['show']:
         plt.show()
-    if config['plotConfig']['write']:
-        fig.savefig(Path(config['linksRelative']['plotsMiDAna']) / 'allDays_runTest_8vs17.png')
+    if config['plotConfig']['save']:
+        fileName = 'allDays_08vs17_%s.png' % (config['labels']['runLabel'])
+        fig.savefig(Path(config['linksRelative']['plotsDCMob']) / fileName)
 
-    if normPlotting == True:
-    # FIXME: So far skipped, b/c of lack of interest in normalized plotting
+    if normPlotting:
+
     # Plotting weekday specific
         driveDataWeekday = pd.DataFrame({'mid08sum':
                     driveData_mid2008.groupby('ST_WOTAG_str').sum().stack()})  # .drop(labels=['Weight', 'tripScaleFactor'], axis=1)
@@ -122,7 +125,8 @@ def evaluateDriveProfiles(config, weightPlot=False):
         if config['plotConfig']['show']:
             plt.show()
         if config['plotConfig']['save']:
-            fig.savefig(Path(config['linksAbsolute']['plotsMiDAna']) / 'absRel08v17_runTest_MoThSa.png')
+            fileName = 'absRel08v17_%s_MoThSa.png' % (config['labels']['runLabel'])
+            fig.savefig(Path(config['linksRelative']['plotsDCMob']) / fileName)
 
 
     # dataTueSat =  driveDataWeekday.loc[driveDataWeekday.loc[:,'ST_WOTAG_str'].isin(['TUE', 'SAT']), ['mid08wAvrg', 'mid17wAvrg']]
@@ -132,13 +136,17 @@ def evaluateDriveProfiles(config, weightPlot=False):
     # dataTueSat = dataTueSat.reset_index([1,2])
     # dualViolinPlot(dataTueSat, x='ST_WOTAG_str', y=0, hue='level_2')
 
-    data08_TuSa = data08.loc[(data08.loc[:, 'ST_WOTAG_str'].isin(['TUE', 'SAT'])) & (data08.loc[:, 'Value'] < 30), :]
-    data17_TuSa = data17.loc[(data17.loc[:, 'ST_WOTAG_str'].isin(['TUE', 'SAT'])) & (data17.loc[:, 'Value'] < 30), :]
+    data08_TuSa = data08.loc[(data08.loc[:, 'Day'].isin(['TUE', 'SAT'])) & (data08.loc[:, 'Value'] < 30), :]
+    data17_TuSa = data17.loc[(data17.loc[:, 'Day'].isin(['TUE', 'SAT'])) & (data17.loc[:, 'Value'] < 30), :]
 
-    dualViolinPlot(data08, x=data08.loc[:,'Hour'].astype('int32'), y='Value', hue=None, write='MiD08_drive_diffHour')
-    dualViolinPlot(data08_TuSa, x=data08_TuSa.loc[:,'Hour'].astype('int32'), y='Value', hue='ST_WOTAG_str', write='MiD08_drive_diffHourDay')
-    dualViolinPlot(data17, x=data17.loc[:,'Hour'].astype('int32'), y='Value', hue=None, write='MiD17_drive_diffHour')
-    dualViolinPlot(data17_TuSa, x=data17_TuSa.loc[:,'Hour'].astype('int32'), y='Value', hue='ST_WOTAG_str', write='MiD17_drive_diffHourDay')
+    dualViolinPlot(data08, x=data08.loc[:,'Hour'].astype('int32'), y='Value', hue=None,
+                   write='MiD08_' + config['labels']['runLabel'] + '_drive_diffHour', config=config)
+    dualViolinPlot(data08_TuSa, x=data08_TuSa.loc[:,'Hour'].astype('int32'), y='Value', hue='Day',
+                   write='MiD08_' + config['labels']['runLabel'] + '_diffHourDay', config=config)
+    dualViolinPlot(data17, x=data17.loc[:,'Hour'].astype('int32'), y='Value', hue=None,
+                   write='MiD17_' + config['labels']['runLabel'] + 'diffHour', config=config)
+    dualViolinPlot(data17_TuSa, x=data17_TuSa.loc[:,'Hour'].astype('int32'), y='Value', hue='Day',
+                   write='MiD17_' + config['labels']['runLabel'] + 'diffHourDay', config=config)
     print('end')
 
 if __name__ == '__main__':

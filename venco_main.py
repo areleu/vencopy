@@ -111,14 +111,14 @@ def vencoRun(config, dataset='MiD17'):
     writeProfilesToCSV(linkDict['linkOutput'],
                        profileDictOut,
                        singleFile=False,
-                       strAdd='')
+                       strAdd=dataset)
 
     # writeAnnualOutputForREMix(profileDictOut, outputConfig, linkDict['linkOutputAnnual'],
     #                         config['postprocessing']['hoursClone'], config['labels']['technologyLabel'],
     #                         strAdd='_MR1_alpha1_batCap40_cons15')
 
     linePlot(profileDictOut, linkOutput=linkDict['linkPlots'], config=config,
-             show=True, write=True, filename='allPlotsMiD17')
+             show=True, write=True, filename='allPlots' + dataset)
 
     # Separately plot flow and state profiles
     profileDictConnectionShare = dict(gridConnectionShare=plugProfilesAgg)
@@ -136,11 +136,11 @@ def vencoRun(config, dataset='MiD17'):
     separateLinePlots(profileDictList, config,
                         show=True, write=True,
                         ylabel=['Average EV connection share', 'Average EV flow in kW', 'Average EV SOC in kWh'],
-                        filenames=['MiD08_connection_THU', 'MiD08_flows_THU', 'MiD08_state_THU'],
+                        filenames=[dataset + '_connection', dataset + '_flows', dataset + '_state'],
                         ylim=[1, 0.9, 50])
 
 
 if __name__ == '__main__':
     linkConfig = pathlib.Path.cwd() / 'config' / 'config.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
     config = yaml.load(open(linkConfig), Loader=yaml.SafeLoader)
-    vencoRun()
+    vencoRun(config=config, dataset='MiD08')

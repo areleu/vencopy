@@ -14,6 +14,8 @@ from .libLogging import logit
 from .libLogging import logger
 from enum import Enum, auto
 import pathlib
+from .utilsParsing import createFileString
+
 
 @logit
 def initializeLinkMgr(config, dataset):
@@ -27,12 +29,12 @@ def initializeLinkMgr(config, dataset):
     linkDict = {'linkScalars': pathlib.Path(config['linksRelative']['input']) /
                                pathlib.Path(config['files']['inputDataScalars']),
                 'linkDriveProfiles': pathlib.Path(config['linksRelative']['input']) /
-                                     pathlib.Path(config['files'][dataset]['inputDataDriveProfiles']),
+                                     pathlib.Path(createFileString(config, 'inputDataDriveProfiles', dataset)),
                 'linkPlugProfiles': pathlib.Path(config['linksRelative']['input']) /
-                                    pathlib.Path(config['files'][dataset]['inputDataPlugProfiles']),
+                                    pathlib.Path(createFileString(config, 'inputDataPlugProfiles', dataset)),
                 'linkOutputConfig': pathlib.Path(config['linksRelative']['outputConfig']),
                 'linkOutputAnnual': pathlib.Path(config['linksRelative']['resultsAnnual']),
-                'linkPlots': pathlib.Path(config['linksRelative']['plots']),
+                'linkPlots': pathlib.Path(config['linksRelative']['plotsDCFlex']),
                 'linkOutput': pathlib.Path(config['linksRelative']['resultsDaily'])}
     return linkDict
 
@@ -49,6 +51,7 @@ class Assumptions(Enum):
     powerChargingStation = auto()
     isBEV = auto()
 
+
 @logit
 def readInputScalar(filePath):
     """
@@ -62,9 +65,9 @@ def readInputScalar(filePath):
 
     scalarInput = Assumptions
     inputRaw = pd.read_excel(filePath,
-                              header=5,
-                              usecols='A:C',
-                              skiprows=0)
+                             header=5,
+                             usecols='A:C',
+                             skiprows=0)
     scalarsOut = inputRaw.set_index('parameter')
     return scalarsOut
 
@@ -93,9 +96,9 @@ def stringToBoolean(df):
     """
 
     dictBol = {'WAHR': True,
-                'FALSCH': False}
+               'FALSCH': False}
     outBool = df.replace(to_replace=dictBol, value=None)
-    return (outBool)
+    return outBool
 
 
 @logit
@@ -136,6 +139,6 @@ def readVencoInput(config, dataset):
     plugProfiles_raw = readInputBoolean(linkDict['linkPlugProfiles'])
 
     print('There are ' + str(len(driveProfiles_raw)) + ' drive profiles and ' +
-                    str(len(driveProfiles_raw)) + ' plug profiles.')
+          str(len(driveProfiles_raw)) + ' plug profiles.')
 
     return linkDict, scalars, driveProfiles_raw, plugProfiles_raw

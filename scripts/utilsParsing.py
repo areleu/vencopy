@@ -8,6 +8,13 @@ __status__ = 'dev'  # options are: dev, test, prod
 import pandas as pd
 import numpy as np
 from scripts.utilsTimestamp import *
+from pathlib import Path
+
+def createFileString(config, fileKey, dataset, filetypeStr='csv'):
+    return "%s_%s_%s.%s" % (config['files'][dataset][fileKey],
+                        config['labels']['runLabel'],
+                        dataset,
+                        filetypeStr)
 
 def assignMultiColToDType(dataFrame, cols, dType):
     dictDType = dict.fromkeys(cols, dType)
@@ -43,7 +50,6 @@ def createListOfVariables(dataset:str, config):
     return variables
 
 def filterOutTripsBelongingToMultiModalDays(data):
-    hpIDs = pd.Series(data.loc[:, 'hhPersonID'].unique())
     idsWFirstTrip = data.loc[data.loc[:, 'tripID'] == 1, 'hhPersonID']
     return data.loc[data.loc[:, 'hhPersonID'].isin(idsWFirstTrip), :]
 
@@ -81,6 +87,7 @@ def assignTSToColViaCWeek(df, colYear, colWeek, colDay, colHour, colMin, colName
 def updateEndTimestamp(df):
     endsFollowingDay = df['tripEndNextDay'] == 1
     df.loc[endsFollowingDay, 'timestamp_en'] = df.loc[endsFollowingDay, 'timestamp_en'] + pd.offsets.Day(1)
+    return df
 
 def calcHourlyShares(data, ts_st, ts_en):
     duration = tripDuration(data.loc[:, ts_st], data.loc[:, ts_en])
@@ -152,7 +159,6 @@ def assignPurpose(driveData, tripData):
     lastHour = tripData['tripEndHour']
     tripPurpose = tripData['tripPurpose']
 
-
 class FillTripPurposes:
     def __init__(self, tripData, mergedDayTrips, rangeFunction=initiateColRange):
         self.startHour = tripData['tripStartHour']
@@ -170,7 +176,6 @@ class FillTripPurposes:
             row[self.fullHourCols[idx]] = self.fullHourRange[idx]
         return row
 
-
 def hoursToDatetime(tripData):
     tripData.loc[:, 'W_SZ_datetime'] = pd.to_datetime(tripData.loc[:, 'tripStartClock'])
     tripData.loc[:, 'W_AZ_datetime'] = pd.to_datetime(tripData.loc[:, 'tripEndClock'])
@@ -185,6 +190,7 @@ def fillDayPurposes(tripData, purposeDataDays):  #FixMe: Ask Ben for performance
         if not isSameHPID:
             hpID = tripData.loc[idx, 'hhPersonID']
             allWIDs = list(tripData.loc[tripData['hhPersonID'] == hpID, 'tripID'])
+            minWID = min(allWIDs)
             maxWID = max(allWIDs)
         if tripData.loc[idx, 'tripID'] == 1:  # Differentiate if trip starts in first half hour or not
             if tripData.loc[idx, 'timestamp_st'].minute <= 30:
@@ -196,6 +202,13 @@ def fillDayPurposes(tripData, purposeDataDays):  #FixMe: Ask Ben for performance
                     purposeDataDays.loc[hpID, range(tripData.loc[idx, 'tripEndHour'], maxHour)] = 'HOME'
                 else:
                     purposeDataDays.loc[hpID, range(tripData.loc[idx, 'tripEndHour'] + 1, maxHour)] = 'HOME'
+        elif tripData.loc[idx, 'tripID'] == minWID:
+            if tripData.loc[idx, 'timestamp_st'].minute <= 30:
+                purposeDataDays.loc[hpID, range(0, tripData.loc[idx, 'tripStartHour'])] = 'HOME'
+            else:
+                purposeDataDays.loc[hpID, range(0, tripData.loc[idx, 'tripStartHour'] + 1)] = 'HOME'
+            if tripData.loc[idx, 'tripID'] == maxWID:
+                purposeDataDays.loc[hpID, range(tripData.loc[idx, 'tripEndHour'] + 1, maxHour)] = 'HOME'
         else:
             purposeHourStart = determinePurposeStartHour(tripData.loc[idxOld, 'timestamp_st'],
                                                          tripData.loc[idxOld, 'timestamp_en'])
@@ -214,42 +227,9 @@ def fillDayPurposes(tripData, purposeDataDays):  #FixMe: Ask Ben for performance
         idxOld = idx
     return purposeDataDays
 
+def writeOut(config, dataset, dataDrive, dataPurpose):
+    dataDrive.to_csv(Path(config['linksRelative']['input']) /
+                     createFileString(config=config, fileKey='inputDataDriveProfiles', dataset=dataset), na_rep=0)
+    dataPurpose.to_csv(Path(config['linksRelative']['input']) /
+                       createFileString(config=config, fileKey='purposesProcessed', dataset=dataset))
 
-
-
-# SANDBOX / OLD FUNCTION
-#==================================
-def fillInHourlyTrips(dfData, dfZeros, colVal='wegkm_k', nHours=24):
-    """
-    Fills in an array with hourly columns in a given dfZeros with values from dfData's column colVal.
-
-    :param dfData: Dataframe containing travel survey data
-    :param dfZeros: Dataframe based on dfData with the same length but only limited columns containing id Data and hour columns
-    :param colVal: Column name to retrieve values for columns from. Default:
-    :param nHours: Number of hour columns to loop over for filling. If
-    :return:
-    """
-    dfZerosOut = dfZeros.copy()
-    for hour in range(nHours):
-        rowsHourTrip = dfData.loc[:, 'st_std'] == hour
-        rowsSameDayStart = rowsHourTrip & dfData.loc[:, 'st_dat'] == 0
-        dfZerosOut.loc[rowsSameDayStart, hour] = dfData.loc[rowsSameDayStart, colVal]
-        if hour + 24 < nHours:
-            rowsNextDayStart = rowsHourTrip & dfData.loc[:, 'st_dat'] == 1
-            dfZerosOut.loc[rowsNextDayStart, hour + 24] = dfData.loc[rowsNextDayStart, colVal]
-
-    return(dfZerosOut)
-
-def fillInMultiHourTrips(dfFill, dfData):
-    pass
-    for idx in dfFill.index:
-        if dfFill.loc[idx, 'duration'] > pd.Timedelta(Hours=1):
-            distance = dfFill.loc[idx, 'wegkm_k']
-            durationInHours = dfFill.loc[idx, 'duration'] / pd.Timedelta(hours=1)
-            startHour =  dfFill.loc[idx, 'st_std']
-            stopFullHour = dfFill.loc[idx, 'st_std'] + round(durationInHours, 0)
-            stopLastHour = stopFullHour + 1
-            for hour in range(startHour, stopFullHour):
-                dfFill.loc[idx, hour] = distance / round(durationInHours, 0)
-
-            dfFill.loc[idx, stopLastHour] = distance / (durationInHours - round(durationInHours, 0))

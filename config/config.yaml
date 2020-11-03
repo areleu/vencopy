@@ -13,7 +13,10 @@ linksRelative:
     input: ./inputData/
     plots: ./output/plots/
     plotsMiDAna: ./output/plotsMIDAna/
+    plotsDCMob: ./output/plots/plotsDC/mob/
+    plotsDCFlex: ./output/plots/plotsDC/flex/
     resultsDaily: ./output/dailyTimeseries/
+    resultsDailyDC: ./output/dailyTimeseries/dcAna/
     resultsAnnual: ./output/annualTimeseries/
     scripts: ./scripts/
     config: ./config/
@@ -25,7 +28,7 @@ linksRelative:
 # output written to an energy system model input folder
 linksAbsolute:
     folderMiD2017_B1: C:/Users/wulf_ni/Documents/11 Data/Transport data/Germany/MiD/2017/proprietary/B1/CSV
-    MiD17: C:/Users/wulf_ni/Documents/11 Data/Transport data/Germany/MiD/2017/proprietary/B2/CSV
+    MiD17: C:/Users/wulf_ni/Documents/11 Data/Transport data/Germany/MiD/2017/proprietary/B2/STATA
     MiD08: C:/Users/wulf_ni/Documents/11 Data/Transport data/Germany/MiD/2008/MiD 2008_DVD/Daten/STATA/STATA_Public Use File
 
 files:
@@ -35,27 +38,27 @@ files:
     MiD17:
         householdsDataRaw: MiD2017_Regional_Haushalte.csv
         personsDataRaw: MiD2017_Regional_Personen.csv
-        tripsDataRaw: MiD2017_Regional_Wege.csv
-        purposesProcessed: inputProfiles_Purpose_runTest_MiD17.csv
-        inputDataDriveProfiles: inputProfiles_Drive_runTest_MiD17.csv
-        inputDataPlugProfiles: inputProfiles_Plug_runTest_MiD17.csv
+        tripsDataRaw: MiD2017_Regional_Wege.dta
+        purposesProcessed: inputProfiles_Purpose  # inputProfiles_Purpose_runTest_MiD17.csv
+        inputDataDriveProfiles: inputProfiles_Drive  # inputProfiles_Drive_runTest_MiD17.csv
+        inputDataPlugProfiles: inputProfiles_Plug  # inputProfiles_Plug_runTest_MiD17.csv
     MiD08:
         householdsDataRaw: MiD2008_PUF_Haushalte.dta
         personDataRaw: MiD2008_PUF_Personen.dta
         tripsDataRaw: MiD2008_PUF_Wege.dta
         tripsProcessedOld: MiD_procCS_caseID-weekday-weight-activity.xlsx
         purposesProcessedOld: MiD_procCS_caseID-weekday-weight-activity.xlsx
-        purposesProcessed: inputProfiles_Purpose_runTest_MiD08.csv
-        inputDataDriveProfiles: inputProfiles_Drive_runTest_MiD08.csv
-        inputDataPlugProfiles: inputProfiles_Plug_runTest_MiD08.csv
+        purposesProcessed: inputProfiles_Purpose  # inputProfiles_Purpose_runTest_MiD08.csv
+        inputDataDriveProfiles: inputProfiles_Drive  # inputProfiles_Drive_runTest_MiD08.csv
+        inputDataPlugProfiles: inputProfiles_Plug  # inputProfiles_Plug_runTest_MiD08.csv
 #        inputDataDriveProfiles: inputProfiles_Drive_MiD08.csv
 #        inputDataPlugProfiles: inputProfiles_Plug_MiD08.csv
 
 midVariables:
     dataset: ['MiD08', 'MiD17']
     isMIVDriver: ['pkw_f','W_VM_G']
-    hhPersonID: ['pid','hhPersonID']
-    tripID: ['wid', 'tripID']
+    hhPersonID: ['pid','HP_ID_Reg']
+    tripID: ['wid', 'W_ID']
     tripWeight: ['w_gew','W_GEW']
     tripScaleFactor: ['NA', 'W_HOCH']
     tripStartClock: ['st_time', 'W_SZ']
@@ -73,8 +76,26 @@ midVariables:
     tripEndNextDay: ['en_dat', 'W_FOLGETAG']
     tripIsIntermodal: ['NA', 'weg_intermod']
 
+inputDTypes:
+    isMIVDriver: 'b'
+    tripID: 'i'
+    tripWeight: 'f'
+    tripStartClock: 'f'
+    tripEndClock: 'f'
+    tripPurpose: 'i'
+    tripDistance: 'f'
+    tripStartYear: 'i'
+    tripStartMonth: 'i'
+    tripStartWeek: 'i'
+    tripStartWeekday: 'i'
+    tripStartHour: 'i'
+    tripStartMinute: 'i'
+    tripEndHour: 'i'
+    tripEndMinute: 'i'
+    tripEndNextDay: 'b'
 
 labels:
+    runLabel: baseDC
     technologyLabel: BEV-S
     outputFileName: VencoPy_MR1_alpha1_batCap40_cons15
     strAdd: 11kW

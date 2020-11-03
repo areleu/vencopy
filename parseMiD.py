@@ -36,21 +36,26 @@ def parseMiD(dataset, config):
     print('Filtering and replacing raw data..')
 
     tripData = tripDataHarmonVariables.loc[tripDataHarmonVariables.loc[:, 'isMIVDriver'] == 1, relevantVariables]
+    # Dtype assignment
+    tripData = tripData.astype(config['inputDTypes'])
 
     # Dataset filtering
     tripData = tripData.loc[(tripData['tripStartHour'] != 99) & (tripData['tripEndHour'] != 99), :]  # beginning and end hour must be available
     tripData = tripData.loc[(tripData['tripStartHour'] != 701) & (tripData['tripEndHour'] != 701), :]
-    tripData = tripData.loc[tripData['tripStartClock'] <= tripData['tripEndClock'], :]  # departure must be before arrival
+    tripData = tripData.loc[(tripData['tripStartClock'] <= tripData['tripEndClock']) |
+                            (tripData['tripEndNextDay'] == 1), :]  # departure must be before arrival or the trip must end the following day
     tripData = tripData.loc[(tripData['tripStartClock'] != ' ') & (tripData['tripEndClock'] != ' '), :]  # Timestamps must be strings
     tripData = tripData.loc[(tripData['tripDistance'] < 1000), :]  # 9994, 9999 and 70703 are values for implausible, missing or non-detailed values
     if dataset == 'MiD17':
         tripData = tripData.loc[tripData['tripIsIntermodal'] != 1, :]  # no intermodal trips
+    if dataset == 'MiD08':
+        tripData = tripData.loc[~tripData['tripPurpose'].isin([97, 98]), :]  # observations with refused or unknown purpose are filtered out
     end = time.time()
     print(f'Done with simple filtering and replacements, took {end-start} seconds.')
 
     start = time.time()
     print('Starting to filter out trips without first trip ID (tripID == 1)')
-    tripData = filterOutTripsBelongingToMultiModalDays(tripData)
+    # tripData = filterOutTripsBelongingToMultiModalDays(tripData)
     end = time.time()
     print(f'Done with filtering out trip w/o first trip ID, took {end-start} seconds.')
 
@@ -71,7 +76,7 @@ def parseMiD(dataset, config):
 
     start = time.time()
     print('Starting to calculate hourly shares')  # FIXME Currently, trips starting before 12:00 and ending at 13:00 have an endhour share of 0 and a fullHour. Change this to the respective share for two-hour trips
-    tripDataWHourlyShares = calcHourlyShares(tripDataWDate, ts_st='timestamp_st', ts_en='timestamp_en')
+    tripDataWHourlyShares = calcHourlyShares(tripDataNightTrips, ts_st='timestamp_st', ts_en='timestamp_en')
 
     # ToDo: Fix implausible trips where shareStartHour = NAN or a share with shareEndHour and noOfFullHours both =0
     tripDataClean = tripDataWHourlyShares.loc[~((tripDataWHourlyShares['shareStartHour'] != 1) &
@@ -102,8 +107,10 @@ def parseMiD(dataset, config):
     print(f'Done with hoursToDatetime, took {end1-start} seconds.')
 
     purposeDataDays = fillDayPurposes(tripDataClean, tripPurposesDriving)
+    purposeDataDays.replace({'0.0': 'HOME'})  # FIXME: This was a quick-fix, integrate into case-differentiation
     end2 = time.time()
     print(f'Done with trip purpose assignemnt, took {end2-start} seconds.')
+    print(f'There are {len(purposeDataDays)} daily trip diaries.')
 
     start = time.time()
     print('Starting with indexing and write out of trip mileage and purposes')
@@ -114,8 +121,7 @@ def parseMiD(dataset, config):
 
     print(indexedDriveData.head())
     print(indexedPurposeData.head())
-    indexedDriveData.to_csv('./inputData/inputProfiles_Drive_runTest_' + dataset + '.csv', na_rep=0)
-    indexedPurposeData.to_csv('./inputData/inputProfiles_Purpose_runTest_' + dataset + '.csv')
+    writeOut(config=config, dataset=dataset, dataDrive=indexedDriveData, dataPurpose=indexedPurposeData)
 
     end = time.time()
     print(f'Done with indexing and write-out, took {end-start} seconds.')

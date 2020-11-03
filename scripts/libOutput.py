@@ -192,7 +192,8 @@ def linePlot(profileDict, linkOutput, config, show=True, write=True, ylabel='Nor
     ax.set_ylabel(ylabel)
     ax.legend(loc='upper center', bbox_to_anchor=(0.5, 1.3))  # ncol=2,
     plt.tight_layout()
-    filePlot = linkOutput / pathlib.Path(filename + '_' + config['labels']['strAdd'] + '.png')
+    filePlot = linkOutput / pathlib.Path(filename + '_' + config['labels']['runLabel'] + '_' +
+                                         config['labels']['strAdd'] + '.png')
     if show:
         plt.show()
     if write:
@@ -201,9 +202,9 @@ def linePlot(profileDict, linkOutput, config, show=True, write=True, ylabel='Nor
 @logit
 def separateLinePlots(profileDictList, config, show=True, write=True, ylabel=[], ylim=[], filenames=[]):
     for iDict, iYLabel, iYLim, iName in zip(profileDictList, ylabel, ylim, filenames):
-        writeProfilesToCSV(outputFolder=config['linksRelative']['sesData'],
+        writeProfilesToCSV(outputFolder=config['linksRelative']['resultsDailyDC'],
                        profileDictOut=iDict,
                        singleFile=False,
-                       strAdd='_mid08')
-        linePlot(iDict, linkOutput=config['linksRelative']['sesPlots'], config=config,
+                       strAdd='_' + config['labels']['runLabel'])
+        linePlot(iDict, linkOutput=config['linksRelative']['plotsDCFlex'], config=config,
                     show=show, write=write, ylabel=iYLabel, ylim=iYLim, filename=iName)
