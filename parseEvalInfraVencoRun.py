@@ -24,18 +24,18 @@ linkConfig = pathlib.Path.cwd() / 'config' / 'config.yaml'  # pathLib syntax for
 config = yaml.load(open(linkConfig), Loader=yaml.SafeLoader)
 
 # Raw MiD2-017 dataset to hourly drive and purpose profiles
-parseMiD(dataset='MiD08', config=config)
-parseMiD(dataset='MiD17', config=config)
-#
-# # Assign charging infrastructure for both 2008 (from CS) and 2017 purpose profiles
-# # In config under key chargingInfrastructureDistributions
-assignSimpleChargeInfra(config=config, dataset='MiD08')
-assignSimpleChargeInfra(config=config, dataset='MiD17')
+# parseMiD(dataset='MiD08', config=config)
+# parseMiD(dataset='MiD17', config=config)
+# #
+# # # Assign charging infrastructure for both 2008 (from CS) and 2017 purpose profiles
+# # # In config under key chargingInfrastructureDistributions
+# assignSimpleChargeInfra(config=config, dataset='MiD08')
+# assignSimpleChargeInfra(config=config, dataset='MiD17')
 
 # FixME: evaluate trip purposes
 # FixME: Merging of variables of original dataset is possible
 # Evaluate drive and trip purpose profiles
-evaluateDriveProfiles(config)
+# evaluateDriveProfiles(config)
 # evaluateTripPurposes(config=config)
 
 # FixME: Implement one VencoPy run for MiD08 and one for MiD17

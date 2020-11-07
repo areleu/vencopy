@@ -25,8 +25,8 @@ def vencoRun(config, dataset='MiD17'):
     driveProfiles, plugProfiles = indexDriveAndPlugData(driveProfilesRaw, plugProfilesRaw, config['numberOfHours'])
     scalarsProc = procScalars(driveProfilesRaw, plugProfilesRaw, driveProfiles, plugProfiles)
 
-    # driveProfiles = driveProfiles.query("Day == 'THU'")
-    # plugProfiles = plugProfiles.query("Day == 'THU'")
+    # driveProfiles = driveProfiles.query("ST_WOTAG_str == 'SAT'")
+    # plugProfiles = plugProfiles.query("ST_WOTAG_str == 'SAT'")
 
     consumptionProfiles = calcConsumptionProfiles(driveProfiles, scalars)
 

@@ -98,7 +98,7 @@ labels:
     runLabel: baseDC
     technologyLabel: BEV-S
     outputFileName: VencoPy_MR1_alpha1_batCap40_cons15
-    strAdd: 11kW
+    strAdd: 11kW_SAM
 
 postprocessing:
     hoursClone: 8760
