@@ -24,7 +24,7 @@ def parseMiD(dataset, config):
     # tripData_raw = pd.read_csv(pathlib.Path(config['linksAbsolute'][dataset]) / config['files'][dataset]['tripsDataRaw'],
     #                            sep=';', decimal=',')
     tripData_raw = pd.read_stata(pathlib.Path(config['linksAbsolute'][dataset]) / config['files'][dataset]['tripsDataRaw'],
-                                 convert_categoricals=False, convert_dates=False, preserve_dtypes=True)
+                                 convert_categoricals=False, convert_dates=False, preserve_dtypes=True)  # be explicit about column types
     end = time.time()
     print(f'Raw data read-in finished, took {end-start} seconds.')
 
@@ -130,4 +130,4 @@ def parseMiD(dataset, config):
 if __name__ == '__main__':
     linkConfig = pathlib.Path.cwd() / 'config' / 'config.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
     config = yaml.load(open(linkConfig), Loader=yaml.SafeLoader)
-    parseMiD(dataset='MiD08', config=config)
+    parseMiD(dataset='MiD17', config=config)
