@@ -94,6 +94,36 @@ inputDTypes:
     tripEndMinute: 'i'
     tripEndNextDay: 'b'
 
+filterDicts:
+    MiD08:
+        include:
+            isMIVDriver: [1]
+        exclude:
+            tripStartHour: [99, 701]
+            tripEndHour: [99, 701]
+            tripStartClock: [' ']
+            tripEndClock: [' ']
+        greaterThan:
+        smallerThan:
+            tripDistance: [1000]
+
+    MiD17:
+        include:
+            isMIVDriver: [1]
+        exclude:
+            tripStartHour: [99, 701]
+            tripEndHour: [99, 701]
+            tripStartClock: [' ']
+            tripEndClock: [' ']
+            tripIsIntermodal: [1]
+        greaterThan:
+        smallerThan:
+            tripDistance: 1000
+
+#    tripData = tripData.loc[(tripData['tripStartClock'] <= tripData['tripEndClock']) |
+#    (tripData['tripEndNextDay'] == 1), :]  # departure must be before arrival or the trip must end the following day
+
+
 labels:
     runLabel: baseDC
     technologyLabel: BEV-S
@@ -103,18 +133,27 @@ labels:
 postprocessing:
     hoursClone: 8760
 
-midTripPurposeReplacements:
-    1: 'WORK'  # Erreichen des Arbeitsplatzes
-    2: 'WORK'  # dienstlich/geschäftlich
-    3: 'SCHOOL'  # Erreichen der Ausbildungsstätte/Schule
-    4: 'SHOPPING'  # Einkauf
-    5: 'SHOPPING'  # private Erledigung
-    6: 'LEISURE'  # Bringen/Holen/Begleiten von Personen
-    7: 'LEISURE'  # Freizeitaktivität
-    8: 'HOME'  # nach Hause
-    9: 'HOME'  # Rückweg vom vorherigen Weg
-    10: 'OTHER'  # anderer Zweck
-    99: 'NA'  # keine Angabe
+midReplacements:
+    tripStartWeekday:
+        1: 'MON'
+        2: 'TUE'
+        3: 'WED'
+        4: 'THU'
+        5: 'FRI'
+        6: 'SAT'
+        7: 'SUN'
+    tripPurpose:
+        1: 'WORK'  # Erreichen des Arbeitsplatzes
+        2: 'WORK'  # dienstlich/geschäftlich
+        3: 'SCHOOL'  # Erreichen der Ausbildungsstätte/Schule
+        4: 'SHOPPING'  # Einkauf
+        5: 'SHOPPING'  # private Erledigung
+        6: 'LEISURE'  # Bringen/Holen/Begleiten von Personen
+        7: 'LEISURE'  # Freizeitaktivität
+        8: 'HOME'  # nach Hause
+        9: 'HOME'  # Rückweg vom vorherigen Weg
+        10: 'OTHER'  # anderer Zweck
+        99: 'NA'  # keine Angabe
 
 chargingInfrastructureDistributions:  # Probabilities given for each location aka trip purpose
     'DRIVING': 'FALSCH'
