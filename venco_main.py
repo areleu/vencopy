@@ -14,9 +14,12 @@ from scripts.libOutput import *
 from scripts.libPlotting import *
 from scripts.libLogging import logger
 import pathlib
+from profilehooks import profile
 
 #ToDo: Maybe consolidate selection actions to one aggregation and one filtering action
 
+
+@profile(immediate=True)
 def vencoRun(config, dataset='MiD17'):
     #----- data and config read-in -----
     linkDict, scalars, driveProfilesRaw, plugProfilesRaw = readVencoInput(config, dataset)

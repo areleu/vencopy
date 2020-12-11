@@ -7,11 +7,12 @@ __license__ = 'BSD-3-Clause'
 
 
 #----- imports & packages ------
+import pathlib
+import time
+
 from scripts.utilsParsing import *
 from scripts.libPlotting import *
 from scripts.libLogging import logger
-import pathlib
-import time
 from parseMiD import parseMiD
 from assignChargeInfra import assignSimpleChargeInfra
 from evaluateDriveProfiles import evaluateDriveProfiles

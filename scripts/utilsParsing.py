@@ -75,7 +75,9 @@ def assignTSToColViaDay(df, colYear, colMonth, colDay, colHour, colMin, colName)
                                            minute=dfOut.loc[x, colMin]) for x in dfOut.index]
     return(dfOut)
 
-def assignTSToColViaCWeek(df, colYear, colWeek, colDay, colHour, colMin, colName):
+def assignTSToColViaCWeek(df: pd.DataFrame,
+                          colYear: str, colWeek: str, colDay: str, colHour: str, colMin: str,
+                          colName: str):
     dfOut = df.copy()
     dfOut[colName] = pd.to_datetime(df.loc[:, colYear], format='%Y') + \
                      pd.to_timedelta(df.loc[:, colWeek] * 7, unit='days') + \

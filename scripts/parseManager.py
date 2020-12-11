@@ -12,8 +12,8 @@ import cProfile
 from pathlib import Path
 import yaml
 
-
 class ParseData:
+    # Separate datasets that know each other
     def __init__(self, datasetID: str, config: dict):
         self.datasetID = datasetID
         self.config = config

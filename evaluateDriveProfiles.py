@@ -7,6 +7,7 @@ __license__ = 'BSD-3-Clause'
 
 import pandas as pd
 from pathlib import Path
+from profilehooks import profile
 import seaborn as sns
 import matplotlib.pyplot as plt
 from scripts.libPlotting import *
@@ -25,7 +26,7 @@ def wavg(data, avg_name, weight_name):
     except ZeroDivisionError:
         return d.mean()
 
-
+@profile(immediate=True)
 def evaluateDriveProfiles(config, weightPlot=False):
 
     normPlotting = True
