@@ -11,7 +11,6 @@ __status__ = 'test'  # options are: dev, test, prod
 import io
 import yaml
 import pathlib
-import openpyxl
 import getpass
 import pandas as pd
 import numpy as np

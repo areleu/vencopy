@@ -52,7 +52,7 @@ def parseMiD(dataset: str, config: dict):
     # # tripData = filterOutTripsBelongingToMultiModalDays(tripData)
     # print('Finished filtering')
 
-    p = ParseData(datasetID='MiD17', config=config, strColumns=True)
+    p = ParseData(datasetID='MiD17', config=config, strColumns=True, loadEncrypted=True)
     tripDataNew = p.data
 
     # # FIXME Currently, trips starting before 12:00 and ending at 13:00 have an endhour share of 0 and a fullHour. Change this to the respective share for two-hour trips

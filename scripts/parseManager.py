@@ -14,7 +14,7 @@ from scripts.libInput import *
 
 class ParseData:
     # Separate datasets that know each other
-    def __init__(self, datasetID: str, config: dict, strColumns: bool = False):
+    def __init__(self, datasetID: str, config: dict, strColumns: bool = False, loadEncrypted=True):
         self.datasetID = self.checkDatasetID(datasetID, config)
         self.config = config
         self.rawDataPath = Path(config['linksAbsolute'][self.datasetID]) / config['files'][self.datasetID]['tripsDataRaw']
@@ -22,7 +22,11 @@ class ParseData:
         self.columns = self.compileVariableList()
         self.filterDictNameList = ['include', 'exclude', 'greaterThan', 'smallerThan']
         self.updateFilterDict()
-        self.loadData()
+        if loadEncrypted:
+            self.loadEncryptedData(linkToZip=Path(self.config['linksAbsolute']['encryptedZipfile']) / self.config['files'][self.datasetID]['enryptedZipFileB2'],
+                                   linkInZip=config['files'][self.datasetID]['tripDataZipFileRaw'])
+        else:
+            self.loadData()
         self.harmonizeVariables()
         self.convertTypes()
         self.checkFilterDict(self.__filterDict)
@@ -64,6 +68,19 @@ class ParseData:
                                       preserve_dtypes=False)
         else:  # self.rawDataFileType == '.csv':
             self.data = pd.read_csv(self.rawDataPath, usecols=self.columns)
+
+        print(f'Finished loading {len(self.columns)} columns and {len(self.data)} rows of raw data '
+              f'of type {self.rawDataPath.suffix}')
+
+    def loadEncryptedData(self, linkToZip, linkInZip):
+        with ZipFile(linkToZip) as myzip:
+            if '.dta' in linkInZip:
+                self.data = pd.read_stata(myzip.open(linkInZip, pwd=bytes(self.config['encryptionPW'], encoding='utf-8')),
+                                          columns=self.columns, convert_categoricals=False, convert_dates=False,
+                                          preserve_dtypes=False)
+            else:  # if '.csv' in linkInZip:
+                self.data = pd.read_csv(myzip.open(linkInZip, pwd=bytes('Eveisnotonlyanicename!', encoding='utf-8')),
+                                        sep=';', decimal=',', usecols=self.columns)
 
         print(f'Finished loading {len(self.columns)} columns and {len(self.data)} rows of raw data '
               f'of type {self.rawDataPath.suffix}')
@@ -158,6 +175,9 @@ class ParseData:
         """
         dat = self.data
         self.data = dat.loc[(dat['tripStartClock'] <= dat['tripEndClock']) | (dat['tripEndNextDay'] == 1), :]
+        # If we want to get rid of tripStartClock and tripEndClock (they are redundant variables)
+        # self.data = dat.loc[pd.to_datetime(dat.loc[:, 'tripStartHour']) <= pd.to_datetime(dat.loc[:, 'tripEndHour']) |
+        #                     (dat['tripEndNextDay'] == 1), :]
 
     def addStrColumns(self, weekday=True, purpose=True):
         if weekday:

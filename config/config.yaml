@@ -8,6 +8,7 @@
 
 # This config holds all relative paths and filenames for VENCO
 numberOfHours: 24
+encryptionPW: 'PASSWORD'
 
 linksRelative:
     input: ./inputData/
@@ -27,6 +28,7 @@ linksRelative:
 # During first configuration, optionally fill in absolute links on your system e.g. if you want to have post processed
 # output written to an energy system model input folder
 linksAbsolute:
+    encryptedZipfile: Z:/data/transport/MiD17/
     folderMiD2017_B1: C:/Users/wulf_ni/Documents/11 Data/Transport data/Germany/MiD/2017/proprietary/B1/CSV
     MiD17: C:/Users/wulf_ni/Documents/11 Data/Transport data/Germany/MiD/2017/proprietary/B2/STATA
     MiD08: C:/Users/wulf_ni/Documents/11 Data/Transport data/Germany/MiD/2008/MiD 2008_DVD/Daten/STATA/STATA_Public Use File
@@ -36,6 +38,9 @@ files:
 #    inputDataDriveProfiles: inputProfiles_Drive_MiD17_woWeights.csv
 #    inputDataPlugProfiles: inputProfiles_Plug_MiD17_woWeights.csv
     MiD17:
+        enryptedZipFileB1: B1_Standard-DatensatzpaketEncrypted.zip
+        enryptedZipFileB2: B2_Regional-DatensatzpaketEncrypted.zip
+        tripDataZipFileRaw: CSV/MiD2017_Regional_Wege.csv
         householdsDataRaw: MiD2017_Regional_Haushalte.csv
         personsDataRaw: MiD2017_Regional_Personen.csv
         tripsDataRaw: MiD2017_Regional_Wege.dta
@@ -84,8 +89,8 @@ inputDTypes:
     hhPersonID: 'i'
     tripID: 'i'
     tripWeight: 'f'
-    tripStartClock: 'f'
-    tripEndClock: 'f'
+#    tripStartClock: 'f'
+#    tripEndClock: 'f'
     tripPurpose: 'i'
     tripDistance: 'f'
     tripStartYear: 'i'
