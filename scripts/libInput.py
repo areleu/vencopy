@@ -8,12 +8,18 @@ __status__ = 'test'  # options are: dev, test, prod
 
 # This file holds the function definitions for VencoPy input functions.
 
+import io
 import yaml
+import pathlib
+import openpyxl
+import getpass
 import pandas as pd
+import numpy as np
+from enum import Enum, auto
+from zipfile import ZipFile
+
 from .libLogging import logit
 from .libLogging import logger
-from enum import Enum, auto
-import pathlib
 from .utilsParsing import createFileString
 
 
@@ -34,7 +40,7 @@ def initializeLinkMgr(config, dataset):
                                     pathlib.Path(createFileString(config, 'inputDataPlugProfiles', dataset)),
                 'linkOutputConfig': pathlib.Path(config['linksRelative']['outputConfig']),
                 'linkOutputAnnual': pathlib.Path(config['linksRelative']['resultsAnnual']),
-                'linkPlots': pathlib.Path(config['linksRelative']['plotsDCFlex']),
+                'linkPlots': pathlib.Path(config['linksRelative']['plots']),
                 'linkOutput': pathlib.Path(config['linksRelative']['resultsDaily'])}
     return linkDict
 
@@ -142,3 +148,70 @@ def readVencoInput(config, dataset):
           str(len(driveProfiles_raw)) + ' plug profiles.')
 
     return linkDict, scalars, driveProfiles_raw, plugProfiles_raw
+
+
+def readZipData(filePath):
+    """
+    Opening the zip file in READ mode and transform scalars.csv to data frame
+    :param filePath: path to zip-file
+    :return: data frame with scalars.csv content
+    """
+    with ZipFile(filePath.as_posix(), 'r') as zip:
+        scalars = None
+        for i in zip.namelist():
+            if i.endswith('Scalars.csv'):
+                scalars = i
+                break
+        print('Reading', scalars)
+        if scalars is None:
+            print('No scalars file exists in zip file!')
+            return pd.DataFrame()
+        scalars = zip.read(scalars)
+        # allow colon and semicolon as separators
+        df = pd.read_csv(io.BytesIO(scalars), sep=',|;')
+    return df
+
+
+def readEncryptedFile(filePath, fileName):
+    print('Starting extraction of encrypted zipfile. Password required')
+    pw = getpass.getpass(stream=None)
+    with ZipFile(filePath, 'r') as zip:
+        for iFile in zip.namelist():
+            if iFile.endswith(fileName):
+                #trips = zip.read(iFile, pwd=bytes(pw, 'utf-8'))
+                trips = zip.read(iFile, pwd=pw)
+                if fileName.endswith('.csv'):
+                    return pd.read_csv(io.BytesIO(trips))
+                elif fileName.endswith('.dta'):
+                    return pd.read_stata(io.BytesIO(trips))
+
+
+def returnBottomDictValues(baseDict: dict, lst: list = []):
+    for iKey, iVal in baseDict.items():
+        if isinstance(iVal, dict):
+            lst = returnBottomDictValues(iVal, lst)
+        else:
+            if iVal is not None:
+                lst.append(iVal)
+    return lst
+
+
+def returnBottomDictKeys(baseDict: dict, lst: list = None):
+    if lst is None:
+        lst = []
+    for iKey, iVal in baseDict.items():
+        if isinstance(iVal, dict):
+            lst = returnBottomDictKeys(iVal, lst)
+        else:
+            if iVal is not None:
+                lst.append(iKey)
+    return lst
+
+
+def returnBottomKeys(self, baseDict: dict, lst: list = []):
+    for iKey, iVal in baseDict.items():
+        if isinstance(iVal, dict):
+            self.returnValueList(iVal, lst)
+        else:
+            lst.append(iKey)
+    return lst

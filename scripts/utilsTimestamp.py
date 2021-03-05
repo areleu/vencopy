@@ -23,10 +23,10 @@ def calcHourShareEnd(timestampEnd, duration, isSameHourTrip):
     share = timestampEnd.dt.minute / (duration.dt.seconds / 60)
     return share.where(~isSameHourTrip, 0)
 
-def calcDistanceShares(data, duration):
-    shareHourStart, isSameHourTrip = calcHourShareStart(data.loc[:, 'timestamp_st'], data.loc[:, 'timestamp_en'],
+def calcDistanceShares(data, duration, timestampSt, timestampEn):
+    shareHourStart, isSameHourTrip = calcHourShareStart(data.loc[:, timestampSt], data.loc[:, timestampEn],
                                                         duration)
-    shareHourEnd = calcHourShareEnd(data.loc[:, 'timestamp_en'], duration, isSameHourTrip=isSameHourTrip)
+    shareHourEnd = calcHourShareEnd(data.loc[:, timestampEn], duration, isSameHourTrip=isSameHourTrip)
     return shareHourStart, shareHourEnd
 
 def numberOfFullHours(timestampStart, timestampEnd):

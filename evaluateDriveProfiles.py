@@ -38,10 +38,10 @@ def evaluateDriveProfiles(config, weightPlot=False):
     driveData_mid2017 = pd.read_csv(Path(config['linksRelative']['input']) /
                                     createFileString(config=config, fileKey='inputDataDriveProfiles', dataset='MiD17'))
 
-    data08_raw = driveData_mid2008.drop(columns=['hhPersonID']).set_index('ST_WOTAG_str', append=True).stack()  # 'tripWeight', 'tripScaleFactor'
+    data08_raw = driveData_mid2008.drop(columns=['hhPersonID']).set_index('tripStartWeekday', append=True).stack()  # 'tripWeight', 'tripScaleFactor'
     data08 = data08_raw.reset_index([1, 2])
     data08.columns = ['Day', 'Hour', 'Value']
-    data17_raw = driveData_mid2017.drop(columns=['hhPersonID']).set_index('ST_WOTAG_str', append=True).stack()  # 'tripWeight', 'tripScaleFactor'
+    data17_raw = driveData_mid2017.drop(columns=['hhPersonID']).set_index('tripStartWeekday', append=True).stack()  # 'tripWeight', 'tripScaleFactor'
     data17 = data17_raw.reset_index([1, 2])
     data17.columns = ['Day', 'Hour', 'Value']
 
@@ -78,9 +78,9 @@ def evaluateDriveProfiles(config, weightPlot=False):
 
     # Plotting weekday specific
         driveDataWeekday = pd.DataFrame({'mid08sum':
-                    driveData_mid2008.groupby('ST_WOTAG_str').sum().stack()})  # .drop(labels=['Weight', 'tripScaleFactor'], axis=1)
+                    driveData_mid2008.groupby('tripStartWeekday').sum().stack()})  # .drop(labels=['Weight', 'tripScaleFactor'], axis=1)
         driveDataWeekday.loc[:,
-            'mid08simpleAvrg'] = driveData_mid2008.groupby('ST_WOTAG_str').mean().stack()  # .drop(labels=['Weight', 'tripScaleFactor'], axis=1)
+            'mid08simpleAvrg'] = driveData_mid2008.groupby('tripStartWeekday').mean().stack()  # .drop(labels=['Weight', 'tripScaleFactor'], axis=1)
         if weightPlot:
             for iCol in hourVec:
                 for iDay in driveData_mid2008.Day.unique():
@@ -91,34 +91,34 @@ def evaluateDriveProfiles(config, weightPlot=False):
 
 
         driveDataWeekday.loc[:,'mid17sum'] \
-            = driveData_mid2017.groupby('ST_WOTAG_str').sum().stack()  # .drop(labels=['tripWeight', 'tripScaleFactor'], axis=1)
+            = driveData_mid2017.groupby('tripStartWeekday').sum().stack()  # .drop(labels=['tripWeight', 'tripScaleFactor'], axis=1)
         driveDataWeekday.loc[:,'mid17simpleAvrg'] \
-            = driveData_mid2017.groupby('ST_WOTAG_str').mean().stack()  # .drop(labels=['tripWeight', 'tripScaleFactor'], axis=1)
+            = driveData_mid2017.groupby('tripStartWeekday').mean().stack()  # .drop(labels=['tripWeight', 'tripScaleFactor'], axis=1)
 
         if weightPlot:
             for iCol in hourVec:
-                for iDay in driveData_mid2017.ST_WOTAG_str.unique():
+                for iDay in driveData_mid2017.tripStartWeekday.unique():
                     driveDataWeekday.loc[(iDay, iCol), 'mid17wAvrg'] \
-                        = sum(driveData_mid2017.loc[driveData_mid2017.loc[:, 'ST_WOTAG_str'] == iDay, iCol]
-                              * driveData_mid2017.loc[driveData_mid2017.loc[:, 'ST_WOTAG_str'] == iDay, 'tripWeight']) \
-                          / sum(driveData_mid2017.loc[driveData_mid2017.loc[:, 'ST_WOTAG_str'] == iDay, 'tripWeight'])
+                        = sum(driveData_mid2017.loc[driveData_mid2017.loc[:, 'tripStartWeekday'] == iDay, iCol]
+                              * driveData_mid2017.loc[driveData_mid2017.loc[:, 'tripStartWeekday'] == iDay, 'tripWeight']) \
+                          / sum(driveData_mid2017.loc[driveData_mid2017.loc[:, 'tripStartWeekday'] == iDay, 'tripWeight'])
 
         driveDataWeekday = driveDataWeekday.reset_index(level=0)
         fig, ax = plt.subplots(3, 2)
-        driveDataWeekday.loc[driveDataWeekday.loc[:,'ST_WOTAG_str'] == 'MON', ['mid08sum', 'mid17sum']].plot.line(ax=ax[0,0])
-        driveDataWeekday.loc[driveDataWeekday.loc[:,'ST_WOTAG_str'] == 'MON', ['mid08simpleAvrg', 'mid17simpleAvrg']].plot.line(ax=ax[0,1])  # 'mid08wAvrg','mid17wAvrg'
-        # driveDataWeekday.loc[driveDataWeekday.loc[:,'ST_WOTAG_str'] == 'TUE', ['mid08sum', 'mid17sum']].plot.line(ax=ax[1,0])
-        # driveDataWeekday.loc[driveDataWeekday.loc[:,'ST_WOTAG_str'] == 'TUE', ['mid08simpleAvrg', 'mid08wAvrg', 'mid17simpleAvrg', 'mid17wAvrg']].plot.line(ax=ax[1,1])
-        # driveDataWeekday.loc[driveDataWeekday.loc[:,'ST_WOTAG_str'] == 'WED', ['mid08sum', 'mid17sum']].plot.line(ax=ax[2,0])
-        # driveDataWeekday.loc[driveDataWeekday.loc[:,'ST_WOTAG_str'] == 'WED', ['mid08simpleAvrg', 'mid08wAvrg', 'mid17simpleAvrg', 'mid17wAvrg']].plot.line(ax=ax[2,1])
-        driveDataWeekday.loc[driveDataWeekday.loc[:,'ST_WOTAG_str'] == 'THU', ['mid08sum', 'mid17sum']].plot.line(ax=ax[1,0])
-        driveDataWeekday.loc[driveDataWeekday.loc[:,'ST_WOTAG_str'] == 'THU', ['mid08simpleAvrg', 'mid17simpleAvrg']].plot.line(ax=ax[1,1])
-        # driveDataWeekday.loc[driveDataWeekday.loc[:,'ST_WOTAG_str'] == 'FRI', ['mid08sum', 'mid17sum']].plot.line(ax=ax[4,0])
-        # driveDataWeekday.loc[driveDataWeekday.loc[:,'ST_WOTAG_str'] == 'FRI', ['mid08simpleAvrg', 'mid08wAvrg', 'mid17simpleAvrg', 'mid17wAvrg']].plot.line(ax=ax[4,1])
-        driveDataWeekday.loc[driveDataWeekday.loc[:,'ST_WOTAG_str'] == 'SAT', ['mid08sum', 'mid17sum']].plot.line(ax=ax[2,0])
-        driveDataWeekday.loc[driveDataWeekday.loc[:,'ST_WOTAG_str'] == 'SAT', ['mid08simpleAvrg', 'mid17simpleAvrg']].plot.line(ax=ax[2,1])
-        # driveDataWeekday.loc[driveDataWeekday.loc[:,'ST_WOTAG_str'] == 'SUN', ['mid08sum', 'mid17sum']].plot.line(ax=ax[6,0])
-        # driveDataWeekday.loc[driveDataWeekday.loc[:,'ST_WOTAG_str'] == 'SUN', ['mid08simpleAvrg', 'mid08wAvrg', 'mid17simpleAvrg', 'mid17wAvrg']].plot.line(ax=ax[6,1])
+        driveDataWeekday.loc[driveDataWeekday.loc[:,'tripStartWeekday'] == 'MON', ['mid08sum', 'mid17sum']].plot.line(ax=ax[0,0])
+        driveDataWeekday.loc[driveDataWeekday.loc[:,'tripStartWeekday'] == 'MON', ['mid08simpleAvrg', 'mid17simpleAvrg']].plot.line(ax=ax[0,1])  # 'mid08wAvrg','mid17wAvrg'
+        # driveDataWeekday.loc[driveDataWeekday.loc[:,'tripStartWeekday'] == 'TUE', ['mid08sum', 'mid17sum']].plot.line(ax=ax[1,0])
+        # driveDataWeekday.loc[driveDataWeekday.loc[:,'tripStartWeekday'] == 'TUE', ['mid08simpleAvrg', 'mid08wAvrg', 'mid17simpleAvrg', 'mid17wAvrg']].plot.line(ax=ax[1,1])
+        # driveDataWeekday.loc[driveDataWeekday.loc[:,'tripStartWeekday'] == 'WED', ['mid08sum', 'mid17sum']].plot.line(ax=ax[2,0])
+        # driveDataWeekday.loc[driveDataWeekday.loc[:,'tripStartWeekday'] == 'WED', ['mid08simpleAvrg', 'mid08wAvrg', 'mid17simpleAvrg', 'mid17wAvrg']].plot.line(ax=ax[2,1])
+        driveDataWeekday.loc[driveDataWeekday.loc[:,'tripStartWeekday'] == 'THU', ['mid08sum', 'mid17sum']].plot.line(ax=ax[1,0])
+        driveDataWeekday.loc[driveDataWeekday.loc[:,'tripStartWeekday'] == 'THU', ['mid08simpleAvrg', 'mid17simpleAvrg']].plot.line(ax=ax[1,1])
+        # driveDataWeekday.loc[driveDataWeekday.loc[:,'tripStartWeekday'] == 'FRI', ['mid08sum', 'mid17sum']].plot.line(ax=ax[4,0])
+        # driveDataWeekday.loc[driveDataWeekday.loc[:,'tripStartWeekday'] == 'FRI', ['mid08simpleAvrg', 'mid08wAvrg', 'mid17simpleAvrg', 'mid17wAvrg']].plot.line(ax=ax[4,1])
+        driveDataWeekday.loc[driveDataWeekday.loc[:,'tripStartWeekday'] == 'SAT', ['mid08sum', 'mid17sum']].plot.line(ax=ax[2,0])
+        driveDataWeekday.loc[driveDataWeekday.loc[:,'tripStartWeekday'] == 'SAT', ['mid08simpleAvrg', 'mid17simpleAvrg']].plot.line(ax=ax[2,1])
+        # driveDataWeekday.loc[driveDataWeekday.loc[:,'tripStartWeekday'] == 'SUN', ['mid08sum', 'mid17sum']].plot.line(ax=ax[6,0])
+        # driveDataWeekday.loc[driveDataWeekday.loc[:,'tripStartWeekday'] == 'SUN', ['mid08simpleAvrg', 'mid08wAvrg', 'mid17simpleAvrg', 'mid17wAvrg']].plot.line(ax=ax[6,1])
         ax[1, 0].get_legend().set_visible(False)
         ax[1, 1].get_legend().set_visible(False)
         ax[2, 0].get_legend().set_visible(False)
@@ -130,12 +130,12 @@ def evaluateDriveProfiles(config, weightPlot=False):
             fig.savefig(Path(config['linksRelative']['plotsDCMob']) / fileName)
 
 
-    # dataTueSat =  driveDataWeekday.loc[driveDataWeekday.loc[:,'ST_WOTAG_str'].isin(['TUE', 'SAT']), ['mid08wAvrg', 'mid17wAvrg']]
-    # # violinPlot(dataTueSat, hue='ST_WOTAG_str')
+    # dataTueSat =  driveDataWeekday.loc[driveDataWeekday.loc[:,'tripStartWeekday'].isin(['TUE', 'SAT']), ['mid08wAvrg', 'mid17wAvrg']]
+    # # violinPlot(dataTueSat, hue='tripStartWeekday')
     #
-    # dataTueSat = driveDataWeekday.loc[driveDataWeekday.loc[:,'ST_WOTAG_str'].isin(['TUE', 'SAT']), ['ST_WOTAG_str', 'mid08wAvrg', 'mid17wAvrg']].set_index('ST_WOTAG_str', append=True).stack()
+    # dataTueSat = driveDataWeekday.loc[driveDataWeekday.loc[:,'tripStartWeekday'].isin(['TUE', 'SAT']), ['tripStartWeekday', 'mid08wAvrg', 'mid17wAvrg']].set_index('tripStartWeekday', append=True).stack()
     # dataTueSat = dataTueSat.reset_index([1,2])
-    # dualViolinPlot(dataTueSat, x='ST_WOTAG_str', y=0, hue='level_2')
+    # dualViolinPlot(dataTueSat, x='tripStartWeekday', y=0, hue='level_2')
 
     data08_TuSa = data08.loc[(data08.loc[:, 'Day'].isin(['TUE', 'SAT'])) & (data08.loc[:, 'Value'] < 30), :]
     data17_TuSa = data17.loc[(data17.loc[:, 'Day'].isin(['TUE', 'SAT'])) & (data17.loc[:, 'Value'] < 30), :]

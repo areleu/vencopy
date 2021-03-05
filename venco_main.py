@@ -11,7 +11,7 @@ from scripts.libInput import *
 from scripts.libPreprocessing import *
 from scripts.libProfileCalculation import *
 from scripts.libOutput import *
-from scripts.libPlotting import *
+# from scripts.libPlotting import *
 from scripts.libLogging import logger
 import pathlib
 from profilehooks import profile
@@ -111,10 +111,10 @@ def vencoRun(config, dataset='MiD17'):
                           electricityDemandDriving=electricPowerProfilesCorr, SOCMax=socMaxNorm, SOCMin=socMinNorm,
                           gridConnectionShare=plugProfilesAgg, auxFuelDriveProfile=driveProfilesFuelAuxCorr)
 
-    writeProfilesToCSV(linkDict['linkOutput'],
-                       profileDictOut,
-                       singleFile=False,
-                       strAdd=dataset)
+    writeProfilesToCSV(profileDictOut=profileDictOut,
+                       config=config,
+                       singleFile=True,
+                       dataset=dataset)
 
     # writeAnnualOutputForREMix(profileDictOut, outputConfig, linkDict['linkOutputAnnual'],
     #                         config['postprocessing']['hoursClone'], config['labels']['technologyLabel'],

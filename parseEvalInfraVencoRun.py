@@ -20,7 +20,6 @@ from evaluateTripPurposes import evaluateTripPurposes
 from venco_main import vencoRun
 
 # Set dataset and config to analyze
-dataset = 'MiD08'
 linkConfig = pathlib.Path.cwd() / 'config' / 'config.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
 config = yaml.load(open(linkConfig), Loader=yaml.SafeLoader)
 

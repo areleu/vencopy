@@ -17,6 +17,7 @@ import seaborn as sns
 import pathlib
 from .libLogging import logit
 from .libLogging import logger
+from scripts.utilsParsing import *
 
 
 @logit
@@ -114,7 +115,7 @@ def createEmptyDataFrame(technologyLabel, numberOfHours, nodes):
 
 
 @logit
-def writeProfilesToCSV(outputFolder, profileDictOut, singleFile=True, strAdd=''):
+def writeProfilesToCSV(profileDictOut, config, singleFile=True, dataset='MiD17'):
     """
     Function to write VencoPy profiles to either one or five .csv files in the output folder specified in outputFolder.
 
@@ -129,10 +130,11 @@ def writeProfilesToCSV(outputFolder, profileDictOut, singleFile=True, strAdd='')
 
     if singleFile:
         dataOut = pd.DataFrame(profileDictOut)
-        dataOut.to_csv(outputFolder / pathlib.Path(r'vencoOutput' + strAdd + '.csv'), header=True)
+        dataOut.to_csv(createFileString(config=config, fileKey='vencoPyOutput', dataset=dataset), header=True)
     else:
         for iName, iProf in profileDictOut.items():
-            iProf.to_csv(outputFolder / pathlib.Path(r'vencoOutput_' + iName + strAdd + '.csv'), header=True)
+            iProf.to_csv(config['linksRelative']['resultsDaily'] /
+                         pathlib.Path(r'vencoPyOutput_' + iName + dataset + '.csv'), header=True)
 
 
 @logit
@@ -200,11 +202,11 @@ def linePlot(profileDict, linkOutput, config, show=True, write=True, ylabel='Nor
         fig.savefig(filePlot)
 
 @logit
-def separateLinePlots(profileDictList, config, show=True, write=True, ylabel=[], ylim=[], filenames=[]):
+def separateLinePlots(profileDictList, config, dataset='MiD17', show=True, write=True, ylabel=[], ylim=[], filenames=[]):
     for iDict, iYLabel, iYLim, iName in zip(profileDictList, ylabel, ylim, filenames):
-        writeProfilesToCSV(outputFolder=config['linksRelative']['resultsDailyDC'],
-                       profileDictOut=iDict,
+        writeProfilesToCSV(profileDictOut=iDict,
+                       config=config,
                        singleFile=False,
-                       strAdd='_' + config['labels']['runLabel'])
-        linePlot(iDict, linkOutput=config['linksRelative']['plotsDCFlex'], config=config,
+                       dataset=dataset)
+        linePlot(iDict, linkOutput=config['linksRelative']['plots'], config=config,
                     show=show, write=write, ylabel=iYLabel, ylim=iYLim, filename=iName)

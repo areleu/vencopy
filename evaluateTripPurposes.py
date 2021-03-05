@@ -23,7 +23,7 @@ def evaluateTripPurposes():
     purpose08_raw = purposes_mid2008_raw.drop(columns=['Weight'])
     purpose17_raw = purposes_mid2017_raw.drop(columns=['tripWeight', 'tripScaleFactor'])
     purpose08_idx = purpose08_raw.set_index('Day', append=True).stack()
-    purpose17_idx = purpose17_raw.set_index('ST_WOTAG_str', append=True).stack()
+    purpose17_idx = purpose17_raw.set_index('tripStartWeekday', append=True).stack()
     purpose08 = purpose08_idx.reset_index([1,2])
     purpose17 = purpose17_idx.reset_index([1,2])
 

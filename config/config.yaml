@@ -42,6 +42,7 @@ files:
         purposesProcessed: inputProfiles_Purpose  # inputProfiles_Purpose_runTest_MiD17.csv
         inputDataDriveProfiles: inputProfiles_Drive  # inputProfiles_Drive_runTest_MiD17.csv
         inputDataPlugProfiles: inputProfiles_Plug  # inputProfiles_Plug_runTest_MiD17.csv
+        vencoPyOutput: vencoPyOutput
     MiD08:
         householdsDataRaw: MiD2008_PUF_Haushalte.dta
         personDataRaw: MiD2008_PUF_Personen.dta
@@ -51,10 +52,12 @@ files:
         purposesProcessed: inputProfiles_Purpose  # inputProfiles_Purpose_runTest_MiD08.csv
         inputDataDriveProfiles: inputProfiles_Drive  # inputProfiles_Drive_runTest_MiD08.csv
         inputDataPlugProfiles: inputProfiles_Plug  # inputProfiles_Plug_runTest_MiD08.csv
+        vencoPyOutput: vencoPyOutput
 #        inputDataDriveProfiles: inputProfiles_Drive_MiD08.csv
 #        inputDataPlugProfiles: inputProfiles_Plug_MiD08.csv
+    vencoPyOutput: vencoPyOutput
 
-midVariables:
+dataVariables:
     dataset: ['MiD08', 'MiD17']
     isMIVDriver: ['pkw_f','W_VM_G']
     hhPersonID: ['pid','HP_ID_Reg']
@@ -78,6 +81,7 @@ midVariables:
 
 inputDTypes:
     isMIVDriver: 'b'
+    hhPersonID: 'i'
     tripID: 'i'
     tripWeight: 'f'
     tripStartClock: 'f'
@@ -93,6 +97,7 @@ inputDTypes:
     tripEndHour: 'i'
     tripEndMinute: 'i'
     tripEndNextDay: 'b'
+    tripIsIntermodal: 'i'
 
 filterDicts:
     MiD08:
@@ -103,6 +108,7 @@ filterDicts:
             tripEndHour: [99, 701]
             tripStartClock: [' ']
             tripEndClock: [' ']
+            tripPurpose: [97, 98]
         greaterThan:
         smallerThan:
             tripDistance: [1000]
@@ -118,7 +124,7 @@ filterDicts:
             tripIsIntermodal: [1]
         greaterThan:
         smallerThan:
-            tripDistance: 1000
+            tripDistance: [1000]
 
 #    tripData = tripData.loc[(tripData['tripStartClock'] <= tripData['tripEndClock']) |
 #    (tripData['tripEndNextDay'] == 1), :]  # departure must be before arrival or the trip must end the following day

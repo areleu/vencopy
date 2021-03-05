@@ -474,7 +474,7 @@ def correctProfiles(scalars, profile, profType):
         corrFactor = consumptionFuelArtemis / consumptionFuelNEFZ
     else:
         # review I expect raising an exception here. Would it not be a problem if the processing continues silently?
-        print('Either parameter "profType" is not given or not assigned to either "electric" or "fuel".')
+        print(f'Either parameter "{profType}" is not given or not assigned to either "electric" or "fuel".')
     profileOut = corrFactor * profile
     return profileOut
 

@@ -46,4 +46,4 @@ def assignSimpleChargeInfra(config, dataset='MiD17'):
 if __name__ == '__main__':
     linkConfig = Path.cwd() / 'config' / 'config.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
     config = yaml.load(open(linkConfig), Loader=yaml.SafeLoader)
-    assignSimpleChargeInfra(config=config, dataset='MiD08')
+    assignSimpleChargeInfra(config=config, dataset='MiD17')
