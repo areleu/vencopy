@@ -54,10 +54,10 @@ def parseMiD(dataset: str, config: dict):
     print(f'There are {len(purposeDataDays)} daily trip diaries.')
 
     #FIXME: Hard coded variable string not available anymore in both datasets
-    indexedDriveData = mergeVariables(data=driveDataDays, variableData=tripDataClean, variables=['tripStartWeekday'])  # 'tripWeight', 'tripScaleFactor'
+    indexedDriveData = mergeVariables(data=driveDataDays, variableData=tripDataClean, variables=['tripStartWeekday', 'tripWeight'])  # 'tripWeight', 'tripScaleFactor'
     print(purposeDataDays.head())
     print(tripDataClean.head())
-    indexedPurposeData = mergeVariables(data=purposeDataDays, variableData=tripDataClean, variables=['tripStartWeekday'])  # 'tripWeight', 'tripScaleFactor'
+    indexedPurposeData = mergeVariables(data=purposeDataDays, variableData=tripDataClean, variables=['tripStartWeekday', 'tripWeight'])  # 'tripWeight', 'tripScaleFactor'
 
     print(indexedDriveData.head())
     print(indexedPurposeData.head())

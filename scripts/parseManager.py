@@ -39,7 +39,7 @@ class ParseData:
         self.filterConsistentHours()
         if strColumns:
             self.addStrColumns()
-        self.addIndex()
+        # self.addIndex()
         self.composeStartAndEndTimestamps()
         print('Parsing completed')
 
@@ -95,8 +95,7 @@ class ParseData:
         replacementDict = self.createReplacementDict(self.datasetID, self.config['dataVariables'])
         dataRenamed = self.data.rename(columns=replacementDict)
         if self.datasetID == 'MiD08':
-            dataRenamed['hhPersonID'] = dataRenamed['hhID'].astype('string') + '__' + \
-                                        dataRenamed['personID'].astype('string')
+            dataRenamed['hhPersonID'] = (dataRenamed['hhID'].astype('string') + dataRenamed['personID'].astype('string')).astype('int')
         self.data = dataRenamed
         print('Finished harmonization of variables')
 
@@ -258,6 +257,6 @@ class ParseMID(ParseData):
 if __name__ == '__main__':
     linkConfig = Path.cwd().parent / 'config' / 'config.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
     config = yaml.load(open(linkConfig), Loader=yaml.SafeLoader)
-    p = ParseData(datasetID='MiD17', config=config, loadEncrypted=False, strColumns=True)
+    p = ParseData(datasetID='MiD08', config=config, loadEncrypted=False, strColumns=True)
     print(p.data.head())
     print('end')

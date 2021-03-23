@@ -27,9 +27,10 @@ class vpGrid:
     def assignSimpleGridViaPurposes(self):
         print(f'Starting with charge connection replacement of location purposes')
         self.chargeAvailability = self.purposeData.replace(self.gridDistributions)
-        # Next two lines needed?
-        self.chargeAvailability.set_index(['hhPersonID', 'tripStartWeekday'], inplace=True)
-        self.chargeAvailability.iloc[~self.chargeAvailability.isin(['WAHR', 'FALSCH'])] = 'FALSCH'
+
+        # Replace "dirty" occurences - doesn't seem to be necessary currently
+        # self.chargeAvailability.set_index(['hhPersonID', 'tripStartWeekday'], inplace=True)
+        # self.chargeAvailability.iloc[~self.chargeAvailability.isin(['WAHR', 'FALSCH'])] = 'FALSCH'
         print('Grid connection assignment complete')
 
     def writeOutGridAvailability(self):
@@ -68,6 +69,6 @@ if __name__ == '__main__':
     linkConfig = Path.cwd() / 'config' / 'config.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
     config = yaml.load(open(linkConfig), Loader=yaml.SafeLoader)
     # assignSimpleChargeInfra(config=config, dataset='MiD08')
-    vpg = vpGrid(config=config, dataset='MiD08')
+    vpg = vpGrid(config=config, dataset='MiD17')
     vpg.assignSimpleGridViaPurposes()
     vpg.writeOutGridAvailability()

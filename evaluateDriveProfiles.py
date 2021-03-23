@@ -36,8 +36,11 @@ class Evaluator:
         self.dailyMileageGermany2008 = 3.080e9  # pkm/d
         self.dailyMileageGermany2017 = 3.214e9  # pkm/d
         self.hourVec = [str(i) for i in range(0, config['numberOfHours'])]
-        self.inputData = self.readInData(['inputDataDriveProfiles'], ['MiD08', 'MiD17'])
+        self.datasets = ['MiD08', 'MiD17']
+        self.inputData = self.readInData(['inputDataDriveProfiles'], self.datasets)
         self.data = None
+        self.dataStacked = None
+        self.hourlyAggregates = self.aggregateAcrossTrips()
 
     def readInData(self, fileKeys: list, datasets: list) -> pd.Series:
         """
@@ -53,9 +56,10 @@ class Evaluator:
         for iFileKey in fileKeys:
             for iDat in datasets:
                 dataIn = pd.read_csv(Path(config['linksRelative']['input']) /
-                        createFileString(config=config, fileKey=iFileKey,
-                                         dataset=iDat))
-                ret[f'{iFileKey}_{iDat}'] = dataIn.set_index(['hhPersonID', 'tripStartWeekday'])
+                                     createFileString(config=config, fileKey=iFileKey,
+                                                      dataset=iDat), dtype={'hhPersonID': int},
+                                     index_col=['hhPersonID', 'tripStartWeekday'])
+                ret[iDat] = dataIn
         return ret
 
     def calculateMobilityQuota(self, dataset: str) -> None:
@@ -73,6 +77,29 @@ class Evaluator:
         isNoTrip.apply(any, axis=1)
 
 
+    # Maybe not used at all?
+    def stackData(self):
+        ret = {}
+        for idx, iDat in self.inputData.items():
+            iDatRaw = iDat.drop(columns=['hhPersonID']).set_index('tripStartWeekday',
+                                                                              append=True).stack()  # 'tripWeight', 'tripScaleFactor'
+            iDat = iDatRaw.reset_index([1, 2])
+            iDat.columns = ['Day', 'Hour', 'Value']
+            ret[idx] = iDat
+        return ret
+
+
+    def aggregateAcrossTrips(self):
+        ret = pd.DataFrame()
+        for iDatID, iDat in self.inputData.items():
+            ret.loc[:, f'{iDatID}_sum'] = iDat.loc[:, self.hourVec].sum(axis=0)
+            ret.loc[:, f'{iDatID}_mean'] = iDat.loc[:, self.hourVec].mean(axis=0)
+            ret.loc[:, f'{iDatID}_weightedMean'] = iDat.loc[:, self.hourVec].apply(self.calculateWeightedAverage, args=[iDat.loc[:, 'tripWeight']])
+        return ret
+
+
+    def calculateWeightedAverage(self, col, weightCol):
+        return sum(col * weightCol) / sum(weightCol)
 
 
 @profile(immediate=True)
@@ -210,5 +237,6 @@ if __name__ == '__main__':
 
     p = ParseData(datasetID='MiD17', config=config, strColumns=True, loadEncrypted=False)
 
-    vpEval.data = mergeVariables(data=vpEval.inputData['inputDataDriveProfiles_MiD17'].reset_index(), variableData=p.data, variables=['tripWeight'])
+    vpEval.data = mergeVariables(data=vpEval.inputData['MiD17'].reset_index(),
+                                 variableData=p.data, variables=['tripWeight'])
     print('this is the end')

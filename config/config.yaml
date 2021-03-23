@@ -89,7 +89,7 @@ dataVariables:
 
 inputDTypes:
     isMIVDriver: 'bool'
-    hhPersonID: 'str'
+    hhPersonID: 'int'
     tripID: 'int'
     tripWeight: 'float'
 #    tripStartClock: 'f'
@@ -141,7 +141,7 @@ filterDicts:
 
 
 labels:
-    runLabel: sesTest
+    runLabel: SES_1
     technologyLabel: BEV-S
     outputFileName: VencoPy_MR1_alpha1_batCap40_cons15
     strAdd: 11kW_SAM
