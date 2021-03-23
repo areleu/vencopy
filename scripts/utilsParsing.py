@@ -190,11 +190,24 @@ def fillDayPurposes(tripData, purposeDataDays):  #FixMe: Ask Ben for performance
         idxOld = idx
     return purposeDataDays
 
+def mapHHPIDToTripID(tripData):
+    idCols = tripData.loc[:, ['hhPersonID', 'tripID']]
+    idCols.loc['nextTripID'] = idCols['tripID'].shift(-1, fill_value=0)
+    tripDict = dict.fromkeys(set(idCols['hhPersonID']))
+    for ihhpID in tripDict.keys():
+        tripDict[ihhpID] = set(idCols.loc[idCols['hhPersonID'] == ihhpID, 'tripID'])
+    return tripDict
+
 def writeOut(config, dataset, dataDrive, dataPurpose):
     dataDrive.to_csv(Path(config['linksRelative']['input']) /
                      createFileString(config=config, fileKey='inputDataDriveProfiles', dataset=dataset), na_rep=0)
     dataPurpose.to_csv(Path(config['linksRelative']['input']) /
                        createFileString(config=config, fileKey='purposesProcessed', dataset=dataset))
+    print(f"Drive data and trip purposes written to files "
+          f"{createFileString(config=config, fileKey='inputDataDriveProfiles', dataset=dataset)} and"
+          f"{createFileString(config=config, fileKey='purposesProcessed', dataset=dataset)}")
+
+
 
 
 ### EXPERIMENTAL SANDBOX PART

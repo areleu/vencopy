@@ -9,11 +9,13 @@ import pprint
 import pandas as pd
 import warnings
 from pathlib import Path
+from profilehooks import profile
 import yaml
 from scripts.libInput import *
 
 class ParseData:
     # Separate datasets that know each other
+    # @profile(immediate=True)
     def __init__(self, datasetID: str, config: dict, strColumns: bool = False, loadEncrypted=True):
         self.datasetID = self.checkDatasetID(datasetID, config)
         self.config = config
@@ -22,10 +24,13 @@ class ParseData:
         self.columns = self.compileVariableList()
         self.filterDictNameList = ['include', 'exclude', 'greaterThan', 'smallerThan']
         self.updateFilterDict()
+        print('Parsing properties set up')
         if loadEncrypted:
+            print(f"Starting to retrieve encrypted data file from {self.config['linksAbsolute']['encryptedZipfile']}")
             self.loadEncryptedData(linkToZip=Path(self.config['linksAbsolute']['encryptedZipfile']) / self.config['files'][self.datasetID]['enryptedZipFileB2'],
                                    linkInZip=config['files'][self.datasetID]['tripDataZipFileRaw'])
         else:
+            print(f"Starting to retrieve local data file from {self.rawDataPath}")
             self.loadData()
         self.harmonizeVariables()
         self.convertTypes()
@@ -36,6 +41,7 @@ class ParseData:
             self.addStrColumns()
         self.addIndex()
         self.composeStartAndEndTimestamps()
+        print('Parsing completed')
 
     def updateFilterDict(self):
         self.__filterDict = self.config['filterDicts'][self.datasetID]
@@ -89,8 +95,8 @@ class ParseData:
         replacementDict = self.createReplacementDict(self.datasetID, self.config['dataVariables'])
         dataRenamed = self.data.rename(columns=replacementDict)
         if self.datasetID == 'MiD08':
-            dataRenamed['hhPersonID'] = dataRenamed['hhid'].astype('string') + '__' + \
-                                        dataRenamed['hhPersonID'].astype('string')
+            dataRenamed['hhPersonID'] = dataRenamed['hhID'].astype('string') + '__' + \
+                                        dataRenamed['personID'].astype('string')
         self.data = dataRenamed
         print('Finished harmonization of variables')
 
@@ -102,7 +108,11 @@ class ParseData:
             raise ValueError(f'Data set {dataset} not specified in MiD variable dictionary.')
 
     def convertTypes(self):
-        self.data = self.data.astype(self.config['inputDTypes'])
+        # Filter for dataset specific columns
+        conversionDict = self.config['inputDTypes']
+        keys = {iCol for iCol in conversionDict.keys() if iCol in self.data.columns}
+        subDict = {key: conversionDict[key] for key in conversionDict.keys() & keys}
+        self.data = self.data.astype(subDict)
 
     def checkFilterDict(self, filterDict: dict):
         # Currently only checking if list of list str not typechecked all(map(self.__checkStr, val)
@@ -122,7 +132,7 @@ class ParseData:
             elif iKey == 'smallerThan':
                 ret = ret.join(self.setSmallerThanFilter(iVal, self.data.index))
             else:
-                warnings.warn(f'A filter dictionary was defined in the config, that with an unknown key. '
+                warnings.warn(f'A filter dictionary was defined in the config with an unknown filtering key. '
                               f'Current filtering keys comprise include, exclude, smallerThan and greaterThan.'
                               f'Continuing with ignoring the dictionary {iKey}')
         self.data = self.data[ret.all(axis='columns')]
@@ -224,6 +234,21 @@ class ParseData:
         self.data.loc[endsFollowingDay, 'timestampEnd'] = self.data.loc[endsFollowingDay,
                                                                         'timestampEnd'] + pd.offsets.Day(1)
 
+    def calcNTripsPerDay(self):
+        return self.data['hhPersonID'].value_counts().mean()
+
+    def calcDailyTravelDistance(self):
+        dailyDistances = self.data.loc[:, ['hhPersonID', 'tripDistance']].groupby(by=['hhPersonID']).sum()
+        return dailyDistances.mean()
+
+    def calcDailyTravelTime(self):
+        travelTime = self.data.loc[:, ['hhPersonID', 'travelTime']].groupby(by=['hhPersonID']).sum()
+        return travelTime.mean()
+
+    def calcAverageTripDistance(self):
+        return self.data.loc[:, 'tripDistance'].mean()
+
+
 class ParseMID(ParseData):
     def __init__(self):
         super().__init__()
@@ -233,6 +258,6 @@ class ParseMID(ParseData):
 if __name__ == '__main__':
     linkConfig = Path.cwd().parent / 'config' / 'config.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
     config = yaml.load(open(linkConfig), Loader=yaml.SafeLoader)
-    p = ParseData(datasetID='MiD17', config=config)
+    p = ParseData(datasetID='MiD17', config=config, loadEncrypted=False, strColumns=True)
     print(p.data.head())
     print('end')

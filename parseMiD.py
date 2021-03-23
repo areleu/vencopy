@@ -9,7 +9,7 @@ __license__ = 'BSD-3-Clause'
 #----- imports & packages ------
 import pathlib
 import time
-# from profilehooks import profile
+from profilehooks import profile
 from scripts.utilsParsing import *
 from scripts.libPlotting import *
 from scripts.libLogging import logger
@@ -18,57 +18,11 @@ from scripts.parseManager import ParseData
 
 # ToDo: Hebefaktoren einrechnen bei nicht-detaillierter Erfassung (siehe MID-Nuterhandbuch, S. 33f.)
 
-# @profile(immediate=True)
+@profile(immediate=True)
 def parseMiD(dataset: str, config: dict):
-    #----- data read-in -----
-    # hhData_raw = pd.read_csv(pathlib.Path(config['linksAbsolute']['folderMiD2017']) / config['files']['MiD2017households'], sep=';')
-    # personData_raw = pd.read_csv(pathlib.Path(config['linksAbsolute']['folderMiD2017']) / config['files']['MiD2017persons'], sep=';')
-    # tripData_raw = pd.read_csv(pathlib.Path(config['linksAbsolute'][dataset]) / config['files'][dataset]['tripsDataRaw'],
-    #                            sep=';', decimal=',')
-    # tripData_raw = pd.read_stata(pathlib.Path(config['linksAbsolute'][dataset]) / config['files'][dataset]['tripsDataRaw'],
-    #                              convert_categoricals=False, convert_dates=False, preserve_dtypes=True)  # be explicit about column types
-    #
-    #
-    #
-    # tripDataHarmonVariables = harmonizeVariables(data=tripData_raw, dataset=dataset, config=config)
-    # relevantVariables = createListOfVariables(dataset=dataset, config=config)
-    #
-    # # W_VM_G=1 -> Only motorized individual vehicle trips
-    # tripData = tripDataHarmonVariables.loc[tripDataHarmonVariables.loc[:, 'isMIVDriver'] == 1, relevantVariables]
-    # # Dtype assignment
-    # tripData = tripData.astype(config['inputDTypes'])
-    #
-    # # Dataset filtering
-    # tripData = tripData.loc[(tripData['tripStartHour'] != 99) & (tripData['tripEndHour'] != 99), :]  # beginning and end hour must be available
-    # tripData = tripData.loc[(tripData['tripStartHour'] != 701) & (tripData['tripEndHour'] != 701), :]
-    # # tripData = tripData.loc[(tripData['tripStartClock'] <= tripData['tripEndClock']) |
-    # #                         (tripData['tripEndNextDay'] == 1), :]  # departure must be before arrival or the trip must end the following day
-    # tripData = tripData.loc[(tripData['tripStartClock'] != ' ') & (tripData['tripEndClock'] != ' '), :]  # Timestamps must be strings
-    # tripData = tripData.loc[(tripData['tripDistance'] < 1000), :]  # 9994, 9999 and 70703 are values for implausible, missing or non-detailed values
-    # if dataset == 'MiD17':
-    #     tripData = tripData.loc[tripData['tripIsIntermodal'] != 1, :]  # no intermodal trips
-    # if dataset == 'MiD08':
-    #     tripData = tripData.loc[~tripData['tripPurpose'].isin([97, 98]), :]  # observations with refused or unknown purpose are filtered out
-    # # tripData = filterOutTripsBelongingToMultiModalDays(tripData)
-    # print('Finished filtering')
-
-    p = ParseData(datasetID='MiD17', config=config, strColumns=True, loadEncrypted=True)
-    tripDataNew = p.data
+    p = ParseData(datasetID=dataset, config=config, strColumns=True, loadEncrypted=False)
 
     # # FIXME Currently, trips starting before 12:00 and ending at 13:00 have an endhour share of 0 and a fullHour. Change this to the respective share for two-hour trips
-    # # Variable replacements
-    # tripData.loc[:, 'ST_WOTAG_str'] = replaceDayNumbersByStrings(tripData.loc[:, 'tripStartWeekday'])
-    # tripData.loc[:, 'zweck_str'] = replacePurposes(tripData.loc[:, 'tripPurpose'],
-    #                                                config['midReplacements']['tripPurpose'])
-    # tripData['indexCol'] = tripData['hhPersonID'].astype('string') + '__' + tripData['tripID'].astype('string')
-    # tripData.set_index('indexCol', inplace=True)
-    # tripDataWDate = composeTimestamp(tripData, 'tripStartYear', 'tripStartWeek', 'tripStartWeekday',
-    #                                       'tripStartHour', 'tripStartMinute', 'timestamp_st')
-    # tripDataWDate = composeTimestamp(tripDataWDate, 'tripStartYear', 'tripStartWeek', 'tripStartWeekday',
-    #                                       'tripEndHour', 'tripEndMinute', 'timestamp_en')
-    # tripDataNightTrips = updateEndTimestamp(tripDataWDate)
-    # print('Finished timeseries replacements')
-
 
     # FIXME Currently, trips starting before 12:00 and ending at 13:00 have an endhour share of 0 and a fullHour. Change this to the respective share for two-hour trips
     tripDataWHourlyShares = calcHourlyShares(p.data, ts_st='timestampStart', ts_en='timestampEnd')
@@ -78,6 +32,7 @@ def parseMiD(dataset: str, config: dict):
                                                 (tripDataWHourlyShares['shareEndHour'] == 0) &
                                                 (tripDataWHourlyShares['noOfFullHours'] == 0)), :]
 
+    print('Initiating allocation of driving distance to hours')
     emptyDF = initiateHourDataframe(tripDataClean.index, config['numberOfHours'])
 
     # Class instantiating of callable class
@@ -85,12 +40,14 @@ def parseMiD(dataset: str, config: dict):
     driveDataTrips = fillDataframe(emptyDF, fillFunction=fillHourValues)
 
     driveDataTrips.loc[:, ['hhPersonID', 'tripID']] = pd.DataFrame(tripDataClean.loc[:, ['hhPersonID', 'tripID']])
-    driveDataDays = mergeTrips(driveDataTrips)  # FIXME: What happens if two trips overlap?
+    driveDataDays = mergeTrips(driveDataTrips)
+    print('Finished allocation of driving distance to hours')
 
     tripPurposesDriving = assignDriving(driveDataDays)
-#    tripDataDatetime = hoursToDatetime(tripDataClean)
     print('Finished hourly dataframe replacements')
 
+    print('Initiating trip purpose allocation')
+    hhPersonMap = mapHHPIDToTripID(tripDataClean)
     purposeDataDays = fillDayPurposes(tripDataClean, tripPurposesDriving)
     purposeDataDays.replace({'0.0': 'HOME'})  # FIXME: This was a quick-fix, integrate into case-differentiation
     print('Finished purpose replacements')
@@ -111,4 +68,4 @@ def parseMiD(dataset: str, config: dict):
 if __name__ == '__main__':
     linkConfig = pathlib.Path.cwd() / 'config' / 'config.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
     config = yaml.load(open(linkConfig), Loader=yaml.SafeLoader)
-    parseMiD(dataset='MiD17', config=config)
+    parseMiD(dataset='MiD08', config=config)

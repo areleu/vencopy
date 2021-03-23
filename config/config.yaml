@@ -8,7 +8,7 @@
 
 # This config holds all relative paths and filenames for VENCO
 numberOfHours: 24
-encryptionPW: 'PASSWORD'
+encryptionPW: 'PW'
 
 linksRelative:
     input: ./inputData/
@@ -65,7 +65,9 @@ files:
 dataVariables:
     dataset: ['MiD08', 'MiD17']
     isMIVDriver: ['pkw_f','W_VM_G']
-    hhPersonID: ['pid','HP_ID_Reg']
+    hhID: ['hhid', 'H_ID_Reg']
+    personID: ['pid', 'P_ID']
+    hhPersonID: ['NA','HP_ID_Reg']
     tripID: ['wid', 'W_ID']
     tripWeight: ['w_gew','W_GEW']
     tripScaleFactor: ['NA', 'W_HOCH']
@@ -73,6 +75,7 @@ dataVariables:
     tripEndClock: ['en_time', 'W_AZ']
     tripPurpose: ['w04', 'zweck']
     tripDistance: ['wegkm_k', 'wegkm']
+    travelTime : ['wegmin_k', 'wegmin_imp1']
     tripStartYear: ['stich_j', 'ST_JAHR']
     tripStartMonth: ['stich_m', 'ST_MONAT']
     tripStartWeek: ['stichwo', 'ST_WOCHE']
@@ -85,34 +88,36 @@ dataVariables:
     tripIsIntermodal: ['NA', 'weg_intermod']
 
 inputDTypes:
-    isMIVDriver: 'b'
-    hhPersonID: 'i'
-    tripID: 'i'
-    tripWeight: 'f'
+    isMIVDriver: 'bool'
+    hhPersonID: 'str'
+    tripID: 'int'
+    tripWeight: 'float'
 #    tripStartClock: 'f'
 #    tripEndClock: 'f'
-    tripPurpose: 'i'
-    tripDistance: 'f'
-    tripStartYear: 'i'
-    tripStartMonth: 'i'
-    tripStartWeek: 'i'
-    tripStartWeekday: 'i'
-    tripStartHour: 'i'
-    tripStartMinute: 'i'
-    tripEndHour: 'i'
-    tripEndMinute: 'i'
-    tripEndNextDay: 'b'
-    tripIsIntermodal: 'i'
+    tripPurpose: 'int'
+    tripDistance: 'float'
+    tripStartYear: 'int'
+    tripStartMonth: 'int'
+    tripStartWeek: 'int'
+    tripStartWeekday: 'int'
+    tripStartHour: 'int'
+    tripStartMinute: 'int'
+    tripEndHour: 'int'
+    tripEndMinute: 'int'
+    tripEndNextDay: 'bool'
+    tripIsIntermodal: 'int'
 
 filterDicts:
     MiD08:
         include:
             isMIVDriver: [1]
         exclude:
-            tripStartHour: [99, 701]
-            tripEndHour: [99, 701]
-            tripStartClock: [' ']
-            tripEndClock: [' ']
+            tripStartHour: [301]
+            tripStartMinute: [301]
+            tripEndHour: [301]
+            tripEndMinute: [301]
+            tripStartClock: ['301:00']
+            tripEndClock: ['301:00']
             tripPurpose: [97, 98]
         greaterThan:
         smallerThan:
@@ -136,7 +141,7 @@ filterDicts:
 
 
 labels:
-    runLabel: baseDC
+    runLabel: sesTest
     technologyLabel: BEV-S
     outputFileName: VencoPy_MR1_alpha1_batCap40_cons15
     strAdd: 11kW_SAM
@@ -164,6 +169,9 @@ midReplacements:
         8: 'HOME'  # nach Hause
         9: 'HOME'  # Rückweg vom vorherigen Weg
         10: 'OTHER'  # anderer Zweck
+        11: 'HOME'  # Begleitung Erwachsener (MiD08)
+        31: 'SCHOOL'  # Zur Schule oder Vorschule (MiD08)
+        32: 'SCHOOL'  # Kindertagesstaette oder Kindergarten (MiD08)
         99: 'NA'  # keine Angabe
 
 chargingInfrastructureDistributions:  # Probabilities given for each location aka trip purpose

@@ -11,7 +11,10 @@ from profilehooks import profile
 import seaborn as sns
 import matplotlib.pyplot as plt
 from scripts.libPlotting import *
-from scripts.utilsParsing import createFileString
+from scripts.utilsParsing import createFileString, mergeVariables
+from scripts.parseManager import ParseData
+
+
 
 # Some functions
 def wavg(data, avg_name, weight_name):
@@ -26,6 +29,52 @@ def wavg(data, avg_name, weight_name):
     except ZeroDivisionError:
         return d.mean()
 
+
+class Evaluator:
+    def __init__(self, config, weightPlot=False):
+        self.normPlotting = True
+        self.dailyMileageGermany2008 = 3.080e9  # pkm/d
+        self.dailyMileageGermany2017 = 3.214e9  # pkm/d
+        self.hourVec = [str(i) for i in range(0, config['numberOfHours'])]
+        self.inputData = self.readInData(['inputDataDriveProfiles'], ['MiD08', 'MiD17'])
+        self.data = None
+
+    def readInData(self, fileKeys: list, datasets: list) -> pd.Series:
+        """
+        Generic read-in function for mobility datasets. This serves as interface between the dailz trip distance
+        and purpose calculation and the class Evaluator.
+
+        :param fileKeys: List of VencoPy-internal names for the filekeys to read in
+        :param datasets: list of strings declaring the datasets to be read in
+        :return: a named pd.Series of all datasets with the given filekey_datasets as identifiers
+        """
+
+        ret = pd.Series(dtype=object)
+        for iFileKey in fileKeys:
+            for iDat in datasets:
+                dataIn = pd.read_csv(Path(config['linksRelative']['input']) /
+                        createFileString(config=config, fileKey=iFileKey,
+                                         dataset=iDat))
+                ret[f'{iFileKey}_{iDat}'] = dataIn.set_index(['hhPersonID', 'tripStartWeekday'])
+        return ret
+
+    def calculateMobilityQuota(self, dataset: str) -> None:
+        """
+        Calculates the number of survey days where mobiity occured.
+
+        :param dataset: name of dataset
+        :return: Scalar, the ratio of mobile days to total days
+        """
+        dataKey = f'inputDataDriveProfiles_{dataset}'
+        if not dataKey in self.inputData.keys():
+            assert 'Specified dataset was not read in during Evaluator initialization'
+        dat = self.inputData[dataKey]
+        isNoTrip = dat == 0
+        isNoTrip.apply(any, axis=1)
+
+
+
+
 @profile(immediate=True)
 def evaluateDriveProfiles(config, weightPlot=False):
 
@@ -37,6 +86,9 @@ def evaluateDriveProfiles(config, weightPlot=False):
                                     createFileString(config=config, fileKey='inputDataDriveProfiles', dataset='MiD08'))
     driveData_mid2017 = pd.read_csv(Path(config['linksRelative']['input']) /
                                     createFileString(config=config, fileKey='inputDataDriveProfiles', dataset='MiD17'))
+
+
+
 
     data08_raw = driveData_mid2008.drop(columns=['hhPersonID']).set_index('tripStartWeekday', append=True).stack()  # 'tripWeight', 'tripScaleFactor'
     data08 = data08_raw.reset_index([1, 2])
@@ -153,4 +205,10 @@ def evaluateDriveProfiles(config, weightPlot=False):
 if __name__ == '__main__':
     linkConfig = Path.cwd() / 'config' / 'config.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
     config = yaml.load(open(linkConfig), Loader=yaml.SafeLoader)
-    evaluateDriveProfiles(config=config)
+    # evaluateDriveProfiles(config=config)
+    vpEval = Evaluator(config)
+
+    p = ParseData(datasetID='MiD17', config=config, strColumns=True, loadEncrypted=False)
+
+    vpEval.data = mergeVariables(data=vpEval.inputData['inputDataDriveProfiles_MiD17'].reset_index(), variableData=p.data, variables=['tripWeight'])
+    print('this is the end')
