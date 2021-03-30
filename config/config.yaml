@@ -14,8 +14,7 @@ linksRelative:
     input: ./inputData/
     plots: ./output/plots/
     plotsMiDAna: ./output/plotsMIDAna/
-    plotsDCMob: ./output/plots/plotsDC/mob/
-    plotsDCFlex: ./output/plots/plotsDC/flex/
+    plotsSESPaper: ./output/SESAnalysis/plots/paper/
     resultsDaily: ./output/dailyTimeseries/
     resultsDailyDC: ./output/dailyTimeseries/dcAna/
     resultsAnnual: ./output/annualTimeseries/
@@ -61,6 +60,7 @@ files:
 #        inputDataDriveProfiles: inputProfiles_Drive_MiD08.csv
 #        inputDataPlugProfiles: inputProfiles_Plug_MiD08.csv
     vencoPyOutput: vencoPyOutput
+    aggPlotName: mobilityComparison
 
 dataVariables:
     dataset: ['MiD08', 'MiD17']
@@ -199,6 +199,7 @@ chargingInfrastructureDistributionsSchimmy:  # Identifiers from the evaluation o
 plotConfig:
     show: True
     save: True
+    xTickSteps: 6
     plotRCParameters:
         font.family: sans-serif
         font.weight: normal

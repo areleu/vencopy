@@ -31,7 +31,9 @@ def wavg(data, avg_name, weight_name):
 
 
 class Evaluator:
-    def __init__(self, config, weightPlot=False):
+    def __init__(self, config, weightPlot=True):
+        self.config = config
+        self.weightPlot = weightPlot
         self.normPlotting = True
         self.dailyMileageGermany2008 = 3.080e9  # pkm/d
         self.dailyMileageGermany2017 = 3.214e9  # pkm/d
@@ -40,7 +42,9 @@ class Evaluator:
         self.inputData = self.readInData(['inputDataDriveProfiles'], self.datasets)
         self.data = None
         self.dataStacked = None
+        self.aggregateIDDict = self.setupAggDict()
         self.hourlyAggregates = self.aggregateAcrossTrips()
+        print('Evaluator initialization complete')
 
     def readInData(self, fileKeys: list, datasets: list) -> pd.Series:
         """
@@ -77,7 +81,7 @@ class Evaluator:
         isNoTrip.apply(any, axis=1)
 
 
-    # Maybe not used at all?
+    # Maybe not needed at all?
     def stackData(self):
         ret = {}
         for idx, iDat in self.inputData.items():
@@ -88,19 +92,83 @@ class Evaluator:
             ret[idx] = iDat
         return ret
 
+    def setupAggDict(self):
+        IDDict = {'sum': None, 'mean': None, 'wMean': None}
+        IDDict['sum'] = [f'{iDatID}_sum' for iDatID in self.datasets]
+        IDDict['mean'] = [f'{iDatID}_mean' for iDatID in self.datasets]
+        IDDict['wMean'] = [f'{iDatID}_wMean' for iDatID in self.datasets]
+        return IDDict
 
     def aggregateAcrossTrips(self):
         ret = pd.DataFrame()
         for iDatID, iDat in self.inputData.items():
             ret.loc[:, f'{iDatID}_sum'] = iDat.loc[:, self.hourVec].sum(axis=0)
             ret.loc[:, f'{iDatID}_mean'] = iDat.loc[:, self.hourVec].mean(axis=0)
-            ret.loc[:, f'{iDatID}_weightedMean'] = iDat.loc[:, self.hourVec].apply(self.calculateWeightedAverage, args=[iDat.loc[:, 'tripWeight']])
+            if self.weightPlot:
+                ret.loc[:, f'{iDatID}_wMean'] = iDat.loc[:, self.hourVec].apply(self.calculateWeightedAverage, args=[iDat.loc[:, 'tripWeight']])
         return ret
-
 
     def calculateWeightedAverage(self, col, weightCol):
         return sum(col * weightCol) / sum(weightCol)
 
+    def calcVariableSpecAggregates(self, by):
+        ret = pd.DataFrame()
+        for iDatID, iDat in self.inputData.items():
+            if not all([iBy in iDat.index.names for iBy in by]):
+                raise Exception('At least one required variable name is not in index names. Aborting')
+            ret.loc[:, f'{iDatID}_sum'] = iDat.loc[:, self.hourVec].groupby(level=by).sum().stack()  # needed .stack() here?
+            ret.loc[:, f'{iDatID}_mean'] = iDat.loc[:, self.hourVec].groupby(level=by).mean().stack()
+            if self.weightPlot:
+                ret.loc[:, f'{iDatID}_wMean'] = iDat.loc[:,
+                                                self.hourVec].groupby(level=by).apply(self.calculateWeightedAverage,
+                                                                    weightCol=[iDat.loc[:, 'tripWeight']]).stack()
+        return ret
+
+        driveDataWeekday = pd.DataFrame({'mid08sum':
+                                         driveData_mid2008.groupby(
+                                             'tripStartWeekday').sum().stack()})  # .drop(labels=['Weight', 'tripScaleFactor'], axis=1)
+        driveDataWeekday.loc[:, 'mid08simpleAvrg'] = driveData_mid2008.groupby(
+        'tripStartWeekday').mean().stack()  # .drop(labels=['Weight', 'tripScaleFactor'], axis=1)
+        if weightPlot:
+            for iCol in hourVec:
+                for iDay in driveData_mid2008.Day.unique():
+                    driveDataWeekday.loc[(iDay, iCol), 'mid08wAvrg'] \
+                        = sum(driveData_mid2008.loc[driveData_mid2008.loc[:, 'Day'] == iDay, iCol]
+                          * driveData_mid2008.loc[driveData_mid2008.loc[:, 'Day'] == iDay, 'Weight']) \
+                            / sum(driveData_mid2008.loc[driveData_mid2008.loc[:, 'Day'] == iDay, 'Weight'])
+
+        driveDataWeekday.loc[:, 'mid17sum'] \
+            = driveData_mid2017.groupby('tripStartWeekday').sum().stack()  # .drop(labels=['tripWeight', 'tripScaleFactor'], axis=1)
+        driveDataWeekday.loc[:, 'mid17simpleAvrg'] \
+            = driveData_mid2017.groupby(
+            'tripStartWeekday').mean().stack()  # .drop(labels=['tripWeight', 'tripScaleFactor'], axis=1)
+
+        if weightPlot:
+            for iCol in hourVec:
+                for iDay in driveData_mid2017.tripStartWeekday.unique():
+                    driveDataWeekday.loc[(iDay, iCol), 'mid17wAvrg'] \
+                        = sum(driveData_mid2017.loc[driveData_mid2017.loc[:, 'tripStartWeekday'] == iDay, iCol]
+                              * driveData_mid2017.loc[driveData_mid2017.loc[:, 'tripStartWeekday'] == iDay, 'tripWeight']) \
+                          / sum(driveData_mid2017.loc[driveData_mid2017.loc[:, 'tripStartWeekday'] == iDay, 'tripWeight'])
+
+    def plotAggregates(self):
+        # Plotting aggregates
+        fig, ax = plt.subplots(2, 1)
+        meanCols = self.aggregateIDDict['mean']
+        meanCols.extend(self.aggregateIDDict['wMean'])
+        self.hourlyAggregates.loc[:, self.aggregateIDDict['sum']].plot.line(ax=ax[0])
+        self.hourlyAggregates.loc[:, meanCols].plot.line(ax=ax[1])
+        plt.xticks(range(0, len(self.hourVec)+1, self.config['plotConfig']['xTickSteps']))
+        ax[0].set(xlabel="Hour", ylabel="Sum of all trips")
+        ax[1].set(xlabel="Hour", ylabel="Average of all hourly trips")
+        ax[0].legend()
+        ax[1].legend()
+
+        if config['plotConfig']['show']:
+            plt.show()
+        if config['plotConfig']['save']:
+            fileName = createFileString(config=config, fileKey='aggPlotName', filetypeStr='svg')
+            fig.savefig(Path(config['linksRelative']['sesPlots']) / fileName)
 
 @profile(immediate=True)
 def evaluateDriveProfiles(config, weightPlot=False):
@@ -151,7 +219,7 @@ def evaluateDriveProfiles(config, weightPlot=False):
         plt.show()
     if config['plotConfig']['save']:
         fileName = 'allDays_08vs17_%s.png' % (config['labels']['runLabel'])
-        fig.savefig(Path(config['linksRelative']['plotsDCMob']) / fileName)
+        fig.savefig(Path(config['linksRelative']['sesPlots']) / fileName)
 
     if normPlotting:
 
@@ -234,9 +302,12 @@ if __name__ == '__main__':
     config = yaml.load(open(linkConfig), Loader=yaml.SafeLoader)
     # evaluateDriveProfiles(config=config)
     vpEval = Evaluator(config)
+    vpEval.hourlyAggregates = vpEval.calcVariableSpecAggregates(by=['tripStartWeekday'])
+    # p = ParseData(datasetID='MiD17', config=config, strColumns=True, loadEncrypted=False)
 
-    p = ParseData(datasetID='MiD17', config=config, strColumns=True, loadEncrypted=False)
+    vpEval.plotAggregates()
 
-    vpEval.data = mergeVariables(data=vpEval.inputData['MiD17'].reset_index(),
-                                 variableData=p.data, variables=['tripWeight'])
+    # vpEval.data = mergeVariables(data=vpEval.inputData['MiD17'].reset_index(),
+    #                              variableData=p.data, variables=['tripWeight'])
+
     print('this is the end')

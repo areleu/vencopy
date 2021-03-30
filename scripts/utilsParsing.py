@@ -10,7 +10,12 @@ import numpy as np
 from scripts.utilsTimestamp import *
 from pathlib import Path
 
-def createFileString(config, fileKey, dataset, filetypeStr='csv'):
+
+def createFileString(config: dict, fileKey: str, dataset: str=None, filetypeStr: str='csv'):
+    if dataset is None:
+        return "%s_%s.%s" % (config['files'][fileKey],
+                                config['labels']['runLabel'],
+                                filetypeStr)
     return "%s_%s_%s.%s" % (config['files'][dataset][fileKey],
                         config['labels']['runLabel'],
                         dataset,
