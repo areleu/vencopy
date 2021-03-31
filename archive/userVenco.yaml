@@ -15,13 +15,13 @@ __status__ = 'dev'  # options are: dev, test, prod
 #  - action2:
 #      project: VencoPy
 #      call: procProfiles
-#      profiles: ['driveProfilesRaw', 'plugProfilesRaw']
+#      profiles: ['driveProfilesIn', 'plugProfilesIn']
 #      dmgrName: 'profilesInput'
 
   - action2b:
       project: VencoPy
       call: indexProfiles
-      profilesInput: ['driveProfilesRaw', 'plugProfilesRaw']
+      profilesInput: ['driveProfilesIn', 'plugProfilesIn']
       indices: ['CASEID', 'PKWID']
       profilesDmgr: ['driveProfiles', 'plugProfiles']
 
@@ -31,7 +31,7 @@ __status__ = 'dev'  # options are: dev, test, prod
 
   - action4:
       project: VencoPy
-      call: calcConsumptionProfiles
+      call: calcDrainProfiles
 
 #  - actionCheck:
 #      project: general
@@ -125,7 +125,7 @@ __status__ = 'dev'  # options are: dev, test, prod
 
   - action20:
       project: VencoPy
-      call: aggregateProfiles
+      call: aggregateProfilesMean
       profiles: ['plugProfilesCons', 'chargeProfilesUncontrolledCorr',
                  'electricPowerProfilesCorr', 'driveProfilesFuelAuxCorr']
       dmgrNames: ['plugProfilesCons_out', 'chargeProfilesUncontrolled_out',
@@ -179,7 +179,7 @@ __status__ = 'dev'  # options are: dev, test, prod
 #  - debugAction2:
 #      project: VencoPy
 #      call: printProfiles
-#      profiles: ['driveProfilesRaw', 'plugProfilesRaw', 'consumptionProfiles', 'chargeProfiles',
+#      profiles: ['driveProfilesIn', 'plugProfilesIn', 'consumptionProfiles', 'chargeProfiles',
 #      'chargeMaxProfiles', 'chargeProfilesUncontrolled', 'driveProfilesFuelAux', 'chargeMinProfiles', 'profileSelectors']
 #      #'SOCMax', 'SOCMin', 'electricPowerProfiles',
 #      caseIDs: ['4803', '84490', '93345', '112106']

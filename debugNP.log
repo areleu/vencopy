@@ -393,10 +393,10 @@ def procScalars(driveProfiles_raw, plugProfiles_raw, driveProfiles, plugProfiles
 
 function call took 0.0 ms
 exiting function "procScalars"
-entering function "calcConsumptionProfiles"
+entering function "calcDrainProfiles"
 source:
 @logit
-def calcConsumptionProfiles(driveProfiles, scalars):
+def calcDrainProfiles(driveProfiles, scalars):
     '''
     Calculates electrical consumption profiles from drive profiles assuming specific consumption (in kWh/100 km)
     given in scalar input data file.
@@ -413,7 +413,7 @@ def calcConsumptionProfiles(driveProfiles, scalars):
     return consumptionProfiles
 
 function call took 0.04900550842285156 ms
-exiting function "calcConsumptionProfiles"
+exiting function "calcDrainProfiles"
 entering function "calcChargeProfiles"
 source:
 @logit
@@ -948,10 +948,10 @@ def filterConsProfiles(profile, filterCons, critCol):
 
 function call took 0.005999088287353516 ms
 exiting function "filterConsProfiles"
-entering function "aggregateProfiles"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     '''
     This action aggregates all single-vehicle profiles that are considered to one fleet profile. There is a separate
     action for the aggregation of plug profiles since it is not corrected by another driving cycle such as consumption
@@ -971,11 +971,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.053005218505859375 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     '''
     This action aggregates all single-vehicle profiles that are considered to one fleet profile. There is a separate
     action for the aggregation of plug profiles since it is not corrected by another driving cycle such as consumption
@@ -995,11 +995,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.0479886531829834 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     '''
     This action aggregates all single-vehicle profiles that are considered to one fleet profile. There is a separate
     action for the aggregation of plug profiles since it is not corrected by another driving cycle such as consumption
@@ -1019,11 +1019,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.04599571228027344 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     '''
     This action aggregates all single-vehicle profiles that are considered to one fleet profile. There is a separate
     action for the aggregation of plug profiles since it is not corrected by another driving cycle such as consumption
@@ -1043,7 +1043,7 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.03400397300720215 ms
-exiting function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
 entering function "correctProfiles"
 source:
 @logit
@@ -2837,10 +2837,10 @@ def procScalars(driveProfiles_raw, plugProfiles_raw, driveProfiles, plugProfiles
 
 function call took 0.0 ms
 exiting function "procScalars"
-entering function "calcConsumptionProfiles"
+entering function "calcDrainProfiles"
 source:
 @logit
-def calcConsumptionProfiles(driveProfiles, scalars):
+def calcDrainProfiles(driveProfiles, scalars):
     """
     Calculates electrical consumption profiles from drive profiles assuming specific consumption (in kWh/100 km)
     given in scalar input data file.
@@ -3055,10 +3055,10 @@ def procScalars(driveProfiles_raw, plugProfiles_raw, driveProfiles, plugProfiles
 
 function call took 0.0 ms
 exiting function "procScalars"
-entering function "calcConsumptionProfiles"
+entering function "calcDrainProfiles"
 source:
 @logit
-def calcConsumptionProfiles(driveProfiles, scalars):
+def calcDrainProfiles(driveProfiles, scalars):
     """
     Calculates electrical consumption profiles from drive profiles assuming specific consumption (in kWh/100 km)
     given in scalar input data file.
@@ -3078,7 +3078,7 @@ def calcConsumptionProfiles(driveProfiles, scalars):
     return consumptionProfiles
 
 function call took 0.04900002479553223 ms
-exiting function "calcConsumptionProfiles"
+exiting function "calcDrainProfiles"
 entering function "calcChargeProfiles"
 source:
 @logit
@@ -3329,10 +3329,10 @@ def procScalars(driveProfiles_raw, plugProfiles_raw, driveProfiles, plugProfiles
 
 function call took 0.0009589195251464844 ms
 exiting function "procScalars"
-entering function "calcConsumptionProfiles"
+entering function "calcDrainProfiles"
 source:
 @logit
-def calcConsumptionProfiles(driveProfiles, scalars):
+def calcDrainProfiles(driveProfiles, scalars):
     """
     Calculates electrical consumption profiles from drive profiles assuming specific consumption (in kWh/100 km)
     given in scalar input data file.
@@ -3352,7 +3352,7 @@ def calcConsumptionProfiles(driveProfiles, scalars):
     return consumptionProfiles
 
 function call took 0.06996488571166992 ms
-exiting function "calcConsumptionProfiles"
+exiting function "calcDrainProfiles"
 entering function "calcChargeProfiles"
 source:
 @logit
@@ -3811,10 +3811,10 @@ def procScalars(driveProfiles_raw, plugProfiles_raw, driveProfiles, plugProfiles
 
 function call took 0.0010025501251220703 ms
 exiting function "procScalars"
-entering function "calcConsumptionProfiles"
+entering function "calcDrainProfiles"
 source:
 @logit
-def calcConsumptionProfiles(driveProfiles, scalars):
+def calcDrainProfiles(driveProfiles, scalars):
     """
     Calculates electrical consumption profiles from drive profiles assuming specific consumption (in kWh/100 km)
     given in scalar input data file.
@@ -3834,7 +3834,7 @@ def calcConsumptionProfiles(driveProfiles, scalars):
     return consumptionProfiles
 
 function call took 0.08999180793762207 ms
-exiting function "calcConsumptionProfiles"
+exiting function "calcDrainProfiles"
 entering function "calcChargeProfiles"
 source:
 @logit
@@ -4279,10 +4279,10 @@ def procScalars(driveProfiles_raw, plugProfiles_raw, driveProfiles, plugProfiles
 
 function call took 0.0 ms
 exiting function "procScalars"
-entering function "calcConsumptionProfiles"
+entering function "calcDrainProfiles"
 source:
 @logit
-def calcConsumptionProfiles(driveProfiles, scalars):
+def calcDrainProfiles(driveProfiles, scalars):
     """
     Calculates electrical consumption profiles from drive profiles assuming specific consumption (in kWh/100 km)
     given in scalar input data file.
@@ -4302,7 +4302,7 @@ def calcConsumptionProfiles(driveProfiles, scalars):
     return consumptionProfiles
 
 function call took 0.06250548362731934 ms
-exiting function "calcConsumptionProfiles"
+exiting function "calcDrainProfiles"
 entering function "calcChargeProfiles"
 source:
 @logit
@@ -4966,10 +4966,10 @@ def procScalars(driveProfiles_raw, plugProfiles_raw, driveProfiles, plugProfiles
 
 function call took 0.0 ms
 exiting function "procScalars"
-entering function "calcConsumptionProfiles"
+entering function "calcDrainProfiles"
 source:
 @logit
-def calcConsumptionProfiles(driveProfiles, scalars):
+def calcDrainProfiles(driveProfiles, scalars):
     """
     Calculates electrical consumption profiles from drive profiles assuming specific consumption (in kWh/100 km)
     given in scalar input data file.
@@ -4989,7 +4989,7 @@ def calcConsumptionProfiles(driveProfiles, scalars):
     return consumptionProfiles
 
 function call took 0.04687643051147461 ms
-exiting function "calcConsumptionProfiles"
+exiting function "calcDrainProfiles"
 entering function "calcChargeProfiles"
 source:
 @logit
@@ -5653,10 +5653,10 @@ def procScalars(driveProfiles_raw, plugProfiles_raw, driveProfiles, plugProfiles
 
 function call took 0.0 ms
 exiting function "procScalars"
-entering function "calcConsumptionProfiles"
+entering function "calcDrainProfiles"
 source:
 @logit
-def calcConsumptionProfiles(driveProfiles, scalars):
+def calcDrainProfiles(driveProfiles, scalars):
     """
     Calculates electrical consumption profiles from drive profiles assuming specific consumption (in kWh/100 km)
     given in scalar input data file.
@@ -5676,7 +5676,7 @@ def calcConsumptionProfiles(driveProfiles, scalars):
     return consumptionProfiles
 
 function call took 0.06250572204589844 ms
-exiting function "calcConsumptionProfiles"
+exiting function "calcDrainProfiles"
 entering function "calcChargeProfiles"
 source:
 @logit
@@ -6224,10 +6224,10 @@ def filterConsProfiles(profile, filterCons, critCol):
 
 function call took 0.0 ms
 exiting function "filterConsProfiles"
-entering function "aggregateProfiles"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -6247,11 +6247,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.04688596725463867 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -6271,11 +6271,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.03124070167541504 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -6295,11 +6295,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.031214475631713867 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -6319,7 +6319,7 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.04688382148742676 ms
-exiting function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
 entering function "correctProfiles"
 source:
 @logit
@@ -6676,10 +6676,10 @@ def procScalars(driveProfiles_raw, plugProfiles_raw, driveProfiles, plugProfiles
 
 function call took 0.0 ms
 exiting function "procScalars"
-entering function "calcConsumptionProfiles"
+entering function "calcDrainProfiles"
 source:
 @logit
-def calcConsumptionProfiles(driveProfiles, scalars):
+def calcDrainProfiles(driveProfiles, scalars):
     """
     Calculates electrical consumption profiles from drive profiles assuming specific consumption (in kWh/100 km)
     given in scalar input data file.
@@ -6699,7 +6699,7 @@ def calcConsumptionProfiles(driveProfiles, scalars):
     return consumptionProfiles
 
 function call took 0.03126120567321777 ms
-exiting function "calcConsumptionProfiles"
+exiting function "calcDrainProfiles"
 entering function "calcChargeProfiles"
 source:
 @logit
@@ -7247,10 +7247,10 @@ def filterConsProfiles(profile, filterCons, critCol):
 
 function call took 0.0 ms
 exiting function "filterConsProfiles"
-entering function "aggregateProfiles"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -7270,11 +7270,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.046871185302734375 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -7294,11 +7294,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.04683995246887207 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -7318,11 +7318,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.01566028594970703 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -7342,7 +7342,7 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.031253814697265625 ms
-exiting function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
 entering function "correctProfiles"
 source:
 @logit
@@ -7697,10 +7697,10 @@ def procScalars(driveProfiles_raw, plugProfiles_raw, driveProfiles, plugProfiles
 
 function call took 0.0 ms
 exiting function "procScalars"
-entering function "calcConsumptionProfiles"
+entering function "calcDrainProfiles"
 source:
 @logit
-def calcConsumptionProfiles(driveProfiles, scalars):
+def calcDrainProfiles(driveProfiles, scalars):
     """
     Calculates electrical consumption profiles from drive profiles assuming specific consumption (in kWh/100 km)
     given in scalar input data file.
@@ -7720,7 +7720,7 @@ def calcConsumptionProfiles(driveProfiles, scalars):
     return consumptionProfiles
 
 function call took 0.046834468841552734 ms
-exiting function "calcConsumptionProfiles"
+exiting function "calcDrainProfiles"
 entering function "calcChargeProfiles"
 source:
 @logit
@@ -8268,10 +8268,10 @@ def filterConsProfiles(profile, filterCons, critCol):
 
 function call took 0.015633821487426758 ms
 exiting function "filterConsProfiles"
-entering function "aggregateProfiles"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -8291,11 +8291,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.031231164932250977 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -8315,11 +8315,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.01562190055847168 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -8339,11 +8339,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.015594482421875 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -8363,7 +8363,7 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.031215429306030273 ms
-exiting function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
 entering function "correctProfiles"
 source:
 @logit
@@ -9237,10 +9237,10 @@ def procScalars(driveProfiles_raw, plugProfiles_raw, driveProfiles, plugProfiles
 
 function call took 0.0 ms
 exiting function "procScalars"
-entering function "calcConsumptionProfiles"
+entering function "calcDrainProfiles"
 source:
 @logit
-def calcConsumptionProfiles(driveProfiles, scalars):
+def calcDrainProfiles(driveProfiles, scalars):
     """
     Calculates electrical consumption profiles from drive profiles assuming specific consumption (in kWh/100 km)
     given in scalar input data file.
@@ -9260,7 +9260,7 @@ def calcConsumptionProfiles(driveProfiles, scalars):
     return consumptionProfiles
 
 function call took 0.06249427795410156 ms
-exiting function "calcConsumptionProfiles"
+exiting function "calcDrainProfiles"
 entering function "calcChargeProfiles"
 source:
 @logit
@@ -9808,10 +9808,10 @@ def filterConsProfiles(profile, filterCons, critCol):
 
 function call took 0.0 ms
 exiting function "filterConsProfiles"
-entering function "aggregateProfiles"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -9831,11 +9831,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.046866655349731445 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -9855,11 +9855,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.03125643730163574 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -9879,11 +9879,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.04683995246887207 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -9903,7 +9903,7 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.031246185302734375 ms
-exiting function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
 entering function "correctProfiles"
 source:
 @logit
@@ -10218,10 +10218,10 @@ def procScalars(driveProfiles_raw, plugProfiles_raw, driveProfiles, plugProfiles
 
 function call took 0.0 ms
 exiting function "procScalars"
-entering function "calcConsumptionProfiles"
+entering function "calcDrainProfiles"
 source:
 @logit
-def calcConsumptionProfiles(driveProfiles, scalars):
+def calcDrainProfiles(driveProfiles, scalars):
     """
     Calculates electrical consumption profiles from drive profiles assuming specific consumption (in kWh/100 km)
     given in scalar input data file.
@@ -10241,7 +10241,7 @@ def calcConsumptionProfiles(driveProfiles, scalars):
     return consumptionProfiles
 
 function call took 0.04688310623168945 ms
-exiting function "calcConsumptionProfiles"
+exiting function "calcDrainProfiles"
 entering function "calcChargeProfiles"
 source:
 @logit
@@ -10789,10 +10789,10 @@ def filterConsProfiles(profile, filterCons, critCol):
 
 function call took 0.0 ms
 exiting function "filterConsProfiles"
-entering function "aggregateProfiles"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -10812,11 +10812,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.046877145767211914 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -10836,11 +10836,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.03125262260437012 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -10860,11 +10860,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.046878814697265625 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -10884,7 +10884,7 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.031250953674316406 ms
-exiting function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
 entering function "correctProfiles"
 source:
 @logit
@@ -11762,10 +11762,10 @@ def procScalars(driveProfiles_raw, plugProfiles_raw, driveProfiles, plugProfiles
 
 function call took 0.0 ms
 exiting function "procScalars"
-entering function "calcConsumptionProfiles"
+entering function "calcDrainProfiles"
 source:
 @logit
-def calcConsumptionProfiles(driveProfiles, scalars):
+def calcDrainProfiles(driveProfiles, scalars):
     """
     Calculates electrical consumption profiles from drive profiles assuming specific consumption (in kWh/100 km)
     given in scalar input data file.
@@ -11785,7 +11785,7 @@ def calcConsumptionProfiles(driveProfiles, scalars):
     return consumptionProfiles
 
 function call took 0.04690861701965332 ms
-exiting function "calcConsumptionProfiles"
+exiting function "calcDrainProfiles"
 entering function "calcChargeProfiles"
 source:
 @logit
@@ -12333,10 +12333,10 @@ def filterConsProfiles(profile, filterCons, critCol):
 
 function call took 0.0 ms
 exiting function "filterConsProfiles"
-entering function "aggregateProfiles"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -12356,11 +12356,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.04691314697265625 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -12380,11 +12380,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.0312657356262207 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -12404,11 +12404,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.04686999320983887 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -12428,7 +12428,7 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.031245708465576172 ms
-exiting function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
 entering function "correctProfiles"
 source:
 @logit
@@ -13306,10 +13306,10 @@ def procScalars(driveProfiles_raw, plugProfiles_raw, driveProfiles, plugProfiles
 
 function call took 0.0 ms
 exiting function "procScalars"
-entering function "calcConsumptionProfiles"
+entering function "calcDrainProfiles"
 source:
 @logit
-def calcConsumptionProfiles(driveProfiles, scalars):
+def calcDrainProfiles(driveProfiles, scalars):
     """
     Calculates electrical consumption profiles from drive profiles assuming specific consumption (in kWh/100 km)
     given in scalar input data file.
@@ -13329,7 +13329,7 @@ def calcConsumptionProfiles(driveProfiles, scalars):
     return consumptionProfiles
 
 function call took 0.04688072204589844 ms
-exiting function "calcConsumptionProfiles"
+exiting function "calcDrainProfiles"
 entering function "calcChargeProfiles"
 source:
 @logit
@@ -13877,10 +13877,10 @@ def filterConsProfiles(profile, filterCons, critCol):
 
 function call took 0.015666484832763672 ms
 exiting function "filterConsProfiles"
-entering function "aggregateProfiles"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -13900,11 +13900,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.03126049041748047 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -13924,11 +13924,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.031235456466674805 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -13948,11 +13948,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.04687643051147461 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -13972,7 +13972,7 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.031215429306030273 ms
-exiting function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
 entering function "correctProfiles"
 source:
 @logit
@@ -14850,10 +14850,10 @@ def procScalars(driveProfiles_raw, plugProfiles_raw, driveProfiles, plugProfiles
 
 function call took 0.0 ms
 exiting function "procScalars"
-entering function "calcConsumptionProfiles"
+entering function "calcDrainProfiles"
 source:
 @logit
-def calcConsumptionProfiles(driveProfiles, scalars):
+def calcDrainProfiles(driveProfiles, scalars):
     """
     Calculates electrical consumption profiles from drive profiles assuming specific consumption (in kWh/100 km)
     given in scalar input data file.
@@ -14873,7 +14873,7 @@ def calcConsumptionProfiles(driveProfiles, scalars):
     return consumptionProfiles
 
 function call took 0.04692268371582031 ms
-exiting function "calcConsumptionProfiles"
+exiting function "calcDrainProfiles"
 entering function "calcChargeProfiles"
 source:
 @logit
@@ -15421,10 +15421,10 @@ def filterConsProfiles(profile, filterCons, critCol):
 
 function call took 0.0 ms
 exiting function "filterConsProfiles"
-entering function "aggregateProfiles"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -15444,11 +15444,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.031200885772705078 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -15468,11 +15468,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.031290531158447266 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -15492,11 +15492,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.031267642974853516 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -15516,7 +15516,7 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.03119039535522461 ms
-exiting function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
 entering function "correctProfiles"
 source:
 @logit
@@ -16394,10 +16394,10 @@ def procScalars(driveProfiles_raw, plugProfiles_raw, driveProfiles, plugProfiles
 
 function call took 0.0 ms
 exiting function "procScalars"
-entering function "calcConsumptionProfiles"
+entering function "calcDrainProfiles"
 source:
 @logit
-def calcConsumptionProfiles(driveProfiles, scalars):
+def calcDrainProfiles(driveProfiles, scalars):
     """
     Calculates electrical consumption profiles from drive profiles assuming specific consumption (in kWh/100 km)
     given in scalar input data file.
@@ -16417,7 +16417,7 @@ def calcConsumptionProfiles(driveProfiles, scalars):
     return consumptionProfiles
 
 function call took 0.06249427795410156 ms
-exiting function "calcConsumptionProfiles"
+exiting function "calcDrainProfiles"
 entering function "calcChargeProfiles"
 source:
 @logit
@@ -16965,10 +16965,10 @@ def filterConsProfiles(profile, filterCons, critCol):
 
 function call took 0.0 ms
 exiting function "filterConsProfiles"
-entering function "aggregateProfiles"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -16988,11 +16988,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.06250309944152832 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -17012,11 +17012,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.04687023162841797 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -17036,11 +17036,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.04691028594970703 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -17060,7 +17060,7 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.062465667724609375 ms
-exiting function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
 entering function "correctProfiles"
 source:
 @logit
@@ -17402,10 +17402,10 @@ def procScalars(driveProfiles_raw, plugProfiles_raw, driveProfiles, plugProfiles
 
 function call took 0.0 ms
 exiting function "procScalars"
-entering function "calcConsumptionProfiles"
+entering function "calcDrainProfiles"
 source:
 @logit
-def calcConsumptionProfiles(driveProfiles, scalars):
+def calcDrainProfiles(driveProfiles, scalars):
     """
     Calculates electrical consumption profiles from drive profiles assuming specific consumption (in kWh/100 km)
     given in scalar input data file.
@@ -17425,7 +17425,7 @@ def calcConsumptionProfiles(driveProfiles, scalars):
     return consumptionProfiles
 
 function call took 0.03125619888305664 ms
-exiting function "calcConsumptionProfiles"
+exiting function "calcDrainProfiles"
 entering function "calcChargeProfiles"
 source:
 @logit
@@ -17973,10 +17973,10 @@ def filterConsProfiles(profile, filterCons, critCol):
 
 function call took 0.015647172927856445 ms
 exiting function "filterConsProfiles"
-entering function "aggregateProfiles"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -17996,11 +17996,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.04680585861206055 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -18020,11 +18020,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.03125357627868652 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -18044,11 +18044,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.031246423721313477 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -18068,7 +18068,7 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.031252384185791016 ms
-exiting function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
 entering function "correctProfiles"
 source:
 @logit
@@ -18936,10 +18936,10 @@ def procScalars(driveProfiles_raw, plugProfiles_raw, driveProfiles, plugProfiles
 
 function call took 0.0 ms
 exiting function "procScalars"
-entering function "calcConsumptionProfiles"
+entering function "calcDrainProfiles"
 source:
 @logit
-def calcConsumptionProfiles(driveProfiles, scalars):
+def calcDrainProfiles(driveProfiles, scalars):
     """
     Calculates electrical consumption profiles from drive profiles assuming specific consumption (in kWh/100 km)
     given in scalar input data file.
@@ -18959,7 +18959,7 @@ def calcConsumptionProfiles(driveProfiles, scalars):
     return consumptionProfiles
 
 function call took 0.04688072204589844 ms
-exiting function "calcConsumptionProfiles"
+exiting function "calcDrainProfiles"
 entering function "calcChargeProfiles"
 source:
 @logit
@@ -19507,10 +19507,10 @@ def filterConsProfiles(profile, filterCons, critCol):
 
 function call took 0.015633106231689453 ms
 exiting function "filterConsProfiles"
-entering function "aggregateProfiles"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -19530,11 +19530,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.031229734420776367 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -19554,11 +19554,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.031307220458984375 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -19578,11 +19578,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.04682159423828125 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -19602,7 +19602,7 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.04687786102294922 ms
-exiting function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
 entering function "correctProfiles"
 source:
 @logit
@@ -20542,10 +20542,10 @@ def procScalars(driveProfiles_raw, plugProfiles_raw, driveProfiles, plugProfiles
 
 function call took 0.0 ms
 exiting function "procScalars"
-entering function "calcConsumptionProfiles"
+entering function "calcDrainProfiles"
 source:
 @logit
-def calcConsumptionProfiles(driveProfiles, scalars):
+def calcDrainProfiles(driveProfiles, scalars):
     """
     Calculates electrical consumption profiles from drive profiles assuming specific consumption (in kWh/100 km)
     given in scalar input data file.
@@ -20565,7 +20565,7 @@ def calcConsumptionProfiles(driveProfiles, scalars):
     return consumptionProfiles
 
 function call took 0.04687929153442383 ms
-exiting function "calcConsumptionProfiles"
+exiting function "calcDrainProfiles"
 entering function "calcChargeProfiles"
 source:
 @logit
@@ -21113,10 +21113,10 @@ def filterConsProfiles(profile, filterCons, critCol):
 
 function call took 0.0 ms
 exiting function "filterConsProfiles"
-entering function "aggregateProfiles"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -21136,11 +21136,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.046814680099487305 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -21160,11 +21160,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.031275033950805664 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -21184,11 +21184,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.031222820281982422 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -21208,7 +21208,7 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.031250953674316406 ms
-exiting function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
 entering function "correctProfiles"
 source:
 @logit
@@ -22040,10 +22040,10 @@ def procScalars(driveProfiles_raw, plugProfiles_raw, driveProfiles, plugProfiles
 
 function call took 0.0 ms
 exiting function "procScalars"
-entering function "calcConsumptionProfiles"
+entering function "calcDrainProfiles"
 source:
 @logit
-def calcConsumptionProfiles(driveProfiles, scalars):
+def calcDrainProfiles(driveProfiles, scalars):
     """
     Calculates electrical consumption profiles from drive profiles assuming specific consumption (in kWh/100 km)
     given in scalar input data file.
@@ -22063,7 +22063,7 @@ def calcConsumptionProfiles(driveProfiles, scalars):
     return consumptionProfiles
 
 function call took 0.053406476974487305 ms
-exiting function "calcConsumptionProfiles"
+exiting function "calcDrainProfiles"
 entering function "calcChargeProfiles"
 source:
 @logit
@@ -22611,10 +22611,10 @@ def filterConsProfiles(profile, filterCons, critCol):
 
 function call took 0.0 ms
 exiting function "filterConsProfiles"
-entering function "aggregateProfiles"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -22634,11 +22634,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.046888113021850586 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -22658,11 +22658,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.037764549255371094 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -22682,11 +22682,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.0312345027923584 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -22706,7 +22706,7 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.03129267692565918 ms
-exiting function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
 entering function "correctProfiles"
 source:
 @logit
@@ -23046,10 +23046,10 @@ def procScalars(driveProfiles_raw, plugProfiles_raw, driveProfiles, plugProfiles
 
 function call took 0.0 ms
 exiting function "procScalars"
-entering function "calcConsumptionProfiles"
+entering function "calcDrainProfiles"
 source:
 @logit
-def calcConsumptionProfiles(driveProfiles, scalars):
+def calcDrainProfiles(driveProfiles, scalars):
     """
     Calculates electrical consumption profiles from drive profiles assuming specific consumption (in kWh/100 km)
     given in scalar input data file.
@@ -23069,7 +23069,7 @@ def calcConsumptionProfiles(driveProfiles, scalars):
     return consumptionProfiles
 
 function call took 0.06250166893005371 ms
-exiting function "calcConsumptionProfiles"
+exiting function "calcDrainProfiles"
 entering function "calcChargeProfiles"
 source:
 @logit
@@ -23617,10 +23617,10 @@ def filterConsProfiles(profile, filterCons, critCol):
 
 function call took 0.0 ms
 exiting function "filterConsProfiles"
-entering function "aggregateProfiles"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -23640,11 +23640,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.053404808044433594 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -23664,11 +23664,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.03125166893005371 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -23688,11 +23688,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.04687333106994629 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -23712,7 +23712,7 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.022150754928588867 ms
-exiting function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
 entering function "correctProfiles"
 source:
 @logit
@@ -24079,10 +24079,10 @@ def procScalars(driveProfiles_raw, plugProfiles_raw, driveProfiles, plugProfiles
 
 function call took 0.0 ms
 exiting function "procScalars"
-entering function "calcConsumptionProfiles"
+entering function "calcDrainProfiles"
 source:
 @logit
-def calcConsumptionProfiles(driveProfiles, scalars):
+def calcDrainProfiles(driveProfiles, scalars):
     """
     Calculates electrical consumption profiles from drive profiles assuming specific consumption (in kWh/100 km)
     given in scalar input data file.
@@ -24102,7 +24102,7 @@ def calcConsumptionProfiles(driveProfiles, scalars):
     return consumptionProfiles
 
 function call took 0.031249046325683594 ms
-exiting function "calcConsumptionProfiles"
+exiting function "calcDrainProfiles"
 entering function "calcChargeProfiles"
 source:
 @logit
@@ -24650,10 +24650,10 @@ def filterConsProfiles(profile, filterCons, critCol):
 
 function call took 0.015624523162841797 ms
 exiting function "filterConsProfiles"
-entering function "aggregateProfiles"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -24673,11 +24673,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.03777432441711426 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -24697,11 +24697,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.031250953674316406 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -24721,11 +24721,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.03128767013549805 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -24745,7 +24745,7 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.022186756134033203 ms
-exiting function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
 entering function "correctProfiles"
 source:
 @logit
@@ -25517,10 +25517,10 @@ def procScalars(driveProfiles_raw, plugProfiles_raw, driveProfiles, plugProfiles
 
 function call took 0.0 ms
 exiting function "procScalars"
-entering function "calcConsumptionProfiles"
+entering function "calcDrainProfiles"
 source:
 @logit
-def calcConsumptionProfiles(driveProfiles, scalars):
+def calcDrainProfiles(driveProfiles, scalars):
     """
     Calculates electrical consumption profiles from drive profiles assuming specific consumption (in kWh/100 km)
     given in scalar input data file.
@@ -25540,7 +25540,7 @@ def calcConsumptionProfiles(driveProfiles, scalars):
     return consumptionProfiles
 
 function call took 0.04687643051147461 ms
-exiting function "calcConsumptionProfiles"
+exiting function "calcDrainProfiles"
 entering function "calcChargeProfiles"
 source:
 @logit
@@ -26076,10 +26076,10 @@ def filterConsProfiles(profile, filterCons, critCol):
 
 function call took 0.0 ms
 exiting function "filterConsProfiles"
-entering function "aggregateProfiles"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -26099,11 +26099,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.04686594009399414 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -26123,11 +26123,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.0312654972076416 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -26147,11 +26147,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.03123331069946289 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -26171,7 +26171,7 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.03122687339782715 ms
-exiting function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
 entering function "correctProfiles"
 source:
 @logit
@@ -27024,10 +27024,10 @@ def procScalars(driveProfiles_raw, plugProfiles_raw, driveProfiles, plugProfiles
 
 function call took 0.0 ms
 exiting function "procScalars"
-entering function "calcConsumptionProfiles"
+entering function "calcDrainProfiles"
 source:
 @logit
-def calcConsumptionProfiles(driveProfiles, scalars):
+def calcDrainProfiles(driveProfiles, scalars):
     """
     Calculates electrical consumption profiles from drive profiles assuming specific consumption (in kWh/100 km)
     given in scalar input data file.
@@ -27047,7 +27047,7 @@ def calcConsumptionProfiles(driveProfiles, scalars):
     return consumptionProfiles
 
 function call took 0.04687309265136719 ms
-exiting function "calcConsumptionProfiles"
+exiting function "calcDrainProfiles"
 entering function "calcChargeProfiles"
 source:
 @logit
@@ -27583,10 +27583,10 @@ def filterConsProfiles(profile, filterCons, critCol):
 
 function call took 0.015583992004394531 ms
 exiting function "filterConsProfiles"
-entering function "aggregateProfiles"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -27606,11 +27606,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.04687380790710449 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -27630,11 +27630,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.03128957748413086 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -27654,11 +27654,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.046869516372680664 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -27678,7 +27678,7 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.031212806701660156 ms
-exiting function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
 entering function "correctProfiles"
 source:
 @logit
@@ -28552,10 +28552,10 @@ def procScalars(driveProfiles_raw, plugProfiles_raw, driveProfiles, plugProfiles
 
 function call took 0.0 ms
 exiting function "procScalars"
-entering function "calcConsumptionProfiles"
+entering function "calcDrainProfiles"
 source:
 @logit
-def calcConsumptionProfiles(driveProfiles, scalars):
+def calcDrainProfiles(driveProfiles, scalars):
     """
     Calculates electrical consumption profiles from drive profiles assuming specific consumption (in kWh/100 km)
     given in scalar input data file.
@@ -28575,7 +28575,7 @@ def calcConsumptionProfiles(driveProfiles, scalars):
     return consumptionProfiles
 
 function call took 0.06253218650817871 ms
-exiting function "calcConsumptionProfiles"
+exiting function "calcDrainProfiles"
 entering function "calcChargeProfiles"
 source:
 @logit
@@ -29111,10 +29111,10 @@ def filterConsProfiles(profile, filterCons, critCol):
 
 function call took 0.015647172927856445 ms
 exiting function "filterConsProfiles"
-entering function "aggregateProfiles"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -29134,11 +29134,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.0468134880065918 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -29158,11 +29158,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.03125572204589844 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -29182,11 +29182,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.031287431716918945 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -29206,7 +29206,7 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.031246662139892578 ms
-exiting function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
 entering function "correctProfiles"
 source:
 @logit
@@ -29560,10 +29560,10 @@ def procScalars(driveProfiles_raw, plugProfiles_raw, driveProfiles, plugProfiles
 
 function call took 0.0 ms
 exiting function "procScalars"
-entering function "calcConsumptionProfiles"
+entering function "calcDrainProfiles"
 source:
 @logit
-def calcConsumptionProfiles(driveProfiles, scalars):
+def calcDrainProfiles(driveProfiles, scalars):
     """
     Calculates electrical consumption profiles from drive profiles assuming specific consumption (in kWh/100 km)
     given in scalar input data file.
@@ -29583,7 +29583,7 @@ def calcConsumptionProfiles(driveProfiles, scalars):
     return consumptionProfiles
 
 function call took 0.046889543533325195 ms
-exiting function "calcConsumptionProfiles"
+exiting function "calcDrainProfiles"
 entering function "calcChargeProfiles"
 source:
 @logit
@@ -30119,10 +30119,10 @@ def filterConsProfiles(profile, filterCons, critCol):
 
 function call took 0.0 ms
 exiting function "filterConsProfiles"
-entering function "aggregateProfiles"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -30142,11 +30142,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.046836137771606445 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -30166,11 +30166,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.03128314018249512 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -30190,11 +30190,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.03121328353881836 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -30214,7 +30214,7 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.015669822692871094 ms
-exiting function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
 entering function "correctProfiles"
 source:
 @logit
@@ -30575,10 +30575,10 @@ def procScalars(driveProfiles_raw, plugProfiles_raw, driveProfiles, plugProfiles
 
 function call took 0.0 ms
 exiting function "procScalars"
-entering function "calcConsumptionProfiles"
+entering function "calcDrainProfiles"
 source:
 @logit
-def calcConsumptionProfiles(driveProfiles, scalars):
+def calcDrainProfiles(driveProfiles, scalars):
     """
     Calculates electrical consumption profiles from drive profiles assuming specific consumption (in kWh/100 km)
     given in scalar input data file.
@@ -30598,7 +30598,7 @@ def calcConsumptionProfiles(driveProfiles, scalars):
     return consumptionProfiles
 
 function call took 0.046857595443725586 ms
-exiting function "calcConsumptionProfiles"
+exiting function "calcDrainProfiles"
 entering function "calcChargeProfiles"
 source:
 @logit
@@ -31134,10 +31134,10 @@ def filterConsProfiles(profile, filterCons, critCol):
 
 function call took 0.015622138977050781 ms
 exiting function "filterConsProfiles"
-entering function "aggregateProfiles"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -31157,11 +31157,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.03128552436828613 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -31181,11 +31181,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.04684329032897949 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -31205,11 +31205,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.031288862228393555 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -31229,7 +31229,7 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.03125572204589844 ms
-exiting function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
 entering function "correctProfiles"
 source:
 @logit
@@ -31585,10 +31585,10 @@ def procScalars(driveProfiles_raw, plugProfiles_raw, driveProfiles, plugProfiles
 
 function call took 0.0 ms
 exiting function "procScalars"
-entering function "calcConsumptionProfiles"
+entering function "calcDrainProfiles"
 source:
 @logit
-def calcConsumptionProfiles(driveProfiles, scalars):
+def calcDrainProfiles(driveProfiles, scalars):
     """
     Calculates electrical consumption profiles from drive profiles assuming specific consumption (in kWh/100 km)
     given in scalar input data file.
@@ -31608,7 +31608,7 @@ def calcConsumptionProfiles(driveProfiles, scalars):
     return consumptionProfiles
 
 function call took 0.06253576278686523 ms
-exiting function "calcConsumptionProfiles"
+exiting function "calcDrainProfiles"
 entering function "calcChargeProfiles"
 source:
 @logit
@@ -32144,10 +32144,10 @@ def filterConsProfiles(profile, filterCons, critCol):
 
 function call took 0.0 ms
 exiting function "filterConsProfiles"
-entering function "aggregateProfiles"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -32167,11 +32167,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.046863555908203125 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -32191,11 +32191,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.04692482948303223 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -32215,11 +32215,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.031212806701660156 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -32239,7 +32239,7 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.04689788818359375 ms
-exiting function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
 entering function "correctProfiles"
 source:
 @logit
@@ -32593,10 +32593,10 @@ def procScalars(driveProfiles_raw, plugProfiles_raw, driveProfiles, plugProfiles
 
 function call took 0.0 ms
 exiting function "procScalars"
-entering function "calcConsumptionProfiles"
+entering function "calcDrainProfiles"
 source:
 @logit
-def calcConsumptionProfiles(driveProfiles, scalars):
+def calcDrainProfiles(driveProfiles, scalars):
     """
     Calculates electrical consumption profiles from drive profiles assuming specific consumption (in kWh/100 km)
     given in scalar input data file.
@@ -32616,7 +32616,7 @@ def calcConsumptionProfiles(driveProfiles, scalars):
     return consumptionProfiles
 
 function call took 0.06898951530456543 ms
-exiting function "calcConsumptionProfiles"
+exiting function "calcDrainProfiles"
 entering function "calcChargeProfiles"
 source:
 @logit
@@ -33152,10 +33152,10 @@ def filterConsProfiles(profile, filterCons, critCol):
 
 function call took 0.014309167861938477 ms
 exiting function "filterConsProfiles"
-entering function "aggregateProfiles"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -33175,11 +33175,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.034447669982910156 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -33199,11 +33199,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.02879023551940918 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -33223,11 +33223,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.03447890281677246 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -33247,7 +33247,7 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.035619258880615234 ms
-exiting function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
 entering function "correctProfiles"
 source:
 @logit
@@ -33603,10 +33603,10 @@ def procScalars(driveProfiles_raw, plugProfiles_raw, driveProfiles, plugProfiles
 
 function call took 0.0 ms
 exiting function "procScalars"
-entering function "calcConsumptionProfiles"
+entering function "calcDrainProfiles"
 source:
 @logit
-def calcConsumptionProfiles(driveProfiles, scalars):
+def calcDrainProfiles(driveProfiles, scalars):
     """
     Calculates electrical consumption profiles from drive profiles assuming specific consumption (in kWh/100 km)
     given in scalar input data file.
@@ -33626,7 +33626,7 @@ def calcConsumptionProfiles(driveProfiles, scalars):
     return consumptionProfiles
 
 function call took 0.049567461013793945 ms
-exiting function "calcConsumptionProfiles"
+exiting function "calcDrainProfiles"
 entering function "calcChargeProfiles"
 source:
 @logit
@@ -34162,10 +34162,10 @@ def filterConsProfiles(profile, filterCons, critCol):
 
 function call took 0.0058863162994384766 ms
 exiting function "filterConsProfiles"
-entering function "aggregateProfiles"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -34185,11 +34185,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.04926657676696777 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -34209,11 +34209,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.032026052474975586 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -34233,11 +34233,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.03657674789428711 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -34257,7 +34257,7 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.03331446647644043 ms
-exiting function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
 entering function "correctProfiles"
 source:
 @logit
@@ -34613,10 +34613,10 @@ def procScalars(driveProfiles_raw, plugProfiles_raw, driveProfiles, plugProfiles
 
 function call took 0.0 ms
 exiting function "procScalars"
-entering function "calcConsumptionProfiles"
+entering function "calcDrainProfiles"
 source:
 @logit
-def calcConsumptionProfiles(driveProfiles, scalars):
+def calcDrainProfiles(driveProfiles, scalars):
     """
     Calculates electrical consumption profiles from drive profiles assuming specific consumption (in kWh/100 km)
     given in scalar input data file.
@@ -34636,7 +34636,7 @@ def calcConsumptionProfiles(driveProfiles, scalars):
     return consumptionProfiles
 
 function call took 0.048436641693115234 ms
-exiting function "calcConsumptionProfiles"
+exiting function "calcDrainProfiles"
 entering function "calcChargeProfiles"
 source:
 @logit
@@ -35172,10 +35172,10 @@ def filterConsProfiles(profile, filterCons, critCol):
 
 function call took 0.0009968280792236328 ms
 exiting function "filterConsProfiles"
-entering function "aggregateProfiles"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -35195,11 +35195,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.0469517707824707 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -35219,11 +35219,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.03721261024475098 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -35243,11 +35243,11 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.03144669532775879 ms
-exiting function "aggregateProfiles"
-entering function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
+entering function "aggregateProfilesMean"
 source:
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -35267,7 +35267,7 @@ def aggregateProfiles(profilesIn):
     return profilesOut
 
 function call took 0.030969619750976562 ms
-exiting function "aggregateProfiles"
+exiting function "aggregateProfilesMean"
 entering function "correctProfiles"
 source:
 @logit
@@ -35624,10 +35624,10 @@ def procScalars(driveProfiles_raw, plugProfiles_raw, driveProfiles, plugProfiles
 
 function call took 0.0 ms
 exiting function "procScalars"
-entering function "calcConsumptionProfiles"
+entering function "calcDrainProfiles"
 source:
 @logit
-def calcConsumptionProfiles(driveProfiles, scalars):
+def calcDrainProfiles(driveProfiles, scalars):
     """
     Calculates electrical consumption profiles from drive profiles assuming specific consumption (in kWh/100 km)
     given in scalar input data file.
@@ -35647,7 +35647,7 @@ def calcConsumptionProfiles(driveProfiles, scalars):
     return consumptionProfiles
 
 function call took 0.062499284744262695 ms
-exiting function "calcConsumptionProfiles"
+exiting function "calcDrainProfiles"
 entering function "calcChargeProfiles"
 source:
 @logit
@@ -35866,10 +35866,10 @@ def procScalars(driveProfiles_raw, plugProfiles_raw, driveProfiles, plugProfiles
 
 function call took 0.0 ms
 exiting function "procScalars"
-entering function "calcConsumptionProfiles"
+entering function "calcDrainProfiles"
 source:
 @logit
-def calcConsumptionProfiles(driveProfiles, scalars):
+def calcDrainProfiles(driveProfiles, scalars):
     """
     Calculates electrical consumption profiles from drive profiles assuming specific consumption (in kWh/100 km)
     given in scalar input data file.
@@ -35889,7 +35889,7 @@ def calcConsumptionProfiles(driveProfiles, scalars):
     return consumptionProfiles
 
 function call took 0.06254124641418457 ms
-exiting function "calcConsumptionProfiles"
+exiting function "calcDrainProfiles"
 entering function "calcChargeProfiles"
 source:
 @logit
@@ -36108,10 +36108,10 @@ def procScalars(driveProfiles_raw, plugProfiles_raw, driveProfiles, plugProfiles
 
 function call took 0.0 ms
 exiting function "procScalars"
-entering function "calcConsumptionProfiles"
+entering function "calcDrainProfiles"
 source:
 @logit
-def calcConsumptionProfiles(driveProfiles, scalars):
+def calcDrainProfiles(driveProfiles, scalars):
     """
     Calculates electrical consumption profiles from drive profiles assuming specific consumption (in kWh/100 km)
     given in scalar input data file.
@@ -36131,7 +36131,7 @@ def calcConsumptionProfiles(driveProfiles, scalars):
     return consumptionProfiles
 
 function call took 0.04688572883605957 ms
-exiting function "calcConsumptionProfiles"
+exiting function "calcDrainProfiles"
 entering function "calcChargeProfiles"
 source:
 @logit
@@ -36272,10 +36272,10 @@ def calcChargeMaxProfiles(chargeProfiles, consumptionProfiles, scalars, scalarsP
 
 function call took 5.473758935928345 ms
 exiting function "calcChargeMaxProfiles"
-entering function "calcConsumptionProfiles"
+entering function "calcDrainProfiles"
 source:
 @logit
-def calcConsumptionProfiles(driveProfiles, scalars):
+def calcDrainProfiles(driveProfiles, scalars):
     """
     Calculates electrical consumption profiles from drive profiles assuming specific consumption (in kWh/100 km)
     given in scalar input data file.
@@ -36295,7 +36295,7 @@ def calcConsumptionProfiles(driveProfiles, scalars):
     return consumptionProfiles
 
 function call took 0.06249833106994629 ms
-exiting function "calcConsumptionProfiles"
+exiting function "calcDrainProfiles"
 entering function "calcChargeProfiles"
 source:
 @logit
@@ -36316,10 +36316,10 @@ def calcChargeProfiles(plugProfiles, scalars):
 
 function call took 0.031248807907104492 ms
 exiting function "calcChargeProfiles"
-entering function "calcConsumptionProfiles"
+entering function "calcDrainProfiles"
 source:
 @logit
-def calcConsumptionProfiles(driveProfiles, scalars):
+def calcDrainProfiles(driveProfiles, scalars):
     """
     Calculates electrical consumption profiles from drive profiles assuming specific consumption (in kWh/100 km)
     given in scalar input data file.
@@ -36339,7 +36339,7 @@ def calcConsumptionProfiles(driveProfiles, scalars):
     return consumptionProfiles
 
 function call took 0.06250882148742676 ms
-exiting function "calcConsumptionProfiles"
+exiting function "calcDrainProfiles"
 entering function "calcChargeProfiles"
 source:
 @logit
@@ -36360,10 +36360,10 @@ def calcChargeProfiles(plugProfiles, scalars):
 
 function call took 0.031249284744262695 ms
 exiting function "calcChargeProfiles"
-entering function "calcConsumptionProfiles"
+entering function "calcDrainProfiles"
 source:
 @logit
-def calcConsumptionProfiles(driveProfiles, scalars):
+def calcDrainProfiles(driveProfiles, scalars):
     """
     Calculates electrical consumption profiles from drive profiles assuming specific consumption (in kWh/100 km)
     given in scalar input data file.
@@ -36383,7 +36383,7 @@ def calcConsumptionProfiles(driveProfiles, scalars):
     return consumptionProfiles
 
 function call took 0.06246519088745117 ms
-exiting function "calcConsumptionProfiles"
+exiting function "calcDrainProfiles"
 entering function "calcChargeProfiles"
 source:
 @logit
@@ -36404,10 +36404,10 @@ def calcChargeProfiles(plugProfiles, scalars):
 
 function call took 0.015630006790161133 ms
 exiting function "calcChargeProfiles"
-entering function "calcConsumptionProfiles"
+entering function "calcDrainProfiles"
 source:
 @logit
-def calcConsumptionProfiles(driveProfiles, scalars):
+def calcDrainProfiles(driveProfiles, scalars):
     """
     Calculates electrical consumption profiles from drive profiles assuming specific consumption (in kWh/100 km)
     given in scalar input data file.
@@ -36427,7 +36427,7 @@ def calcConsumptionProfiles(driveProfiles, scalars):
     return consumptionProfiles
 
 function call took 0.0625004768371582 ms
-exiting function "calcConsumptionProfiles"
+exiting function "calcDrainProfiles"
 entering function "calcChargeProfiles"
 source:
 @logit
@@ -36448,10 +36448,10 @@ def calcChargeProfiles(plugProfiles, scalars):
 
 function call took 0.03125 ms
 exiting function "calcChargeProfiles"
-entering function "calcConsumptionProfiles"
+entering function "calcDrainProfiles"
 source:
 @logit
-def calcConsumptionProfiles(driveProfiles, scalars):
+def calcDrainProfiles(driveProfiles, scalars):
     """
     Calculates electrical consumption profiles from drive profiles assuming specific consumption (in kWh/100 km)
     given in scalar input data file.
@@ -36471,7 +36471,7 @@ def calcConsumptionProfiles(driveProfiles, scalars):
     return consumptionProfiles
 
 function call took 0.06246519088745117 ms
-exiting function "calcConsumptionProfiles"
+exiting function "calcDrainProfiles"
 entering function "calcChargeProfiles"
 source:
 @logit
@@ -36492,10 +36492,10 @@ def calcChargeProfiles(plugProfiles, scalars):
 
 function call took 0.031290292739868164 ms
 exiting function "calcChargeProfiles"
-entering function "calcConsumptionProfiles"
+entering function "calcDrainProfiles"
 source:
 @logit
-def calcConsumptionProfiles(driveProfiles, scalars):
+def calcDrainProfiles(driveProfiles, scalars):
     """
     Calculates electrical consumption profiles from drive profiles assuming specific consumption (in kWh/100 km)
     given in scalar input data file.
@@ -36515,7 +36515,7 @@ def calcConsumptionProfiles(driveProfiles, scalars):
     return consumptionProfiles
 
 function call took 0.04690122604370117 ms
-exiting function "calcConsumptionProfiles"
+exiting function "calcDrainProfiles"
 entering function "calcChargeProfiles"
 source:
 @logit
@@ -36536,10 +36536,10 @@ def calcChargeProfiles(plugProfiles, scalars):
 
 function call took 0.031222105026245117 ms
 exiting function "calcChargeProfiles"
-entering function "calcConsumptionProfiles"
+entering function "calcDrainProfiles"
 source:
 @logit
-def calcConsumptionProfiles(driveProfiles, scalars):
+def calcDrainProfiles(driveProfiles, scalars):
     """
     Calculates electrical consumption profiles from drive profiles assuming specific consumption (in kWh/100 km)
     given in scalar input data file.
@@ -36559,7 +36559,7 @@ def calcConsumptionProfiles(driveProfiles, scalars):
     return consumptionProfiles
 
 function call took 0.04687333106994629 ms
-exiting function "calcConsumptionProfiles"
+exiting function "calcDrainProfiles"
 entering function "calcChargeProfiles"
 source:
 @logit
@@ -36580,10 +36580,10 @@ def calcChargeProfiles(plugProfiles, scalars):
 
 function call took 0.015625 ms
 exiting function "calcChargeProfiles"
-entering function "calcConsumptionProfiles"
+entering function "calcDrainProfiles"
 source:
 @logit
-def calcConsumptionProfiles(driveProfiles, scalars):
+def calcDrainProfiles(driveProfiles, scalars):
     """
     Calculates electrical consumption profiles from drive profiles assuming specific consumption (in kWh/100 km)
     given in scalar input data file.
@@ -36603,7 +36603,7 @@ def calcConsumptionProfiles(driveProfiles, scalars):
     return consumptionProfiles
 
 function call took 0.04687356948852539 ms
-exiting function "calcConsumptionProfiles"
+exiting function "calcDrainProfiles"
 entering function "calcChargeProfiles"
 source:
 @logit
@@ -36624,10 +36624,10 @@ def calcChargeProfiles(plugProfiles, scalars):
 
 function call took 0.015635251998901367 ms
 exiting function "calcChargeProfiles"
-entering function "calcConsumptionProfiles"
+entering function "calcDrainProfiles"
 source:
 @logit
-def calcConsumptionProfiles(driveProfiles, scalars):
+def calcDrainProfiles(driveProfiles, scalars):
     """
     Calculates electrical consumption profiles from drive profiles assuming specific consumption (in kWh/100 km)
     given in scalar input data file.
@@ -36647,7 +36647,7 @@ def calcConsumptionProfiles(driveProfiles, scalars):
     return consumptionProfiles
 
 function call took 0.062499046325683594 ms
-exiting function "calcConsumptionProfiles"
+exiting function "calcDrainProfiles"
 entering function "calcChargeProfiles"
 source:
 @logit
@@ -36668,10 +36668,10 @@ def calcChargeProfiles(plugProfiles, scalars):
 
 function call took 0.031261444091796875 ms
 exiting function "calcChargeProfiles"
-entering function "calcConsumptionProfiles"
+entering function "calcDrainProfiles"
 source:
 @logit
-def calcConsumptionProfiles(driveProfiles, scalars):
+def calcDrainProfiles(driveProfiles, scalars):
     """
     Calculates electrical consumption profiles from drive profiles assuming specific consumption (in kWh/100 km)
     given in scalar input data file.
@@ -36691,7 +36691,7 @@ def calcConsumptionProfiles(driveProfiles, scalars):
     return consumptionProfiles
 
 function call took 0.04690289497375488 ms
-exiting function "calcConsumptionProfiles"
+exiting function "calcDrainProfiles"
 entering function "calcChargeProfiles"
 source:
 @logit
@@ -36712,10 +36712,10 @@ def calcChargeProfiles(plugProfiles, scalars):
 
 function call took 0.03125309944152832 ms
 exiting function "calcChargeProfiles"
-entering function "calcConsumptionProfiles"
+entering function "calcDrainProfiles"
 source:
 @logit
-def calcConsumptionProfiles(driveProfiles, scalars):
+def calcDrainProfiles(driveProfiles, scalars):
     """
     Calculates electrical consumption profiles from drive profiles assuming specific consumption (in kWh/100 km)
     given in scalar input data file.
@@ -36735,7 +36735,7 @@ def calcConsumptionProfiles(driveProfiles, scalars):
     return consumptionProfiles
 
 function call took 0.0468745231628418 ms
-exiting function "calcConsumptionProfiles"
+exiting function "calcDrainProfiles"
 entering function "calcChargeProfiles"
 source:
 @logit
@@ -36756,10 +36756,10 @@ def calcChargeProfiles(plugProfiles, scalars):
 
 function call took 0.015626907348632812 ms
 exiting function "calcChargeProfiles"
-entering function "calcConsumptionProfiles"
+entering function "calcDrainProfiles"
 source:
 @logit
-def calcConsumptionProfiles(driveProfiles, scalars):
+def calcDrainProfiles(driveProfiles, scalars):
     """
     Calculates electrical consumption profiles from drive profiles assuming specific consumption (in kWh/100 km)
     given in scalar input data file.
@@ -36779,7 +36779,7 @@ def calcConsumptionProfiles(driveProfiles, scalars):
     return consumptionProfiles
 
 function call took 0.04690957069396973 ms
-exiting function "calcConsumptionProfiles"
+exiting function "calcDrainProfiles"
 entering function "calcChargeProfiles"
 source:
 @logit

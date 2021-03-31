@@ -11,11 +11,18 @@ __status__ = 'test'  # options are: dev, test, prod
 import warnings
 from .libLogging import logit
 from .libLogging import logger
+import pandas as pd
 
-def indexDriveAndPlugData(driveProfiles_raw, plugProfiles_raw, nHours):
-    driveProfiles = indexProfile(driveProfiles_raw, nHours)
-    plugProfiles = indexProfile(plugProfiles_raw, nHours)
-    return driveProfiles, plugProfiles
+
+def indexWeights(weights: pd.DataFrame) -> pd.DataFrame:
+    weights = weights.convert_dtypes()
+    return weights.set_index(['hhPersonID', 'tripStartWeekday'], drop=True)
+
+
+def indexDriveAndPlugData(driveData: pd.DataFrame, plugData: pd.DataFrame, dropIdxLevel: str, nHours: int):
+    driveProfiles = indexProfile(driveData, nHours)
+    plugProfiles = indexProfile(plugData, nHours)
+    return driveProfiles.droplevel(dropIdxLevel), plugProfiles.droplevel(dropIdxLevel)
 
 @logit
 def indexProfile(data, nHours):
@@ -31,6 +38,7 @@ def indexProfile(data, nHours):
     """
 
     indexCols = findIndexCols(data, nHours)
+    data = data.convert_dtypes()  # Reduce column data types if possible (specifically hhPersonID column to int)
     dataIndexed = data.set_index(list(indexCols))
 
     # Typecast column indices to int for later looping over a range

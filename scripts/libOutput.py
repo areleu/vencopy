@@ -187,26 +187,39 @@ def composeStringDict(pre, names, post):
 def linePlot(profileDict, linkOutput, config, show=True, write=True, ylabel='Normalized profiles', ylim=None, filename=''):
     plt.rcParams.update(config['plotConfig']['plotRCParameters'])  # set plot layout
     fig, ax = plt.subplots()
+    plt.tick_params(labelsize=config['plotConfig']['plotRCParameters']['font.size'])
     for iKey, iVal in profileDict.items():
-        sns.lineplot(iVal.index, iVal, label=iKey, sort=False)
+        if isinstance(iVal.index, pd.MultiIndex):
+            iVal = sort(iVal)
+            sns.lineplot(range(iVal.index.size), iVal, label=iKey, sort=False)
+        else:
+            sns.lineplot(iVal.index, iVal, label=iKey, sort=False)
+    xRange = range(0, len(profileDict[list(profileDict)[0]]) + 1, config['plotConfig']['xAxis']['xTickSteps'])
+    xLabels = [f'{iDay}\n{str(iTime)}:00' for iDay in config['plotConfig']['xAxis']['weekdays'] for iTime in config['plotConfig']['xAxis']['hours']]
+    # xLabels = [f'{str(iTime)}:00' for iTime in config['plotConfig']['xAxis']['hours']]
+    ax.set_xticks(xRange)
+    ax.set_xticklabels(xLabels, fontsize=config['plotConfig']['xAxis']['ticklabelsize'])
     ax.set_ylim(bottom=0, top=ylim)
-    ax.set_xlabel('Hour')
-    ax.set_ylabel(ylabel)
-    ax.legend(loc='upper center', bbox_to_anchor=(0.5, 1.3))  # ncol=2,
+    ax.set_xlabel('Hour', fontsize=config['plotConfig']['plotRCParameters']['axes.labelsize'])
+    ax.set_ylabel(ylabel, fontsize=config['plotConfig']['plotRCParameters']['axes.labelsize'])
+    plt.legend(loc='upper center')  # , bbox_to_anchor=(0.5, 1.3) ncol=2,
     plt.tight_layout()
-    filePlot = linkOutput / pathlib.Path(filename + '_' + config['labels']['runLabel'] + '_' +
-                                         config['labels']['strAdd'] + '.png')
+    filePlot = linkOutput / pathlib.Path(createFileString(config=config, fileKey='flexPlotName', manualLabel=filename,
+                                                          filetypeStr='svg'))
     if show:
         plt.show()
     if write:
         fig.savefig(filePlot)
 
+
+def sort(data):
+    data.index = data.index.swaplevel(0, 1)
+    return data.sort_index()
+
 @logit
-def separateLinePlots(profileDictList, config, dataset='MiD17', show=True, write=True, ylabel=[], ylim=[], filenames=[]):
+def separateLinePlots(profileDictList, config, dataset='MiD17', show=True, write=True, ylabel=[], ylim=[],
+                      filenames=[]):
     for iDict, iYLabel, iYLim, iName in zip(profileDictList, ylabel, ylim, filenames):
-        writeProfilesToCSV(profileDictOut=iDict,
-                       config=config,
-                       singleFile=False,
-                       dataset=dataset)
-        linePlot(iDict, linkOutput=config['linksRelative']['plots'], config=config,
-                    show=show, write=write, ylabel=iYLabel, ylim=iYLim, filename=iName)
+        writeProfilesToCSV(profileDictOut=iDict, config=config, singleFile=False, dataset=dataset)
+        linePlot(iDict, linkOutput=config['linksRelative']['sesPlots'], config=config, show=show, write=write,
+                 ylabel=iYLabel, ylim=iYLim, filename=iName)

@@ -15,10 +15,11 @@ from random import seed
 from random import random
 from .libLogging import logit
 from .libLogging import logger
+from evaluateDriveProfiles import Evaluator
 
 
 @logit
-def calcConsumptionProfiles(driveProfiles, scalars):
+def calcDrainProfiles(driveProfiles, scalars):
     """
     Calculates electrical consumption profiles from drive profiles assuming specific consumption (in kWh/100 km)
     given in scalar input data file.
@@ -29,9 +30,7 @@ def calcConsumptionProfiles(driveProfiles, scalars):
     scaled with the specific consumption assumption.
     """
 
-    consumptionProfiles = driveProfiles.copy()
-    consumptionProfiles = consumptionProfiles * scalars.loc['Electric consumption NEFZ', 'value'] / float(100)
-    return consumptionProfiles
+    return driveProfiles * scalars.loc['Electric consumption NEFZ', 'value'] / float(100)
 
 
 @logit
@@ -45,9 +44,7 @@ def calcChargeProfiles(plugProfiles, scalars):
     :return: Returns scaled plugProfile in the same format as plugProfiles.
     '''
 
-    chargeProfiles = plugProfiles.copy()
-    chargeProfiles = chargeProfiles * scalars.loc['Rated power of charging column', 'value'].astype(float)
-    return chargeProfiles
+    return plugProfiles * scalars.loc['Rated power of charging column', 'value'].astype(float)
 
 
 @logit
@@ -69,17 +66,16 @@ def calcChargeMaxProfiles(chargeProfiles, consumptionProfiles, scalars, scalarsP
     """
 
     chargeMaxProfiles = chargeProfiles.copy()
-    chargeProfiles = chargeProfiles.copy()
-    consumptionProfiles = consumptionProfiles.copy()
     batCapMin = scalars.loc['Battery capacity', 'value'] * scalars.loc['Minimum SOC', 'value']
     batCapMax = scalars.loc['Battery capacity', 'value'] * scalars.loc['Maximum SOC', 'value']
     nHours = scalarsProc['noHours']
     for idxIt in range(nIter):
+        print(f'Starting with iteration {idxIt}')
         for iHour in range(nHours):
+            # print(f'Starting with hour {iHour}')
             if iHour == 0:
                 chargeMaxProfiles[iHour] = chargeMaxProfiles[nHours - 1].where(chargeMaxProfiles[iHour] <= batCapMax,
                                                                                batCapMax)
-
             else:
                 # Calculate and append column with new SoC Max value for comparison and cleaner code
                 chargeMaxProfiles['newCharge'] = chargeMaxProfiles[iHour - 1] + \
@@ -275,18 +271,12 @@ def calcProfileSelectors(chargeProfiles,
     socMin = scalars.loc['Minimum SOC', 'value']
     filterCons = driveProfiles.copy()
     filterCons['randNo'] = randNos
-    filterCons['bolFuelDriveTolerance'] = driveProfilesFuelAux.sum(axis='columns') * \
-                                           boolBEV < fuelDriveTolerance
+    filterCons['bolFuelDriveTolerance'] = driveProfilesFuelAux.sum(axis='columns') * boolBEV < fuelDriveTolerance
     filterCons['bolMinDailyMileage'] = driveProfiles.sum(axis='columns') > \
-                                        (2 * randNos * minDailyMileage +
-                                         (1 - randNos) * minDailyMileage *
-                                         isBEV)
-    filterCons['indexCons'] = filterCons.loc[:, 'bolFuelDriveTolerance'] & \
-                               filterCons.loc[:, 'bolMinDailyMileage']
-    filterCons['bolConsumption'] = consumptionProfiles.sum(axis=1) < \
-                                    chargeProfiles.sum(axis=1)
-    filterCons['bolSuffBat'] = consumptionProfiles.sum(axis=1) < \
-                                batSize * (socMax - socMin)
+                                       (2 * randNos * minDailyMileage + (1 - randNos) * minDailyMileage * isBEV)
+    filterCons['indexCons'] = filterCons.loc[:, 'bolFuelDriveTolerance'] & filterCons.loc[:, 'bolMinDailyMileage']
+    filterCons['bolConsumption'] = consumptionProfiles.sum(axis=1) < chargeProfiles.sum(axis=1)
+    filterCons['bolSuffBat'] = consumptionProfiles.sum(axis=1) < batSize * (socMax - socMin)
     filterCons['indexDSM'] = filterCons['indexCons'] & filterCons['bolConsumption'] & filterCons['bolSuffBat']
 
     print('There are ' + str(sum(filterCons['indexCons'])) + ' considered profiles and ' + \
@@ -436,7 +426,7 @@ def normalizeProfiles(scalars, socMin, socMax, normReferenceParam):
 
 
 @logit
-def aggregateProfiles(profilesIn):
+def aggregateProfilesMean(profilesIn):
     """
     This method aggregates all single-vehicle profiles that are considered to one fleet profile.
 
@@ -449,6 +439,29 @@ def aggregateProfiles(profilesIn):
     lenProfiles = len(profilesIn)
     profilesOut = profilesIn.apply(sum, axis=0) / lenProfiles
     return profilesOut
+
+
+def aggregateProfilesWeight(profilesIn, weights):
+    profilesIn = profilesIn.loc[~profilesIn.apply(lambda x: x.isna(), axis=0).any(axis=1), :]
+    weights = weights.loc[profilesIn.index, :]  # Filtering weight data to equate lengths
+    profilesOut = profilesIn.apply(Evaluator.calculateWeightedAverage, weightCol=weights['tripWeight'])
+    return profilesOut
+
+
+def aggregateDiffVariable(data: pd.DataFrame, by: str, weights: pd.Series, hourVec: list):
+    vars = set(data.index.get_level_values(by))
+    ret = pd.DataFrame(index=hourVec, columns=vars)
+    data = data.reset_index(level=by)
+    weights = weights.loc[data.index, :].reset_index(level=by)
+    for iVar in vars:
+        dataSlice = data.loc[data.loc[:, by] == iVar, hourVec]
+        weightSlice = weights.loc[weights.loc[:, by] == iVar, 'tripWeight']
+        ret.loc[:, iVar] = dataSlice.apply(Evaluator.calculateWeightedAverage, weightCol=weightSlice)
+    ret = ret.stack()
+    ret.index.names = ['time', by]
+    # ret.index = ret.index.swaplevel(0, 1)
+    return ret
+
 
 
 @logit

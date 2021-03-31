@@ -22,7 +22,7 @@ linksRelative:
     config: ./config/
     outputConfig: ./config/outputConfigREMix.yaml
     sesData: ./output/sesAnalysis/data/
-    sesPlots: ./output/sesAnalysis/plots/
+    sesPlots: ./output/sesAnalysis/plots/paper
 
 # During first configuration, optionally fill in absolute links on your system e.g. if you want to have post processed
 # output written to an energy system model input folder
@@ -61,6 +61,7 @@ files:
 #        inputDataPlugProfiles: inputProfiles_Plug_MiD08.csv
     vencoPyOutput: vencoPyOutput
     aggPlotName: mobilityComparison
+    flexPlotName : flexProfileComparison
 
 dataVariables:
     dataset: ['MiD08', 'MiD17']
@@ -144,7 +145,7 @@ labels:
     runLabel: SES_1
     technologyLabel: BEV-S
     outputFileName: VencoPy_MR1_alpha1_batCap40_cons15
-    strAdd: 11kW_SAM
+    strAdd:
 
 postprocessing:
     hoursClone: 8760
@@ -197,12 +198,19 @@ chargingInfrastructureDistributionsSchimmy:  # Identifiers from the evaluation o
     nan: 'FALSCH'
 
 plotConfig:
-    show: True
+    show: False
     save: True
-    xTickSteps: 6
+    xAxis:
+        xTickSteps: 24
+        weekdays: ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN']
+#        hours: [0, 6, 12, 18]
+        hours: [0]
+        ticklabelsize: 10
+    yAxis:
+        ticklabelsize: 10
     plotRCParameters:
         font.family: sans-serif
         font.weight: normal
-        font.size: 14
-        axes.labelsize: 18
-        axes.labelpad: 8.0
+        font.size: 10
+        axes.labelsize: 10
+#        axes.labelpad: 8.0

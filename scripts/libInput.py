@@ -34,9 +34,11 @@ def initializeLinkMgr(config, dataset):
     linkDict = {'linkScalars': pathlib.Path(config['linksRelative']['input']) /
                                pathlib.Path(config['files']['inputDataScalars']),
                 'linkDriveProfiles': pathlib.Path(config['linksRelative']['input']) /
-                                     pathlib.Path(createFileString(config, 'inputDataDriveProfiles', dataset)),
+                                     pathlib.Path(createFileString(config=config, fileKey='inputDataDriveProfiles',
+                                                                   dataset=dataset)),
                 'linkPlugProfiles': pathlib.Path(config['linksRelative']['input']) /
-                                    pathlib.Path(createFileString(config, 'inputDataPlugProfiles', dataset)),
+                                    pathlib.Path(createFileString(config=config, fileKey='inputDataPlugProfiles',
+                                                                  dataset=dataset)),
                 'linkOutputConfig': pathlib.Path(config['linksRelative']['outputConfig']),
                 'linkOutputAnnual': pathlib.Path(config['linksRelative']['resultsAnnual']),
                 'linkPlots': pathlib.Path(config['linksRelative']['plots']),

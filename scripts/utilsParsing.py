@@ -11,13 +11,15 @@ from scripts.utilsTimestamp import *
 from pathlib import Path
 
 
-def createFileString(config: dict, fileKey: str, dataset: str=None, filetypeStr: str='csv'):
+def createFileString(config: dict, fileKey: str, dataset: str=None, manualLabel: str = '', filetypeStr: str='csv'):
     if dataset is None:
-        return "%s_%s.%s" % (config['files'][fileKey],
+        return "%s_%s%s.%s" % (config['files'][fileKey],
                                 config['labels']['runLabel'],
+                                manualLabel,
                                 filetypeStr)
-    return "%s_%s_%s.%s" % (config['files'][dataset][fileKey],
+    return "%s_%s%s_%s.%s" % (config['files'][dataset][fileKey],
                         config['labels']['runLabel'],
+                        manualLabel,
                         dataset,
                         filetypeStr)
 
