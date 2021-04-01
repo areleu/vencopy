@@ -64,8 +64,11 @@ class FlexEstimator:
         self.electricPowerProfilesWAggVar = None
         self.chargeProfilesUncontrolledWAggVar = None
         self.auxFuelDemandProfilesWAggVar = None
+
         self.SOCMin = None
         self.SOCMax = None
+        self.SOCMinVar = None
+        self.SOCMaxVar = None
 
         # Correction attributes
         self.chargeProfilesUncontrolledCorr = None
@@ -163,8 +166,29 @@ class FlexEstimator:
         self.SOCMin, self.SOCMax = socProfileSelection(self.profilesSOCMinCons, self.profilesSOCMaxCons,
                                                        filter='singleValue', alpha=0.9)
 
-        self.SOCMinVar, self.SOCMaxVar = socSelectionVar()
+        self.SOCMinVar, self.SOCMaxVar = self.socSelectionVar(dataMin=self.profilesSOCMinCons,
+                                                              dataMax=self.profilesSOCMaxCons,
+                                                              by='tripStartWeekday', filter='singleValue', alpha=0.9)
 
+    def socSelectionVar(self, dataMin, dataMax, by, filter, alpha):
+        socSelectionPartial = functools.partial(socProfileSelection, filter=filter, alpha=alpha)
+        vars = set(dataMin.index.get_level_values(by))
+        retMin = pd.DataFrame(index=self.hourVec, columns=vars)
+        retMax = pd.DataFrame(index=self.hourVec, columns=vars)
+        dataMin = dataMin.reset_index(level=by)
+        dataMax = dataMax.reset_index(level=by)
+        for iVar in vars:
+            dataSliceMin = dataMin.loc[dataMin.loc[:, by] == iVar, self.hourVec]
+            dataSliceMax = dataMax.loc[dataMax.loc[:, by] == iVar, self.hourVec]
+            retMin.loc[:, iVar], retMax.loc[:, iVar] = socSelectionPartial(profilesMin=dataSliceMin,
+                                                                           profilesMax=dataSliceMax)
+
+        retMin = retMin.stack()
+        retMax = retMax.stack()
+        retMin.index.names = ['time', by]
+        retMax.index.names = ['time', by]
+        # ret.index = ret.index.swaplevel(0, 1)
+        return retMin, retMax
 
     def correct(self):
         self.chargeProfilesUncontrolledCorr = correctProfiles(self.scalars, self.chargeProfilesUncontrolledAgg,
@@ -218,11 +242,17 @@ class FlexEstimator:
         profileList = [
                        # 'plugProfilesAgg', 'plugProfilesWAgg', 'chargeProfilesUncontrolledAgg',
                        # 'chargeProfilesUncontrolledWAgg', 'electricPowerProfilesAgg', 'electricPowerProfilesWAgg',
-                       'plugProfilesWAggVar', 'electricPowerProfilesWAggVar', 'chargeProfilesUncontrolledWAggVar'
-                       # 'auxFuelDemandProfilesWAggVar'
+                       # 'plugProfilesWAggVar', 'electricPowerProfilesWAggVar', 'chargeProfilesUncontrolledWAggVar'
+                       # 'auxFuelDemandProfilesWAggVar',
                        ]
 
         profileDictList = self.compileDictList(compareTo=compareTo, profileNameList=profileList)
+        SOCDataWeek = { 'MiD08_SOCmin': self.SOCMinVar,
+                        'MiD08_SOCmax': self.SOCMaxVar,
+                        'MiD17_SOCmin': compareTo.SOCMinVar,
+                        'MiD17_SOCmax': compareTo.SOCMaxVar }
+
+        profileDictList.append(SOCDataWeek)
 
         separateLinePlots(profileDictList, self.config,
                           show=self.config['plotConfig']['show'], write=self.config['plotConfig']['save'],
@@ -231,24 +261,27 @@ class FlexEstimator:
                                   # 'Uncontrolled charging in kW', 'Weighted Uncontrolled charging in kW',
                                   # 'Electricity consumption for driving in kWh',
                                   # 'Weighted Electricity consumption for driving in kWh',
-                                  'Weighted average EV fleet connection share',
-                                  'Electricity consumption for driving in kWh',
-                                  'Weighted average uncontrolled charging in kW'
-                              # 'auxFuelDemandProfilesWAggVar'
+                                  # 'Weighted average EV fleet connection share',
+                                  # 'Electricity consumption for driving in kWh',
+                                  # 'Weighted average uncontrolled charging in kW'
+                                  # 'auxFuelDemandProfilesWAggVar'
+                                  'State of charge in kWh'
                                   ],
                           filenames=[
                                      # '_connection', '_connectionWeighted',
                                      # '_uncCharge', '_uncChargeWeighted',
                                      # '_drain', '_drainWeighted',
-                                     '_plugDiffDay', '_drainDiffDay',
-                                     '_uncChargeDiffDay'
-                              # '_auxFuelDiffDay'
+                                     # '_plugDiffDay', '_drainDiffDay',
+                                     # '_uncChargeDiffDay'
+                                     #  '_auxFuelDiffDay',
+                                     '_socWeek'
                                      ],
                           ylim=[
                               # 1, 1, 1,
                               # 1, 1, 1
-                              1, 1, 1
+                              # 1, 1, 1
                               # 1
+                              50
                                 ])
 
     def compileDictList(self, compareTo, profileNameList):

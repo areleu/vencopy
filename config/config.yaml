@@ -198,7 +198,7 @@ chargingInfrastructureDistributionsSchimmy:  # Identifiers from the evaluation o
     nan: 'FALSCH'
 
 plotConfig:
-    show: False
+    show: True
     save: True
     xAxis:
         xTickSteps: 24
