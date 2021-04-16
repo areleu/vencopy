@@ -13,7 +13,7 @@ from scripts.utilsParsing import createFileString
 
 # FIXME Add distributions and charging power ratings
 
-class vpGrid:
+class GridModeler:
     def __init__(self, config, dataset='MiD17'):
         self.inputFileName = createFileString(config=config, fileKey='purposesProcessed', dataset=dataset)
         self.inputFilePath = Path(config['linksRelative']['input']) / self.inputFileName
@@ -28,7 +28,8 @@ class vpGrid:
         print(f'Starting with charge connection replacement of location purposes')
         self.chargeAvailability = self.purposeData.replace(self.gridDistributions)
 
-        self.chargeAvailability.set_index(['hhPersonID', 'tripStartWeekday', 'tripWeight'], inplace=True)
+        # self.chargeAvailability.set_index(['hhPersonID', 'tripStartWeekday', 'tripWeight'], inplace=True)
+        self.chargeAvailability.set_index(['hhPersonID'], inplace=True)
         self.chargeAvailability.iloc[~self.chargeAvailability.isin(['WAHR', 'FALSCH'])] = 'FALSCH'
         print('Grid connection assignment complete')
 
@@ -39,6 +40,6 @@ class vpGrid:
 if __name__ == '__main__':
     linkConfig = Path.cwd() / 'config' / 'config.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
     config = yaml.load(open(linkConfig), Loader=yaml.SafeLoader)
-    vpg = vpGrid(config=config, dataset='MiD17')
+    vpg = GridModeler(config=config, dataset='MiD17')
     vpg.assignSimpleGridViaPurposes()
     vpg.writeOutGridAvailability()

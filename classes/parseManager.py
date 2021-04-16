@@ -13,10 +13,11 @@ from profilehooks import profile
 import yaml
 from scripts.libInput import *
 
-class ParseData:
+
+class DataParser:
     # Separate datasets that know each other
     # @profile(immediate=True)
-    def __init__(self, datasetID: str, config: dict, strColumns: bool = False, loadEncrypted=True):
+    def __init__(self, datasetID: str, config: dict, loadEncrypted=True):
         self.datasetID = self.checkDatasetID(datasetID, config)
         self.config = config
         self.rawDataPath = Path(config['linksAbsolute'][self.datasetID]) / config['files'][self.datasetID]['tripsDataRaw']
@@ -37,9 +38,9 @@ class ParseData:
         self.checkFilterDict(self.__filterDict)
         self.filter()
         self.filterConsistentHours()
-        if strColumns:
-            self.addStrColumns()
-        # self.addIndex()
+        self.addStrColumns()
+        # self.composeIndex()  Method to compose a unique index from hhID and personID if needed
+        # self.setIndex(col='hhPersonID')
         self.composeStartAndEndTimestamps()
         print('Parsing completed')
 
@@ -95,7 +96,8 @@ class ParseData:
         replacementDict = self.createReplacementDict(self.datasetID, self.config['dataVariables'])
         dataRenamed = self.data.rename(columns=replacementDict)
         if self.datasetID == 'MiD08':
-            dataRenamed['hhPersonID'] = (dataRenamed['hhID'].astype('string') + dataRenamed['personID'].astype('string')).astype('int')
+            dataRenamed['hhPersonID'] = (dataRenamed['hhID'].astype('string') +
+                                         dataRenamed['personID'].astype('string')).astype('int')
         self.data = dataRenamed
         print('Finished harmonization of variables')
 
@@ -202,9 +204,11 @@ class ParseData:
         self.data.loc[:, 'purposeStr'] \
             = self.data.loc[:, 'tripPurpose'].replace(self.config['midReplacements']['tripPurpose'])
 
-    def addIndex(self):
+    def composeIndex(self):
         self.data['idxCol'] = self.data['hhPersonID'].astype('string') + '__' + self.data['tripID'].astype('string')
-        self.data.set_index('idxCol', inplace=True, drop=True)
+
+    def setIndex(self, col):
+        self.data.set_index(col, inplace=True, drop=True)
 
     def composeTimestamp(self, data: pd.DataFrame = None,
                          colYear: str = 'tripStartYear',
@@ -214,10 +218,10 @@ class ParseData:
                          colMin: str = 'tripStartMinute',
                          colName: str = 'timestampStart'):
         data[colName] = pd.to_datetime(data.loc[:, colYear], format='%Y') + \
-                         pd.to_timedelta(data.loc[:, colWeek] * 7, unit='days') + \
-                         pd.to_timedelta(data.loc[:, colDay], unit='days') + \
-                         pd.to_timedelta(data.loc[:, colHour], unit='hour') + \
-                         pd.to_timedelta(data.loc[:, colMin], unit='minute')
+                        pd.to_timedelta(data.loc[:, colWeek] * 7, unit='days') + \
+                        pd.to_timedelta(data.loc[:, colDay], unit='days') + \
+                        pd.to_timedelta(data.loc[:, colHour], unit='hour') + \
+                        pd.to_timedelta(data.loc[:, colMin], unit='minute')
         # return data
 
     def composeStartAndEndTimestamps(self):
@@ -248,7 +252,9 @@ class ParseData:
         return self.data.loc[:, 'tripDistance'].mean()
 
 
-class ParseMID(ParseData):
+
+
+class ParseMID(DataParser):
     def __init__(self):
         super().__init__()
 
@@ -257,6 +263,6 @@ class ParseMID(ParseData):
 if __name__ == '__main__':
     linkConfig = Path.cwd().parent / 'config' / 'config.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
     config = yaml.load(open(linkConfig), Loader=yaml.SafeLoader)
-    p = ParseData(datasetID='MiD08', config=config, loadEncrypted=False, strColumns=True)
+    p = DataParser(datasetID='MiD08', config=config, loadEncrypted=False)
     print(p.data.head())
     print('end')

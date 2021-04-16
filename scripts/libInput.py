@@ -89,6 +89,7 @@ def readInputCSV(filePath):
     """
     inputRaw = pd.read_csv(filePath, header=0)
     inputData = inputRaw.loc[:, ~inputRaw.columns.str.match('Unnamed')]
+    inputData = inputData.convert_dtypes()
     return inputData
 
 

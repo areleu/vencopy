@@ -130,7 +130,8 @@ def writeProfilesToCSV(profileDictOut, config, singleFile=True, dataset='MiD17')
 
     if singleFile:
         dataOut = pd.DataFrame(profileDictOut)
-        dataOut.to_csv(createFileString(config=config, fileKey='vencoPyOutput', dataset=dataset), header=True)
+        dataOut.to_csv(config['linksRelative']['dataSESPaper'] /
+                       createFileString(config=config, fileKey='vencoPyOutput', dataset=dataset), header=True)
     else:
         for iName, iProf in profileDictOut.items():
             iProf.to_csv(config['linksRelative']['resultsDaily'] /

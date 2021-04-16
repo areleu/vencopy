@@ -23,10 +23,12 @@ def createFileString(config: dict, fileKey: str, dataset: str=None, manualLabel:
                         dataset,
                         filetypeStr)
 
+
 def assignMultiColToDType(dataFrame, cols, dType):
     dictDType = dict.fromkeys(cols, dType)
     dfOut = dataFrame.astype(dictDType)
     return(dfOut)
+
 
 def harmonizeVariables(data, dataset, config):
     replacementDict = createReplacementDict(dataset, config['dataVariables'])
@@ -36,6 +38,7 @@ def harmonizeVariables(data, dataset, config):
                                     dataRenamed['hhPersonID'].astype('string')
     return dataRenamed
 
+
 def createReplacementDict(dataset, dictRaw):
     if dataset in dictRaw['dataset']:
         listIndex = dictRaw['dataset'].index(dataset)
@@ -43,10 +46,12 @@ def createReplacementDict(dataset, dictRaw):
     else:
         raise ValueError(f'Dataset {dataset} not specified in MiD variable dictionary.')
 
+
 def removeNA(variables:list):
     variables.remove('NA')
     if 'NA' in variables:
         removeNA(variables)
+
 
 def createListOfVariables(dataset:str, config):
     listIndex = config['dataVariables']['dataset'].index(dataset)
@@ -56,9 +61,11 @@ def createListOfVariables(dataset:str, config):
         removeNA(variables)
     return variables
 
+
 def filterOutTripsBelongingToMultiModalDays(data):
     idsWFirstTrip = data.loc[data.loc[:, 'tripID'] == 1, 'hhPersonID']
     return data.loc[data.loc[:, 'hhPersonID'].isin(idsWFirstTrip), :]
+
 
 def calcHourlyShares(data, ts_st, ts_en):
     duration = tripDuration(data.loc[:, ts_st], data.loc[:, ts_en])
@@ -68,11 +75,13 @@ def calcHourlyShares(data, ts_st, ts_en):
                                                                data.loc[:, 'tripDistance'])
     return data
 
+
 def initiateColRange(row):
     if row['tripStartHour'] + 1 < row['tripEndHour']:
         return range(row['tripStartHour'] + 1, row['tripEndHour'])  # The hour of arrival (tripEndHour) will not be indexed further below but is part of the range() object
     else:
         return None
+
 
 class FillHourValues:
     def __init__(self, data, rangeFunction):
@@ -93,9 +102,11 @@ class FillHourValues:
             row[self.fullHourCols[idx]] = self.fullHourRange[idx]
         return row
 
+
 def fillDataframe(hourlyArray, fillFunction):
     hourlyArray = hourlyArray.apply(fillFunction, axis=1)
     return hourlyArray
+
 
 def mergeTrips(tripData):
     # uniqueHHPersons = tripData.loc[:, 'hhPersonID'].unique()
@@ -104,11 +115,15 @@ def mergeTrips(tripData):
     dataDay = dataDay.drop('tripID', axis=1)
     return dataDay
 
+
 def mergeVariables(data, variableData, variables):
     variableDataUnique = variableData.loc[~variableData['hhPersonID'].duplicated(), :]
     variables.append('hhPersonID')
     variableDataMerge = variableDataUnique.loc[:, variables].set_index('hhPersonID')
+    if 'hhPersonID' not in data.index.names:
+        data.set_index('hhPersonID', inplace=True, drop=True)
     mergedData = pd.concat([variableDataMerge, data], axis=1)
+    mergedData.reset_index(inplace=True)
     return mergedData
 
 def replaceTripsBeforeFirstTrips(driveData, replacement:str):
@@ -197,22 +212,15 @@ def fillDayPurposes(tripData, purposeDataDays):  #FixMe: Ask Ben for performance
         idxOld = idx
     return purposeDataDays
 
-def mapHHPIDToTripID(tripData):
-    idCols = tripData.loc[:, ['hhPersonID', 'tripID']]
-    idCols.loc['nextTripID'] = idCols['tripID'].shift(-1, fill_value=0)
-    tripDict = dict.fromkeys(set(idCols['hhPersonID']))
-    for ihhpID in tripDict.keys():
-        tripDict[ihhpID] = set(idCols.loc[idCols['hhPersonID'] == ihhpID, 'tripID'])
-    return tripDict
 
-def writeOut(config, dataset, dataDrive, dataPurpose):
+def writeOut(config, datasetID, dataDrive, dataPurpose):
     dataDrive.to_csv(Path(config['linksRelative']['input']) /
-                     createFileString(config=config, fileKey='inputDataDriveProfiles', dataset=dataset), na_rep=0)
+                     createFileString(config=config, fileKey='inputDataDriveProfiles', dataset=datasetID), na_rep=0)
     dataPurpose.to_csv(Path(config['linksRelative']['input']) /
-                       createFileString(config=config, fileKey='purposesProcessed', dataset=dataset))
+                       createFileString(config=config, fileKey='purposesProcessed', dataset=datasetID))
     print(f"Drive data and trip purposes written to files "
-          f"{createFileString(config=config, fileKey='inputDataDriveProfiles', dataset=dataset)} and"
-          f"{createFileString(config=config, fileKey='purposesProcessed', dataset=dataset)}")
+          f"{createFileString(config=config, fileKey='inputDataDriveProfiles', dataset=datasetID)} and"
+          f"{createFileString(config=config, fileKey='purposesProcessed', dataset=datasetID)}")
 
 
 

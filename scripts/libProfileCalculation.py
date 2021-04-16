@@ -15,7 +15,7 @@ from random import seed
 from random import random
 from .libLogging import logit
 from .libLogging import logger
-from evaluateDriveProfiles import Evaluator
+from classes.evaluationManager import Evaluator
 
 
 @logit

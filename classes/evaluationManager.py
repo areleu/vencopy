@@ -13,7 +13,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from scripts.libPlotting import *
 from scripts.utilsParsing import createFileString, mergeVariables
-from scripts.parseManager import ParseData
+from classes.parseManager import DataParser
 
 
 
@@ -61,10 +61,11 @@ class Evaluator:
         ret = pd.Series(dtype=object)
         for iFileKey in fileKeys:
             for iDat in datasets:
-                dataIn = pd.read_csv(Path(config['linksRelative']['input']) /
-                                     createFileString(config=config, fileKey=iFileKey,
+                dataIn = pd.read_csv(Path(self.config['linksRelative']['input']) /
+                                     createFileString(config=self.config, fileKey=iFileKey,
                                                       dataset=iDat), dtype={'hhPersonID': int},
-                                     index_col=['hhPersonID', 'tripStartWeekday'])
+                                     # index_col=['hhPersonID', 'tripStartWeekday'])
+                                     index_col=['hhPersonID'])
                 ret[iDat] = dataIn
         return ret
 
@@ -141,7 +142,6 @@ class Evaluator:
         ret = ret.stack()
         ret.index = ret.index.swaplevel(0, 1)
         return ret
-
 
     def plotAggregates(self):
         # Plotting aggregates
