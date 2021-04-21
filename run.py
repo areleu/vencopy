@@ -9,9 +9,8 @@ __license__ = 'BSD-3-Clause'
 #----- imports & packages ------
 import pathlib
 import time
-
+import yaml
 from scripts.utilsParsing import *
-from scripts.libPlotting import *
 from scripts.libLogging import logger
 from classes.parseManager import DataParser
 from classes.tripDiaryManager import TripDiaryBuilder

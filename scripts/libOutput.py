@@ -130,11 +130,11 @@ def writeProfilesToCSV(profileDictOut, config, singleFile=True, dataset='MiD17')
 
     if singleFile:
         dataOut = pd.DataFrame(profileDictOut)
-        dataOut.to_csv(config['linksRelative']['dataSESPaper'] /
+        dataOut.to_csv(pathlib.Path(config['linksRelative']['dataOutput']) /
                        createFileString(config=config, fileKey='vencoPyOutput', dataset=dataset), header=True)
     else:
         for iName, iProf in profileDictOut.items():
-            iProf.to_csv(config['linksRelative']['resultsDaily'] /
+            iProf.to_csv(pathlib.Path(config['linksRelative']['dataOutput']) /
                          pathlib.Path(r'vencoPyOutput_' + iName + dataset + '.csv'), header=True)
 
 
@@ -196,8 +196,8 @@ def linePlot(profileDict, linkOutput, config, show=True, write=True, ylabel='Nor
         else:
             sns.lineplot(iVal.index, iVal, label=iKey, sort=False)
     xRange = range(0, len(profileDict[list(profileDict)[0]]) + 1, config['plotConfig']['xAxis']['xTickSteps'])
-    xLabels = [f'{iDay}\n{str(iTime)}:00' for iDay in config['plotConfig']['xAxis']['weekdays'] for iTime in config['plotConfig']['xAxis']['hours']]
-    # xLabels = [f'{str(iTime)}:00' for iTime in config['plotConfig']['xAxis']['hours']]
+    #xLabels = [f'{iDay}\n{str(iTime)}:00' for iDay in config['plotConfig']['xAxis']['weekdays'] for iTime in config['plotConfig']['xAxis']['hours']]
+    xLabels = [f'{str(iTime)}:00' for iTime in config['plotConfig']['xAxis']['hours']]
     ax.set_xticks(xRange)
     ax.set_xticklabels(xLabels, fontsize=config['plotConfig']['xAxis']['ticklabelsize'])
     ax.set_ylim(bottom=0, top=ylim)
@@ -222,5 +222,5 @@ def separateLinePlots(profileDictList, config, dataset='MiD17', show=True, write
                       filenames=[]):
     for iDict, iYLabel, iYLim, iName in zip(profileDictList, ylabel, ylim, filenames):
         writeProfilesToCSV(profileDictOut=iDict, config=config, singleFile=False, dataset=dataset)
-        linePlot(iDict, linkOutput=config['linksRelative']['sesPlots'], config=config, show=show, write=write,
+        linePlot(iDict, linkOutput=config['linksRelative']['plots'], config=config, show=show, write=write,
                  ylabel=iYLabel, ylim=iYLim, filename=iName)

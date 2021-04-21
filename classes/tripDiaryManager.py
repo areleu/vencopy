@@ -13,7 +13,6 @@ from profilehooks import profile
 import yaml
 from scripts.libInput import *
 from scripts.utilsParsing import *
-from scripts.libPlotting import *
 from classes.parseManager import DataParser
 
 

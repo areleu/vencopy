@@ -11,7 +11,6 @@ from pathlib import Path
 from profilehooks import profile
 import seaborn as sns
 import matplotlib.pyplot as plt
-from scripts.libPlotting import *
 from scripts.utilsParsing import createFileString, mergeVariables
 from classes.parseManager import DataParser
 
@@ -174,7 +173,7 @@ class Evaluator:
             plt.show()
         if config['plotConfig']['save']:
             fileName = createFileString(config=config, fileKey='aggPlotName', manualLabel=self.label, filetypeStr='svg')
-            fig.savefig(Path(config['linksRelative']['sesPlots']) / fileName, bbox_inches='tight')
+            fig.savefig(Path(config['linksRelative']['plots']) / fileName, bbox_inches='tight')
 
 if __name__ == '__main__':
     linkConfig = Path.cwd() / 'config' / 'config.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
