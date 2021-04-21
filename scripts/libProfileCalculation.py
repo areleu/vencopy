@@ -1,7 +1,8 @@
 # -*- coding:utf-8 -*-
 
-__version__ = '0.0.8'
+__version__ = '0.0.9'
 __maintainer__ = 'Niklas Wulff 04.09.2020'
+__contributors__ = 'Fabia Miorelli, Parth Butte'
 __email__ = 'Niklas.Wulff@dlr.de'
 __birthdate__ = '24.02.2020'
 __status__ = 'test'  # options are: dev, test, prod

@@ -1,7 +1,8 @@
 #-*- coding:utf-8 -*-
 
-# __version__ = '0.0.8'
+# __version__ = '0.0.9'
 # __maintainer__ = 'Niklas Wulff 2019-02-12'
+# __contributors__ = 'Fabia Miorelli, Parth Butte'
 # __email__ = 'Niklas.Wulff@dlr.de'
 # __birthdate__ = '2019-02-12'
 # __status__ = 'dev'  # options are: dev, test, prod
@@ -23,6 +24,7 @@ linksRelative:
 # output written to an energy system model input folder
 linksAbsolute: 
     MiD17: C:/8_Work/Data/MiD17/B2_Regional-DatensatzpaketEncrypted/STATA/
+    vencoPyRoot: C:/8_Work/VencoPy/VencoPy_internal/vencopy/
    
 
 files:

@@ -1,5 +1,6 @@
-__version__ = '0.0.2'
+__version__ = '0.0.9'
 __maintainer__ = 'Niklas Wulff'
+__contributors__ = 'Fabia Miorelli, Parth Butte'
 __email__ = 'Niklas.Wulff@dlr.de'
 __birthdate__ = '21.09.2020'
 __status__ = 'dev'  # options are: dev, test, prod
@@ -11,9 +12,8 @@ from pathlib import Path
 from profilehooks import profile
 import seaborn as sns
 import matplotlib.pyplot as plt
-from scripts.utilsParsing import createFileString, mergeVariables
+from scripts.globalFunctions import createFileString, mergeVariables
 from classes.parseManager import DataParser
-
 
 
 # Some functions

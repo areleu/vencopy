@@ -1,5 +1,6 @@
-__version__ = '0.0.0'
+__version__ = '0.0.9'
 __maintainer__ = 'Niklas Wulff 31.12.2019'
+__contributors__ = 'Fabia Miorelli, Parth Butte'
 __email__ = 'Niklas.Wulff@dlr.de'
 __birthdate__ = '31.12.2019'
 __status__ = 'dev'  # options are: dev, test, prod
@@ -11,13 +12,13 @@ import warnings
 from pathlib import Path
 from profilehooks import profile
 import yaml
-from scripts.libInput import *
+from zipfile import ZipFile
 
 
 class DataParser:
     # Separate datasets that know each other
     # @profile(immediate=True)
-    def __init__(self, datasetID: str, config: dict, loadEncrypted=True):
+    def __init__(self, config: dict, datasetID: str = 'MiD17', loadEncrypted=True):
         self.datasetID = self.checkDatasetID(datasetID, config)
         self.config = config
         self.rawDataPath = Path(config['linksAbsolute'][self.datasetID]) / config['files'][self.datasetID]['tripsDataRaw']
@@ -115,13 +116,33 @@ class DataParser:
         subDict = {key: conversionDict[key] for key in conversionDict.keys() & keys}
         self.data = self.data.astype(subDict)
 
+    def returnBottomDictValues(self, baseDict: dict, lst: list = []):
+        for iKey, iVal in baseDict.items():
+            if isinstance(iVal, dict):
+                lst = self.returnBottomDictValues(iVal, lst)
+            else:
+                if iVal is not None:
+                    lst.append(iVal)
+        return lst
+
     def checkFilterDict(self, filterDict: dict):
         # Currently only checking if list of list str not typechecked all(map(self.__checkStr, val)
-        assert all(isinstance(val, list) for val in returnBottomDictValues(filterDict)), \
+        assert all(isinstance(val, list) for val in self.returnBottomDictValues(filterDict)), \
             f'All values in filter dictionaries have to be lists, but are not'
 
+    def returnBottomDictKeys(self, baseDict: dict, lst: list = None):
+        if lst is None:
+            lst = []
+        for iKey, iVal in baseDict.items():
+            if isinstance(iVal, dict):
+                lst = self.returnBottomDictKeys(iVal, lst)
+            else:
+                if iVal is not None:
+                    lst.append(iKey)
+        return lst
+
     def filter(self):
-        print(f'Starting filtering, applying {len(returnBottomDictKeys(self.__filterDict))} filters.')
+        print(f'Starting filtering, applying {len(self.returnBottomDictKeys(self.__filterDict))} filters.')
         ret = pd.DataFrame(index=self.data.index)
         for iKey, iVal in self.__filterDict.items():
             if iKey == 'include':
@@ -263,6 +284,6 @@ class ParseMID(DataParser):
 if __name__ == '__main__':
     linkConfig = Path.cwd().parent / 'config' / 'config.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
     config = yaml.load(open(linkConfig), Loader=yaml.SafeLoader)
-    p = DataParser(datasetID='MiD08', config=config, loadEncrypted=False)
+    p = DataParser(config=config, loadEncrypted=False)
     print(p.data.head())
     print('end')

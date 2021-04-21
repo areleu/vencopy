@@ -1,5 +1,6 @@
-__version__ = '0.0.1'
+__version__ = '0.0.9'
 __maintainer__ = 'Niklas Wulff'
+__contributors__ = 'Fabia Miorelli, Parth Butte'
 __email__ = 'Niklas.Wulff@dlr.de'
 __birthdate__ = '23.10.2020'
 __status__ = 'dev'  # options are: dev, test, prod
@@ -10,7 +11,7 @@ __license__ = 'BSD-3-Clause'
 import pathlib
 import time
 import yaml
-from scripts.utilsParsing import *
+from scripts.sandboxFunctions import *
 from scripts.libLogging import logger
 from classes.parseManager import DataParser
 from classes.tripDiaryManager import TripDiaryBuilder

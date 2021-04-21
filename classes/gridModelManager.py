@@ -8,17 +8,19 @@ __license__ = 'BSD-3-Clause'
 
 #----- imports & packages ------
 from pathlib import Path
-from scripts.libInput import *
-from scripts.utilsParsing import createFileString
+import pandas as pd
+import yaml
+import os
+from scripts.globalFunctions import createFileString
 
 # FIXME Add distributions and charging power ratings
 
 class GridModeler:
-    def __init__(self, config, dataset='MiD17'):
-        self.inputFileName = createFileString(config=config, fileKey='purposesProcessed', dataset=dataset)
+    def __init__(self, config, datasetID : str ='MiD17'):
+        self.inputFileName = createFileString(config=config, fileKey='purposesProcessed', dataset=datasetID)
         self.inputFilePath = Path(config['linksRelative']['input']) / self.inputFileName
         self.gridDistributions = config['chargingInfrastructureDistributions']
-        self.outputFileName = createFileString(config=config, fileKey='inputDataPlugProfiles', dataset=dataset)
+        self.outputFileName = createFileString(config=config, fileKey='inputDataPlugProfiles', dataset=datasetID)
         self.outputFilePath = Path(config['linksRelative']['input']) / self.outputFileName
 
         self.purposeData = pd.read_csv(self.inputFilePath, keep_default_na=False)
@@ -38,8 +40,9 @@ class GridModeler:
 
 
 if __name__ == '__main__':
-    linkConfig = Path.cwd() / 'config' / 'config.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
+    linkConfig = Path.cwd().parent / 'config' / 'config.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
     config = yaml.load(open(linkConfig), Loader=yaml.SafeLoader)
-    vpg = GridModeler(config=config, dataset='MiD17')
+    os.chdir(config['linksAbsolute']['vencoPyRoot'])
+    vpg = GridModeler(config=config)
     vpg.assignSimpleGridViaPurposes()
     vpg.writeOutGridAvailability()
