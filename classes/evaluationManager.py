@@ -6,28 +6,13 @@ __birthdate__ = '21.09.2020'
 __status__ = 'dev'  # options are: dev, test, prod
 __license__ = 'BSD-3-Clause'
 
+import yaml
+import os
+import pathlib
 import pandas as pd
-import collections as col
 from pathlib import Path
-from profilehooks import profile
-import seaborn as sns
 import matplotlib.pyplot as plt
-from scripts.globalFunctions import createFileString, mergeVariables
-from classes.parseManager import DataParser
-
-
-# Some functions
-def wavg(data, avg_name, weight_name):
-    """ http://stackoverflow.com/questions/10951341/pandas-dataframe-aggregate-function-using-multiple-columns
-    In rare instance, we may not have weights, so just return the mean. Customize this if your business case
-    should return otherwise.
-    """
-    d = data[avg_name]
-    w = data[weight_name]
-    try:
-        return (d * w).sum() / w.sum()
-    except ZeroDivisionError:
-        return d.mean()
+from scripts.globalFunctions import createFileString
 
 
 class Evaluator:
@@ -49,7 +34,7 @@ class Evaluator:
 
     def readInData(self, fileKeys: list, datasets: list) -> pd.Series:
         """
-        Generic read-in function for mobility datasets. This serves as interface between the dailz trip distance
+        Generic read-in function for mobility datasets. This serves as interface between the daily trip distance
         and purpose calculation and the class Evaluator.
 
         :param fileKeys: List of VencoPy-internal names for the filekeys to read in
@@ -60,7 +45,7 @@ class Evaluator:
         ret = pd.Series(dtype=object)
         for iFileKey in fileKeys:
             for iDat in datasets:
-                dataIn = pd.read_csv(Path(self.config['linksRelative']['input']) /
+                dataIn = pd.read_csv(pathlib.Path(self.config['linksRelative']['input']) /
                                      createFileString(config=self.config, fileKey=iFileKey,
                                                       dataset=iDat), dtype={'hhPersonID': int},
                                      # index_col=['hhPersonID', 'tripStartWeekday'])
@@ -176,8 +161,9 @@ class Evaluator:
             fig.savefig(Path(config['linksRelative']['plots']) / fileName, bbox_inches='tight')
 
 if __name__ == '__main__':
-    linkConfig = Path.cwd() / 'config' / 'config.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
+    linkConfig = pathlib.Path.cwd().parent / 'config' / 'config.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
     config = yaml.load(open(linkConfig), Loader=yaml.SafeLoader)
+    os.chdir(config['linksAbsolute']['vencoPyRoot'])
     # evaluateDriveProfiles(config=config)
     vpEval = Evaluator(config, label='base')
     vpEval.hourlyAggregates = vpEval.calcVariableSpecAggregates(by=['tripStartWeekday'])

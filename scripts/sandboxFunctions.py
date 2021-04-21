@@ -290,7 +290,17 @@ def composeStringDict(pre, names, post):
         dict[nIdx] = listStr
     return dict
 
-
+def wavg(data, avg_name, weight_name):
+    """ http://stackoverflow.com/questions/10951341/pandas-dataframe-aggregate-function-using-multiple-columns
+    In rare instance, we may not have weights, so just return the mean. Customize this if your business case
+    should return otherwise.
+    """
+    d = data[avg_name]
+    w = data[weight_name]
+    try:
+        return (d * w).sum() / w.sum()
+    except ZeroDivisionError:
+        return d.mean()
 
 ### EXPERIMENTAL SANDBOX PART
 # def fillDayPurposesPerformant(tripData, purposeDataDays):  #FixMe: Ask Ben for performance improvements
