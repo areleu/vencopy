@@ -17,12 +17,12 @@ from scripts.globalFunctions import createFileString
 # FIXME Add distributions and charging power ratings
 
 class GridModeler:
-    def __init__(self, config, datasetID : str ='MiD17'):
-        self.inputFileName = createFileString(config=config, fileKey='purposesProcessed', dataset=datasetID)
-        self.inputFilePath = Path(config['linksRelative']['input']) / self.inputFileName
+    def __init__(self, config: dict, globalConfig:dict, datasetID : str ='MiD17'):
+        self.inputFileName = createFileString(globalConfig=globalConfig, fileKey='purposesProcessed', dataset=datasetID)
+        self.inputFilePath = Path(globalConfig['linksRelative']['input']) / self.inputFileName
         self.gridDistributions = config['chargingInfrastructureDistributions']
-        self.outputFileName = createFileString(config=config, fileKey='inputDataPlugProfiles', dataset=datasetID)
-        self.outputFilePath = Path(config['linksRelative']['input']) / self.outputFileName
+        self.outputFileName = createFileString(globalConfig=globalConfig, fileKey='inputDataPlugProfiles', dataset=datasetID)
+        self.outputFilePath = Path(globalConfig['linksRelative']['input']) / self.outputFileName
 
         self.purposeData = pd.read_csv(self.inputFilePath, keep_default_na=False)
 
@@ -41,9 +41,12 @@ class GridModeler:
 
 
 if __name__ == '__main__':
-    linkConfig = Path.cwd().parent / 'config' / 'config.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
-    config = yaml.load(open(linkConfig), Loader=yaml.SafeLoader)
-    os.chdir(config['linksAbsolute']['vencoPyRoot'])
-    vpg = GridModeler(config=config)
+    linkGlobalConfig = Path.cwd().parent / 'config' / 'globalConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
+    globalConfig = yaml.load(open(linkGlobalConfig), Loader=yaml.SafeLoader)
+    linkGridConfig = Path.cwd().parent / 'config' / 'gridConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
+    gridConfig = yaml.load(open(linkGridConfig), Loader=yaml.SafeLoader)
+    os.chdir(globalConfig['linksAbsolute']['vencoPyRoot'])
+
+    vpg = GridModeler(config=gridConfig, globalConfig=globalConfig)
     vpg.assignSimpleGridViaPurposes()
     vpg.writeOutGridAvailability()

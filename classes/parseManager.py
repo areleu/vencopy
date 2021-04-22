@@ -5,32 +5,30 @@ __email__ = 'Niklas.Wulff@dlr.de'
 __birthdate__ = '31.12.2019'
 __status__ = 'dev'  # options are: dev, test, prod
 
-import time
 import pprint
 import pandas as pd
 import warnings
 from pathlib import Path
-from profilehooks import profile
 import yaml
 from zipfile import ZipFile
-
 
 class DataParser:
     # Separate datasets that know each other
     # @profile(immediate=True)
-    def __init__(self, config: dict, datasetID: str = 'MiD17', loadEncrypted=True):
+    def __init__(self, config: dict, globalConfig: dict,  datasetID: str = 'MiD17', loadEncrypted=True):
         self.datasetID = self.checkDatasetID(datasetID, config)
         self.config = config
-        self.rawDataPath = Path(config['linksAbsolute'][self.datasetID]) / config['files'][self.datasetID]['tripsDataRaw']
+        self.globalConfig = globalConfig
+        self.rawDataPath = Path(globalConfig['linksAbsolute'][self.datasetID]) / globalConfig['files'][self.datasetID]['tripsDataRaw']
         self.data = None
         self.columns = self.compileVariableList()
         self.filterDictNameList = ['include', 'exclude', 'greaterThan', 'smallerThan']
         self.updateFilterDict()
         print('Parsing properties set up')
         if loadEncrypted:
-            print(f"Starting to retrieve encrypted data file from {self.config['linksAbsolute']['encryptedZipfile']}")
-            self.loadEncryptedData(linkToZip=Path(self.config['linksAbsolute']['encryptedZipfile']) / self.config['files'][self.datasetID]['enryptedZipFileB2'],
-                                   linkInZip=config['files'][self.datasetID]['tripDataZipFileRaw'])
+            print(f"Starting to retrieve encrypted data file from {self.globalConfig['linksAbsolute']['encryptedZipfile']}")
+            self.loadEncryptedData(linkToZip=Path(self.globalConfig['linksAbsolute']['encryptedZipfile']) / self.globalConfig['files'][self.datasetID]['enryptedZipFileB2'],
+                                   linkInZip=globalConfig['files'][self.datasetID]['tripDataZipFileRaw'])
         else:
             print(f"Starting to retrieve local data file from {self.rawDataPath}")
             self.loadData()
@@ -273,8 +271,6 @@ class DataParser:
         return self.data.loc[:, 'tripDistance'].mean()
 
 
-
-
 class ParseMID(DataParser):
     def __init__(self):
         super().__init__()
@@ -282,8 +278,10 @@ class ParseMID(DataParser):
 
 
 if __name__ == '__main__':
-    linkConfig = Path.cwd().parent / 'config' / 'config.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
-    config = yaml.load(open(linkConfig), Loader=yaml.SafeLoader)
-    p = DataParser(config=config, loadEncrypted=False)
+    linkParseConfig = Path.cwd().parent / 'config' / 'parseConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
+    parseConfig = yaml.load(open(linkParseConfig), Loader=yaml.SafeLoader)
+    linkGlobalConfig = Path.cwd().parent / 'config' / 'globalConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
+    globalConfig = yaml.load(open(linkGlobalConfig), Loader=yaml.SafeLoader)
+    p = DataParser(config=parseConfig, globalConfig=globalConfig, loadEncrypted=False)
     print(p.data.head())
     print('end')

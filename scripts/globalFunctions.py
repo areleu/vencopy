@@ -7,18 +7,21 @@ __status__ = 'dev'  # options are: dev, test, prod
 __license__ = 'BSD-3-Clause'
 
 import pandas as pd
-import numpy as np
-import warnings
+import yaml
+import pathlib
 
-def createFileString(config: dict, fileKey: str, dataset: str = None, manualLabel: str = '',
+def createFileString(globalConfig: dict, fileKey: str, dataset: str, manualLabel: str = '',
                      filetypeStr: str = 'csv'):
+    #linkGlobalConfig = pathlib.Path.cwd().parent / 'config' / 'globalConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
+    #globalConfig = yaml.load(open(linkGlobalConfig), Loader=yaml.SafeLoader)
     if dataset is None:
-        return "%s_%s%s.%s" % (config['files'][fileKey],
-                               config['labels']['runLabel'],
+
+        return "%s_%s%s.%s" % (globalConfig['files'][fileKey],
+                               globalConfig['labels']['runLabel'],
                                manualLabel,
                                filetypeStr)
-    return "%s_%s%s_%s.%s" % (config['files'][dataset][fileKey],
-                              config['labels']['runLabel'],
+    return "%s_%s%s_%s.%s" % (globalConfig['files'][dataset][fileKey],
+                              globalConfig['labels']['runLabel'],
                               manualLabel,
                               dataset,
                               filetypeStr)

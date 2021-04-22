@@ -24,19 +24,21 @@ from scripts.globalFunctions import createFileString, mergeVariables
 
 
 class FlexEstimator:
-    def __init__(self, config, ParseData: DataParser, datasetID: str= 'MiD17'):
+    def __init__(self, config:dict, globalConfig: dict, evaluatorConfig: dict, ParseData: DataParser, datasetID: str= 'MiD17'):
         self.config = config
-        self.hourVec = range(config['numberOfHours'])
-        self.dataset = datasetID
+        self.globalConfig = globalConfig
+        self.evaluatorConfig = evaluatorConfig
+        self.hourVec = range(globalConfig['numberOfHours'])
+        self.datasetID = datasetID
         self.linkDict, self.scalars, \
-            self.driveProfilesIn, self.plugProfilesIn = self.readVencoInput(config=config, dataset=datasetID)
+            self.driveProfilesIn, self.plugProfilesIn = self.readVencoInput(config=config, globalConfig=globalConfig, dataset=datasetID)
         self.mergeDataToWeightsAndDays(ParseData)
 
         self.weights = self.indexWeights(self.driveProfilesIn.loc[:, ['hhPersonID', 'tripStartWeekday', 'tripWeight']])
         self.outputConfig = yaml.load(open(self.linkDict['linkOutputConfig']), Loader=yaml.SafeLoader)
         self.driveProfiles, self.plugProfiles = self.indexDriveAndPlugData(self.driveProfilesIn, self.plugProfilesIn,
                                                                       dropIdxLevel='tripWeight',
-                                                                      nHours=config['numberOfHours'])
+                                                                      nHours=globalConfig['numberOfHours'])
         self.scalarsProc = self.procScalars(self.driveProfilesIn, self.plugProfilesIn,
                                        self.driveProfiles, self.plugProfiles)
         # Base profile attributes
@@ -91,7 +93,7 @@ class FlexEstimator:
 
         print('Flex Estimator initialization complete')
 
-    def initializeLinkMgr(self, config, dataset):
+    def initializeLinkMgr(self, config, globalConfig, dataset):
         """
         Setup link manager based on a VencoPy config file.
 
@@ -99,18 +101,18 @@ class FlexEstimator:
 
         :return: Returns link dictionary with relative links to input data and output folders.
         """
-        linkDict = {'linkScalars': pathlib.Path(config['linksRelative']['input']) /
-                                   pathlib.Path(config['files']['inputDataScalars']),
-                    'linkDriveProfiles': pathlib.Path(config['linksRelative']['input']) /
-                                         pathlib.Path(createFileString(config=config, fileKey='inputDataDriveProfiles',
+        linkDict = {'linkScalars': pathlib.Path(globalConfig['linksRelative']['input']) /
+                                   pathlib.Path(globalConfig['files']['inputDataScalars']),
+                    'linkDriveProfiles': pathlib.Path(globalConfig['linksRelative']['input']) /
+                                         pathlib.Path(createFileString(globalConfig=globalConfig, fileKey='inputDataDriveProfiles',
                                                                        dataset=dataset)),
-                    'linkPlugProfiles': pathlib.Path(config['linksRelative']['input']) /
-                                        pathlib.Path(createFileString(config=config, fileKey='inputDataPlugProfiles',
+                    'linkPlugProfiles': pathlib.Path(globalConfig['linksRelative']['input']) /
+                                        pathlib.Path(createFileString(globalConfig=globalConfig, fileKey='inputDataPlugProfiles',
                                                                       dataset=dataset)),
-                    'linkOutputConfig': pathlib.Path(config['linksRelative']['outputConfig']),
-                    # 'linkOutputAnnual': pathlib.Path(config['linksRelative']['resultsAnnual']),
-                    'linkPlots': pathlib.Path(config['linksRelative']['plots']),
-                    'linkOutput': pathlib.Path(config['linksRelative']['dataOutput'])}
+                    'linkOutputConfig': pathlib.Path(globalConfig['linksRelative']['outputConfig']),
+                    # 'linkOutputAnnual': pathlib.Path(globalConfig['linksRelative']['resultsAnnual']),
+                    'linkPlots': pathlib.Path(globalConfig['linksRelative']['plots']),
+                    'linkOutput': pathlib.Path(globalConfig['linksRelative']['dataOutput'])}
         return linkDict
 
     def readInputScalar(self, filePath):
@@ -169,7 +171,7 @@ class FlexEstimator:
         inputData = self.stringToBoolean(inputRaw)
         return inputData
 
-    def readVencoInput(self, config, dataset):
+    def readVencoInput(self, config, globalConfig, dataset):
         """
         Initializing action for VencoPy-specific config-file, link dictionary and data read-in. The config file has
         to be a dictionary in a .yaml file containing three categories: linksRelative, linksAbsolute and files. Each
@@ -182,7 +184,7 @@ class FlexEstimator:
         data, the latter three ones in a raw data format.
         """
 
-        linkDict = self.initializeLinkMgr(config, dataset)
+        linkDict = self.initializeLinkMgr(config, globalConfig, dataset)
 
         # review: have you considered using the logging module for these kind of outputs?
         print('Reading Venco input scalars, drive profiles and boolean plug profiles')
@@ -254,7 +256,7 @@ class FlexEstimator:
         plugProfiles = self.indexProfile(plugData, nHours)
         return driveProfiles.droplevel(dropIdxLevel), plugProfiles.droplevel(dropIdxLevel)
 
-    def readInData(self, fileKey: str, dataset: str) -> pd.DataFrame:
+    def readInData(self, globalConfig, fileKey: str, dataset: str) -> pd.DataFrame:
         """
         Generic read-in function for mobility datasets. This serves as interface between the daily trip distance
         and purpose calculation and the class Evaluator.
@@ -263,7 +265,7 @@ class FlexEstimator:
         :return: a named pd.Series of all datasets with the given filekey_datasets as identifiers
         """
 
-        return pd.read_csv(pathlib.Path(config['linksRelative']['input']) / createFileString(config=config, fileKey=fileKey,
+        return pd.read_csv(pathlib.Path(globalConfig['linksRelative']['input']) / createFileString(globalConfig=globalConfig, fileKey=fileKey,
                                                                                      dataset=dataset),
                            dtype={'hhPersonID': int}, index_col=['hhPersonID', 'tripStartWeekday'])
 
@@ -476,7 +478,7 @@ class FlexEstimator:
         self.chargeMinProfiles = self.calcChargeMinProfiles(self.chargeProfiles, self.drainProfiles,
                                                        self.auxFuelDemandProfiles, self.scalars, self.scalarsProc,
                                                        nIter=3)
-        print(f'Base profile calculation complete for dataset {self.dataset}')
+        print(f'Base profile calculation complete for dataset {self.datasetID}')
 
     def createRandNo(self, driveProfiles, setSeed=1):
         """
@@ -824,7 +826,7 @@ class FlexEstimator:
         self.socMinNorm, self.socMaxNorm = self.normalizeProfiles(self.scalars, self.SOCMin, self.SOCMax,
                                                              normReferenceParam='Battery capacity')
 
-    def writeProfilesToCSV(self, profileDictOut, config, singleFile=True, dataset='MiD17'):
+    def writeProfilesToCSV(self, globalConfig, profileDictOut, singleFile=True, dataset='MiD17'):
         """
         Function to write VencoPy profiles to either one or five .csv files in the output folder specified in outputFolder.
 
@@ -839,11 +841,11 @@ class FlexEstimator:
 
         if singleFile:
             dataOut = pd.DataFrame(profileDictOut)
-            dataOut.to_csv(pathlib.Path(config['linksRelative']['dataOutput']) /
-                           createFileString(config=config, fileKey='vencoPyOutput', dataset=dataset), header=True)
+            dataOut.to_csv(pathlib.Path(globalConfig['linksRelative']['dataOutput']) /
+                           createFileString(globalConfig=globalConfig, fileKey='vencoPyOutput', dataset=dataset), header=True)
         else:
             for iName, iProf in profileDictOut.items():
-                iProf.to_csv(pathlib.Path(config['linksRelative']['dataOutput']) /
+                iProf.to_csv(pathlib.Path(globalConfig['linksRelative']['dataOutput']) /
                              pathlib.Path(r'vencoPyOutput_' + iName + dataset + '.csv'), header=True)
 
     def writeOut(self):
@@ -853,8 +855,8 @@ class FlexEstimator:
                                    gridConnectionShare=self.plugProfilesAgg,
                                    auxFuelDriveProfile=self.auxFuelDemandProfilesCorr)
 
-        self.writeProfilesToCSV(profileDictOut=self.profileDictOut, config=self.config, singleFile=True,
-                           dataset=self.dataset)
+        self.writeProfilesToCSV(profileDictOut=self.profileDictOut, globalConfig=self.globalConfig, singleFile=True,
+                                dataset=self.datasetID)
 
     def sortData(data):
         data.index = data.index.swaplevel(0, 1)
@@ -862,44 +864,44 @@ class FlexEstimator:
 
     def linePlot(self, profileDict, linkOutput, config, show=True, write=True, ylabel='Normalized profiles', ylim=None,
                  filename=''):
-        plt.rcParams.update(config['plotConfig']['plotRCParameters'])  # set plot layout
+        plt.rcParams.update(self.evaluatorConfig['plotConfig']['plotRCParameters'])  # set plot layout
         fig, ax = plt.subplots()
-        plt.tick_params(labelsize=config['plotConfig']['plotRCParameters']['font.size'])
+        plt.tick_params(labelsize=self.evaluatorConfig['plotConfig']['plotRCParameters']['font.size'])
         for iKey, iVal in profileDict.items():
             if isinstance(iVal.index, pd.MultiIndex):
                 iVal = self.sortData(iVal)
                 sns.lineplot(range(iVal.index.size), iVal, label=iKey, sort=False)
             else:
                 sns.lineplot(iVal.index, iVal, label=iKey, sort=False)
-        xRange = range(0, len(profileDict[list(profileDict)[0]]) + 1, config['plotConfig']['xAxis']['xTickSteps'])
+        xRange = range(0, len(profileDict[list(profileDict)[0]]) + 1, self.evaluatorConfig['plotConfig']['xAxis']['xTickSteps'])
         # xLabels = [f'{iDay}\n{str(iTime)}:00' for iDay in config['plotConfig']['xAxis']['weekdays'] for iTime in config['plotConfig']['xAxis']['hours']]
-        xLabels = [f'{str(iTime)}:00' for iTime in config['plotConfig']['xAxis']['hours']]
+        xLabels = [f'{str(iTime)}:00' for iTime in self.evaluatorConfig['plotConfig']['xAxis']['hours']]
         ax.set_xticks(xRange)
-        ax.set_xticklabels(xLabels, fontsize=config['plotConfig']['xAxis']['ticklabelsize'])
+        ax.set_xticklabels(xLabels, fontsize=self.evaluatorConfig['plotConfig']['xAxis']['ticklabelsize'])
         ax.set_ylim(bottom=0, top=ylim)
-        ax.set_xlabel('Hour', fontsize=config['plotConfig']['plotRCParameters']['axes.labelsize'])
-        ax.set_ylabel(ylabel, fontsize=config['plotConfig']['plotRCParameters']['axes.labelsize'])
+        ax.set_xlabel('Hour', fontsize=self.evaluatorConfig['plotConfig']['plotRCParameters']['axes.labelsize'])
+        ax.set_ylabel(ylabel, fontsize=self.evaluatorConfig['plotConfig']['plotRCParameters']['axes.labelsize'])
         plt.legend(loc='upper center')  # , bbox_to_anchor=(0.5, 1.3) ncol=2,
         plt.tight_layout()
         filePlot = linkOutput / pathlib.Path(
-            createFileString(config=config, fileKey='flexPlotName', manualLabel=filename,
+            createFileString(globalConfig=self.globalConfig, dataset=self.datasetID, fileKey='flexPlotName', manualLabel=filename,
                              filetypeStr='svg'))
         if show:
             plt.show()
         if write:
             fig.savefig(filePlot)
 
-    def separateLinePlots(self,profileDictList, config, dataset='MiD17', show=True, write=True, ylabel=[], ylim=[],
+    def separateLinePlots(self, profileDictList, config, globalConfig, dataset='MiD17', show=True, write=True, ylabel=[], ylim=[],
                           filenames=[]):
         for iDict, iYLabel, iYLim, iName in zip(profileDictList, ylabel, ylim, filenames):
-            self.writeProfilesToCSV(profileDictOut=iDict, config=config, singleFile=False, dataset=dataset)
-            self.linePlot(iDict, linkOutput=config['linksRelative']['plots'], config=config, show=show, write=write,
+            self.writeProfilesToCSV(profileDictOut=iDict, globalConfig=globalConfig, singleFile=False, dataset=dataset)
+            self.linePlot(iDict, linkOutput=self.globalConfig['linksRelative']['plots'], config=config, show=show, write=write,
                      ylabel=iYLabel, ylim=iYLim, filename=iName)
 
 
     def plotProfiles(self):
         self.linePlot(self.profileDictOut, linkOutput=self.linkDict['linkPlots'], config=self.config,
-                 show=True, write=True, filename='allPlots' + self.dataset)
+                      show=True, write=True, filename='allPlots' + self.datasetID)
 
         # Separately plot flow and state profiles
         profileDictConnectionShare = dict(gridConnectionShare=self.plugProfilesAgg)
@@ -915,11 +917,11 @@ class FlexEstimator:
 
         profileDictList = [profileDictConnectionShare, profileDictFlowsAbs, profileDictStateAbs]
 
-        self.separateLinePlots(profileDictList, self.config,
-                          show=True, write=True,
-                          ylabel=['Average EV connection share', 'Average EV flow in kW', 'Average EV SOC in kWh'],
-                          filenames=[self.dataset + '_connection', self.dataset + '_flows', self.dataset + '_state'],
-                          ylim=[1, 0.9, 50])
+        self.separateLinePlots(profileDictList, self.config, self.globalConfig,
+                               show=True, write=True,
+                               ylabel=['Average EV connection share', 'Average EV flow in kW', 'Average EV SOC in kWh'],
+                               filenames=[self.datasetID + '_connection', self.datasetID + '_flows', self.datasetID + '_state'],
+                               ylim=[1, 0.9, 50])
 
     def compareProfiles(self, compareTo):
         if not isinstance(compareTo, FlexEstimator):
@@ -941,7 +943,7 @@ class FlexEstimator:
         profileDictList.append(SOCDataWeek)
 
         self.separateLinePlots(profileDictList, self.config,
-                          show=self.config['plotConfig']['show'], write=self.config['plotConfig']['save'],
+                          show=self.evaluatorConfig['plotConfig']['show'], write=self.evaluatorConfig['plotConfig']['save'],
                           ylabel=[
                                   # 'Average EV connection share', 'Weighted Average EV connection share',
                                   # 'Uncontrolled charging in kW', 'Weighted Uncontrolled charging in kW',
@@ -972,7 +974,7 @@ class FlexEstimator:
 
     def compileDictList(self, compareTo, profileNameList):
         ret = []
-        keys = [self.dataset, compareTo.dataset]
+        keys = [self.datasetID, compareTo.datasetID]
         for iProf in profileNameList:
             iDict = self.compileProfileComparisonDict(keys=keys,
                                                       values=[getattr(self, iProf), getattr(compareTo, iProf)])
@@ -984,8 +986,8 @@ class FlexEstimator:
         return {iKey: iVal for iKey, iVal in zip(keys, values)}
 
 
-def runFlexEstimation(config, ParseData : DataParser, dataset : str = 'MiD17'):
-    Flexstimator = FlexEstimator(config=config, datasetID=dataset, ParseData=ParseData)
+def runFlexEstimation(config, globalConfig, evaluatorConfig, ParseData : DataParser, dataset : str = 'MiD17'):
+    Flexstimator = FlexEstimator(config=config, globalConfig=globalConfig, evaluatorConfig=evaluatorConfig, datasetID=dataset, ParseData=ParseData)
     Flexstimator.baseProfileCalculation()
     Flexstimator.filter()
     Flexstimator.aggregate()
@@ -994,26 +996,33 @@ def runFlexEstimation(config, ParseData : DataParser, dataset : str = 'MiD17'):
     Flexstimator.writeOut()
     # Flexstimator.plotProfiles()
     return Flexstimator
-
-def runFlexstimation(config, dataset, variable):
-    #indexedDriveData = mergeVariables(data=driveDataDays, variableData=tripDataClean, variables=['tripStartWeekday',
-    #                                                                                             'tripWeight'])
-    #indexedPurposeData = mergeVariables(data=purposeDataDays, variableData=tripDataClean, variables=['tripStartWeekday',
-    #                                                                                                 'tripWeight'])
-    Flexstimator = FlexEstimator(config=config, datasetID=dataset)
-    Flexstimator.baseProfileCalculation()
-    Flexstimator.filter()
-    Flexstimator.aggregate()
-    Flexstimator.correct()
-    Flexstimator.normalize()
-    Flexstimator.writeOut()
+#
+# def runFlexstimation(config, dataset, variable):
+#     #indexedDriveData = mergeVariables(data=driveDataDays, variableData=tripDataClean, variables=['tripStartWeekday',
+#     #                                                                                             'tripWeight'])
+#     #indexedPurposeData = mergeVariables(data=purposeDataDays, variableData=tripDataClean, variables=['tripStartWeekday',
+#     #                                                                                                 'tripWeight'])
+#     Flexstimator = FlexEstimator(config=config, datasetID=dataset)
+#     Flexstimator.baseProfileCalculation()
+#     Flexstimator.filter()
+#     Flexstimator.aggregate()
+#     Flexstimator.correct()
+#     Flexstimator.normalize()
+#     Flexstimator.writeOut()
 
 if __name__ == '__main__':
-    linkConfig = pathlib.Path.cwd().parent / 'config' / 'config.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
-    config = yaml.load(open(linkConfig), Loader=yaml.SafeLoader)
-    os.chdir(config['linksAbsolute']['vencoPyRoot'])
-    vpData = DataParser(config=config, loadEncrypted=False)
-    vpFlexEst17 = runFlexEstimation(config=config, ParseData=vpData)
+    linkGlobalConfig = pathlib.Path.cwd().parent / 'config' / 'globalConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
+    globalConfig = yaml.load(open(linkGlobalConfig), Loader=yaml.SafeLoader)
+    linkFlexConfig = pathlib.Path.cwd().parent / 'config' / 'flexConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
+    flexConfig = yaml.load(open(linkFlexConfig), Loader=yaml.SafeLoader)
+    linkParseConfig = pathlib.Path.cwd().parent / 'config' / 'parseConfig.yaml'
+    parseConfig = yaml.load(open(linkParseConfig), Loader=yaml.SafeLoader)
+    linkEvaluatorConfig = pathlib.Path.cwd().parent / 'config' / 'evaluatorConfig.yaml'
+    evaluatorConfig = yaml.load(open(linkEvaluatorConfig), Loader=yaml.SafeLoader)
+    os.chdir(globalConfig['linksAbsolute']['vencoPyRoot'])
+
+    vpData = DataParser(config=parseConfig, globalConfig=globalConfig, loadEncrypted=False)
+    vpFlexEst17 = runFlexEstimation(config=flexConfig, globalConfig=globalConfig, evaluatorConfig=evaluatorConfig, ParseData=vpData, dataset='MiD17')
 
     print(f'Total absolute electricity charged in uncontrolled charging based on MiD08: '
           f'{vpFlexEst17.chargeProfilesUncontrolled.sum().sum()} based on MiD17')

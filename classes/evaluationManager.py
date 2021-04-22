@@ -16,7 +16,7 @@ from scripts.globalFunctions import createFileString
 
 
 class Evaluator:
-    def __init__(self, config, label, weightPlot=True):
+    def __init__(self, config:dict, label, weightPlot=True):
         self.config = config
         self.label = label
         self.weightPlot = weightPlot

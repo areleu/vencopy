@@ -8,29 +8,36 @@ __license__ = 'BSD-3-Clause'
 
 
 #----- imports & packages ------
-import pathlib
-import time
 import yaml
-from scripts.sandboxFunctions import *
-from scripts.libLogging import logger
+import pathlib
 from classes.parseManager import DataParser
 from classes.tripDiaryManager import TripDiaryBuilder
 from classes.gridModelManager import GridModeler
 from classes.flexEstimationManager import FlexEstimator
-from classes.evaluationManager import Evaluator
 
 # Set dataset and config to analyze
-linkConfig = pathlib.Path.cwd() / 'config' / 'config.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
-config = yaml.load(open(linkConfig), Loader=yaml.SafeLoader)
 datasetID = 'MiD17'
+linkGlobalConfig = pathlib.Path.cwd() / 'config' / 'globalConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
+globalConfig = yaml.load(open(linkGlobalConfig), Loader=yaml.SafeLoader)
+linkParseConfig = pathlib.Path.cwd() / 'config' / 'parseConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
+parseConfig = yaml.load(open(linkParseConfig), Loader=yaml.SafeLoader)
+linkTripConfig = pathlib.Path.cwd() / 'config' / 'tripConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
+tripConfig = yaml.load(open(linkTripConfig), Loader=yaml.SafeLoader)
+linkGridConfig = pathlib.Path.cwd() / 'config' / 'gridConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
+gridConfig = yaml.load(open(linkGridConfig), Loader=yaml.SafeLoader)
+linkEvaluatorConfig = pathlib.Path.cwd() / 'config' / 'evaluatorConfig.yaml'
+evaluatorConfig = yaml.load(open(linkEvaluatorConfig), Loader=yaml.SafeLoader)
+linkFlexConfig = pathlib.Path.cwd() / 'config' / 'flexConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
+flexConfig = yaml.load(open(linkFlexConfig), Loader=yaml.SafeLoader)
 
-vpData = DataParser(datasetID=datasetID, config=config, loadEncrypted=False)
+
+vpData = DataParser(datasetID=datasetID, config=parseConfig, globalConfig=globalConfig, loadEncrypted=False)
 
 # Trip distance and purpose diary compositions
-vpTripDiary = TripDiaryBuilder(config=config, ParseData=vpData, datasetID=datasetID)
+vpTripDiary = TripDiaryBuilder(config=tripConfig, globalConfig=globalConfig, ParseData=vpData, datasetID=datasetID)
 
 # Grid model applications
-vpGrid = GridModeler(config=config, dataset=datasetID)
+vpGrid = GridModeler(config=gridConfig, globalConfig=globalConfig, datasetID=datasetID)
 vpGrid.assignSimpleGridViaPurposes()
 vpGrid.writeOutGridAvailability()
 
@@ -40,7 +47,7 @@ vpGrid.writeOutGridAvailability()
 # vpEval.plotAggregates()
 
 # Estimate charging flexibility based on driving profiles and charge connection
-vpFlex = FlexEstimator(config=config, datasetID=datasetID, ParseData=vpData)
+vpFlex = FlexEstimator(config=flexConfig, globalConfig=globalConfig, evaluatorConfig=evaluatorConfig, datasetID=datasetID, ParseData=vpData)
 vpFlex.baseProfileCalculation()
 vpFlex.filter()
 vpFlex.aggregate()

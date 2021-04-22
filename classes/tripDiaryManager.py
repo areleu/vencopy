@@ -5,40 +5,38 @@ __email__ = 'Niklas.Wulff@dlr.de'
 __birthdate__ = '31.12.2019'
 __status__ = 'dev'  # options are: dev, test, prod
 
-import time
-import pprint
+
 import pandas as pd
-import warnings
 from pathlib import Path
-from profilehooks import profile
 import yaml
 import os
 from classes.parseManager import DataParser
 from scripts.globalFunctions import createFileString
 
 class TripDiaryBuilder:
-    def __init__(self, config: dict, ParseData: DataParser, datasetID: str = 'MiD17'):
+    def __init__(self, config: dict, globalConfig: dict, ParseData: DataParser, datasetID: str = 'MiD17'):
         self.config = config
+        self.globalConfig = globalConfig
         self.tripDataClean = None
         self.tripDistanceDiary = None
         self.tripPurposeDiary = None
         # self.calculateConsistentHourlyShares(data=ParseData.data)
         # ONLY FOR DEBUGGING PURPOSES
         self.calculateConsistentHourlyShares(data=ParseData.data.loc[0:2000, :])
-        self.tripDistanceAllocation()
+        self.tripDistanceAllocation(globalConfig)
         # self.hhPersonMap = self.mapHHPIDToTripID(self.tripDataClean)
         self.tripPurposeAllocation()
-        self.writeOut(config=config, datasetID=datasetID, dataDrive=self.tripDistanceDiary,
+        self.writeOut(globalConfig=globalConfig, datasetID=datasetID, dataDrive=self.tripDistanceDiary,
                  dataPurpose=self.tripPurposeDiary)
 
-    def writeOut(self, config : dict, dataDrive, dataPurpose, datasetID: str = 'MiD17'):
-        dataDrive.to_csv(Path(config['linksRelative']['input']) /
-                         self.createFileString(config=config, fileKey='inputDataDriveProfiles', dataset=datasetID), na_rep=0)
-        dataPurpose.to_csv(Path(config['linksRelative']['input']) /
-                           self.createFileString(config=config, fileKey='purposesProcessed', dataset=datasetID))
+    def writeOut(self, globalConfig:dict, dataDrive, dataPurpose, datasetID: str = 'MiD17'):
+        dataDrive.to_csv(Path(globalConfig['linksRelative']['input']) /
+                         createFileString(globalConfig=globalConfig, fileKey='inputDataDriveProfiles', dataset=datasetID), na_rep=0)
+        dataPurpose.to_csv(Path(globalConfig['linksRelative']['input']) /
+                          createFileString(globalConfig=globalConfig, fileKey='purposesProcessed', dataset=datasetID))
         print(f"Drive data and trip purposes written to files "
-              f"{self.createFileString(config=config, fileKey='inputDataDriveProfiles', dataset=datasetID)} and"
-              f"{self.createFileString(config=config, fileKey='purposesProcessed', dataset=datasetID)}")
+              f"{createFileString(globalConfig=globalConfig, fileKey='inputDataDriveProfiles', dataset=datasetID)} and"
+              f"{createFileString(globalConfig=globalConfig, fileKey='purposesProcessed', dataset=datasetID)}")
 
     def tripDuration(self, timestampStart, timestampEnd):
         return timestampEnd - timestampStart
@@ -121,9 +119,9 @@ class TripDiaryBuilder:
         else:
             return None
 
-    def tripDistanceAllocation(self):
+    def tripDistanceAllocation(self, globalConfig):
         print('Trip distance diary setup starting')
-        self.formatDF = self.initiateHourDataframe(indexCol=self.tripDataClean.index, nHours=self.config['numberOfHours'])
+        self.formatDF = self.initiateHourDataframe(indexCol=self.tripDataClean.index, nHours=globalConfig['numberOfHours'])
         fillHourValues = FillHourValues(data=self.tripDataClean, rangeFunction=self.initiateColRange)
         driveDataTrips = self.fillDataframe(self.formatDF, fillFunction=fillHourValues)
         driveDataTrips.loc[:, ['hhPersonID', 'tripID']] = pd.DataFrame(self.tripDataClean.loc[:, ['hhPersonID',
@@ -239,8 +237,13 @@ class FillHourValues:
 
 
 if __name__ == '__main__':
-    linkConfig = Path.cwd().parent / 'config' / 'config.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
-    config = yaml.load(open(linkConfig), Loader=yaml.SafeLoader)
-    os.chdir(config['linksAbsolute']['vencoPyRoot'])
-    vpData = DataParser(config=config, loadEncrypted=False)
-    vpDiary = TripDiaryBuilder(config=config, ParseData=vpData)
+    linkGlobalConfig = Path.cwd().parent / 'config' / 'globalConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
+    globalConfig = yaml.load(open(linkGlobalConfig), Loader=yaml.SafeLoader)
+    linkTripConfig = Path.cwd().parent / 'config' / 'tripConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
+    tripConfig = yaml.load(open(linkTripConfig), Loader=yaml.SafeLoader)
+    linkParseConfig = Path.cwd().parent / 'config' / 'parseConfig.yaml'
+    parseConfig = yaml.load(open(linkParseConfig), Loader=yaml.SafeLoader)
+    os.chdir(globalConfig['linksAbsolute']['vencoPyRoot'])
+
+    vpData = DataParser(config=parseConfig, globalConfig=globalConfig, loadEncrypted=False)
+    vpDiary = TripDiaryBuilder(config=tripConfig, globalConfig=globalConfig, ParseData=vpData)
