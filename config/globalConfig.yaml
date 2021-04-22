@@ -1,0 +1,66 @@
+#-*- coding:utf-8 -*-
+
+# __version__ = '0.0.9'
+# __maintainer__ = 'Niklas Wulff 2019-02-12'
+# __contributors__ = 'Fabia Miorelli, Parth Butte'
+# __email__ = 'Niklas.Wulff@dlr.de'
+# __birthdate__ = '2019-02-12'
+# __status__ = 'dev'  # options are: dev, test, prod
+
+# This config holds all relative paths and filenames for VENCO
+
+linksRelative:
+    input: ./inputData/
+    plots: ./output/plots/
+    dataOutput: ./output/data/
+    scripts: ./scripts/
+    config: ./config/
+    outputConfig: ./config/outputConfigREMix.yaml
+
+
+# During first configuration, optionally fill in absolute links on your system e.g. if you want to have post processed
+# output written to an energy system model input folder
+linksAbsolute: 
+    MiD17: C:/8_Work/Data/MiD17/B2_Regional-DatensatzpaketEncrypted/STATA/
+    vencoPyRoot: C:/8_Work/VencoPy/VencoPy_internal/vencopy/
+
+numberOfHours: 24
+
+files:
+    inputDataScalars: VencoPy_scalarInputSES.xlsx
+#    inputDataDriveProfiles: inputProfiles_Drive_MiD17_woWeights.csv
+#    inputDataPlugProfiles: inputProfiles_Plug_MiD17_woWeights.csv
+    MiD17:
+        enryptedZipFileB1: B1_Standard-DatensatzpaketEncrypted.zip
+        enryptedZipFileB2: B2_Regional-DatensatzpaketEncrypted.zip
+        tripDataZipFileRaw: CSV/MiD2017_Regional_Wege.csv
+        householdsDataRaw: MiD2017_Regional_Haushalte.csv
+        personsDataRaw: MiD2017_Regional_Personen.csv
+        tripsDataRaw: MiD2017_Regional_Wege.dta
+        purposesProcessed: inputProfiles_Purpose  # inputProfiles_Purpose_runTest_MiD17.csv
+        inputDataDriveProfiles: inputProfiles_Drive  # inputProfiles_Drive_runTest_MiD17.csv
+        inputDataPlugProfiles: inputProfiles_Plug  # inputProfiles_Plug_runTest_MiD17.csv
+        vencoPyOutput: vencoPyOutput
+        flexPlotName: flexProfileComparison
+    MiD08:
+        householdsDataRaw: MiD2008_PUF_Haushalte.dta
+        personDataRaw: MiD2008_PUF_Personen.dta
+        tripsDataRaw: MiD2008_PUF_Wege.dta
+        tripsProcessedOld: MiD_procCS_caseID-weekday-weight-activity.xlsx
+        purposesProcessedOld: MiD_procCS_caseID-weekday-weight-activity.xlsx
+        purposesProcessed: inputProfiles_Purpose  # inputProfiles_Purpose_runTest_MiD08.csv
+        inputDataDriveProfiles: inputProfiles_Drive  # inputProfiles_Drive_runTest_MiD08.csv
+        inputDataPlugProfiles: inputProfiles_Plug  # inputProfiles_Plug_runTest_MiD08.csv
+        vencoPyOutput: vencoPyOutput
+#        inputDataDriveProfiles: inputProfiles_Drive_MiD08.csv
+#        inputDataPlugProfiles: inputProfiles_Plug_MiD08.csv
+    vencoPyOutput: vencoPyOutput
+    aggPlotName: mobilityComparison
+    flexPlotName: flexProfileComparison
+
+
+labels:
+    runLabel: vpConsolid
+    technologyLabel: BEV-S
+    outputFileName: VencoPy_MR1_alpha1_batCap40_cons15
+    strAdd:

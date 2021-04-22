@@ -1,0 +1,33 @@
+#-*- coding:utf-8 -*-
+
+# __version__ = '0.0.9'
+# __maintainer__ = 'Niklas Wulff 2019-02-12'
+# __contributors__ = 'Fabia Miorelli, Parth Butte'
+# __email__ = 'Niklas.Wulff@dlr.de'
+# __birthdate__ = '2019-02-12'
+# __status__ = 'dev'  # options are: dev, test, prod
+
+# This config holds all relative paths and filenames for gridModelerManager.py
+
+   
+chargingInfrastructureDistributions:  # Probabilities given for each location aka trip purpose
+    'DRIVING': 'FALSCH'
+    'HOME': 'WAHR'
+    'WORK': 'FALSCH'
+    'SCHOOL': 'FALSCH'
+    'SHOPPING': 'FALSCH'
+    'LEISURE': 'FALSCH'
+    'OTHER': 'FALSCH'
+    'NA': 'FALSCH'
+
+#chargingInfrastructureDistributionsSchimmy:  # Identifiers from the evaluation of MID08 by Christoph Schimeczek
+#    'driving': 'FALSCH'
+#    'home': 'WAHR'
+#    'work': 'FALSCH'
+#    'school': 'FALSCH'
+#    'shop': 'FALSCH'
+#    'private': 'FALSCH'
+#    'recreation': 'FALSCH'
+#    'other': 'FALSCH'
+#    'n/a': 'FALSCH'
+#    nan: 'FALSCH'
