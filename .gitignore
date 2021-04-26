@@ -1,7 +1,7 @@
 # PyCharm project setup (.idea), jupyter notebook folders and precompiled bytecode (__pycache__)
 /.idea/
 /.ipynb_checkpoints/
-/__pycache__/
+*/__pycache__/
 /scripts/__pycache__/
 
 # local outputs
@@ -12,6 +12,7 @@
 /administration
 /archive
 /scripts/lib.py
+/inputData/*.csv
 /inputData/emobpyData
 /inputData/archive
 /presentation/archive

@@ -39,9 +39,20 @@ class TripDiaryBuilder:
               f"{createFileString(globalConfig=globalConfig, fileKey='purposesProcessed', dataset=datasetID)}")
 
     def tripDuration(self, timestampStart, timestampEnd):
+        """
+        :param timestampStart: start time of a trip
+        :param timestampEnd:  end time of a trip
+        :return: Returns trip duration
+        """
         return timestampEnd - timestampStart
 
     def calcHourShareStart(self, timestampStart, timestampEnd, duration):
+        """
+        :param timestampStart: start time of a trip
+        :param timestampEnd:  end time of a trip
+        :param duration: duration of a trip
+        :return: Returns a timestamped data frame of the trips which started in the same hour
+        """
         isSameHourTrip = timestampStart.dt.hour == timestampEnd.dt.hour
         shareSameHour = (timestampEnd.dt.minute - timestampStart.dt.minute) / (duration.dt.seconds / 60)
         shareSameHour[
@@ -50,16 +61,34 @@ class TripDiaryBuilder:
         return share, isSameHourTrip
 
     def calcHourShareEnd(self, timestampEnd, duration, isSameHourTrip):
+        """
+        :param timestampEnd: end time of a trip
+        :param duration: duration of a trip
+        :param isSameHourTrip: data frame containing same start time of various trips
+        :return: Returns a timestamped data frame of the trips which ended in the same hour
+        """
         share = timestampEnd.dt.minute / (duration.dt.seconds / 60)
         return share.where(~isSameHourTrip, 0)
 
     def calcDistanceShares(self, data, duration, timestampSt, timestampEn):
+        """
+        :param data:
+        :param duration: duration of a trip
+        :param timestampSt:  start time of a trip
+        :param timestampEn:  end time of a trip
+        :return: Return a data frame of distance covered by each trip in a particular hour
+        """
         shareHourStart, isSameHourTrip = self.calcHourShareStart(data.loc[:, timestampSt], data.loc[:, timestampEn],
                                                             duration)
         shareHourEnd = self.calcHourShareEnd(data.loc[:, timestampEn], duration, isSameHourTrip=isSameHourTrip)
         return shareHourStart, shareHourEnd
 
     def numberOfFullHours(self, timestampStart, timestampEnd):
+        """
+        :param timestampStart:  start time of a trip
+        :param timestampEnd: end time of a trip
+        :return: Returns a data frame of number of full load hours of each trip(not sure about this)
+        """
         timedeltaTrip = timestampEnd - timestampStart
         numberOfHours = timedeltaTrip.apply(lambda x: x.components.hours)
         numberOfDays = timedeltaTrip.apply(lambda x: x.components.days)
@@ -69,6 +98,12 @@ class TripDiaryBuilder:
         return numberOfHours.where(numberOfDays != -1, other=0)
 
     def calcFullHourTripLength(self, duration, numberOfFullHours, tripLength):
+        """
+        :param duration: duration of a trip
+        :param numberOfFullHours:
+        :param tripLength: data frame of individual trip length
+        :return: Returns a data frame of hourly distance covered by each trip
+        """
         fullHourTripLength = (numberOfFullHours / (duration.dt.seconds / 3600)) * tripLength
         fullHourTripLength.loc[duration == pd.Timedelta(0)] = 0  # set trip length to 0 that would otherwise be NaN
         return fullHourTripLength
@@ -131,6 +166,10 @@ class TripDiaryBuilder:
 
     def assignDriving(self, driveData):
         # assign hours where drivData != 0/NA to 'driving'
+        """
+        :param driveData: driving data
+        :return: Returns driving data with 'driving' instead of hours having 0/NA
+        """
         locationData = driveData.copy()
         locationData = locationData.where(locationData == 0, other='DRIVING')
         return locationData
@@ -141,6 +180,12 @@ class TripDiaryBuilder:
     #     return range(startHour, self.endHour)
 
     def determinePurposeStartHour(self, departure, arrival):
+        """
+
+        :param departure:  start time of a trip
+        :param arrival: end time of a trip
+        :return: Returns more specific start hour of a trip when departure hour and arrival hour of a trip are equal
+        """
         if departure.hour == arrival.hour:
             if arrival.minute >= 30:  # Cases 3, 4, 5
                 startHour = departure.hour + 1  # Cases 3,5

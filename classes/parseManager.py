@@ -16,6 +16,10 @@ class DataParser:
     # Separate datasets that know each other
     # @profile(immediate=True)
     def __init__(self, config: dict, globalConfig: dict,  datasetID: str = 'MiD17', loadEncrypted=True):
+        """
+        :param config: A yaml config file holding a dictionary with the keys 'linksRelative' and 'linksAbsolute'
+        :param globalConfig:
+        """
         self.datasetID = self.checkDatasetID(datasetID, config)
         self.config = config
         self.globalConfig = globalConfig
@@ -48,6 +52,11 @@ class DataParser:
         self.__filterDict = {iKey: iVal for iKey, iVal in self.__filterDict.items() if self.__filterDict[iKey] is not None}
 
     def checkDatasetID(self, dataset: str, config: dict):
+        """
+        :param dataset: Corresponds to mobility data of a particular year
+        :param config: A yaml config file holding a dictionary with the keys 'linksRelative' and 'linksAbsolute'
+        :return: Returns a string value of a mobility data
+        """
         availableDatasetIDs = config['dataVariables']['dataset']
         assert dataset in availableDatasetIDs, \
             f'Defined dataset {dataset} not specified under dataVariables in config. Specified datasetIDs are ' \
@@ -63,6 +72,10 @@ class DataParser:
         return variables
 
     def removeNA(self, variables: list):
+        """
+        :param variables: List of variables of the mobility dataset
+        :return: Returns a list with non NA values
+        """
         variables.remove('NA')
         if 'NA' in variables:
             self.removeNA(variables)
@@ -79,6 +92,11 @@ class DataParser:
               f'of type {self.rawDataPath.suffix}')
 
     def loadEncryptedData(self, linkToZip, linkInZip):
+        """
+        :param linkToZip:
+        :param linkInZip:
+        :return:
+        """
         with ZipFile(linkToZip) as myzip:
             if '.dta' in linkInZip:
                 self.data = pd.read_stata(myzip.open(linkInZip, pwd=bytes(self.config['encryptionPW'], encoding='utf-8')),
@@ -92,6 +110,9 @@ class DataParser:
               f'of type {self.rawDataPath.suffix}')
 
     def harmonizeVariables(self):
+        """
+        :return: Returns the variables of 2008 MiD data harmonized with the variables for 2017 MiD data
+        """
         replacementDict = self.createReplacementDict(self.datasetID, self.config['dataVariables'])
         dataRenamed = self.data.rename(columns=replacementDict)
         if self.datasetID == 'MiD08':
@@ -101,6 +122,11 @@ class DataParser:
         print('Finished harmonization of variables')
 
     def createReplacementDict(self, dataset, dictRaw):
+        """
+        :param dataset: Corresponds to mobility data of a particular year
+        :param dictRaw: Contains dictionary of the raw data
+        :return:
+        """
         if dataset in dictRaw['dataset']:
             listIndex = dictRaw['dataset'].index(dataset)
             return {val[listIndex]: key for (key, val) in dictRaw.items()}
@@ -115,6 +141,11 @@ class DataParser:
         self.data = self.data.astype(subDict)
 
     def returnBottomDictValues(self, baseDict: dict, lst: list = []):
+        """
+        :param baseDict: Dictionary of variables
+        :param lst: empty list
+        :return: Returns a list with all the bottom dictionary values
+        """
         for iKey, iVal in baseDict.items():
             if isinstance(iVal, dict):
                 lst = self.returnBottomDictValues(iVal, lst)
@@ -124,11 +155,19 @@ class DataParser:
         return lst
 
     def checkFilterDict(self, filterDict: dict):
+        """
+        :return: Returns a filter dictionary containing a list from BottomDictValues
+        """
         # Currently only checking if list of list str not typechecked all(map(self.__checkStr, val)
         assert all(isinstance(val, list) for val in self.returnBottomDictValues(filterDict)), \
             f'All values in filter dictionaries have to be lists, but are not'
 
     def returnBottomDictKeys(self, baseDict: dict, lst: list = None):
+        """
+        :param baseDict: Dictionary of variables
+        :param lst: empty list
+        :return: Returns a list with all the bottom dictionary keys
+        """
         if lst is None:
             lst = []
         for iKey, iVal in baseDict.items():
@@ -159,18 +198,33 @@ class DataParser:
         self.filterAnalysis(ret)
 
     def setIncludeFilter(self, includeFilterDict: dict, dataIndex):
+        """
+        :param includeFilterDict: Dictionary of include filters defined in config.yaml
+        :param dataIndex: Index for the data frame
+        :return:
+        """
         incFilterCols = pd.DataFrame(index=dataIndex, columns=includeFilterDict.keys())
         for incCol, incElements in includeFilterDict.items():
             incFilterCols[incCol] = self.data[incCol].isin(incElements)
         return incFilterCols
 
     def setExcludeFilter(self, excludeFilterDict: dict, dataIndex):
+        """
+        :param excludeFilterDict: Dictionary of exclude filters defined in config.yaml
+        :param dataIndex: Index for the data frame
+        :return:
+        """
         exclFilterCols = pd.DataFrame(index=dataIndex, columns=excludeFilterDict.keys())
         for excCol, excElements in excludeFilterDict.items():
             exclFilterCols[excCol] = ~self.data[excCol].isin(excElements)
         return exclFilterCols
 
     def setGreaterThanFilter(self, greaterThanFilterDict: dict, dataIndex):
+        """
+        :param greaterThanFilterDict: Dictionary of greater than filters defined in config.yaml
+        :param dataIndex: Index for the data frame
+        :return:
+        """
         greaterThanFilterCols = pd.DataFrame(index=dataIndex, columns=greaterThanFilterDict.keys())
         for greaterCol, greaterElements in greaterThanFilterDict.items():
             greaterThanFilterCols[greaterCol] = self.data[greaterCol] >= greaterElements.pop()
@@ -180,6 +234,11 @@ class DataParser:
         return greaterThanFilterCols
 
     def setSmallerThanFilter(self, smallerThanFilterDict: dict, dataIndex):
+        """
+        :param smallerThanFilterDict: Dictionary of smaller than filters defined in config.yaml
+        :param dataIndex: Index for the data frame
+        :return:
+        """
         smallerThanFilterCols = pd.DataFrame(index=dataIndex, columns=smallerThanFilterDict.keys())
         for smallerCol, smallerElements in smallerThanFilterDict.items():
             smallerThanFilterCols[smallerCol] = self.data[smallerCol] <= smallerElements.pop()
@@ -189,6 +248,10 @@ class DataParser:
         return smallerThanFilterCols
 
     def filterAnalysis(self, filterData):
+        """
+        :param filterData:
+        :return:
+        """
         lenData = sum(filterData.all(axis='columns'))
         boolDict = {iCol: sum(filterData[iCol]) for iCol in filterData}
         print(f'The following values were taken into account after filtering:')
@@ -236,6 +299,16 @@ class DataParser:
                          colHour: str = 'tripStartHour',
                          colMin: str = 'tripStartMinute',
                          colName: str = 'timestampStart'):
+        """
+        :param data: a data frame
+        :param colYear: year of start of a particular trip
+        :param colWeek: week of start of a particular trip
+        :param colDay: weekday of start of a particular trip
+        :param colHour: hour of start of a particular trip
+        :param colMin: minute of start of a particular trip
+        :param colName:
+        :return: Returns a detailed time stamp
+        """
         data[colName] = pd.to_datetime(data.loc[:, colYear], format='%Y') + \
                         pd.to_timedelta(data.loc[:, colWeek] * 7, unit='days') + \
                         pd.to_timedelta(data.loc[:, colDay], unit='days') + \
@@ -244,6 +317,9 @@ class DataParser:
         # return data
 
     def composeStartAndEndTimestamps(self):
+        """
+        :return: Returns start and end time of a trip
+        """
         self.composeTimestamp(data=self.data)  # Starting timestamp
         self.composeTimestamp(data=self.data,  # Ending timestamps
                               colHour='tripEndHour',
@@ -252,22 +328,37 @@ class DataParser:
         self.updateEndTimestamp()
 
     def updateEndTimestamp(self):
+        """
+        :return:
+        """
         endsFollowingDay = self.data['tripEndNextDay'] == 1
         self.data.loc[endsFollowingDay, 'timestampEnd'] = self.data.loc[endsFollowingDay,
                                                                         'timestampEnd'] + pd.offsets.Day(1)
 
     def calcNTripsPerDay(self):
+        """
+        :return: Returns number of trips trips per household per day
+        """
         return self.data['hhPersonID'].value_counts().mean()
 
     def calcDailyTravelDistance(self):
+        """
+        :return: Returns daily travel distance per household
+        """
         dailyDistances = self.data.loc[:, ['hhPersonID', 'tripDistance']].groupby(by=['hhPersonID']).sum()
         return dailyDistances.mean()
 
     def calcDailyTravelTime(self):
+        """
+        :return: Returns daily travel time per household
+        """
         travelTime = self.data.loc[:, ['hhPersonID', 'travelTime']].groupby(by=['hhPersonID']).sum()
         return travelTime.mean()
 
     def calcAverageTripDistance(self):
+        """
+        :return: Returns daily average trip distance
+        """
         return self.data.loc[:, 'tripDistance'].mean()
 
 
