@@ -17,6 +17,8 @@ class DataParser:
     # @profile(immediate=True)
     def __init__(self, config: dict, globalConfig: dict,  datasetID: str = 'MiD17', loadEncrypted=True):
         """
+        This is some explanation
+
         :param config: A yaml config file holding a dictionary with the keys 'linksRelative' and 'linksAbsolute'
         :param globalConfig:
         """
