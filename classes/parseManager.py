@@ -7,6 +7,7 @@ __status__ = 'dev'  # options are: dev, test, prod
 
 import pprint
 import pandas as pd
+import numpy as np
 import warnings
 from pathlib import Path
 import yaml
@@ -53,7 +54,7 @@ class DataParser:
         self.__filterDict = self.config['filterDicts'][self.datasetID]
         self.__filterDict = {iKey: iVal for iKey, iVal in self.__filterDict.items() if self.__filterDict[iKey] is not None}
 
-    def checkDatasetID(self, dataset: str, config: dict):
+    def checkDatasetID(self, dataset: str, config: dict) -> str:
         """
         :param dataset: Corresponds to mobility data of a particular year
         :param config: A yaml config file holding a dictionary with the keys 'linksRelative' and 'linksAbsolute'
@@ -65,7 +66,7 @@ class DataParser:
                 f'{availableDatasetIDs}'
         return dataset
 
-    def compileVariableList(self):
+    def compileVariableList(self) -> list:
         listIndex = self.config['dataVariables']['dataset'].index(self.datasetID)
         variables = [val[listIndex] if not val[listIndex] == 'NA' else 'NA' for key, val in self.config['dataVariables'].items()]
         variables.remove(self.datasetID)
@@ -113,7 +114,7 @@ class DataParser:
 
     def harmonizeVariables(self):
         """
-        :return: Returns the variables of 2008 MiD data harmonized with the variables for 2017 MiD data
+        :return: Returns the variable names of 2008 MiD data harmonized with the variable names for 2017 MiD data
         """
         replacementDict = self.createReplacementDict(self.datasetID, self.config['dataVariables'])
         dataRenamed = self.data.rename(columns=replacementDict)
@@ -123,7 +124,7 @@ class DataParser:
         self.data = dataRenamed
         print('Finished harmonization of variables')
 
-    def createReplacementDict(self, dataset, dictRaw):
+    def createReplacementDict(self, dataset : str, dictRaw : dict):
         """
         :param dataset: Corresponds to mobility data of a particular year
         :param dictRaw: Contains dictionary of the raw data
@@ -142,7 +143,7 @@ class DataParser:
         subDict = {key: conversionDict[key] for key in conversionDict.keys() & keys}
         self.data = self.data.astype(subDict)
 
-    def returnBottomDictValues(self, baseDict: dict, lst: list = []):
+    def returnBottomDictValues(self, baseDict: dict, lst: list = []) -> list:
         """
         :param baseDict: Dictionary of variables
         :param lst: empty list
@@ -199,22 +200,22 @@ class DataParser:
         self.data = self.data[ret.all(axis='columns')]
         self.filterAnalysis(ret)
 
-    def setIncludeFilter(self, includeFilterDict: dict, dataIndex):
+    def setIncludeFilter(self, includeFilterDict: dict, dataIndex) -> pd.DataFrame:
         """
         :param includeFilterDict: Dictionary of include filters defined in config.yaml
         :param dataIndex: Index for the data frame
-        :return:
+        :return: Returns a data frame with individuals using car as a mode of transport
         """
         incFilterCols = pd.DataFrame(index=dataIndex, columns=includeFilterDict.keys())
         for incCol, incElements in includeFilterDict.items():
             incFilterCols[incCol] = self.data[incCol].isin(incElements)
         return incFilterCols
 
-    def setExcludeFilter(self, excludeFilterDict: dict, dataIndex):
+    def setExcludeFilter(self, excludeFilterDict: dict, dataIndex) -> pd.DataFrame:
         """
         :param excludeFilterDict: Dictionary of exclude filters defined in config.yaml
         :param dataIndex: Index for the data frame
-        :return:
+        :return: Returns a filtered data frame with exclude filters
         """
         exclFilterCols = pd.DataFrame(index=dataIndex, columns=excludeFilterDict.keys())
         for excCol, excElements in excludeFilterDict.items():
@@ -235,11 +236,11 @@ class DataParser:
                               f'Only considering the last element given in the config.')
         return greaterThanFilterCols
 
-    def setSmallerThanFilter(self, smallerThanFilterDict: dict, dataIndex):
+    def setSmallerThanFilter(self, smallerThanFilterDict: dict, dataIndex) -> pd.DataFrame:
         """
         :param smallerThanFilterDict: Dictionary of smaller than filters defined in config.yaml
         :param dataIndex: Index for the data frame
-        :return:
+        :return: Returns a data frame of trips covering a distance of less than 1000 km
         """
         smallerThanFilterCols = pd.DataFrame(index=dataIndex, columns=smallerThanFilterDict.keys())
         for smallerCol, smallerElements in smallerThanFilterDict.items():
@@ -249,7 +250,7 @@ class DataParser:
                               f'Only considering the last element given in the config.')
         return smallerThanFilterCols
 
-    def filterAnalysis(self, filterData):
+    def filterAnalysis(self, filterData: pd.DataFrame):
         """
         :param filterData:
         :return:
@@ -300,7 +301,7 @@ class DataParser:
                          colDay: str = 'tripStartWeekday',
                          colHour: str = 'tripStartHour',
                          colMin: str = 'tripStartMinute',
-                         colName: str = 'timestampStart'):
+                         colName: str = 'timestampStart') -> np.datetime64:
         """
         :param data: a data frame
         :param colYear: year of start of a particular trip
@@ -318,7 +319,7 @@ class DataParser:
                         pd.to_timedelta(data.loc[:, colMin], unit='minute')
         # return data
 
-    def composeStartAndEndTimestamps(self):
+    def composeStartAndEndTimestamps(self) -> np.datetime64:
         """
         :return: Returns start and end time of a trip
         """
@@ -329,7 +330,7 @@ class DataParser:
                               colName='timestampEnd')
         self.updateEndTimestamp()
 
-    def updateEndTimestamp(self):
+    def updateEndTimestamp(self) -> np.datetime64:
         """
         :return:
         """
@@ -339,7 +340,7 @@ class DataParser:
 
     def calcNTripsPerDay(self):
         """
-        :return: Returns number of trips trips per household per day
+        :return: Returns number of trips trips per household person per day
         """
         return self.data['hhPersonID'].value_counts().mean()
 
@@ -352,7 +353,7 @@ class DataParser:
 
     def calcDailyTravelTime(self):
         """
-        :return: Returns daily travel time per household
+        :return: Returns daily travel time per household person
         """
         travelTime = self.data.loc[:, ['hhPersonID', 'travelTime']].groupby(by=['hhPersonID']).sum()
         return travelTime.mean()

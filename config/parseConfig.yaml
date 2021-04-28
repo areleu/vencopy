@@ -81,7 +81,8 @@ filterDicts:
             tripEndHour: [99, 701]
             tripStartClock: [' ']
             tripEndClock: [' ']
-            tripIsIntermodal: [1]
+            tripPurpose: [99]
+            tripIsIntermodal: [1, 703, 708]
         greaterThan:
         smallerThan:
             tripDistance: [1000]

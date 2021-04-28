@@ -7,6 +7,9 @@ __status__ = 'dev'  # options are: dev, test, prod
 
 
 import pandas as pd
+import numpy as np
+import typing
+from typing import Callable
 from pathlib import Path
 import yaml
 import os
@@ -29,7 +32,7 @@ class TripDiaryBuilder:
         self.writeOut(globalConfig=globalConfig, datasetID=datasetID, dataDrive=self.tripDistanceDiary,
                  dataPurpose=self.tripPurposeDiary)
 
-    def writeOut(self, globalConfig:dict, dataDrive, dataPurpose, datasetID: str = 'MiD17'):
+    def writeOut(self, globalConfig:dict, dataDrive: pd.DataFrame, dataPurpose: pd.DataFrame, datasetID: str = 'MiD17'):
         dataDrive.to_csv(Path(globalConfig['linksRelative']['input']) /
                          createFileString(globalConfig=globalConfig, fileKey='inputDataDriveProfiles', dataset=datasetID), na_rep=0)
         dataPurpose.to_csv(Path(globalConfig['linksRelative']['input']) /
@@ -38,7 +41,7 @@ class TripDiaryBuilder:
               f"{createFileString(globalConfig=globalConfig, fileKey='inputDataDriveProfiles', dataset=datasetID)} and"
               f"{createFileString(globalConfig=globalConfig, fileKey='purposesProcessed', dataset=datasetID)}")
 
-    def tripDuration(self, timestampStart, timestampEnd):
+    def tripDuration(self, timestampStart: np.datetime64, timestampEnd: np.datetime64) -> np.datetime64:
         """
         :param timestampStart: start time of a trip
         :param timestampEnd:  end time of a trip
@@ -46,12 +49,12 @@ class TripDiaryBuilder:
         """
         return timestampEnd - timestampStart
 
-    def calcHourShareStart(self, timestampStart, timestampEnd, duration):
+    def calcHourShareStart(self, timestampStart: np.datetime64, timestampEnd: np.datetime64, duration) -> pd.DataFrame:
         """
         :param timestampStart: start time of a trip
         :param timestampEnd:  end time of a trip
         :param duration: duration of a trip
-        :return: Returns a timestamped data frame of the trips which started in the same hour
+        :return: Returns a data frame of share of individual trip for trips completed in an hour and more w.r.t start time of the trip
         """
         isSameHourTrip = timestampStart.dt.hour == timestampEnd.dt.hour
         shareSameHour = (timestampEnd.dt.minute - timestampStart.dt.minute) / (duration.dt.seconds / 60)
@@ -60,34 +63,34 @@ class TripDiaryBuilder:
         share = shareSameHour.where(isSameHourTrip, (60 - timestampStart.dt.minute) / (duration.dt.seconds / 60))
         return share, isSameHourTrip
 
-    def calcHourShareEnd(self, timestampEnd, duration, isSameHourTrip):
+    def calcHourShareEnd(self, timestampEnd: np.datetime64, duration, isSameHourTrip: pd.DataFrame) -> pd.DataFrame:
         """
         :param timestampEnd: end time of a trip
         :param duration: duration of a trip
         :param isSameHourTrip: data frame containing same start time of various trips
-        :return: Returns a timestamped data frame of the trips which ended in the same hour
+        :return: Returns a data frame of share of individual trip for trips completed in an hour and more w.r.t end time of the trip
         """
         share = timestampEnd.dt.minute / (duration.dt.seconds / 60)
         return share.where(~isSameHourTrip, 0)
 
-    def calcDistanceShares(self, data, duration, timestampSt, timestampEn):
+    def calcDistanceShares(self, data: pd.DataFrame, duration, timestampSt: np.datetime64, timestampEn: np.datetime64) -> pd.DataFrame:
         """
         :param data:
         :param duration: duration of a trip
         :param timestampSt:  start time of a trip
         :param timestampEn:  end time of a trip
-        :return: Return a data frame of distance covered by each trip in a particular hour
+        :return: Return a data frame of distance covered by each trip in an hour or more
         """
         shareHourStart, isSameHourTrip = self.calcHourShareStart(data.loc[:, timestampSt], data.loc[:, timestampEn],
                                                             duration)
         shareHourEnd = self.calcHourShareEnd(data.loc[:, timestampEn], duration, isSameHourTrip=isSameHourTrip)
         return shareHourStart, shareHourEnd
 
-    def numberOfFullHours(self, timestampStart, timestampEnd):
+    def numberOfFullHours(self, timestampStart: np.datetime64, timestampEnd: np.datetime64) -> pd.DataFrame:
         """
         :param timestampStart:  start time of a trip
         :param timestampEnd: end time of a trip
-        :return: Returns a data frame of number of full load hours of each trip(not sure about this)
+        :return: Returns a data frame of number of unutilized hours of individual trip #need to confirm this
         """
         timedeltaTrip = timestampEnd - timestampStart
         numberOfHours = timedeltaTrip.apply(lambda x: x.components.hours)
@@ -97,7 +100,7 @@ class TripDiaryBuilder:
         numberOfHours = numberOfHours.where(hasFullHourAfterFirstHour, other=0)
         return numberOfHours.where(numberOfDays != -1, other=0)
 
-    def calcFullHourTripLength(self, duration, numberOfFullHours, tripLength):
+    def calcFullHourTripLength(self, duration, numberOfFullHours: Callable, tripLength: pd.DataFrame) -> pd.DataFrame:
         """
         :param duration: duration of a trip
         :param numberOfFullHours:
@@ -108,7 +111,13 @@ class TripDiaryBuilder:
         fullHourTripLength.loc[duration == pd.Timedelta(0)] = 0  # set trip length to 0 that would otherwise be NaN
         return fullHourTripLength
 
-    def calcHourlyShares(self, data, ts_st, ts_en):
+    def calcHourlyShares(self, data: pd.DataFrame, ts_st: np.datetime64, ts_en: np.datetime64) -> pd.DataFrame:
+        """
+        :param data: data frame consisting filter data from data parser
+        :param ts_st: start time of a trip
+        :param ts_en: end time of a trip
+        :return: data frame consisting additional information regarding share of a trip, number of full hours and lenght of each trip
+        """
         duration = self.tripDuration(data.loc[:, ts_st], data.loc[:, ts_en])
         data.loc[:, 'shareStartHour'], data.loc[:, 'shareEndHour'] = self.calcDistanceShares(data, duration, ts_st, ts_en)
         data.loc[:, 'noOfFullHours'] = self.numberOfFullHours(data.loc[:, ts_st], data.loc[:, ts_en])
@@ -116,7 +125,7 @@ class TripDiaryBuilder:
                                                                    data.loc[:, 'tripDistance'])
         return data
 
-    def calculateConsistentHourlyShares(self, data):
+    def calculateConsistentHourlyShares(self, data: pd.DataFrame):
         print('Calculating hourly shares')
         tripDataWHourlyShares = self.calcHourlyShares(data, ts_st='timestampStart', ts_en='timestampEnd')
 
@@ -131,7 +140,7 @@ class TripDiaryBuilder:
 
         :param indexCol: List of column names
         :param nHours: integer giving the number of columns that should be added to the dataframe
-        :return: dataframe with columns given and nHours additional columns appended with 0s
+        :return: data frame with columns given and nHours additional columns appended with 0s
         """
         emptyDf = pd.DataFrame(index=indexCol, columns=range(nHours))
         return (emptyDf)
@@ -140,7 +149,7 @@ class TripDiaryBuilder:
         hourlyArray = hourlyArray.apply(fillFunction, axis=1)
         return hourlyArray
 
-    def mergeTrips(self, tripData):
+    def mergeTrips(self, tripData: pd.DataFrame) -> pd.DataFrame:
         # uniqueHHPersons = tripData.loc[:, 'hhPersonID'].unique()
         # dataDay = pd.DataFrame(index=uniqueHHPersons, columns=tripData.columns)
         dataDay = tripData.groupby(['hhPersonID']).sum()
@@ -154,7 +163,7 @@ class TripDiaryBuilder:
         else:
             return None
 
-    def tripDistanceAllocation(self, globalConfig):
+    def tripDistanceAllocation(self, globalConfig : dict):
         print('Trip distance diary setup starting')
         self.formatDF = self.initiateHourDataframe(indexCol=self.tripDataClean.index, nHours=globalConfig['numberOfHours'])
         fillHourValues = FillHourValues(data=self.tripDataClean, rangeFunction=self.initiateColRange)
