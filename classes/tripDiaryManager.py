@@ -77,7 +77,7 @@ class TripDiaryBuilder:
 
     def calcDistanceShares(self, data: pd.DataFrame, duration, timestampSt: np.datetime64, timestampEn: np.datetime64) -> pd.DataFrame:
         """
-        :param data:
+        :param data: list of strings declaring the datasets to be read in
         :param duration: duration of a trip
         :param timestampSt:  start time of a trip
         :param timestampEn:  end time of a trip
@@ -115,7 +115,7 @@ class TripDiaryBuilder:
 
     def calcHourlyShares(self, data: pd.DataFrame, ts_st: np.datetime64, ts_en: np.datetime64) -> pd.DataFrame:
         """
-        :param data: data frame consisting filter data from data parser
+        :param data: list of strings declaring the datasets to be read in
         :param ts_st: start time of a trip
         :param ts_en: end time of a trip
         :return: data frame consisting additional information regarding share of a trip, number of full hours and lenght of each trip
@@ -136,7 +136,7 @@ class TripDiaryBuilder:
                                                        (tripDataWHourlyShares['shareEndHour'] == 0) &
                                                        (tripDataWHourlyShares['noOfFullHours'] == 0)), :]
 
-    def initiateHourDataframe(self, indexCol, nHours):
+    def initiateHourDataframe(self, indexCol, nHours: int) -> pd.DataFrame:
         """
         Sets up an empty dataframe to be filled with hourly data.
 
@@ -147,7 +147,7 @@ class TripDiaryBuilder:
         emptyDf = pd.DataFrame(index=indexCol, columns=range(nHours))
         return (emptyDf)
 
-    def fillDataframe(self, hourlyArray, fillFunction):
+    def fillDataframe(self, hourlyArray: pd.DataFrame, fillFunction) -> pd.DataFrame:
         hourlyArray = hourlyArray.apply(fillFunction, axis=1)
         return hourlyArray
 
@@ -175,7 +175,7 @@ class TripDiaryBuilder:
         self.tripDistanceDiary = self.mergeTrips(driveDataTrips)
         print('Finished trip distance diary setup')
 
-    def assignDriving(self, driveData):
+    def assignDriving(self, driveData: pd.DataFrame) -> pd.DataFrame:
         # assign hours where drivData != 0/NA to 'driving'
         """
         :param driveData: driving data
@@ -191,7 +191,7 @@ class TripDiaryBuilder:
     #     startHour = self.determinePurposeStartHour(departure, tripDuration)
     #     return range(startHour, self.endHour)
 
-    def determinePurposeStartHour(self, departure, arrival):
+    def determinePurposeStartHour(self, departure: np.datetime64, arrival: np.datetime64):
         """
 
         :param departure:  start time of a trip
@@ -210,7 +210,12 @@ class TripDiaryBuilder:
                 startHour = arrival.hour + 1  # Cases 2a and b
         return startHour
 
-    def fillDayPurposes(self, tripData, purposeDataDays):  # FixMe: Ask Ben for performance improvements
+    def fillDayPurposes(self, tripData: pd.DataFrame, purposeDataDays: pd.DataFrame) -> pd.DataFrame:  # FixMe: Ask Ben for performance improvements
+        """
+        :param tripData: data frame holding all the information about individual trip
+        :param purposeDataDays:
+        :return: Returns a data frame of individual trip with it's hourly activity or location of trip
+        """
         hpID = str()
         maxWID = int()
         maxHour = len(purposeDataDays.columns)

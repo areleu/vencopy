@@ -65,13 +65,13 @@ class DataParser:
         self.composeStartAndEndTimestamps()
         print('Parsing completed')
 
-    def updateFilterDict(self):
+    def updateFilterDict(self) -> None:
         self.__filterDict = self.config['filterDicts'][self.datasetID]
         self.__filterDict = {iKey: iVal for iKey, iVal in self.__filterDict.items() if self.__filterDict[iKey] is not None}
 
     def checkDatasetID(self, dataset: str, config: dict) -> str:
         """
-        :param dataset: Corresponds to mobility data of a particular year
+        :param dataset: list of strings declaring the datasets to be read in
         :param config: A yaml config file holding a dictionary with the keys 'linksRelative' and 'linksAbsolute'
         :return: Returns a string value of a mobility data
         """
@@ -147,9 +147,9 @@ class DataParser:
         self.data = dataRenamed
         print('Finished harmonization of variables')
 
-    def createReplacementDict(self, dataset : str, dictRaw : dict):
+    def createReplacementDict(self, dataset : str, dictRaw : dict) -> None:
         """
-        :param dataset: Corresponds to mobility data of a particular year
+        :param dataset: list of strings declaring the datasets to be read in
         :param dictRaw: Contains dictionary of the raw data
         :return:
         """
@@ -190,7 +190,7 @@ class DataParser:
         assert all(isinstance(val, list) for val in self.returnBottomDictValues(filterDict)), \
             f'All values in filter dictionaries have to be lists, but are not'
 
-    def returnBottomDictKeys(self, baseDict: dict, lst: list = None):
+    def returnBottomDictKeys(self, baseDict: dict, lst: list = None) -> list:
         """
         :param baseDict: Dictionary of variables
         :param lst: empty list
