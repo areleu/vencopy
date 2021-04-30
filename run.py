@@ -17,6 +17,7 @@ from classes.flexEstimationManager import FlexEstimator
 
 # Set dataset and config to analyze
 datasetID = 'MiD17'
+# review: should the datasetID not be part of the config files?
 linkGlobalConfig = pathlib.Path.cwd() / 'config' / 'globalConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
 globalConfig = yaml.load(open(linkGlobalConfig), Loader=yaml.SafeLoader)
 linkParseConfig = pathlib.Path.cwd() / 'config' / 'parseConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
@@ -41,6 +42,8 @@ vpGrid = GridModeler(config=gridConfig, globalConfig=globalConfig, datasetID=dat
 vpGrid.assignSimpleGridViaPurposes()
 vpGrid.writeOutGridAvailability()
 
+# review: Is this still valid code or left overs? I ignored this code for now.
+#  Maybe we should schedule a cleanup.
 # Evaluate drive and trip purpose profiles
 # vpEval = Evaluator(config, label='SESPaperTest')
 # vpEval.hourlyAggregates = vpEval.calcVariableSpecAggregates(by=['tripStartWeekday'])

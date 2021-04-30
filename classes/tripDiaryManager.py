@@ -16,6 +16,8 @@ import os
 from classes.parseManager import DataParser
 from scripts.globalFunctions import createFileString
 
+# review: I think it is inconsistent to have a module tripDiaryManager in which there is one class
+#  TripDiaryBuilder but no manager. We should rename one of them.
 class TripDiaryBuilder:
     def __init__(self, config: dict, globalConfig: dict, ParseData: DataParser, datasetID: str = 'MiD17'):
         self.config = config
@@ -183,6 +185,7 @@ class TripDiaryBuilder:
         locationData = locationData.where(locationData == 0, other='DRIVING')
         return locationData
 
+    # review: is this obsolete?
     # def determinePurposeHourRange(self, departure, arrival):
     #     tripDuration = arrival - departure
     #     startHour = self.determinePurposeStartHour(departure, tripDuration)

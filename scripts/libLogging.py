@@ -20,7 +20,6 @@ streamHandler = logging.StreamHandler()
 logger.addHandler(streamHandler)
 
 
-
 def logit(f):
     @functools.wraps(f)
     def wrapper(*args, **kwargs):
