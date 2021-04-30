@@ -25,6 +25,10 @@ from scripts.globalFunctions import createFileString, mergeVariables
 
 class FlexEstimator:
     def __init__(self, config:dict, globalConfig: dict, evaluatorConfig: dict, ParseData: DataParser, datasetID: str= 'MiD17'):
+        # review: could be not pass one config dict into this class instead of three?
+        #  we could encapsulate all three into one dict with the three keys and then
+        #  extract the information inside. This would make the interface leaner and
+        #  all classes could use the same convention of one config parameter?
         self.config = config
         self.globalConfig = globalConfig
         self.evaluatorConfig = evaluatorConfig
@@ -41,6 +45,12 @@ class FlexEstimator:
                                                                       nHours=globalConfig['numberOfHours'])
         self.scalarsProc = self.procScalars(self.driveProfilesIn, self.plugProfilesIn,
                                        self.driveProfiles, self.plugProfiles)
+
+        # review: with so many values to be initialized, it might be a good idea to take a step back and
+        #  think together about a composition approach with a dataclass based encapsulation.
+        #  this would also make it easy to communicate the data to the outside of the class
+        #  as the fields are then no longer directly in the main processing class.
+
         # Base profile attributes
         self.drainProfiles = None
         self.chargeProfiles = None
@@ -101,6 +111,10 @@ class FlexEstimator:
 
         :return: Returns link dictionary with relative links to input data and output folders.
         """
+        # review: The methodname surprises me. It suggest that we return a manager
+        #  which we clearly don't. we also don't really initialize anything in
+        #  the sense of the word. would a name along the lines of buildLinkMapping
+        #  be more true to the concept?
         linkDict = {'linkScalars': pathlib.Path(globalConfig['linksRelative']['input']) /
                                    pathlib.Path(globalConfig['files']['inputDataScalars']),
                     'linkDriveProfiles': pathlib.Path(globalConfig['linksRelative']['input']) /
@@ -113,6 +127,7 @@ class FlexEstimator:
                     # 'linkOutputAnnual': pathlib.Path(globalConfig['linksRelative']['resultsAnnual']),
                     'linkPlots': pathlib.Path(globalConfig['linksRelative']['plots']),
                     'linkOutput': pathlib.Path(globalConfig['linksRelative']['dataOutput'])}
+
         return linkDict
 
     def readInputScalar(self, filePath):
@@ -124,6 +139,8 @@ class FlexEstimator:
         :return: Returns a dataframe with an index column and two value columns. The first value column holds numbers the
             second one holds units.
         """
+        # review: As far as I can recon, this returns a list of scalars. If yes I would opt for renaming
+        #  the method to readInputScalars (plural) as it returns more than one.
 
         #scalarInput = Assumptions
         inputRaw = pd.read_excel(filePath,
@@ -154,6 +171,13 @@ class FlexEstimator:
         :return: Dataframe holding true and false
         """
 
+        # review: Just one remark on the wording. In SE this
+        #  data structure is called a mapping. A dict is the python
+        #  incarnation of a mapping. As we here clearly refer to the concept of a
+        #  mapping it would be more natural to call it booleanMapping (bol is also a
+        #  funny abbreviation for boolean). This needs not to change but should be cleaned
+        #  up over time especially for an external release. Also new variables should
+        #  strictly avoid type declaration in the names.
         dictBol = {'WAHR': True,
                    'FALSCH': False}
         outBool = df.replace(to_replace=dictBol, value=None)
@@ -985,9 +1009,12 @@ class FlexEstimator:
     def compileProfileComparisonDict(keys: list, values: list):
         return {iKey: iVal for iKey, iVal in zip(keys, values)}
 
-
+# review: This should be a method of FlexEstimation with name run().
+#  this is a common approach to define a workflow for a class based structure.
+#  I suggest to not return Flexstimator.
 def runFlexEstimation(config, globalConfig, evaluatorConfig, ParseData : DataParser, dataset : str = 'MiD17'):
     Flexstimator = FlexEstimator(config=config, globalConfig=globalConfig, evaluatorConfig=evaluatorConfig, datasetID=dataset, ParseData=ParseData)
+    # review: Flexstimator should be lower case as it is an instance not a class.
     Flexstimator.baseProfileCalculation()
     Flexstimator.filter()
     Flexstimator.aggregate()

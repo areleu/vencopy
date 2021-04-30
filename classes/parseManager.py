@@ -13,10 +13,15 @@ from pathlib import Path
 import yaml
 from zipfile import ZipFile
 
+# review: the name of this file seems to be misleading. Parsers and Managers are very different and incompatible concepts.
+#  I would therefore opt for choosing one term over the other and not use both in the module name.
+
 class DataParser:
     # Separate datasets that know each other
     # @profile(immediate=True)
     def __init__(self, config: dict, globalConfig: dict,  datasetID: str = 'MiD17', loadEncrypted=True):
+        # review: This doc string could do with some love. It is currently not saying much helpful
+        #  in the description.
         """
         This is some explanation
 
@@ -31,8 +36,13 @@ class DataParser:
         self.columns = self.compileVariableList()
         self.filterDictNameList = ['include', 'exclude', 'greaterThan', 'smallerThan']
         self.updateFilterDict()
+        # review: Why do we not use the standard logging library of python for these output. It would empower
+        #  the user to configure the output level it desires.
         print('Parsing properties set up')
         if loadEncrypted:
+            # review: I am unsure if the config field should be called "linksAbsolute" as links have a
+            #  plethora of meanings. Could we make it more clear that we talk about files on disk here?
+            #  Something like filePaths or dataPaths?
             print(f"Starting to retrieve encrypted data file from {self.globalConfig['linksAbsolute']['encryptedZipfile']}")
             self.loadEncryptedData(linkToZip=Path(self.globalConfig['linksAbsolute']['encryptedZipfile']) / self.globalConfig['files'][self.datasetID]['enryptedZipFileB2'],
                                    linkInZip=globalConfig['files'][self.datasetID]['tripDataZipFileRaw'])
@@ -41,10 +51,15 @@ class DataParser:
             self.loadData()
         self.harmonizeVariables()
         self.convertTypes()
+        # review: Why do we provide the local information to the checkFilterDict method?
+        #  Could we switch to a default behaviour, so that checkFilterDict by default (so without
+        #  input arguments) accesses self.__filterDict and only uses an overwrite when provided?
+        #  For me this would clarify this rather unintuitive code snipped quite a bit.
         self.checkFilterDict(self.__filterDict)
         self.filter()
         self.filterConsistentHours()
         self.addStrColumns()
+        # review: this is obsolete code I presume?
         # self.composeIndex()  Method to compose a unique index from hhID and personID if needed
         # self.setIndex(col='hhPersonID')
         self.composeStartAndEndTimestamps()
@@ -83,7 +98,13 @@ class DataParser:
         if 'NA' in variables:
             self.removeNA(variables)
 
+        # review: is this maybe to exact a filter? Should we not also accept "na" as a synonym for NA?
+        #  If yes, we would need to loop once over the values in variables and capitalize them before filtering.
+        #  Or are uppercase NA guaranteed?
+
     def loadData(self):
+        # review: Are potential error messages (.dta not being a stata file even as the ending matches)
+        #  readable for the user? Should we have a manual error treatment here?
         if self.rawDataPath.suffix == '.dta':
             self.data = pd.read_stata(self.rawDataPath,
                                       columns=self.columns, convert_categoricals=False, convert_dates=False,
@@ -100,6 +121,8 @@ class DataParser:
         :param linkInZip:
         :return:
         """
+        # review: What happens wif linkToZip is ot on the hard drive? Do we get an error or
+        #  is a file created?
         with ZipFile(linkToZip) as myzip:
             if '.dta' in linkInZip:
                 self.data = pd.read_stata(myzip.open(linkInZip, pwd=bytes(self.config['encryptionPW'], encoding='utf-8')),
@@ -149,6 +172,8 @@ class DataParser:
         :param lst: empty list
         :return: Returns a list with all the bottom dictionary values
         """
+        # review: It is unclear to me which concept is referenced by bottom dict.
+        #  I suggest we add some explanation about the concept of bottomDict to the doc string
         for iKey, iVal in baseDict.items():
             if isinstance(iVal, dict):
                 lst = self.returnBottomDictValues(iVal, lst)
@@ -184,6 +209,11 @@ class DataParser:
     def filter(self):
         print(f'Starting filtering, applying {len(self.returnBottomDictKeys(self.__filterDict))} filters.')
         ret = pd.DataFrame(index=self.data.index)
+        # review: as discussed before we could indeed work here with a plug and pray approach.
+        #  we would need to introduce a filter manager and a folder structure where to look for filters.
+        #  this is very similar code than the one from ioproc. If we want to go down this route we should
+        #  take inspiration from the code there. It was not easy to get it right in the first place. This
+        #  might be easy to code but hard to implement correctly.
         for iKey, iVal in self.__filterDict.items():
             if iKey == 'include':
                 ret = ret.join(self.setIncludeFilter(iVal, self.data.index))
@@ -281,6 +311,13 @@ class DataParser:
         if purpose:
             self.addPurposeStrColumn()
 
+        # review: just a comment here for the general granularity of the code:
+        #  a split into two submethods is not necessary for readability or decoupling.
+        #  One would opt for this high granularity iff addWekdayStrColumn is also used outside of
+        #  the method addStrColumn as it contains only one instruction. This by no means means that we
+        #  need to refactor it back into one method. This is more like a reminder, that we are too granular
+        #  at this point in the code for future guidance.
+
     def addWeekdayStrColumn(self):
         self.data.loc[:, 'weekdayStr'] \
             = self.data.loc[:, 'tripStartWeekday'].replace(self.config['midReplacements']['tripStartWeekday'])
@@ -290,9 +327,13 @@ class DataParser:
             = self.data.loc[:, 'tripPurpose'].replace(self.config['midReplacements']['tripPurpose'])
 
     def composeIndex(self):
+        # review: pycharm complains that this method is never used. I am not totally convinced. If true we
+        #  should remove it.
         self.data['idxCol'] = self.data['hhPersonID'].astype('string') + '__' + self.data['tripID'].astype('string')
 
     def setIndex(self, col):
+        # review: pycharm complains that this method is never used. I am not totally convinced. If true we
+        #  should remove it.
         self.data.set_index(col, inplace=True, drop=True)
 
     def composeTimestamp(self, data: pd.DataFrame = None,
@@ -366,6 +407,16 @@ class DataParser:
 
 
 class ParseMID(DataParser):
+    # review: This is actually not future fail prove as parameters to DataParser are not
+    #  forwarded in the super call. I suggest to use just and simply the syntax:
+    #  class ParseMID(DataParser):
+    #      pass
+    #
+    # Also this begs the question how ParseMID is actually different from all other parsers?
+
+    # review: The class name is misleading, as it implies a function, since by convention verbs are only used
+    #  for methods. Classes are more like entities and hence are named after nouns. In this case MIDParser would
+    #  be a better name.
     def __init__(self):
         super().__init__()
 
