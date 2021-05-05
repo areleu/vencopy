@@ -10,6 +10,7 @@ import pandas as pd
 import yaml
 import pathlib
 
+
 def createFileString(globalConfig: dict, fileKey: str, dataset: str, manualLabel: str = '',
                      filetypeStr: str = 'csv'):
     #linkGlobalConfig = pathlib.Path.cwd().parent / 'config' / 'globalConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
@@ -25,6 +26,7 @@ def createFileString(globalConfig: dict, fileKey: str, dataset: str, manualLabel
                               manualLabel,
                               dataset,
                               filetypeStr)
+
 
 def mergeVariables(data, variableData, variables):
     variableDataUnique = variableData.loc[~variableData['hhPersonID'].duplicated(), :]

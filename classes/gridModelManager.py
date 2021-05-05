@@ -23,7 +23,6 @@ class GridModeler:
         self.gridDistributions = config['chargingInfrastructureDistributions']
         self.outputFileName = createFileString(globalConfig=globalConfig, fileKey='inputDataPlugProfiles', dataset=datasetID)
         self.outputFilePath = Path(globalConfig['linksRelative']['input']) / self.outputFileName
-
         self.purposeData = pd.read_csv(self.inputFilePath, keep_default_na=False)
 
 
