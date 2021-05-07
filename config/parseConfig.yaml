@@ -13,7 +13,7 @@ encryptionPW: 'PW'
 
 
 dataVariables:
-    dataset: ['MiD08', 'MiD17']
+    datasetID: ['MiD08', 'MiD17']
     isMIVDriver: ['pkw_f','W_VM_G']
     hhID: ['hhid', 'H_ID_Reg']
     personID: ['pid', 'P_ID']

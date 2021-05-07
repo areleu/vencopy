@@ -19,11 +19,12 @@
 /JupyterNotebooks
 
 # files still in process
-/scripts/libPlotting.py
-/scripts/readInAndProcessMID.py
 
 # log files
 debug.log
 
 # documentation files on local machine
 /build
+
+# local run files
+runSES.py

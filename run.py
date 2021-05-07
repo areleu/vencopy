@@ -35,7 +35,7 @@ flexConfig = yaml.load(open(linkFlexConfig), Loader=yaml.SafeLoader)
 vpData = DataParser(datasetID=datasetID, config=parseConfig, globalConfig=globalConfig, loadEncrypted=False)
 
 # Trip distance and purpose diary compositions
-vpTripDiary = TripDiaryBuilder(config=tripConfig, globalConfig=globalConfig, ParseData=vpData, datasetID=datasetID)
+vpTripDiary = TripDiaryBuilder(datasetID=datasetID, config=tripConfig, globalConfig=globalConfig, ParseData=vpData)
 
 # Grid model applications
 vpGrid = GridModeler(config=gridConfig, globalConfig=globalConfig, datasetID=datasetID)

@@ -11,20 +11,20 @@ import yaml
 import pathlib
 
 
-def createFileString(globalConfig: dict, fileKey: str, dataset: str, manualLabel: str = '',
+def createFileString(globalConfig: dict, fileKey: str, datasetID: str, manualLabel: str = '',
                      filetypeStr: str = 'csv'):
     #linkGlobalConfig = pathlib.Path.cwd().parent / 'config' / 'globalConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
     #globalConfig = yaml.load(open(linkGlobalConfig), Loader=yaml.SafeLoader)
-    if dataset is None:
+    if datasetID is None:
 
         return "%s_%s%s.%s" % (globalConfig['files'][fileKey],
                                globalConfig['labels']['runLabel'],
                                manualLabel,
                                filetypeStr)
-    return "%s_%s%s_%s.%s" % (globalConfig['files'][dataset][fileKey],
+    return "%s_%s%s_%s.%s" % (globalConfig['files'][datasetID][fileKey],
                               globalConfig['labels']['runLabel'],
                               manualLabel,
-                              dataset,
+                              datasetID,
                               filetypeStr)
 
 

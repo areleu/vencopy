@@ -37,12 +37,14 @@ class TripDiaryBuilder:
 
     def writeOut(self, globalConfig:dict, dataDrive: pd.DataFrame, dataPurpose: pd.DataFrame, datasetID: str = 'MiD17'):
         dataDrive.to_csv(Path(globalConfig['linksRelative']['input']) /
-                         createFileString(globalConfig=globalConfig, fileKey='inputDataDriveProfiles', dataset=datasetID), na_rep=0)
+                         createFileString(globalConfig=globalConfig, fileKey='inputDataDriveProfiles',
+                                          datasetID=datasetID),
+                         na_rep=0)
         dataPurpose.to_csv(Path(globalConfig['linksRelative']['input']) /
-                          createFileString(globalConfig=globalConfig, fileKey='purposesProcessed', dataset=datasetID))
+                          createFileString(globalConfig=globalConfig, fileKey='purposesProcessed', datasetID=datasetID))
         print(f"Drive data and trip purposes written to files "
-              f"{createFileString(globalConfig=globalConfig, fileKey='inputDataDriveProfiles', dataset=datasetID)} and"
-              f"{createFileString(globalConfig=globalConfig, fileKey='purposesProcessed', dataset=datasetID)}")
+              f"{createFileString(globalConfig=globalConfig, fileKey='inputDataDriveProfiles', datasetID=datasetID)} "
+              f"and {createFileString(globalConfig=globalConfig, fileKey='purposesProcessed', datasetID=datasetID)}")
 
     def tripDuration(self, timestampStart: np.datetime64, timestampEnd: np.datetime64) -> np.datetime64:
         """

@@ -32,6 +32,7 @@ class DataParser:
         self.config = config
         self.globalConfig = globalConfig
         self.rawDataPath = Path(globalConfig['linksAbsolute'][self.datasetID]) / globalConfig['files'][self.datasetID]['tripsDataRaw']
+        self.rawData = None
         self.data = None
         self.columns = self.compileVariableList()
         self.filterDictNameList = ['include', 'exclude', 'greaterThan', 'smallerThan']
@@ -49,6 +50,7 @@ class DataParser:
         else:
             print(f"Starting to retrieve local data file from {self.rawDataPath}")
             self.loadData()
+        self.selectColumns()
         self.harmonizeVariables()
         self.convertTypes()
         # review: Why do we provide the local information to the checkFilterDict method?
@@ -69,20 +71,20 @@ class DataParser:
         self.__filterDict = self.config['filterDicts'][self.datasetID]
         self.__filterDict = {iKey: iVal for iKey, iVal in self.__filterDict.items() if self.__filterDict[iKey] is not None}
 
-    def checkDatasetID(self, dataset: str, config: dict) -> str:
+    def checkDatasetID(self, datasetID: str, config: dict) -> str:
         """
-        :param dataset: list of strings declaring the datasets to be read in
+        :param datasetID: list of strings declaring the datasets to be read in
         :param config: A yaml config file holding a dictionary with the keys 'linksRelative' and 'linksAbsolute'
         :return: Returns a string value of a mobility data
         """
-        availableDatasetIDs = config['dataVariables']['dataset']
-        assert dataset in availableDatasetIDs, \
-            f'Defined dataset {dataset} not specified under dataVariables in config. Specified datasetIDs are ' \
+        availableDatasetIDs = config['dataVariables']['datasetID']
+        assert datasetID in availableDatasetIDs, \
+            f'Defined datasetID {datasetID} not specified under dataVariables in config. Specified datasetIDs are ' \
                 f'{availableDatasetIDs}'
-        return dataset
+        return datasetID
 
     def compileVariableList(self) -> list:
-        listIndex = self.config['dataVariables']['dataset'].index(self.datasetID)
+        listIndex = self.config['dataVariables']['datasetID'].index(self.datasetID)
         variables = [val[listIndex] if not val[listIndex] == 'NA' else 'NA' for key, val in self.config['dataVariables'].items()]
         variables.remove(self.datasetID)
         if 'NA' in variables:
@@ -106,14 +108,12 @@ class DataParser:
         # review: Are potential error messages (.dta not being a stata file even as the ending matches)
         #  readable for the user? Should we have a manual error treatment here?
         if self.rawDataPath.suffix == '.dta':
-            self.data = pd.read_stata(self.rawDataPath,
-                                      columns=self.columns, convert_categoricals=False, convert_dates=False,
+            self.rawData = pd.read_stata(self.rawDataPath, convert_categoricals=False, convert_dates=False,
                                       preserve_dtypes=False)
         else:  # self.rawDataFileType == '.csv':
-            self.data = pd.read_csv(self.rawDataPath, usecols=self.columns)
+            self.rawData = pd.read_csv(self.rawDataPath)
 
-        print(f'Finished loading {len(self.columns)} columns and {len(self.data)} rows of raw data '
-              f'of type {self.rawDataPath.suffix}')
+        print(f'Finished loading {len(self.rawData)} rows of raw data of type {self.rawDataPath.suffix}')
 
     def loadEncryptedData(self, linkToZip, linkInZip):
         """
@@ -125,15 +125,17 @@ class DataParser:
         #  is a file created?
         with ZipFile(linkToZip) as myzip:
             if '.dta' in linkInZip:
-                self.data = pd.read_stata(myzip.open(linkInZip, pwd=bytes(self.config['encryptionPW'], encoding='utf-8')),
-                                          columns=self.columns, convert_categoricals=False, convert_dates=False,
-                                          preserve_dtypes=False)
+                self.rawData = pd.read_stata(myzip.open(linkInZip, pwd=bytes(self.config['encryptionPW'],
+                                                                             encoding='utf-8')),
+                                             convert_categoricals=False, convert_dates=False, preserve_dtypes=False)
             else:  # if '.csv' in linkInZip:
-                self.data = pd.read_csv(myzip.open(linkInZip, pwd=bytes('Eveisnotonlyanicename!', encoding='utf-8')),
-                                        sep=';', decimal=',', usecols=self.columns)
+                self.rawData = pd.read_csv(myzip.open(linkInZip, pwd=bytes(self.config['encryptionPW'],
+                                                                           encoding='utf-8')), sep=';', decimal=',')
 
-        print(f'Finished loading {len(self.columns)} columns and {len(self.data)} rows of raw data '
-              f'of type {self.rawDataPath.suffix}')
+        print(f'Finished loading {len(self.rawData)} rows of raw data of type {self.rawDataPath.suffix}')
+
+    def selectColumns(self):
+        self.data = self.rawData.loc[:, self.columns]
 
     def harmonizeVariables(self):
         """
@@ -147,17 +149,17 @@ class DataParser:
         self.data = dataRenamed
         print('Finished harmonization of variables')
 
-    def createReplacementDict(self, dataset : str, dictRaw : dict) -> None:
+    def createReplacementDict(self, datasetID : str, dictRaw : dict) -> None:
         """
-        :param dataset: list of strings declaring the datasets to be read in
+        :param datasetID: list of strings declaring the datasets to be read in
         :param dictRaw: Contains dictionary of the raw data
         :return:
         """
-        if dataset in dictRaw['dataset']:
-            listIndex = dictRaw['dataset'].index(dataset)
+        if datasetID in dictRaw['datasetID']:
+            listIndex = dictRaw['datasetID'].index(datasetID)
             return {val[listIndex]: key for (key, val) in dictRaw.items()}
         else:
-            raise ValueError(f'Data set {dataset} not specified in MiD variable dictionary.')
+            raise ValueError(f'Data set {datasetID} not specified in MiD variable dictionary.')
 
     def convertTypes(self):
         # Filter for dataset specific columns

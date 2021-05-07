@@ -18,10 +18,12 @@ from scripts.globalFunctions import createFileString
 
 class GridModeler:
     def __init__(self, config: dict, globalConfig:dict, datasetID : str ='MiD17'):
-        self.inputFileName = createFileString(globalConfig=globalConfig, fileKey='purposesProcessed', dataset=datasetID)
+        self.inputFileName = createFileString(globalConfig=globalConfig, fileKey='purposesProcessed',
+                                              datasetID=datasetID)
         self.inputFilePath = Path(globalConfig['linksRelative']['input']) / self.inputFileName
         self.gridDistributions = config['chargingInfrastructureDistributions']
-        self.outputFileName = createFileString(globalConfig=globalConfig, fileKey='inputDataPlugProfiles', dataset=datasetID)
+        self.outputFileName = createFileString(globalConfig=globalConfig, fileKey='inputDataPlugProfiles',
+                                               datasetID=datasetID)
         self.outputFilePath = Path(globalConfig['linksRelative']['input']) / self.outputFileName
         self.purposeData = pd.read_csv(self.inputFilePath, keep_default_na=False)
 

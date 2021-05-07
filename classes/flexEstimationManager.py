@@ -24,7 +24,7 @@ from scripts.globalFunctions import createFileString, mergeVariables
 
 
 class FlexEstimator:
-    def __init__(self, config:dict, globalConfig: dict, evaluatorConfig: dict, ParseData: DataParser, datasetID: str= 'MiD17'):
+    def __init__(self, config: dict, globalConfig: dict, evaluatorConfig: dict, ParseData: DataParser, datasetID: str='MiD17'):
         # review: could be not pass one config dict into this class instead of three?
         #  we could encapsulate all three into one dict with the three keys and then
         #  extract the information inside. This would make the interface leaner and
@@ -35,7 +35,7 @@ class FlexEstimator:
         self.hourVec = range(globalConfig['numberOfHours'])
         self.datasetID = datasetID
         self.linkDict, self.scalars, \
-            self.driveProfilesIn, self.plugProfilesIn = self.readVencoInput(config=config, globalConfig=globalConfig, dataset=datasetID)
+            self.driveProfilesIn, self.plugProfilesIn = self.readVencoInput(config=config, globalConfig=globalConfig, datasetID=datasetID)
         self.mergeDataToWeightsAndDays(ParseData)
 
         self.weights = self.indexWeights(self.driveProfilesIn.loc[:, ['hhPersonID', 'tripStartWeekday', 'tripWeight']])
@@ -103,7 +103,7 @@ class FlexEstimator:
 
         print('Flex Estimator initialization complete')
 
-    def initializeLinkMgr(self, config, globalConfig: dict, dataset: str) -> dict:
+    def initializeLinkMgr(self, config, globalConfig: dict, datasetID: str) -> dict:
         """
         Setup link manager based on a VencoPy config file.
 
@@ -119,10 +119,10 @@ class FlexEstimator:
                                    pathlib.Path(globalConfig['files']['inputDataScalars']),
                     'linkDriveProfiles': pathlib.Path(globalConfig['linksRelative']['input']) /
                                          pathlib.Path(createFileString(globalConfig=globalConfig, fileKey='inputDataDriveProfiles',
-                                                                       dataset=dataset)),
+                                                                       datasetID=datasetID)),
                     'linkPlugProfiles': pathlib.Path(globalConfig['linksRelative']['input']) /
                                         pathlib.Path(createFileString(globalConfig=globalConfig, fileKey='inputDataPlugProfiles',
-                                                                      dataset=dataset)),
+                                                                      datasetID=datasetID)),
                     'linkOutputConfig': pathlib.Path(globalConfig['linksRelative']['outputConfig']),
                     # 'linkOutputAnnual': pathlib.Path(globalConfig['linksRelative']['resultsAnnual']),
                     'linkPlots': pathlib.Path(globalConfig['linksRelative']['plots']),
@@ -195,7 +195,7 @@ class FlexEstimator:
         inputData = self.stringToBoolean(inputRaw)
         return inputData
 
-    def readVencoInput(self, config: dict, globalConfig: dict, dataset: str) ->pd.DataFrame:
+    def readVencoInput(self, config: dict, globalConfig: dict, datasetID: str) ->pd.DataFrame:
         """
         Initializing action for VencoPy-specific config-file, link dictionary and data read-in. The config file has
         to be a dictionary in a .yaml file containing three categories: linksRelative, linksAbsolute and files. Each
@@ -208,7 +208,7 @@ class FlexEstimator:
         data, the latter three ones in a raw data format.
         """
 
-        linkDict = self.initializeLinkMgr(config, globalConfig, dataset)
+        linkDict = self.initializeLinkMgr(config, globalConfig, datasetID)
 
         # review: have you considered using the logging module for these kind of outputs?
         print('Reading Venco input scalars, drive profiles and boolean plug profiles')
@@ -222,7 +222,8 @@ class FlexEstimator:
 
         return linkDict, scalars, driveProfiles_raw, plugProfiles_raw
 
-    def procScalars(self, driveProfiles_raw, plugProfiles_raw, driveProfiles: pd.DataFrame, plugProfiles: pd.DataFrame):
+    def procScalars(self, driveProfiles_raw, plugProfiles_raw, driveProfiles: pd.DataFrame,
+                    plugProfiles: pd.DataFrame):
         """
         Calculates some scalars from the input data such as the number of hours of drive and plug profiles, the number of
         profiles etc.
@@ -275,12 +276,13 @@ class FlexEstimator:
         dataIndexed.columns = dataIndexed.columns.astype(int)
         return dataIndexed
 
-    def indexDriveAndPlugData(self, driveData: pd.DataFrame, plugData: pd.DataFrame, dropIdxLevel: str, nHours: int) -> pd.DataFrame:
+    def indexDriveAndPlugData(self, driveData: pd.DataFrame, plugData: pd.DataFrame, dropIdxLevel: str,
+                              nHours: int) -> pd.DataFrame:
         driveProfiles = self.indexProfile(driveData, nHours)
         plugProfiles = self.indexProfile(plugData, nHours)
         return driveProfiles.droplevel(dropIdxLevel), plugProfiles.droplevel(dropIdxLevel)
 
-    def readInData(self, globalConfig, fileKey: str, dataset: str) -> pd.DataFrame:
+    def readInData(self, globalConfig, fileKey: str, datasetID: str) -> pd.DataFrame:
         """
         Generic read-in function for mobility datasets. This serves as interface between the daily trip distance
         and purpose calculation and the class Evaluator.
@@ -290,7 +292,7 @@ class FlexEstimator:
         """
 
         return pd.read_csv(pathlib.Path(globalConfig['linksRelative']['input']) / createFileString(globalConfig=globalConfig, fileKey=fileKey,
-                                                                                     dataset=dataset),
+                                                                                     datasetID=datasetID),
                            dtype={'hhPersonID': int}, index_col=['hhPersonID', 'tripStartWeekday'])
 
     def mergeDataToWeightsAndDays(self, ParseData):
@@ -324,7 +326,8 @@ class FlexEstimator:
 
         return plugProfiles * scalars.loc['Rated power of charging column', 'value'].astype(float)
 
-    def calcChargeMaxProfiles(self, chargeProfiles: pd.DataFrame, consumptionProfiles: pd.DataFrame, scalars: pd.DataFrame, scalarsProc: pd.DataFrame, nIter: int) -> pd.DataFrame:
+    def calcChargeMaxProfiles(self, chargeProfiles: pd.DataFrame, consumptionProfiles: pd.DataFrame,
+                              scalars: pd.DataFrame, scalarsProc: pd.DataFrame, nIter: int) -> pd.DataFrame:
         """
         Calculates all maximum SoC profiles under the assumption that batteries are always charged as soon as they
         are plugged to the grid. Values are assured to not fall below SoC_min * battery capacity or surpass
@@ -372,7 +375,8 @@ class FlexEstimator:
         return chargeMaxProfiles
 
 
-    def calcChargeProfilesUncontrolled(self, chargeMaxProfiles: pd.DataFrame, scalarsProc: pd.DataFrame) -> pd.DataFrame:
+    def calcChargeProfilesUncontrolled(self, chargeMaxProfiles: pd.DataFrame,
+                                       scalarsProc: pd.DataFrame) -> pd.DataFrame:
         """
         Calculates uncontrolled electric charging based on SoC Max profiles for each hour for each profile.
 
@@ -398,7 +402,9 @@ class FlexEstimator:
             (chargeProfilesUncontrolled[1] + chargeProfilesUncontrolled[nHours - 1]) / 2
         return chargeProfilesUncontrolled
 
-    def calcDriveProfilesFuelAux(self, chargeMaxProfiles: pd.DataFrame, chargeProfilesUncontrolled: pd.DataFrame, driveProfiles: pd.DataFrame, scalars: pd.DataFrame, scalarsProc: pd.DataFrame) -> pd.DataFrame:
+    def calcDriveProfilesFuelAux(self, chargeMaxProfiles: pd.DataFrame, chargeProfilesUncontrolled: pd.DataFrame,
+                                 driveProfiles: pd.DataFrame, scalars: pd.DataFrame,
+                                 scalarsProc: pd.DataFrame) -> pd.DataFrame:
         # ToDo: alternative vectorized format for looping over columns? numpy, pandas: broadcasting-rules
         """
          Calculates necessary fuel consumption profile of a potential auxilliary unit (e.g. a gasoline motor) based
@@ -435,8 +441,9 @@ class FlexEstimator:
         driveProfilesFuelAux = driveProfilesFuelAux.round(4)
         return driveProfilesFuelAux
 
-
-    def calcChargeMinProfiles(self, chargeProfiles: pd.DataFrame, consumptionProfiles: pd.DataFrame, driveProfilesFuelAux: pd.DataFrame, scalars: pd.DataFrame, scalarsProc: pd.DataFrame, nIter: int) -> pd.DataFrame:
+    def calcChargeMinProfiles(self, chargeProfiles: pd.DataFrame, consumptionProfiles: pd.DataFrame,
+                              driveProfilesFuelAux: pd.DataFrame, scalars: pd.DataFrame, scalarsProc: pd.DataFrame,
+                              nIter: int) -> pd.DataFrame:
         # ToDo param minSecurityFactor
         """
         Calculates minimum SoC profiles assuming that the hourly mileage has to exactly be fulfilled but no battery charge
@@ -497,8 +504,9 @@ class FlexEstimator:
                                                        self.scalarsProc, nIter=3)
         # self.splitChargeMaxCalc(chargeProfiles=self.chargeProfiles, drainProfiles=self.drainProfiles)
         self.chargeProfilesUncontrolled = self.calcChargeProfilesUncontrolled(self.chargeMaxProfiles, self.scalarsProc)
-        self.auxFuelDemandProfiles = self.calcDriveProfilesFuelAux(self.chargeMaxProfiles, self.chargeProfilesUncontrolled,
-                                                              self.driveProfiles, self.scalars, self.scalarsProc)
+        self.auxFuelDemandProfiles = self.calcDriveProfilesFuelAux(self.chargeMaxProfiles,
+                                                                   self.chargeProfilesUncontrolled, self.driveProfiles,
+                                                                   self.scalars, self.scalarsProc)
         self.chargeMinProfiles = self.calcChargeMinProfiles(self.chargeProfiles, self.drainProfiles,
                                                        self.auxFuelDemandProfiles, self.scalars, self.scalarsProc,
                                                        nIter=3)
@@ -570,7 +578,8 @@ class FlexEstimator:
         filterCons_out = filterCons.loc[:, ['randNo', 'indexCons', 'indexDSM']]
         return filterCons_out
 
-    def calcElectricPowerProfiles(self, consumptionProfiles: pd.DataFrame, driveProfilesFuelAux: pd.DataFrame, scalars: pd.DataFrame, filterCons: pd.DataFrame, scalarsProc: pd.DataFrame,
+    def calcElectricPowerProfiles(self, consumptionProfiles: pd.DataFrame, driveProfilesFuelAux: pd.DataFrame,
+                                  scalars: pd.DataFrame, filterCons: pd.DataFrame, scalarsProc: pd.DataFrame,
                                   filterIndex) -> pd.DataFrame:
         """
         Calculates electric power profiles that serve as outflow of the fleet batteries.
@@ -600,7 +609,8 @@ class FlexEstimator:
                 electricPowerProfiles[iHour] = electricPowerProfiles[iHour] * indexDSM
         return electricPowerProfiles
 
-    def setUnconsideredBatProfiles(self, chargeMaxProfiles: pd.DataFrame, chargeMinProfiles: pd.DataFrame, filterCons: pd.DataFrame, minValue, maxValue):
+    def setUnconsideredBatProfiles(self, chargeMaxProfiles: pd.DataFrame, chargeMinProfiles: pd.DataFrame,
+                                   filterCons: pd.DataFrame, minValue, maxValue):
         """
         Sets all profile values with filterCons = False to extreme values. For SoC max profiles, this means a value
         that is way higher than SoC max capacity. For SoC min this means usually 0. This setting is important for the
@@ -675,7 +685,8 @@ class FlexEstimator:
             raise ValueError('You selected a filter method that is not implemented.')
         return profileMinOut, profileMaxOut
 
-    def normalizeProfiles(self, scalars: pd.DataFrame, socMin: pd.Series, socMax: pd.Series, normReferenceParam) -> pd.Series:
+    def normalizeProfiles(self, scalars: pd.DataFrame, socMin: pd.Series, socMax: pd.Series, normReferenceParam) -> \
+            pd.Series:
         # ToDo: Implement a normalization to the maximum of a given profile
 
         """
@@ -870,7 +881,7 @@ class FlexEstimator:
         self.socMinNorm, self.socMaxNorm = self.normalizeProfiles(self.scalars, self.SOCMin, self.SOCMax,
                                                              normReferenceParam='Battery capacity')
 
-    def writeProfilesToCSV(self, globalConfig: dict, profileDictOut, singleFile=True, dataset='MiD17'):
+    def writeProfilesToCSV(self, globalConfig: dict, profileDictOut, singleFile=True, datasetID='MiD17'):
         """
         Function to write VencoPy profiles to either one or five .csv files in the output folder specified in outputFolder.
 
@@ -886,11 +897,11 @@ class FlexEstimator:
         if singleFile:
             dataOut = pd.DataFrame(profileDictOut)
             dataOut.to_csv(pathlib.Path(globalConfig['linksRelative']['dataOutput']) /
-                           createFileString(globalConfig=globalConfig, fileKey='vencoPyOutput', dataset=dataset), header=True)
+                           createFileString(globalConfig=globalConfig, fileKey='vencoPyOutput', datasetID=datasetID), header=True)
         else:
             for iName, iProf in profileDictOut.items():
                 iProf.to_csv(pathlib.Path(globalConfig['linksRelative']['dataOutput']) /
-                             pathlib.Path(r'vencoPyOutput_' + iName + dataset + '.csv'), header=True)
+                             pathlib.Path(r'vencoPyOutput_' + iName + datasetID + '.csv'), header=True)
 
     def writeOut(self):
         self.profileDictOut = dict(uncontrolledCharging=self.chargeProfilesUncontrolledCorr,
@@ -900,7 +911,7 @@ class FlexEstimator:
                                    auxFuelDriveProfile=self.auxFuelDemandProfilesCorr)
 
         self.writeProfilesToCSV(profileDictOut=self.profileDictOut, globalConfig=self.globalConfig, singleFile=True,
-                                dataset=self.datasetID)
+                                datasetID=self.datasetID)
 
     def sortData(data):
         data.index = data.index.swaplevel(0, 1)
@@ -928,17 +939,17 @@ class FlexEstimator:
         plt.legend(loc='upper center')  # , bbox_to_anchor=(0.5, 1.3) ncol=2,
         plt.tight_layout()
         filePlot = linkOutput / pathlib.Path(
-            createFileString(globalConfig=self.globalConfig, dataset=self.datasetID, fileKey='flexPlotName', manualLabel=filename,
+            createFileString(globalConfig=self.globalConfig, datasetID=self.datasetID, fileKey='flexPlotName', manualLabel=filename,
                              filetypeStr='svg'))
         if show:
             plt.show()
         if write:
             fig.savefig(filePlot)
 
-    def separateLinePlots(self, profileDictList, config, globalConfig, dataset='MiD17', show=True, write=True, ylabel=[], ylim=[],
-                          filenames=[]):
+    def separateLinePlots(self, profileDictList, config, globalConfig, datasetID='MiD17', show=True, write=True,
+                          ylabel=[], ylim=[], filenames=[]):
         for iDict, iYLabel, iYLim, iName in zip(profileDictList, ylabel, ylim, filenames):
-            self.writeProfilesToCSV(profileDictOut=iDict, globalConfig=globalConfig, singleFile=False, dataset=dataset)
+            self.writeProfilesToCSV(profileDictOut=iDict, globalConfig=globalConfig, singleFile=False, datasetID=datasetID)
             self.linePlot(iDict, linkOutput=self.globalConfig['linksRelative']['plots'], config=config, show=show, write=write,
                      ylabel=iYLabel, ylim=iYLim, filename=iName)
 
@@ -1032,8 +1043,9 @@ class FlexEstimator:
 # review: This should be a method of FlexEstimation with name run().
 #  this is a common approach to define a workflow for a class based structure.
 #  I suggest to not return Flexstimator.
-def runFlexEstimation(config, globalConfig, evaluatorConfig, ParseData : DataParser, dataset : str = 'MiD17'):
-    Flexstimator = FlexEstimator(config=config, globalConfig=globalConfig, evaluatorConfig=evaluatorConfig, datasetID=dataset, ParseData=ParseData)
+def runFlexEstimation(config, globalConfig, evaluatorConfig, ParseData: DataParser, datasetID: str='MiD17'):
+    Flexstimator = FlexEstimator(config=config, globalConfig=globalConfig, evaluatorConfig=evaluatorConfig,
+                                 datasetID=datasetID, ParseData=ParseData)
     # review: Flexstimator should be lower case as it is an instance not a class.
     Flexstimator.baseProfileCalculation()
     Flexstimator.filter()
@@ -1044,12 +1056,12 @@ def runFlexEstimation(config, globalConfig, evaluatorConfig, ParseData : DataPar
     # Flexstimator.plotProfiles()
     return Flexstimator
 #
-# def runFlexstimation(config, dataset, variable):
-#     #indexedDriveData = mergeVariables(data=driveDataDays, variableData=tripDataClean, variables=['tripStartWeekday',
-#     #                                                                                             'tripWeight'])
-#     #indexedPurposeData = mergeVariables(data=purposeDataDays, variableData=tripDataClean, variables=['tripStartWeekday',
-#     #                                                                                                 'tripWeight'])
-#     Flexstimator = FlexEstimator(config=config, datasetID=dataset)
+# def runFlexstimation(config, datasetID, variable):
+#     indexedDriveData = mergeVariables(data=driveDataDays, variableData=tripDataClean, variables=['tripStartWeekday',
+#                                                                                                 'tripWeight'])
+#     indexedPurposeData = mergeVariables(data=purposeDataDays, variableData=tripDataClean, variables=['tripStartWeekday',
+#                                                                                                     'tripWeight'])
+#     Flexstimator = FlexEstimator(config=config, datasetID=datasetID)
 #     Flexstimator.baseProfileCalculation()
 #     Flexstimator.filter()
 #     Flexstimator.aggregate()
@@ -1069,7 +1081,8 @@ if __name__ == '__main__':
     os.chdir(globalConfig['linksAbsolute']['vencoPyRoot'])
 
     vpData = DataParser(config=parseConfig, globalConfig=globalConfig, loadEncrypted=False)
-    vpFlexEst17 = runFlexEstimation(config=flexConfig, globalConfig=globalConfig, evaluatorConfig=evaluatorConfig, ParseData=vpData, dataset='MiD17')
+    vpFlexEst17 = runFlexEstimation(config=flexConfig, globalConfig=globalConfig, evaluatorConfig=evaluatorConfig,
+                                    ParseData=vpData, datasetID='MiD17')
 
     print(f'Total absolute electricity charged in uncontrolled charging based on MiD08: '
           f'{vpFlexEst17.chargeProfilesUncontrolled.sum().sum()} based on MiD17')
