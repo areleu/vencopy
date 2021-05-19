@@ -20,11 +20,11 @@ class GridModeler:
     def __init__(self, config: dict, globalConfig:dict, datasetID : str ='MiD17'):
         self.inputFileName = createFileString(globalConfig=globalConfig, fileKey='purposesProcessed',
                                               datasetID=datasetID)
-        self.inputFilePath = Path(globalConfig['linksRelative']['input']) / self.inputFileName
+        self.inputFilePath = Path(globalConfig['pathRelative']['input']) / self.inputFileName
         self.gridDistributions = config['chargingInfrastructureDistributions']
         self.outputFileName = createFileString(globalConfig=globalConfig, fileKey='inputDataPlugProfiles',
                                                datasetID=datasetID)
-        self.outputFilePath = Path(globalConfig['linksRelative']['input']) / self.outputFileName
+        self.outputFilePath = Path(globalConfig['pathRelative']['input']) / self.outputFileName
         self.purposeData = pd.read_csv(self.inputFilePath, keep_default_na=False)
 
 
@@ -42,11 +42,11 @@ class GridModeler:
 
 
 if __name__ == '__main__':
-    linkGlobalConfig = Path.cwd().parent / 'config' / 'globalConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
-    globalConfig = yaml.load(open(linkGlobalConfig), Loader=yaml.SafeLoader)
-    linkGridConfig = Path.cwd().parent / 'config' / 'gridConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
-    gridConfig = yaml.load(open(linkGridConfig), Loader=yaml.SafeLoader)
-    os.chdir(globalConfig['linksAbsolute']['vencoPyRoot'])
+    pathGlobalConfig = Path.cwd().parent / 'config' / 'globalConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
+    globalConfig = yaml.load(open(pathGlobalConfig), Loader=yaml.SafeLoader)
+    pathGridConfig = Path.cwd().parent / 'config' / 'gridConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
+    gridConfig = yaml.load(open(pathGridConfig), Loader=yaml.SafeLoader)
+    os.chdir(globalConfig['pathAbsolute']['vencoPyRoot'])
 
     vpg = GridModeler(config=gridConfig, globalConfig=globalConfig)
     vpg.assignSimpleGridViaPurposes()

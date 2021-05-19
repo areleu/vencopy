@@ -18,18 +18,18 @@ from classes.flexEstimationManager import FlexEstimator
 # Set dataset and config to analyze
 datasetID = 'MiD17'
 # review: should the datasetID not be part of the config files?
-linkGlobalConfig = pathlib.Path.cwd() / 'config' / 'globalConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
-globalConfig = yaml.load(open(linkGlobalConfig), Loader=yaml.SafeLoader)
-linkParseConfig = pathlib.Path.cwd() / 'config' / 'parseConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
-parseConfig = yaml.load(open(linkParseConfig), Loader=yaml.SafeLoader)
-linkTripConfig = pathlib.Path.cwd() / 'config' / 'tripConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
-tripConfig = yaml.load(open(linkTripConfig), Loader=yaml.SafeLoader)
-linkGridConfig = pathlib.Path.cwd() / 'config' / 'gridConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
-gridConfig = yaml.load(open(linkGridConfig), Loader=yaml.SafeLoader)
-linkEvaluatorConfig = pathlib.Path.cwd() / 'config' / 'evaluatorConfig.yaml'
-evaluatorConfig = yaml.load(open(linkEvaluatorConfig), Loader=yaml.SafeLoader)
-linkFlexConfig = pathlib.Path.cwd() / 'config' / 'flexConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
-flexConfig = yaml.load(open(linkFlexConfig), Loader=yaml.SafeLoader)
+pathGlobalConfig = pathlib.Path.cwd() / 'config' / 'globalConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
+globalConfig = yaml.load(open(pathGlobalConfig), Loader=yaml.SafeLoader)
+pathParseConfig = pathlib.Path.cwd() / 'config' / 'parseConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
+parseConfig = yaml.load(open(pathParseConfig), Loader=yaml.SafeLoader)
+pathTripConfig = pathlib.Path.cwd() / 'config' / 'tripConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
+tripConfig = yaml.load(open(pathTripConfig), Loader=yaml.SafeLoader)
+pathGridConfig = pathlib.Path.cwd() / 'config' / 'gridConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
+gridConfig = yaml.load(open(pathGridConfig), Loader=yaml.SafeLoader)
+pathEvaluatorConfig = pathlib.Path.cwd() / 'config' / 'evaluatorConfig.yaml'
+evaluatorConfig = yaml.load(open(pathEvaluatorConfig), Loader=yaml.SafeLoader)
+pathFlexConfig = pathlib.Path.cwd() / 'config' / 'flexConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
+flexConfig = yaml.load(open(pathFlexConfig), Loader=yaml.SafeLoader)
 
 
 vpData = DataParser(datasetID=datasetID, config=parseConfig, globalConfig=globalConfig, loadEncrypted=False)

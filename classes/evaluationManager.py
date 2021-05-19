@@ -45,7 +45,7 @@ class Evaluator:
         ret = pd.Series(dtype=object)
         for iFileKey in fileKeys:
             for iDat in datasets:
-                dataIn = pd.read_csv(pathlib.Path(self.config['linksRelative']['input']) /
+                dataIn = pd.read_csv(pathlib.Path(self.config['pathRelative']['input']) /
                                      createFileString(config=self.config, fileKey=iFileKey,
                                                       dataset=iDat), dtype={'hhPersonID': int},
                                      # index_col=['hhPersonID', 'tripStartWeekday'])
@@ -158,12 +158,12 @@ class Evaluator:
             plt.show()
         if config['plotConfig']['save']:
             fileName = createFileString(config=config, fileKey='aggPlotName', manualLabel=self.label, filetypeStr='svg')
-            fig.savefig(Path(config['linksRelative']['plots']) / fileName, bbox_inches='tight')
+            fig.savefig(Path(config['pathRelative']['plots']) / fileName, bbox_inches='tight')
 
 if __name__ == '__main__':
-    linkConfig = pathlib.Path.cwd().parent / 'config' / 'config.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
-    config = yaml.load(open(linkConfig), Loader=yaml.SafeLoader)
-    os.chdir(config['linksAbsolute']['vencoPyRoot'])
+    pathConfig = pathlib.Path.cwd().parent / 'config' / 'config.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
+    config = yaml.load(open(pathConfig), Loader=yaml.SafeLoader)
+    os.chdir(config['pathAbsolute']['vencoPyRoot'])
     # evaluateDriveProfiles(config=config)
     vpEval = Evaluator(config, label='base')
     vpEval.hourlyAggregates = vpEval.calcVariableSpecAggregates(by=['tripStartWeekday'])

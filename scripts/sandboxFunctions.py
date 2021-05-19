@@ -100,9 +100,9 @@ def hoursToDatetime(tripData):
 
 
 # def writeOut(config, datasetID, dataDrive, dataPurpose):
-#     dataDrive.to_csv(Path(config['linksRelative']['input']) /
+#     dataDrive.to_csv(Path(config['pathRelative']['input']) /
 #                      createFileString(config=config, fileKey='inputDataDriveProfiles', dataset=datasetID), na_rep=0)
-#     dataPurpose.to_csv(Path(config['linksRelative']['input']) /
+#     dataPurpose.to_csv(Path(config['pathRelative']['input']) /
 #                        createFileString(config=config, fileKey='purposesProcessed', dataset=datasetID))
 #     print(f"Drive data and trip purposes written to files "
 #           f"{createFileString(config=config, fileKey='inputDataDriveProfiles', dataset=datasetID)} and"
@@ -156,13 +156,13 @@ def returnBottomKeys(self, baseDict: dict, lst: list = []):
 
 
 
-def writeAnnualOutputForREMix(profileDict, outputConfig, outputLink, noOfHoursOutput, technologyLabel, strAdd):
+def writeAnnualOutputForREMix(profileDict, outputConfig, outputPath, noOfHoursOutput, technologyLabel, strAdd):
     """
     Output wrapper function to call cloneAndWriteProfile once for each output profile.
 
     :param profileDict: Dictionary holding profile names and profiles in pd.Series to be cloned and written
     :param outputConfig: REMix specific configuration file holding model nodes
-    :param outputLink: link to output folder
+    :param outputPath: path to output folder
     :param noOfHoursOutput: Integer describing the number of hours that the profiles are cloned to
     :param technologyLabel: String holding a REMix eCarsDtl technology label
     :param strAdd: String addition for output writing
@@ -170,16 +170,16 @@ def writeAnnualOutputForREMix(profileDict, outputConfig, outputLink, noOfHoursOu
     """
     for iName, iProf in profileDict.items():
         filename = technologyLabel + '_' + iName + strAdd
-        cloneAndWriteProfile(iProf, outputConfig, outputLink, noOfHoursOutput, technologyLabel, filename)
+        cloneAndWriteProfile(iProf, outputConfig, outputPath, noOfHoursOutput, technologyLabel, filename)
 
 
 
-def cloneAndWriteProfile(profile, outputConfig, outputLink, noOfHoursOutput, technologyLabel, filename):
+def cloneAndWriteProfile(profile, outputConfig, outputPath, noOfHoursOutput, technologyLabel, filename):
     """
     This action clones daily profiles to cover the specified time horizon given in noOfHoursOutput.
 
     :param profileDict: A dictionary holding five VencoPy profiles as Series including their names as keys.
-    :param linkDict: A VencoPy link dictionary.
+    :param pathDict: A VencoPy path dictionary.
     :param noOfHoursOutput: Number of hours to clone the daily profile to (for 1 (non-gap-)year set to 8760)
     :param technologyLabel: Technology (e.g. vehicle segment "BEV-S") label for the filename that is written.
     :param filename: Name of the file to be written.
@@ -206,7 +206,7 @@ def cloneAndWriteProfile(profile, outputConfig, outputLink, noOfHoursOutput, tec
     for i in outputConfig['NonNullNodes']:
         profilesOut.loc[:, i] = np.round(profileCloned, 3)
 
-    profilesOut.to_csv(outputLink / pathlib.Path(filename + '.csv'), index=False)
+    profilesOut.to_csv(outputPath / pathlib.Path(filename + '.csv'), index=False)
 
 
 def createEmptyDataFrame(technologyLabel, numberOfHours, nodes):
@@ -247,15 +247,15 @@ def createEmptyDataFrame(technologyLabel, numberOfHours, nodes):
     df.loc[s3, ''] = df.loc[s3, ''].apply(lambda x: "{}{}".format('t', x))
     return df
 
-def appendREMixProfiles(pre, names, post, linkFiles, linkOutput, outputPre, outputPost):
+def appendREMixProfiles(pre, names, post, pathFiles, pathOutput, outputPre, outputPost):
     """
     REMix specific append functionality to integrate results of three different VencoPy-runs into one file per profile.
 
     :param pre: String part before profile name
     :param names: list of profile names
     :param post: String part after profile name
-    :param linkFiles: Link to folder of files
-    :param linkOutput: Link to appended file
+    :param pathFiles: path to folder of files
+    :param pathOutput: path to appended file
     :param outputPre: String before profile name for output
     :param outputPost: String after profile name for output
     :return: None
@@ -266,7 +266,7 @@ def appendREMixProfiles(pre, names, post, linkFiles, linkOutput, outputPre, outp
     for key, strList in strDict.items():
         dfList = []
         for strIdx in strList:
-            df = pd.read_csv(linkFiles / strIdx)
+            df = pd.read_csv(pathFiles / strIdx)
             df.ix[df.iloc[:, 0] == 'BEV', 0] = strIdx[0:5]
             df.rename(columns={'Unnamed: 1': ' '}, inplace=True)
             dfList.append(df)
@@ -276,7 +276,7 @@ def appendREMixProfiles(pre, names, post, linkFiles, linkOutput, outputPre, outp
     for key, value in dataDict.items():
         resultDict[key] = pd.concat(value)
         resultDict[key].to_csv(index=False,
-                               path_or_buf=linkOutput / pathlib.Path(outputPre + key + outputPost + '.csv'),
+                               path_or_buf=pathOutput / pathlib.Path(outputPre + key + outputPost + '.csv'),
                                float_format='%.3f')
 
 

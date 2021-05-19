@@ -13,8 +13,8 @@ import pathlib
 
 def createFileString(globalConfig: dict, fileKey: str, datasetID: str, manualLabel: str = '',
                      filetypeStr: str = 'csv'):
-    #linkGlobalConfig = pathlib.Path.cwd().parent / 'config' / 'globalConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
-    #globalConfig = yaml.load(open(linkGlobalConfig), Loader=yaml.SafeLoader)
+    #pathGlobalConfig = pathlib.Path.cwd().parent / 'config' / 'globalConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
+    #globalConfig = yaml.load(open(pathGlobalConfig), Loader=yaml.SafeLoader)
     if datasetID is None:
 
         return "%s_%s%s.%s" % (globalConfig['files'][fileKey],

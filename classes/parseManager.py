@@ -25,13 +25,13 @@ class DataParser:
         """
         This is some explanation
 
-        :param config: A yaml config file holding a dictionary with the keys 'linksRelative' and 'linksAbsolute'
+        :param config: A yaml config file holding a dictionary with the keys 'pathRelative' and 'pathAbsolute'
         :param globalConfig:
         """
         self.datasetID = self.checkDatasetID(datasetID, config)
         self.config = config
         self.globalConfig = globalConfig
-        self.rawDataPath = Path(globalConfig['linksAbsolute'][self.datasetID]) / globalConfig['files'][self.datasetID]['tripsDataRaw']
+        self.rawDataPath = Path(globalConfig['pathAbsolute'][self.datasetID]) / globalConfig['files'][self.datasetID]['tripsDataRaw']
         self.rawData = None
         self.data = None
         self.columns = self.compileVariableList()
@@ -41,12 +41,12 @@ class DataParser:
         #  the user to configure the output level it desires.
         print('Parsing properties set up')
         if loadEncrypted:
-            # review: I am unsure if the config field should be called "linksAbsolute" as links have a
+            # review: I am unsure if the config field should be called "pathAbsolute" as paths have a
             #  plethora of meanings. Could we make it more clear that we talk about files on disk here?
             #  Something like filePaths or dataPaths?
-            print(f"Starting to retrieve encrypted data file from {self.globalConfig['linksAbsolute']['encryptedZipfile']}")
-            self.loadEncryptedData(linkToZip=Path(self.globalConfig['linksAbsolute']['encryptedZipfile']) / self.globalConfig['files'][self.datasetID]['enryptedZipFileB2'],
-                                   linkInZip=globalConfig['files'][self.datasetID]['tripDataZipFileRaw'])
+            print(f"Starting to retrieve encrypted data file from {self.globalConfig['pathsAbsolute']['encryptedZipfile']}")
+            self.loadEncryptedData(pathToZip=Path(self.globalConfig['pathAbsolute']['encryptedZipfile']) / self.globalConfig['files'][self.datasetID]['enryptedZipFileB2'],
+                                   pathInZip=globalConfig['files'][self.datasetID]['tripDataZipFileRaw'])
         else:
             print(f"Starting to retrieve local data file from {self.rawDataPath}")
             self.loadData()
@@ -74,7 +74,7 @@ class DataParser:
     def checkDatasetID(self, datasetID: str, config: dict) -> str:
         """
         :param datasetID: list of strings declaring the datasets to be read in
-        :param config: A yaml config file holding a dictionary with the keys 'linksRelative' and 'linksAbsolute'
+        :param config: A yaml config file holding a dictionary with the keys 'pathRelative' and 'pathAbsolute'
         :return: Returns a string value of a mobility data
         """
         availableDatasetIDs = config['dataVariables']['datasetID']
@@ -115,21 +115,21 @@ class DataParser:
 
         print(f'Finished loading {len(self.rawData)} rows of raw data of type {self.rawDataPath.suffix}')
 
-    def loadEncryptedData(self, linkToZip, linkInZip):
+    def loadEncryptedData(self, pathToZip, pathInZip):
         """
-        :param linkToZip:
-        :param linkInZip:
+        :param pathToZip:
+        :param pathInZip:
         :return:
         """
-        # review: What happens wif linkToZip is ot on the hard drive? Do we get an error or
+        # review: What happens wif pathToZip is ot on the hard drive? Do we get an error or
         #  is a file created?
-        with ZipFile(linkToZip) as myzip:
-            if '.dta' in linkInZip:
-                self.rawData = pd.read_stata(myzip.open(linkInZip, pwd=bytes(self.config['encryptionPW'],
+        with ZipFile(pathToZip) as myzip:
+            if '.dta' in pathInZip:
+                self.rawData = pd.read_stata(myzip.open(pathInZip, pwd=bytes(self.config['encryptionPW'],
                                                                              encoding='utf-8')),
                                              convert_categoricals=False, convert_dates=False, preserve_dtypes=False)
-            else:  # if '.csv' in linkInZip:
-                self.rawData = pd.read_csv(myzip.open(linkInZip, pwd=bytes(self.config['encryptionPW'],
+            else:  # if '.csv' in pathInZip:
+                self.rawData = pd.read_csv(myzip.open(pathInZip, pwd=bytes(self.config['encryptionPW'],
                                                                            encoding='utf-8')), sep=';', decimal=',')
 
         print(f'Finished loading {len(self.rawData)} rows of raw data of type {self.rawDataPath.suffix}')
@@ -425,10 +425,10 @@ class ParseMID(DataParser):
 
 
 if __name__ == '__main__':
-    linkParseConfig = Path.cwd().parent / 'config' / 'parseConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
-    parseConfig = yaml.load(open(linkParseConfig), Loader=yaml.SafeLoader)
-    linkGlobalConfig = Path.cwd().parent / 'config' / 'globalConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
-    globalConfig = yaml.load(open(linkGlobalConfig), Loader=yaml.SafeLoader)
+    pathParseConfig = Path.cwd().parent / 'config' / 'parseConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
+    parseConfig = yaml.load(open(pathParseConfig), Loader=yaml.SafeLoader)
+    pathGlobalConfig = Path.cwd().parent / 'config' / 'globalConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
+    globalConfig = yaml.load(open(pathGlobalConfig), Loader=yaml.SafeLoader)
     p = DataParser(config=parseConfig, globalConfig=globalConfig, loadEncrypted=False)
     print(p.data.head())
     print('end')

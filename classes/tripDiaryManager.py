@@ -275,11 +275,11 @@ class TripDiaryBuilder:
         return tripDict
 
     def writeOut(self, globalConfig:dict, dataDrive: pd.DataFrame, dataPurpose: pd.DataFrame, datasetID: str = 'MiD17'):
-        dataDrive.to_csv(Path(globalConfig['linksRelative']['input']) /
+        dataDrive.to_csv(Path(globalConfig['pathRelative']['input']) /
                          createFileString(globalConfig=globalConfig, fileKey='inputDataDriveProfiles',
                                           datasetID=datasetID),
                          na_rep=0)
-        dataPurpose.to_csv(Path(globalConfig['linksRelative']['input']) /
+        dataPurpose.to_csv(Path(globalConfig['pathRelative']['input']) /
                           createFileString(globalConfig=globalConfig, fileKey='purposesProcessed', datasetID=datasetID))
         print(f"Drive data and trip purposes written to files "
               f"{createFileString(globalConfig=globalConfig, fileKey='inputDataDriveProfiles', datasetID=datasetID)} "
@@ -307,13 +307,13 @@ class FillHourValues:
 
 
 if __name__ == '__main__':
-    linkGlobalConfig = Path.cwd().parent / 'config' / 'globalConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
-    globalConfig = yaml.load(open(linkGlobalConfig), Loader=yaml.SafeLoader)
-    linkTripConfig = Path.cwd().parent / 'config' / 'tripConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
-    tripConfig = yaml.load(open(linkTripConfig), Loader=yaml.SafeLoader)
-    linkParseConfig = Path.cwd().parent / 'config' / 'parseConfig.yaml'
-    parseConfig = yaml.load(open(linkParseConfig), Loader=yaml.SafeLoader)
-    os.chdir(globalConfig['linksAbsolute']['vencoPyRoot'])
+    pathGlobalConfig = Path.cwd().parent / 'config' / 'globalConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
+    globalConfig = yaml.load(open(pathGlobalConfig), Loader=yaml.SafeLoader)
+    pathTripConfig = Path.cwd().parent / 'config' / 'tripConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
+    tripConfig = yaml.load(open(pathTripConfig), Loader=yaml.SafeLoader)
+    pathParseConfig = Path.cwd().parent / 'config' / 'parseConfig.yaml'
+    parseConfig = yaml.load(open(pathParseConfig), Loader=yaml.SafeLoader)
+    os.chdir(globalConfig['pathsAbsolute']['vencoPyRoot'])
 
     vpData = DataParser(config=parseConfig, globalConfig=globalConfig, loadEncrypted=False)
     vpDiary = TripDiaryBuilder(config=tripConfig, globalConfig=globalConfig, ParseData=vpData)
