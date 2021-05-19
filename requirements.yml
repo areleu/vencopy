@@ -1,0 +1,15 @@
+name: VencoPy_env
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - matplotlib
+  - pandas=1.1.1
+  - pyyaml
+  - seaborn
+  - sphinx
+  - xlrd=1.2.0
+  - yaml
+  - python=3.7
+  - openpyxl
+
