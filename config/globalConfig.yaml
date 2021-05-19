@@ -11,11 +11,10 @@
 
 linksRelative:
     input: ./inputData/
-    plots: ./output/plots/
-    dataOutput: ./output/data/
+    plots: ./output/sesAnalysis/plots/
+    dataOutput: ./output/sesAnalysis/data/
     scripts: ./scripts/
     config: ./config/
-    outputConfig: ./config/outputConfigREMix.yaml
 
 
 # During first configuration, optionally fill in absolute links on your system e.g. if you want to have post processed
@@ -57,10 +56,11 @@ files:
     vencoPyOutput: vencoPyOutput
     aggPlotName: mobilityComparison
     flexPlotName: flexProfileComparison
+    outputConfig: outputConfigREMix.yaml
 
 
 labels:
-    runLabel: vpConsolid
+    runLabel: sesRepro
     technologyLabel: BEV-S
     outputFileName: VencoPy_MR1_alpha1_batCap40_cons15
     strAdd:

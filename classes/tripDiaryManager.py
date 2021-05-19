@@ -35,17 +35,6 @@ class TripDiaryBuilder:
         self.writeOut(globalConfig=globalConfig, datasetID=datasetID, dataDrive=self.tripDistanceDiary,
                  dataPurpose=self.tripPurposeDiary)
 
-    def writeOut(self, globalConfig:dict, dataDrive: pd.DataFrame, dataPurpose: pd.DataFrame, datasetID: str = 'MiD17'):
-        dataDrive.to_csv(Path(globalConfig['linksRelative']['input']) /
-                         createFileString(globalConfig=globalConfig, fileKey='inputDataDriveProfiles',
-                                          datasetID=datasetID),
-                         na_rep=0)
-        dataPurpose.to_csv(Path(globalConfig['linksRelative']['input']) /
-                          createFileString(globalConfig=globalConfig, fileKey='purposesProcessed', datasetID=datasetID))
-        print(f"Drive data and trip purposes written to files "
-              f"{createFileString(globalConfig=globalConfig, fileKey='inputDataDriveProfiles', datasetID=datasetID)} "
-              f"and {createFileString(globalConfig=globalConfig, fileKey='purposesProcessed', datasetID=datasetID)}")
-
     def tripDuration(self, timestampStart: np.datetime64, timestampEnd: np.datetime64) -> np.datetime64:
         """
         :param timestampStart: start time of a trip
@@ -54,7 +43,8 @@ class TripDiaryBuilder:
         """
         return timestampEnd - timestampStart
 
-    def calcHourShareStart(self, timestampStart: np.datetime64, timestampEnd: np.datetime64, duration) -> pd.DataFrame:
+    def calcHourShareStart(self, timestampStart: np.datetime64, timestampEnd: np.datetime64, duration) -> (pd.Series,
+                                                                                                           pd.Series):
         """
         :param timestampStart: start time of a trip
         :param timestampEnd:  end time of a trip
@@ -63,12 +53,12 @@ class TripDiaryBuilder:
         """
         isSameHourTrip = timestampStart.dt.hour == timestampEnd.dt.hour
         shareSameHour = (timestampEnd.dt.minute - timestampStart.dt.minute) / (duration.dt.seconds / 60)
-        shareSameHour[
-            duration == pd.Timedelta(0)] = 1  # Set share of first hour to 1 for trips with reported duration of 0
-        share = shareSameHour.where(isSameHourTrip, (60 - timestampStart.dt.minute) / (duration.dt.seconds / 60))
-        return share, isSameHourTrip
+        shareSameHour[duration == pd.Timedelta(0)] = 1  # Set share of first hour to 1 for trips with duration of 0
+        share = pd.Series(shareSameHour.where(isSameHourTrip,
+                                              (60 - timestampStart.dt.minute) / (duration.dt.seconds / 60)))
+        return share.copy(), isSameHourTrip
 
-    def calcHourShareEnd(self, timestampEnd: np.datetime64, duration, isSameHourTrip: pd.DataFrame) -> pd.DataFrame:
+    def calcHourShareEnd(self, timestampEnd: np.datetime64, duration, isSameHourTrip: pd.DataFrame) -> pd.Series:
         """
         :param timestampEnd: end time of a trip
         :param duration: duration of a trip
@@ -78,7 +68,8 @@ class TripDiaryBuilder:
         share = timestampEnd.dt.minute / (duration.dt.seconds / 60)
         return share.where(~isSameHourTrip, 0)
 
-    def calcDistanceShares(self, data: pd.DataFrame, duration, timestampSt: np.datetime64, timestampEn: np.datetime64) -> pd.DataFrame:
+    def calcDistanceShares(self, data: pd.DataFrame, duration, timestampSt: np.datetime64,
+                           timestampEn: np.datetime64) -> tuple:
         """
         :param data: list of strings declaring the datasets to be read in
         :param duration: duration of a trip
@@ -86,10 +77,12 @@ class TripDiaryBuilder:
         :param timestampEn:  end time of a trip
         :return: Return a data frame of distance covered by each trip in an hour or more
         """
-        shareHourStart, isSameHourTrip = self.calcHourShareStart(data.loc[:, timestampSt], data.loc[:, timestampEn],
-                                                            duration)
-        shareHourEnd = self.calcHourShareEnd(data.loc[:, timestampEn], duration, isSameHourTrip=isSameHourTrip)
-        return shareHourStart, shareHourEnd
+        shareHourStart, isSameHourTrip = self.calcHourShareStart(timestampStart=data.loc[:, timestampSt],
+                                                                 timestampEnd=data.loc[:, timestampEn],
+                                                                 duration=duration)
+        shareHourEnd = self.calcHourShareEnd(timestampEnd=data.loc[:, timestampEn], duration=duration,
+                                             isSameHourTrip=isSameHourTrip)
+        return shareHourStart.copy(), shareHourEnd.copy()
 
     def numberOfFullHours(self, timestampStart: np.datetime64, timestampEnd: np.datetime64) -> pd.DataFrame:
         """
@@ -280,6 +273,18 @@ class TripDiaryBuilder:
         for ihhpID in tripDict.keys():
             tripDict[ihhpID] = set(idCols.loc[idCols['hhPersonID'] == ihhpID, 'tripID'])
         return tripDict
+
+    def writeOut(self, globalConfig:dict, dataDrive: pd.DataFrame, dataPurpose: pd.DataFrame, datasetID: str = 'MiD17'):
+        dataDrive.to_csv(Path(globalConfig['linksRelative']['input']) /
+                         createFileString(globalConfig=globalConfig, fileKey='inputDataDriveProfiles',
+                                          datasetID=datasetID),
+                         na_rep=0)
+        dataPurpose.to_csv(Path(globalConfig['linksRelative']['input']) /
+                          createFileString(globalConfig=globalConfig, fileKey='purposesProcessed', datasetID=datasetID))
+        print(f"Drive data and trip purposes written to files "
+              f"{createFileString(globalConfig=globalConfig, fileKey='inputDataDriveProfiles', datasetID=datasetID)} "
+              f"and {createFileString(globalConfig=globalConfig, fileKey='purposesProcessed', datasetID=datasetID)}")
+
 
 class FillHourValues:
     def __init__(self, data, rangeFunction):
