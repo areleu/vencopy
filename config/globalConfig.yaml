@@ -20,8 +20,10 @@ pathRelative:
 # During first configuration, optionally fill in absolute links on your system e.g. if you want to have post processed
 # output written to an energy system model input folder
 pathAbsolute:
-    MiD17: C:/8_Work/Data/MiD17/B2_Regional-DatensatzpaketEncrypted/STATA
-    vencoPyRoot: C:/8_Work/VencoPy/VencoPy_internal/vencopy
+    #    MiD17: C:/8_Work/Data/MiD17/B2_Regional-DatensatzpaketEncrypted/STATA
+    MiD17: C:/Users/wulf_ni/Documents/11 Data/Transport data/Germany/MiD/2017/proprietary/B2/STATA/
+#    vencoPyRoot: C:/8_Work/VencoPy/VencoPy_internal/vencopy
+    vencoPyRoot: C:/vencopy_repo/
 
 numberOfHours: 24
 

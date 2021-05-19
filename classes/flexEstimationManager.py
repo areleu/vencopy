@@ -147,7 +147,8 @@ class FlexEstimator:
         inputRaw = pd.read_excel(filePath,
                                  header=5,
                                  usecols='A:C',
-                                 skiprows=0)
+                                 skiprows=0,
+                                 engine='openpyxl')
         scalarsOut = inputRaw.set_index('parameter')
         return scalarsOut
 
