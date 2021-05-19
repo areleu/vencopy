@@ -104,33 +104,6 @@ class FlexEstimator:
 
         print('Flex Estimator initialization complete')
 
-    # def initializeLinkMgr(self, config, globalConfig: dict, datasetID: str) -> dict:
-    #     """
-    #     Setup link manager based on a VencoPy config file.
-    #
-    #     :param config: Config file initiated by a yaml-loader
-    #
-    #     :return: Returns link dictionary with relative links to input data and output folders.
-    #     """
-    #     # review: The methodname surprises me. It suggest that we return a manager
-    #     #  which we clearly don't. we also don't really initialize anything in
-    #     #  the sense of the word. would a name along the lines of buildLinkMapping
-    #     #  be more true to the concept?
-    #     linkDict = {'linkScalars': pathlib.Path(globalConfig['linksRelative']['input']) /
-    #                                pathlib.Path(globalConfig['files']['inputDataScalars']),
-    #                 'linkDriveProfiles': pathlib.Path(globalConfig['linksRelative']['input']) /
-    #                                      pathlib.Path(createFileString(globalConfig=globalConfig, fileKey='inputDataDriveProfiles',
-    #                                                                    datasetID=datasetID)),
-    #                 'linkPlugProfiles': pathlib.Path(globalConfig['linksRelative']['input']) /
-    #                                     pathlib.Path(createFileString(globalConfig=globalConfig, fileKey='inputDataPlugProfiles',
-    #                                                                   datasetID=datasetID)),
-    #                 'linkOutputConfig': pathlib.Path(globalConfig['linksRelative']['outputConfig']),
-    #                 # 'linkOutputAnnual': pathlib.Path(globalConfig['linksRelative']['resultsAnnual']),
-    #                 'linkPlots': pathlib.Path(globalConfig['linksRelative']['plots']),
-    #                 'linkOutput': pathlib.Path(globalConfig['linksRelative']['dataOutput'])}
-    #
-    #     return linkDict
-
     def readInputScalar(self, filePath) -> pd.DataFrame:
         """
         Method that gets the path to a venco scalar input file specifying technical assumptions such as battery capacity
@@ -208,8 +181,6 @@ class FlexEstimator:
         :return: Returns four dataframes: A link dictionary, scalars, drive profile data and plug profile
         data, the latter three ones in a raw data format.
         """
-
-        # linkDict = self.initializeLinkMgr(config, globalConfig, datasetID)
 
         # review: have you considered using the logging module for these kind of outputs?
         print('Reading Venco input scalars, drive profiles and boolean plug profiles')

@@ -1,6 +1,6 @@
 __version__ = '0.0.9'
 __maintainer__ = 'Niklas Wulff'
-__contributors__ = 'Fabia Miorelli, Parth Butte'
+__contributors__ = 'Fabia Miorelli, Parth Butte, Ronald Stegen'
 __email__ = 'Niklas.Wulff@dlr.de'
 __birthdate__ = '30.09.2020'
 __status__ = 'dev'  # options are: dev, test, prod
@@ -26,7 +26,7 @@ class GridModeler:
                                                datasetID=datasetID)
         self.outputFilePath = Path(globalConfig['linksRelative']['input']) / self.outputFileName
         self.purposeData = pd.read_csv(self.inputFilePath, keep_default_na=False)
-
+        self.chargeAvailability = None
 
     def assignSimpleGridViaPurposes(self):
         print(f'Starting with charge connection replacement of location purposes')
@@ -34,7 +34,7 @@ class GridModeler:
 
         # self.chargeAvailability.set_index(['hhPersonID', 'tripStartWeekday', 'tripWeight'], inplace=True)
         self.chargeAvailability.set_index(['hhPersonID'], inplace=True)
-        self.chargeAvailability.iloc[~self.chargeAvailability.isin(['WAHR', 'FALSCH'])] = 'FALSCH'
+        self.chargeAvailability = (~(self.chargeAvailability != True))
         print('Grid connection assignment complete')
 
     def writeOutGridAvailability(self):
