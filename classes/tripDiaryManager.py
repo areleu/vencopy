@@ -25,9 +25,9 @@ class TripDiaryBuilder:
         self.tripDataClean = None
         self.tripDistanceDiary = None
         self.tripPurposeDiary = None
-        self.calculateConsistentHourlyShares(data=ParseData.data)
+        # self.calculateConsistentHourlyShares(data=ParseData.data)
         # ONLY FOR DEBUGGING PURPOSES
-        # self.calculateConsistentHourlyShares(data=ParseData.data.loc[0:2000, :])
+        self.calculateConsistentHourlyShares(data=ParseData.data.loc[0:2000, :])
         # self.calculateConsistentHourlyShares(data=ParseData.data)
         self.tripDistanceAllocation(globalConfig)
         # self.hhPersonMap = self.mapHHPIDToTripID(self.tripDataClean)
