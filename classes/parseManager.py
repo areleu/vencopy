@@ -44,8 +44,8 @@ class DataParser:
             # review: I am unsure if the config field should be called "pathAbsolute" as paths have a
             #  plethora of meanings. Could we make it more clear that we talk about files on disk here?
             #  Something like filePaths or dataPaths?
-            print(f"Starting to retrieve encrypted data file from {self.globalConfig['pathsAbsolute']['encryptedZipfile']}")
-            self.loadEncryptedData(pathToZip=Path(self.globalConfig['pathAbsolute']['encryptedZipfile']) / self.globalConfig['files'][self.datasetID]['enryptedZipFileB2'],
+            print(f"Starting to retrieve encrypted data file from {self.globalConfig['pathAbsolute']['encryptedZipfile']}")
+            self.loadEncryptedData(pathToZip=Path(self.globalConfig['pathAbsolute']['encryptedZipfile']) / self.globalConfig['files'][self.datasetID]['encryptedZipFileB2'],
                                    pathInZip=globalConfig['files'][self.datasetID]['tripDataZipFileRaw'])
         else:
             print(f"Starting to retrieve local data file from {self.rawDataPath}")
