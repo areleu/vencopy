@@ -28,3 +28,10 @@ debug.log
 
 # local run files
 runSES.py
+runDataAnalysis.py
+
+# data analysis csv
+MiD_data_analysis.csv
+
+# files with local paths
+/config/globalConfig.yaml
