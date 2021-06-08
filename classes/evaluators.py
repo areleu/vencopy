@@ -160,6 +160,55 @@ class Evaluator:
             fileName = createFileString(config=config, fileKey='aggPlotName', manualLabel=self.label, filetypeStr='svg')
             fig.savefig(Path(config['pathRelative']['plots']) / fileName, bbox_inches='tight')
 
+    def compareProfiles(self, compareTo):
+        if not isinstance(compareTo, FlexEstimator):
+            raise('Argument to compare to is not a class instance of FlexEstimator')
+
+        profileList = [
+                       # 'plugProfilesAgg', 'plugProfilesWAgg', 'chargeProfilesUncontrolledAgg',
+                       # 'chargeProfilesUncontrolledWAgg', 'electricPowerProfilesAgg', 'electricPowerProfilesWAgg',
+                       # 'plugProfilesWAggVar', 'electricPowerProfilesWAggVar', 'chargeProfilesUncontrolledWAggVar'
+                       # 'auxFuelDemandProfilesWAggVar',
+                       ]
+
+        profileDictList = self.compileDictList(compareTo=compareTo, profileNameList=profileList)
+        SOCDataWeek = { 'MiD08_SOCmin': self.SOCMinVar,
+                        'MiD08_SOCmax': self.SOCMaxVar,
+                        'MiD17_SOCmin': compareTo.SOCMinVar,
+                        'MiD17_SOCmax': compareTo.SOCMaxVar }
+
+        profileDictList.append(SOCDataWeek)
+
+        self.separateLinePlots(profileDictList, self.config,
+                          show=self.evaluatorConfig['plotConfig']['show'], write=self.evaluatorConfig['plotConfig']['save'],
+                          ylabel=[
+                                  # 'Average EV connection share', 'Weighted Average EV connection share',
+                                  # 'Uncontrolled charging in kW', 'Weighted Uncontrolled charging in kW',
+                                  # 'Electricity consumption for driving in kWh',
+                                  # 'Weighted Electricity consumption for driving in kWh',
+                                  # 'Weighted average EV fleet connection share',
+                                  # 'Electricity consumption for driving in kWh',
+                                  # 'Weighted average uncontrolled charging in kW'
+                                  # 'auxFuelDemandProfilesWAggVar'
+                                  'State of charge in kWh'
+                                  ],
+                          filenames=[
+                                     # '_connection', '_connectionWeighted',
+                                     # '_uncCharge', '_uncChargeWeighted',
+                                     # '_drain', '_drainWeighted',
+                                     # '_plugDiffDay', '_drainDiffDay',
+                                     # '_uncChargeDiffDay'
+                                     #  '_auxFuelDiffDay',
+                                     '_socWeek'
+                                     ],
+                          ylim=[
+                              # 1, 1, 1,
+                              # 1, 1, 1
+                              # 1, 1, 1
+                              # 1
+                              50
+                                ])
+
 if __name__ == '__main__':
     pathConfig = pathlib.Path.cwd().parent / 'config' / 'config.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
     config = yaml.load(open(pathConfig), Loader=yaml.SafeLoader)

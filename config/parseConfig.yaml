@@ -7,7 +7,7 @@
 # __birthdate__ = '2019-02-12'
 # __status__ = 'dev'  # options are: dev, test, prod
 
-# This config holds all relative paths and filenames for parseManager.py
+# This config holds all relative paths and filenames for dataParsers.py
 
 encryptionPW: 'PW'
 

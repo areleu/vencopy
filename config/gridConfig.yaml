@@ -6,6 +6,8 @@
 # __birthdate__ = '2019-02-12'
 # __status__ = 'dev'  # options are: dev, test, prod
 
+# This config holds all relative paths and filenames for gridModelers.py
+
 chargingInfrastructureDistributions:  # Probabilities given for each location aka trip purpose
     'DRIVING': False
     'HOME': True

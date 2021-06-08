@@ -10,10 +10,10 @@ __license__ = 'BSD-3-Clause'
 #----- imports & packages ------
 import yaml
 import pathlib
-from classes.parseManager import DataParser
-from classes.tripDiaryManager import TripDiaryBuilder
-from classes.gridModelManager import GridModeler
-from classes.flexEstimationManager import FlexEstimator
+from classes.dataParsers import DataParser
+from classes.tripDiaryBuilders import TripDiaryBuilder
+from classes.gridModelers import GridModeler
+from classes.flexEstimators import FlexEstimator
 
 # Set dataset and config to analyze
 datasetID = 'MiD17'

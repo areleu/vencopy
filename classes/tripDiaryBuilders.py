@@ -13,7 +13,7 @@ from typing import Callable
 from pathlib import Path
 import yaml
 import os
-from classes.parseManager import DataParser
+from classes.dataParsers import DataParser
 from scripts.globalFunctions import createFileString
 
 # review: I think it is inconsistent to have a module tripDiaryManager in which there is one class

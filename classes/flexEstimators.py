@@ -18,8 +18,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from random import seed, random
-from classes.parseManager import DataParser
-from classes.evaluationManager import Evaluator
+from classes.dataParsers import DataParser
+from classes.evaluators import Evaluator
 from scripts.globalFunctions import createFileString, mergeVariables
 
 
@@ -987,54 +987,6 @@ class FlexEstimator:
                                           self.datasetID + '_state'],
                                ylim=[1, 0.9, 50])
 
-    def compareProfiles(self, compareTo):
-        if not isinstance(compareTo, FlexEstimator):
-            raise('Argument to compare to is not a class instance of FlexEstimator')
-
-        profileList = [
-                       # 'plugProfilesAgg', 'plugProfilesWAgg', 'chargeProfilesUncontrolledAgg',
-                       # 'chargeProfilesUncontrolledWAgg', 'electricPowerProfilesAgg', 'electricPowerProfilesWAgg',
-                       # 'plugProfilesWAggVar', 'electricPowerProfilesWAggVar', 'chargeProfilesUncontrolledWAggVar'
-                       # 'auxFuelDemandProfilesWAggVar',
-                       ]
-
-        profileDictList = self.compileDictList(compareTo=compareTo, profileNameList=profileList)
-        SOCDataWeek = { 'MiD08_SOCmin': self.SOCMinVar,
-                        'MiD08_SOCmax': self.SOCMaxVar,
-                        'MiD17_SOCmin': compareTo.SOCMinVar,
-                        'MiD17_SOCmax': compareTo.SOCMaxVar }
-
-        profileDictList.append(SOCDataWeek)
-
-        self.separateLinePlots(profileDictList, self.config,
-                          show=self.evaluatorConfig['plotConfig']['show'], write=self.evaluatorConfig['plotConfig']['save'],
-                          ylabel=[
-                                  # 'Average EV connection share', 'Weighted Average EV connection share',
-                                  # 'Uncontrolled charging in kW', 'Weighted Uncontrolled charging in kW',
-                                  # 'Electricity consumption for driving in kWh',
-                                  # 'Weighted Electricity consumption for driving in kWh',
-                                  # 'Weighted average EV fleet connection share',
-                                  # 'Electricity consumption for driving in kWh',
-                                  # 'Weighted average uncontrolled charging in kW'
-                                  # 'auxFuelDemandProfilesWAggVar'
-                                  'State of charge in kWh'
-                                  ],
-                          filenames=[
-                                     # '_connection', '_connectionWeighted',
-                                     # '_uncCharge', '_uncChargeWeighted',
-                                     # '_drain', '_drainWeighted',
-                                     # '_plugDiffDay', '_drainDiffDay',
-                                     # '_uncChargeDiffDay'
-                                     #  '_auxFuelDiffDay',
-                                     '_socWeek'
-                                     ],
-                          ylim=[
-                              # 1, 1, 1,
-                              # 1, 1, 1
-                              # 1, 1, 1
-                              # 1
-                              50
-                                ])
 
     def compileDictList(self, compareTo, profileNameList):
         ret = []
