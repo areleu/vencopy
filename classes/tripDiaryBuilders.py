@@ -16,8 +16,6 @@ import os
 from classes.dataParsers import DataParser
 from scripts.globalFunctions import createFileString
 
-# review: I think it is inconsistent to have a module tripDiaryManager in which there is one class
-#  TripDiaryBuilder but no manager. We should rename one of them.
 class TripDiaryBuilder:
     def __init__(self, config: dict, globalConfig: dict, ParseData: DataParser, datasetID: str = 'MiD17'):
         self.config = config
@@ -125,6 +123,8 @@ class TripDiaryBuilder:
 
     def calculateConsistentHourlyShares(self, data: pd.DataFrame):
         print('Calculating hourly shares')
+        if not data._is_view:
+            data = data.copy()  #FIXME: why is data._is_view False if we get a view
         tripDataWHourlyShares = self.calcHourlyShares(data, ts_st='timestampStart', ts_en='timestampEnd')
 
         # Filter out implausible hourly share combinations
@@ -341,7 +341,7 @@ if __name__ == '__main__':
     tripConfig = yaml.load(open(pathTripConfig), Loader=yaml.SafeLoader)
     pathParseConfig = Path.cwd().parent / 'config' / 'parseConfig.yaml'
     parseConfig = yaml.load(open(pathParseConfig), Loader=yaml.SafeLoader)
-    os.chdir(globalConfig['pathsAbsolute']['vencoPyRoot'])
+    os.chdir(globalConfig['pathAbsolute']['vencoPyRoot'])
 
     vpData = DataParser(config=parseConfig, globalConfig=globalConfig, loadEncrypted=False)
     vpDiary = TripDiaryBuilder(config=tripConfig, globalConfig=globalConfig, ParseData=vpData)

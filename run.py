@@ -19,17 +19,22 @@ from classes.flexEstimators import FlexEstimator
 datasetID = 'MiD17'
 # review: should the datasetID not be part of the config files?
 pathGlobalConfig = pathlib.Path.cwd() / 'config' / 'globalConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
-globalConfig = yaml.load(open(pathGlobalConfig), Loader=yaml.SafeLoader)
-pathParseConfig = pathlib.Path.cwd() / 'config' / 'parseConfig.yaml'
-parseConfig = yaml.load(open(pathParseConfig), Loader=yaml.SafeLoader)
+with open(pathGlobalConfig) as ipf:
+    globalConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
+with open(pathParseConfig) as ipf:
+    parseConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
 pathTripConfig = pathlib.Path.cwd() / 'config' / 'tripConfig.yaml'
-tripConfig = yaml.load(open(pathTripConfig), Loader=yaml.SafeLoader)
+with open(pathTripConfig) as ipf:
+    tripConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
 pathGridConfig = pathlib.Path.cwd() / 'config' / 'gridConfig.yaml'
-gridConfig = yaml.load(open(pathGridConfig), Loader=yaml.SafeLoader)
+with open(pathGridConfig) as ipf:
+    gridConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
 pathEvaluatorConfig = pathlib.Path.cwd() / 'config' / 'evaluatorConfig.yaml'
-evaluatorConfig = yaml.load(open(pathEvaluatorConfig), Loader=yaml.SafeLoader)
+with open(pathEvaluatorConfig) as ipf:
+    evaluatorConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
 pathFlexConfig = pathlib.Path.cwd() / 'config' / 'flexConfig.yaml'
-flexConfig = yaml.load(open(pathFlexConfig), Loader=yaml.SafeLoader)
+with open(pathFlexConfig) as ipf:
+    flexConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
 
 
 vpData = DataParser(datasetID=datasetID, config=parseConfig, globalConfig=globalConfig, loadEncrypted=False)

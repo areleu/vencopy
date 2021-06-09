@@ -13,9 +13,6 @@ from pathlib import Path
 import yaml
 from zipfile import ZipFile
 
-# review: the name of this file seems to be misleading. Parsers and Managers are very different and incompatible concepts.
-#  I would therefore opt for choosing one term over the other and not use both in the module name.
-
 class DataParser:
     # Separate datasets that know each other
     # @profile(immediate=True)
