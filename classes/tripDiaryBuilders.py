@@ -250,48 +250,38 @@ class TripDiaryBuilder:
             if iRow['tripID'] == 1:  # Differentiate if trip starts in first half hour or not
 
                 if iRow['timestampStart'].minute <= 30:
-                    s = slice(0, iRow['tripStartHour'])
-                    purposeDataDays.loc[hpID, s] = 'HOME'  # FIXME perf
+                    purposeDataDays.loc[hpID, 0:iRow['tripStartHour']] = 'HOME'  # FIXME perf
                     # purposeDataDays.loc[hpID, range(0, iRow['tripStartHour'])] = 'HOME'
                 else:
-                    s = slice(0, iRow['tripStartHour'] + 1)
-                    purposeDataDays.loc[hpID, s] = 'HOME'
+                    purposeDataDays.loc[hpID, 0:iRow['tripStartHour'] + 1] = 'HOME'
                 if iRow['tripID'] == maxWID:
                     if iRow['timestampEnd'].minute <= 30:
-                        s = slice(iRow['tripEndHour'], maxHour)
-                        purposeDataDays.loc[hpID, s] = 'HOME'
+                        purposeDataDays.loc[hpID, iRow['tripEndHour']:maxHour] = 'HOME'
                     else:
-                        s = slice(iRow['tripEndHour'] + 1, maxHour)
-                        purposeDataDays.loc[hpID, s] = 'HOME'
+                        purposeDataDays.loc[hpID, iRow['tripEndHour'] + 1:maxHour] = 'HOME'
             elif iRow['tripID'] == minWID:
                 if iRow['timestampStart'].minute <= 30:
-                    s = slice(0, iRow['tripStartHour'])
-                    purposeDataDays.loc[hpID, s] = 'HOME'
+                    purposeDataDays.loc[hpID, 0:iRow['tripStartHour']] = 'HOME'
                 else:
-                    s = slice(0, iRow['tripStartHour'] + 1)
-                    purposeDataDays.loc[hpID, s] = 'HOME'
+                    purposeDataDays.loc[hpID, 0:iRow['tripStartHour'] + 1] = 'HOME'
                 if iRow['tripID'] == maxWID:
-                    s = slice(iRow['tripEndHour'] + 1, maxHour)
-                    purposeDataDays.loc[hpID, s] = 'HOME'
+                    purposeDataDays.loc[hpID, iRow['tripEndHour'] + 1:maxHour] = 'HOME'
             else:
                 purposeHourStart = self.determinePurposeStartHour(tripData.loc[idxOld, 'timestampStart'],
                                                              tripData.loc[idxOld, 'timestampEnd'])  # FIXME perf?
                 if iRow['timestampStart'].minute <= 30:
-                    hoursBetween = slice(purposeHourStart, iRow['tripStartHour'])
+                    purposeDataDays.loc[hpID, purposeHourStart:iRow['tripStartHour']] = tripData.loc[idxOld, 'purposeStr']
                     # hoursBetween = range(purposeHourStart,
                     #                      iRow['tripStartHour'])  # FIXME: case differentiation on arrival hour
                 else:
-                    hoursBetween = slice(purposeHourStart, iRow['tripStartHour'] + 1)
                     # hoursBetween = range(purposeHourStart,
                     #                      iRow['tripStartHour'] + 1)
-                purposeDataDays.loc[hpID, hoursBetween] = tripData.loc[idxOld, 'purposeStr']
+                    purposeDataDays.loc[hpID, purposeHourStart:iRow['tripStartHour'] + 1] = tripData.loc[idxOld, 'purposeStr']
                 if iRow['tripID'] == maxWID:
                     if iRow['timestampEnd'].minute <= 30:
-                        s = slice(iRow['tripEndHour'], maxHour)
-                        purposeDataDays.loc[hpID, s] = 'HOME'
+                        purposeDataDays.loc[hpID, iRow['tripEndHour']:maxHour] = 'HOME'
                     else:
-                        s = slice(iRow['tripEndHour'] + 1, maxHour)
-                        purposeDataDays.loc[hpID, s] = 'HOME'
+                        purposeDataDays.loc[hpID, iRow['tripEndHour'] + 1:maxHour] = 'HOME'
             idxOld = idx
         return purposeDataDays
 
