@@ -32,6 +32,7 @@ class DataParser:
         self.config = config
         self.globalConfig = globalConfig
         self.rawDataPath = Path(globalConfig['pathAbsolute'][self.datasetID]) / globalConfig['files'][self.datasetID]['tripsDataRaw']
+        self.subDict = {}
         self.rawData = None
         self.data = None
         self.columns = self.compileVariableList()
@@ -165,8 +166,8 @@ class DataParser:
         # Filter for dataset specific columns
         conversionDict = self.config['inputDTypes']
         keys = {iCol for iCol in conversionDict.keys() if iCol in self.data.columns}
-        subDict = {key: conversionDict[key] for key in conversionDict.keys() & keys}
-        self.data = self.data.astype(subDict)
+        self.subDict = {key: conversionDict[key] for key in conversionDict.keys() & keys}
+        self.data = self.data.astype(self.subDict)
 
     def returnBottomDictValues(self, baseDict: dict, lst: list = []) -> list:
         """

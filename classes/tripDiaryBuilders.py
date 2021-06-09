@@ -22,14 +22,14 @@ class TripDiaryBuilder:
     def __init__(self, config: dict, globalConfig: dict, ParseData: DataParser, datasetID: str = 'MiD17'):
         self.config = config
         self.globalConfig = globalConfig
+        self.parsedData = ParseData
         self.tripDataClean = None
         self.tripDistanceDiary = None
         self.tripPurposeDiary = None
         # self.calculateConsistentHourlyShares(data=ParseData.data)
         # ONLY FOR DEBUGGING PURPOSES
-        self.calculateConsistentHourlyShares(data=ParseData.data.loc[0:2000, :])
-        # self.calculateConsistentHourlyShares(data=ParseData.data)
-        self.tripDistanceAllocation(globalConfig)
+        self.tripDataClean = self.calculateConsistentHourlyShares(data=ParseData.data.loc[0:2000, :])
+        self.tripDistanceDiary = self.tripDistanceAllocation(globalConfig)
         # self.hhPersonMap = self.mapHHPIDToTripID(self.tripDataClean)
         self.tripPurposeAllocation()
         self.writeOut(globalConfig=globalConfig, datasetID=datasetID, dataDrive=self.tripDistanceDiary,
@@ -128,7 +128,7 @@ class TripDiaryBuilder:
         tripDataWHourlyShares = self.calcHourlyShares(data, ts_st='timestampStart', ts_en='timestampEnd')
 
         # Filter out implausible hourly share combinations
-        self.tripDataClean = tripDataWHourlyShares.loc[~((tripDataWHourlyShares['shareStartHour'] != 1) &
+        return tripDataWHourlyShares.loc[~((tripDataWHourlyShares['shareStartHour'] != 1) &
                                                        (tripDataWHourlyShares['shareEndHour'] == 0) &
                                                        (tripDataWHourlyShares['noOfFullHours'] == 0)), :]
 
@@ -168,7 +168,8 @@ class TripDiaryBuilder:
         driveDataTrips = self.fillDataframe(self.formatDF, fillFunction=fillHourValues)
         driveDataTrips.loc[:, ['hhPersonID', 'tripID']] = pd.DataFrame(self.tripDataClean.loc[:, ['hhPersonID',
                                                                                                   'tripID']])
-        self.tripDistanceDiary = self.mergeTrips(driveDataTrips)
+        driveDataTrips = driveDataTrips.astype({'hhPersonID': int, 'tripID': int})
+        return self.mergeTrips(driveDataTrips)
         print('Finished trip distance diary setup')
 
     def assignDriving(self, driveData: pd.DataFrame) -> pd.DataFrame:

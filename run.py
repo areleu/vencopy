@@ -20,15 +20,15 @@ datasetID = 'MiD17'
 # review: should the datasetID not be part of the config files?
 pathGlobalConfig = pathlib.Path.cwd() / 'config' / 'globalConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
 globalConfig = yaml.load(open(pathGlobalConfig), Loader=yaml.SafeLoader)
-pathParseConfig = pathlib.Path.cwd() / 'config' / 'parseConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
+pathParseConfig = pathlib.Path.cwd() / 'config' / 'parseConfig.yaml'
 parseConfig = yaml.load(open(pathParseConfig), Loader=yaml.SafeLoader)
-pathTripConfig = pathlib.Path.cwd() / 'config' / 'tripConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
+pathTripConfig = pathlib.Path.cwd() / 'config' / 'tripConfig.yaml'
 tripConfig = yaml.load(open(pathTripConfig), Loader=yaml.SafeLoader)
-pathGridConfig = pathlib.Path.cwd() / 'config' / 'gridConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
+pathGridConfig = pathlib.Path.cwd() / 'config' / 'gridConfig.yaml'
 gridConfig = yaml.load(open(pathGridConfig), Loader=yaml.SafeLoader)
 pathEvaluatorConfig = pathlib.Path.cwd() / 'config' / 'evaluatorConfig.yaml'
 evaluatorConfig = yaml.load(open(pathEvaluatorConfig), Loader=yaml.SafeLoader)
-pathFlexConfig = pathlib.Path.cwd() / 'config' / 'flexConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
+pathFlexConfig = pathlib.Path.cwd() / 'config' / 'flexConfig.yaml'
 flexConfig = yaml.load(open(pathFlexConfig), Loader=yaml.SafeLoader)
 
 
