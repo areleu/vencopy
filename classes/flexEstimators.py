@@ -24,7 +24,8 @@ from scripts.globalFunctions import createFileString, mergeVariables
 
 
 class FlexEstimator:
-    def __init__(self, config: dict, globalConfig: dict, evaluatorConfig: dict, ParseData: DataParser, datasetID: str='MiD17'):
+    def __init__(self, config: dict, globalConfig: dict, evaluatorConfig: dict, ParseData: DataParser,
+                 datasetID: str='MiD17'):
         # review: could be not pass one config dict into this class instead of three?
         #  we could encapsulate all three into one dict with the three keys and then
         #  extract the information inside. This would make the interface leaner and
@@ -103,33 +104,6 @@ class FlexEstimator:
         self.profileDictOut = {}
 
         print('Flex Estimator initialization complete')
-
-    # def initializepathMgr(self, config, globalConfig: dict, datasetID: str) -> dict:
-    #     """
-    #     Setup path manager based on a VencoPy config file.
-    #
-    #     :param config: Config file initiated by a yaml-loader
-    #
-    #     :return: Returns path dictionary with relative paths to input data and output folders.
-    #     """
-    #     # review: The methodname surprises me. It suggest that we return a manager
-    #     #  which we clearly don't. we also don't really initialize anything in
-    #     #  the sense of the word. would a name along the lines of buildPathMapping
-    #     #  be more true to the concept?
-    #     pathDict = {'pathScalars': pathlib.Path(globalConfig['pathRelative']['input']) /
-    #                                pathlib.Path(globalConfig['files']['inputDataScalars']),
-    #                 'pathDriveProfiles': pathlib.Path(globalConfig['pathRelative']['input']) /
-    #                                      pathlib.Path(createFileString(globalConfig=globalConfig, fileKey='inputDataDriveProfiles',
-    #                                                                    datasetID=datasetID)),
-    #                 'pathPlugProfiles': pathlib.Path(globalConfig['pathRelative']['input']) /
-    #                                     pathlib.Path(createFileString(globalConfig=globalConfig, fileKey='inputDataPlugProfiles',
-    #                                                                   datasetID=datasetID)),
-    #                 'pathOutputConfig': pathlib.Path(globalConfig['pathRelative']['outputConfig']),
-    #                 # 'pathOutputAnnual': pathlib.Path(globalConfig['pathRelative']['resultsAnnual']),
-    #                 'pathPlots': pathlib.Path(globalConfig['pathRelative']['plots']),
-    #                 'pathOutput': pathlib.Path(globalConfig['pathRelative']['dataOutput'])}
-    #
-    #     return pathDict
 
     def readInputScalar(self, filePath) -> pd.DataFrame:
         """
@@ -291,6 +265,7 @@ class FlexEstimator:
         plugProfiles = self.indexProfile(plugData, nHours)
         return driveProfiles.droplevel(dropIdxLevel), plugProfiles.droplevel(dropIdxLevel)
 
+    # DEPRECATED may be dropped deprecated in future
     def readInData(self, fileKey: str, datasetID: str) -> pd.DataFrame:
         """
         Generic read-in function for mobility datasets. This serves as interface between the daily trip distance
@@ -807,19 +782,19 @@ class FlexEstimator:
         self.chargeProfilesUncontrolledWAgg = self.aggregateProfilesWeight(self.chargeProfilesUncontrolledCons, self.weights)
         self.auxFuelDemandProfilesWAgg = self.aggregateProfilesWeight(self.auxFuelDemandProfilesCons, self.weights)
 
-        # Define a partial method for variable specific weight-considering aggregation
-        aggDiffVar = functools.partial(self.aggregateDiffVariable, by='tripStartWeekday', weights=self.weights,
-                                       hourVec=self.hourVec)
+        # Define a partial method for variable specific weight-considering aggregation to make following lines shorter
+        aggDiffWeekday = functools.partial(self.aggregateDiffVariable, by='tripStartWeekday', weights=self.weights,
+                                           hourVec=self.hourVec)
 
         # Profile aggregation for flow profiles by averaging
-        self.plugProfilesWAggVar = aggDiffVar(data=self.plugProfilesCons)
-        self.electricPowerProfilesWAggVar = aggDiffVar(data=self.electricPowerProfilesCons)
-        self.chargeProfilesUncontrolledWAggVar = aggDiffVar(data=self.chargeProfilesUncontrolledCons)
-        self.auxFuelDemandProfilesWAggVar = aggDiffVar(data=self.auxFuelDemandProfilesCons)
+        self.plugProfilesWAggVar = aggDiffWeekday(data=self.plugProfilesCons)
+        self.electricPowerProfilesWAggVar = aggDiffWeekday(data=self.electricPowerProfilesCons)
+        self.chargeProfilesUncontrolledWAggVar = aggDiffWeekday(data=self.chargeProfilesUncontrolledCons)
+        self.auxFuelDemandProfilesWAggVar = aggDiffWeekday(data=self.auxFuelDemandProfilesCons)
 
         # Profile aggregation for state profiles by selecting one profiles value for each hour
         self.SOCMin, self.SOCMax = self.socProfileSelection(self.profilesSOCMinCons, self.profilesSOCMaxCons,
-                                                       filter='singleValue', alpha=10)
+                                                            filter='singleValue', alpha=10)
 
         self.SOCMinVar, self.SOCMaxVar = self.socSelectionVar(dataMin=self.profilesSOCMinCons,
                                                               dataMax=self.profilesSOCMaxCons,
@@ -888,7 +863,7 @@ class FlexEstimator:
     def normalize(self):
         # Profile normalization for state profiles with the basis battery capacity
         self.socMinNorm, self.socMaxNorm = self.normalizeProfiles(self.scalars, self.SOCMin, self.SOCMax,
-                                                             normReferenceParam='Battery capacity')
+                                                                  normReferenceParam='Battery capacity')
 
     def writeProfilesToCSV(self, profileDictOut, singleFile=True, datasetID='MiD17'):
         """
@@ -924,6 +899,11 @@ class FlexEstimator:
                                 datasetID=self.datasetID)
 
     def sortData(data):
+        """
+        Method used for plotting to order index values
+
+        :param data: Pandas Dataframe with two indices
+        """
         data.index = data.index.swaplevel(0, 1)
         return data.sort_index()
 
