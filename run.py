@@ -21,6 +21,7 @@ datasetID = 'MiD17'
 pathGlobalConfig = pathlib.Path.cwd() / 'config' / 'globalConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
 with open(pathGlobalConfig) as ipf:
     globalConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
+pathParseConfig = pathlib.Path.cwd() / 'config' / 'parseConfig.yaml'
 with open(pathParseConfig) as ipf:
     parseConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
 pathTripConfig = pathlib.Path.cwd() / 'config' / 'tripConfig.yaml'
