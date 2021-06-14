@@ -10,9 +10,9 @@ Welcome to VencoPy's documentation!
 Indices and tables
 ------------------
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+* :ref:'genindex'
+* :ref:'modindex'
+* :ref:'search'
 
 
 
@@ -33,13 +33,13 @@ Indices and tables
 
 Documentation
 -------------
-* :ref:`intro`.
-* :ref:`installation`.
-* :ref:`start`.
-* :ref:`codestyle`.
-* :ref:`architecture`.
-* :ref:`functions`.
-* :ref:`filtering`.
-* :ref:`outputProfileSpecification`.
-* :ref:`howToContribute`.
+* :ref:'intro'.
+* :ref:'installation'.
+* :ref:'start'.
+* :ref:'codestyle'.
+* :ref:'architecture'.
+* :ref:'functions'.
+* :ref:'filtering'.
+* :ref:'outputProfileSpecification'.
+* :ref:'howToContribute'.
 

@@ -10,7 +10,7 @@ Functions
 
 
 This part of the documentation holds the function definitions of VencoPy from the main run file
-´venco_main.py´ and the library files.
+´run.py´ and the library files.
 
 
 .. automodule:: venco_main
