@@ -292,7 +292,7 @@ class FlexEstimator:
         scaled with the specific consumption assumption.
         """
 
-        return driveProfiles * scalars.loc['Electric consumption NEFZ', 'value'] / float(100)
+        return driveProfiles * scalars.loc['Electric_consumption_NEFZ', 'value'] / float(100)
 
     def calcChargeProfiles(self, plugProfiles: pd.DataFrame, scalars: pd.DataFrame) -> pd.DataFrame:
         '''
@@ -304,7 +304,7 @@ class FlexEstimator:
         :return: Returns scaled plugProfile in the same format as plugProfiles.
         '''
 
-        return plugProfiles * scalars.loc['Rated power of charging column', 'value'].astype(float)
+        return plugProfiles * scalars.loc['Rated_power_of_charging_column', 'value'].astype(float)
 
     def calcChargeMaxProfiles(self, chargeProfiles: pd.DataFrame, consumptionProfiles: pd.DataFrame,
                               scalars: pd.DataFrame, scalarsProc: pd.DataFrame, nIter: int) -> pd.DataFrame:
@@ -325,8 +325,8 @@ class FlexEstimator:
         """
 
         chargeMaxProfiles = chargeProfiles.copy()
-        batCapMin = scalars.loc['Battery capacity', 'value'] * scalars.loc['Minimum SOC', 'value']
-        batCapMax = scalars.loc['Battery capacity', 'value'] * scalars.loc['Maximum SOC', 'value']
+        batCapMin = scalars.loc['Battery_capacity', 'value'] * scalars.loc['Minimum_SOC', 'value']
+        batCapMax = scalars.loc['Battery_capacity', 'value'] * scalars.loc['Maximum_SOC', 'value']
         nHours = scalarsProc['noHours']
         for idxIt in range(nIter):
             print(f'Starting with iteration {idxIt}')
@@ -402,8 +402,8 @@ class FlexEstimator:
 
         # review: the hardcoding of the column names can cause a lot of problems for people later on if we do not ship the date with the tool.
         # I would recommend to move these column names to a config file similar to i18n strategies
-        consumptionPower = scalars.loc['Electric consumption NEFZ', 'value']
-        consumptionFuel = scalars.loc['Fuel consumption NEFZ', 'value']
+        consumptionPower = scalars.loc['Electric_consumption_NEFZ', 'value']
+        consumptionFuel = scalars.loc['Fuel_consumption_NEFZ', 'value']
 
         # initialize data set for filling up later on
         driveProfilesFuelAux = chargeMaxProfiles.copy()
@@ -448,10 +448,10 @@ class FlexEstimator:
         # Especially if there are columns with similar names only differing in whitespaces.
         # This is clearly not the case here, but did you consider naming columns with underscores for easier reference?
         chargeMinProfiles = chargeProfiles.copy()
-        batCapMin = scalars.loc['Battery capacity', 'value'] * scalars.loc['Minimum SOC', 'value']
-        batCapMax = scalars.loc['Battery capacity', 'value'] * scalars.loc['Maximum SOC', 'value']
-        consElectric = scalars.loc['Electric consumption NEFZ', 'value']
-        consGasoline = scalars.loc['Fuel consumption NEFZ', 'value']
+        batCapMin = scalars.loc['Battery_capacity', 'value'] * scalars.loc['Minimum_SOC', 'value']
+        batCapMax = scalars.loc['Battery_capacity', 'value'] * scalars.loc['Maximum_SOC', 'value']
+        consElectric = scalars.loc['Electric_consumption_NEFZ', 'value']
+        consGasoline = scalars.loc['Fuel_consumption_NEFZ', 'value']
         nHours = scalarsProc['noHours']
         for idxIt in range(nIter):
             for iHour in range(nHours):
@@ -538,11 +538,11 @@ class FlexEstimator:
         indexDSM and the same indices as the other profiles.
         """
 
-        boolBEV = scalars.loc['Is BEV?', 'value']
-        minDailyMileage = scalars.loc['Minimum daily mileage', 'value']
-        batSize = scalars.loc['Battery capacity', 'value']
-        socMax = scalars.loc['Maximum SOC', 'value']
-        socMin = scalars.loc['Minimum SOC', 'value']
+        boolBEV = scalars.loc['Is_BEV?', 'value']
+        minDailyMileage = scalars.loc['Minimum_daily_mileage', 'value']
+        batSize = scalars.loc['Battery_capacity', 'value']
+        socMax = scalars.loc['Maximum_SOC', 'value']
+        socMin = scalars.loc['Minimum_SOC', 'value']
         filterCons = driveProfiles.copy()
         filterCons['randNo'] = randNos
         filterCons['bolFuelDriveTolerance'] = driveProfilesFuelAux.sum(axis='columns') * boolBEV < fuelDriveTolerance
@@ -574,8 +574,8 @@ class FlexEstimator:
         :return: Returns electric demand from driving filtered and aggregated to one fleet.
         """
 
-        consumptionPower = scalars.loc['Electric consumption NEFZ', 'value']
-        consumptionFuel = scalars.loc['Fuel consumption NEFZ', 'value']
+        consumptionPower = scalars.loc['Electric_consumption_NEFZ', 'value']
+        consumptionFuel = scalars.loc['Fuel_consumption_NEFZ', 'value']
         indexCons = filterCons.loc[:, 'indexCons']
         indexDSM = filterCons.loc[:, 'indexDSM']
         nHours = scalarsProc['noHours']
@@ -837,12 +837,12 @@ class FlexEstimator:
         """
 
         if profType == 'electric':
-            consumptionElectricNEFZ = scalars.loc['Electric consumption NEFZ', 'value']
-            consumptionElectricArtemis = scalars.loc['Electric consumption Artemis', 'value']
+            consumptionElectricNEFZ = scalars.loc['Electric_consumption_NEFZ', 'value']
+            consumptionElectricArtemis = scalars.loc['Electric_consumption_Artemis', 'value']
             corrFactor = consumptionElectricArtemis / consumptionElectricNEFZ
         elif profType == 'fuel':
-            consumptionFuelNEFZ = scalars.loc['Fuel consumption NEFZ', 'value']
-            consumptionFuelArtemis = scalars.loc['Fuel consumption Artemis', 'value']
+            consumptionFuelNEFZ = scalars.loc['Fuel_consumption_NEFZ', 'value']
+            consumptionFuelArtemis = scalars.loc['Fuel_consumption_Artemis', 'value']
             corrFactor = consumptionFuelArtemis / consumptionFuelNEFZ
         else:
             # review I expect raising an exception here. Would it not be a problem if the processing continues silently?
@@ -852,14 +852,14 @@ class FlexEstimator:
 
     def correct(self):
         self.chargeProfilesUncontrolledCorr = self.correctProfiles(self.scalars, self.chargeProfilesUncontrolledAgg,
-                                                              'electric')
+                                                                   'electric')
         self.electricPowerProfilesCorr = self.correctProfiles(self.scalars, self.electricPowerProfilesAgg, 'electric')
         self.auxFuelDemandProfilesCorr = self.correctProfiles(self.scalars, self.auxFuelDemandProfilesAgg, 'fuel')
 
     def normalize(self):
         # Profile normalization for state profiles with the basis battery capacity
         self.socMinNorm, self.socMaxNorm = self.normalizeProfiles(self.scalars, self.socMin, self.socMax,
-                                                                  normReferenceParam='Battery capacity')
+                                                                  normReferenceParam='Battery_capacity')
 
     def writeProfilesToCSV(self, profileDictOut, singleFile=True, datasetID='MiD17'):
         """
