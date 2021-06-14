@@ -409,18 +409,9 @@ class DataParser:
 
 
 class ParseMID(DataParser):
-    # review: This is actually not future fail prove as parameters to DataParser are not
-    #  forwarded in the super call. I suggest to use just and simply the syntax:
-    #  class ParseMID(DataParser):
-    #      pass
-    #
-    # Also this begs the question how ParseMID is actually different from all other parsers?
-
-    # review: The class name is misleading, as it implies a function, since by convention verbs are only used
-    #  for methods. Classes are more like entities and hence are named after nouns. In this case MIDParser would
-    #  be a better name.
-    def __init__(self):
-        super().__init__()
+    # Inherited data class to at some point differentiate between abstract interfaces such as vencopz internal
+    # variable namings and data set specific functions such as filters etc. Currently not used (06/14/2021)
+    pass
 
 
 
