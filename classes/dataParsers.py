@@ -144,7 +144,11 @@ class DataParser:
 
     def harmonizeVariables(self):
         """
-        :return: Returns the variable names of 2008 MiD data harmonized with the variable names for 2017 MiD data
+        Harmonizes the input data variables to match internal VencoPy names given as specified in the mapping in
+        parseConfig['dataVariables']. So far mappings for MiD08 and MiD17 are given. Since the MiD08 doesn't provide
+        a combined household and person unique identifier, it is synthesized of the both IDs.
+
+        :return: None
         """
         replacementDict = self.createReplacementDict(self.datasetID, self.parseConfig['dataVariables'])
         dataRenamed = self.data.rename(columns=replacementDict)
@@ -344,16 +348,6 @@ class DataParser:
         self.data.loc[:, colName] \
             = self.data.loc[:, varName].replace(self.parseConfig['midReplacements'][varName])
 
-    def composeIndex(self):
-        # review: pycharm complains that this method is never used. I am not totally convinced. If true we
-        #  should remove it.
-        self.data['idxCol'] = self.data['hhPersonID'].astype('string') + '__' + self.data['tripID'].astype('string')
-
-    def setIndex(self, col):
-        # review: pycharm complains that this method is never used. I am not totally convinced. If true we
-        #  should remove it.
-        self.data.set_index(col, inplace=True, drop=True)
-
     def composeTimestamp(self, data: pd.DataFrame = None,
                          colYear: str = 'tripStartYear',
                          colWeek: str = 'tripStartWeek',
@@ -442,6 +436,6 @@ if __name__ == '__main__':
     with open(pathGlobalConfig) as ipf:
         globalConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
     p = DataParser(localPathConfig=localPathConfig, parseConfig=parseConfig, globalConfig=globalConfig,
-                   loadEncrypted=False)
+                   loadEncrypted=False, datasetID='MiD17')
     print(p.data.head())
     print('end')
