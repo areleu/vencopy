@@ -59,9 +59,6 @@ class DataParser:
         self.filter()
         self.filterConsistentHours()
         self.addStrColumns()
-        # review: this is obsolete code I presume?
-        # self.composeIndex()  Method to compose a unique index from hhID and personID if needed
-        # self.setIndex(col='hhPersonID')
         self.composeStartAndEndTimestamps()
         print('Parsing completed')
 
@@ -306,25 +303,30 @@ class DataParser:
         #                     (dat['tripEndNextDay'] == 1), :]
 
     def addStrColumns(self, weekday=True, purpose=True):
+        """
+        Adds string columns for either weekday or purpose.
+
+        :param weekday: Boolean identifier if weekday string info should be added in a separate column
+        :param purpose: Boolean identifier if purpose string info should be added in a separate column
+        :return: None
+        """
+
         if weekday:
-            self.addWeekdayStrColumn()
+            self.addStrColumnFromMidVariable(colName='weekdayStr', varName='tripStartWeekday')
         if purpose:
-            self.addPurposeStrColumn()
+            self.addStrColumnFromMidVariable(colName='purposeStr', varName='tripPurpose')
 
-        # review: just a comment here for the general granularity of the code:
-        #  a split into two submethods is not necessary for readability or decoupling.
-        #  One would opt for this high granularity iff addWekdayStrColumn is also used outside of
-        #  the method addStrColumn as it contains only one instruction. This by no means means that we
-        #  need to refactor it back into one method. This is more like a reminder, that we are too granular
-        #  at this point in the code for future guidance.
+    def addStrColumnFromMidVariable(self, colName: str, varName: str):
+        """
+        Replaces each occurence of a MID variable e.g. 1,2,...,7 for weekdays with an explicitly mapped string e.g.
+        'MON', 'TUE',...,'SUN'.
 
-    def addWeekdayStrColumn(self):
-        self.data.loc[:, 'weekdayStr'] \
-            = self.data.loc[:, 'tripStartWeekday'].replace(self.config['midReplacements']['tripStartWeekday'])
-
-    def addPurposeStrColumn(self):
-        self.data.loc[:, 'purposeStr'] \
-            = self.data.loc[:, 'tripPurpose'].replace(self.config['midReplacements']['tripPurpose'])
+        :param colName: Name of the column in self.data where the explicit string info is stored
+        :param varName: Name of the VencoPy internal variable given in config/parseConfig['dataVariables']
+        :return: None
+        """
+        self.data.loc[:, colName] \
+            = self.data.loc[:, varName].replace(self.config['midReplacements'][varName])
 
     def composeIndex(self):
         # review: pycharm complains that this method is never used. I am not totally convinced. If true we
