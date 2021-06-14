@@ -86,10 +86,10 @@ class FlexEstimator:
         self.chargeProfilesUncontrolledWAggVar = None
         self.auxFuelDemandProfilesWAggVar = None
 
-        self.SOCMin = None
-        self.SOCMax = None
-        self.SOCMinVar = None
-        self.SOCMaxVar = None
+        self.socMin = None
+        self.socMax = None
+        self.socMinVar = None
+        self.socMaxVar = None
 
         # Correction attributes
         self.chargeProfilesUncontrolledCorr = None
@@ -647,7 +647,7 @@ class FlexEstimator:
         :param profilesMax: Profiles giving maximum hypothetic SOC values if vehicle is charged as soon as possible
         :param filter: Filter method. Currently implemented: 'singleValue'
         :param alpha: Percentage, giving the amount of profiles whose mobility demand can not be fulfilled after selection.
-        :return: Returns the two profiles 'SOCMax' and 'SOCMin' in the same time resolution as input profiles.
+        :return: Returns the two profiles 'socMax' and 'socMin' in the same time resolution as input profiles.
         """
 
         profilesMin = profilesMin.convert_dtypes()
@@ -793,10 +793,10 @@ class FlexEstimator:
         self.auxFuelDemandProfilesWAggVar = aggDiffWeekday(data=self.auxFuelDemandProfilesCons)
 
         # Profile aggregation for state profiles by selecting one profiles value for each hour
-        self.SOCMin, self.SOCMax = self.socProfileSelection(self.profilesSOCMinCons, self.profilesSOCMaxCons,
+        self.socMin, self.socMax = self.socProfileSelection(self.profilesSOCMinCons, self.profilesSOCMaxCons,
                                                             filter='singleValue', alpha=10)
 
-        self.SOCMinVar, self.SOCMaxVar = self.socSelectionVar(dataMin=self.profilesSOCMinCons,
+        self.socMinVar, self.socMaxVar = self.socSelectionVar(dataMin=self.profilesSOCMinCons,
                                                               dataMax=self.profilesSOCMaxCons,
                                                               by='tripStartWeekday', filter='singleValue', alpha=10)
 
@@ -862,7 +862,7 @@ class FlexEstimator:
 
     def normalize(self):
         # Profile normalization for state profiles with the basis battery capacity
-        self.socMinNorm, self.socMaxNorm = self.normalizeProfiles(self.scalars, self.SOCMin, self.SOCMax,
+        self.socMinNorm, self.socMaxNorm = self.normalizeProfiles(self.scalars, self.socMin, self.socMax,
                                                                   normReferenceParam='Battery capacity')
 
     def writeProfilesToCSV(self, profileDictOut, singleFile=True, datasetID='MiD17'):
@@ -891,7 +891,7 @@ class FlexEstimator:
     def writeOut(self):
         self.profileDictOut = dict(uncontrolledCharging=self.chargeProfilesUncontrolledCorr,
                                    electricityDemandDriving=self.electricPowerProfilesCorr,
-                                   SOCMax=self.socMaxNorm, SOCMin=self.socMinNorm,
+                                   socMax=self.socMaxNorm, socMin=self.socMinNorm,
                                    gridConnectionShare=self.plugProfilesAgg,
                                    auxFuelDriveProfile=self.auxFuelDemandProfilesCorr)
 
@@ -956,8 +956,8 @@ class FlexEstimator:
         profileDictFlowsAbs = dict(uncontrolledCharging=self.chargeProfilesUncontrolledAgg,
                                    electricityDemandDriving=self.electricPowerProfilesAgg)
 
-        profileDictStateNorm = dict(SOCMax=self.socMaxNorm, SOCMin=self.socMinNorm)
-        profileDictStateAbs = dict(SOCMax=self.SOCMax, SOCMin=self.SOCMin)
+        profileDictStateNorm = dict(socMax=self.socMaxNorm, socMin=self.socMinNorm)
+        profileDictStateAbs = dict(socMax=self.socMax, socMin=self.socMin)
 
         profileDictList = [profileDictConnectionShare, profileDictFlowsAbs, profileDictStateAbs]
 
@@ -1012,14 +1012,21 @@ def runFlexEstimation(config, globalConfig, evaluatorConfig, ParseData: DataPars
 
 if __name__ == '__main__':
     pathGlobalConfig = Path.cwd().parent / 'config' / 'globalConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
-    globalConfig = yaml.load(open(pathGlobalConfig), Loader=yaml.SafeLoader)
-    pathFlexConfig = Path.cwd().parent / 'config' / 'flexConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
-    flexConfig = yaml.load(open(pathFlexConfig), Loader=yaml.SafeLoader)
+    with open(pathGlobalConfig) as ipf:
+        globalConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
+    pathFlexConfig = Path.cwd().parent / 'config' / 'flexConfig.yaml'
+    with open(pathFlexConfig) as ipf:
+        flexConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
     pathParseConfig = Path.cwd().parent / 'config' / 'parseConfig.yaml'
-    parseConfig = yaml.load(open(pathParseConfig), Loader=yaml.SafeLoader)
+    with open(pathParseConfig) as ipf:
+        parseConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
     pathEvaluatorConfig = Path.cwd().parent / 'config' / 'evaluatorConfig.yaml'
-    evaluatorConfig = yaml.load(open(pathEvaluatorConfig), Loader=yaml.SafeLoader)
-    os.chdir(globalConfig['pathAbsolute']['vencoPyRoot'])
+    with open(pathEvaluatorConfig) as ipf:
+        evaluatorConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
+    pathLocalPathConfig = Path.cwd().parent / 'config' / 'localPathConfig.yaml'
+    with open(pathLocalPathConfig) as ipf:
+        localPathConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
+    os.chdir(localPathConfig['pathAbsolute']['vencoPyRoot'])
 
     vpData = DataParser(config=parseConfig, globalConfig=globalConfig, loadEncrypted=False)
     vpFlexEst17 = runFlexEstimation(config=flexConfig, globalConfig=globalConfig, evaluatorConfig=evaluatorConfig,

@@ -16,7 +16,7 @@ from zipfile import ZipFile
 class DataParser:
     # Separate datasets that know each other
     # @profile(immediate=True)
-    def __init__(self, config: dict, globalConfig: dict,  datasetID: str = 'MiD17', loadEncrypted=True):
+    def __init__(self, config: dict, globalConfig: dict, localPathConfig: dict, datasetID: str = 'MiD17', loadEncrypted=True):
         # review: This doc string could do with some love. It is currently not saying much helpful
         #  in the description.
         """
@@ -28,7 +28,7 @@ class DataParser:
         self.datasetID = self.checkDatasetID(datasetID, config)
         self.config = config
         self.globalConfig = globalConfig
-        self.rawDataPath = Path(globalConfig['pathAbsolute'][self.datasetID]) / globalConfig['files'][self.datasetID]['tripsDataRaw']
+        self.rawDataPath = Path(localPathConfig['pathAbsolute'][self.datasetID]) / globalConfig['files'][self.datasetID]['tripsDataRaw']
         self.subDict = {}
         self.rawData = None
         self.data = None
@@ -424,9 +424,11 @@ class ParseMID(DataParser):
 
 if __name__ == '__main__':
     pathParseConfig = Path.cwd().parent / 'config' / 'parseConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
-    parseConfig = yaml.load(open(pathParseConfig), Loader=yaml.SafeLoader)
-    pathGlobalConfig = Path.cwd().parent / 'config' / 'globalConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
-    globalConfig = yaml.load(open(pathGlobalConfig), Loader=yaml.SafeLoader)
+    with open(pathParseConfig) as ipf:
+        parseConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
+    pathGlobalConfig = Path.cwd().parent / 'config' / 'globalConfig.yaml'
+    with open(pathGlobalConfig) as ipf:
+        globalConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
     p = DataParser(config=parseConfig, globalConfig=globalConfig, loadEncrypted=False)
     print(p.data.head())
     print('end')

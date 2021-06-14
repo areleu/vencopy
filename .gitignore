@@ -34,4 +34,4 @@ runDataAnalysis.py
 MiD_data_analysis.csv
 
 # files with local paths
-/config/globalConfig.yaml
+/config/localPathConfig.yaml

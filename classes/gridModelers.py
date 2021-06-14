@@ -43,11 +43,15 @@ class GridModeler:
 
 if __name__ == '__main__':
     pathGlobalConfig = Path.cwd().parent / 'config' / 'globalConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
-    globalConfig = yaml.load(open(pathGlobalConfig), Loader=yaml.SafeLoader)
-    pathGridConfig = Path.cwd().parent / 'config' / 'gridConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
-    gridConfig = yaml.load(open(pathGridConfig), Loader=yaml.SafeLoader)
-    os.chdir(globalConfig['pathAbsolute']['vencoPyRoot'])
-
+    with open(pathGlobalConfig) as ipf:
+        globalConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
+    pathGridConfig = Path.cwd().parent / 'config' / 'gridConfig.yaml'
+    with open(pathGridConfig) as ipf:
+        gridConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
+    pathLocalPathConfig = Path.cwd().parent / 'config' / 'localPathConfig.yaml'
+    with open(pathLocalPathConfig) as ipf:
+        localPathConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
+    os.chdir(localPathConfig['pathAbsolute']['vencoPyRoot'])
     vpg = GridModeler(config=gridConfig, globalConfig=globalConfig)
     vpg.assignSimpleGridViaPurposes()
     vpg.writeOutGridAvailability()

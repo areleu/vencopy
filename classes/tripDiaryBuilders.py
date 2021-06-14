@@ -346,12 +346,20 @@ class FillHourValues:
 
 if __name__ == '__main__':
     pathGlobalConfig = Path.cwd().parent / 'config' / 'globalConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
-    globalConfig = yaml.load(open(pathGlobalConfig), Loader=yaml.SafeLoader)
-    pathTripConfig = Path.cwd().parent / 'config' / 'tripConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
-    tripConfig = yaml.load(open(pathTripConfig), Loader=yaml.SafeLoader)
+    with open(pathGlobalConfig) as ipf:
+        globalConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
     pathParseConfig = Path.cwd().parent / 'config' / 'parseConfig.yaml'
-    parseConfig = yaml.load(open(pathParseConfig), Loader=yaml.SafeLoader)
-    os.chdir(globalConfig['pathAbsolute']['vencoPyRoot'])
-
+    with open(pathParseConfig) as ipf:
+        parseConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
+    pathGlobalConfig = Path.cwd().parent / 'config' / 'globalConfig.yaml'
+    with open(pathGlobalConfig) as ipf:
+        globalConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
+    pathTripConfig = Path.cwd().parent / 'config' / 'tripConfig.yaml'
+    with open(pathTripConfig) as ipf:
+        tripConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
+    pathLocalPathConfig = Path.cwd().parent / 'config' / 'localPathConfig.yaml'
+    with open(pathLocalPathConfig) as ipf:
+        localPathConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
+    os.chdir(localPathConfig['pathAbsolute']['vencoPyRoot'])
     vpData = DataParser(config=parseConfig, globalConfig=globalConfig, loadEncrypted=False)
     vpDiary = TripDiaryBuilder(config=tripConfig, globalConfig=globalConfig, ParseData=vpData)
