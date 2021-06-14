@@ -43,6 +43,7 @@ class DataParser:
         self.subDict = {}
         self.rawData = None
         self.data = None
+        self.__filterDict = {}
         self.columns = self.compileVariableList()
         self.filterDictNameList = ['include', 'exclude', 'greaterThan', 'smallerThan']
         self.updateFilterDict()
@@ -62,11 +63,7 @@ class DataParser:
         self.selectColumns()
         self.harmonizeVariables()
         self.convertTypes()
-        # review: Why do we provide the local information to the checkFilterDict method?
-        #  Could we switch to a default behaviour, so that checkFilterDict by default (so without
-        #  input arguments) accesses self.__filterDict and only uses an overwrite when provided?
-        #  For me this would clarify this rather unintuitive code snipped quite a bit.
-        self.checkFilterDict(self.__filterDict)
+        self.checkFilterDict()
         self.filter()
         self.filterConsistentHours()
         self.addStrColumns()
@@ -75,7 +72,8 @@ class DataParser:
 
     def updateFilterDict(self) -> None:
         self.__filterDict = self.parseConfig['filterDicts'][self.datasetID]
-        self.__filterDict = {iKey: iVal for iKey, iVal in self.__filterDict.items() if self.__filterDict[iKey] is not None}
+        self.__filterDict = {iKey: iVal for iKey, iVal in self.__filterDict.items() if self.__filterDict[iKey] is not
+                             None}
 
     def checkDatasetID(self, datasetID: str, parseConfig: dict) -> str:
         """
@@ -190,12 +188,12 @@ class DataParser:
                     lst.append(iVal)
         return lst
 
-    def checkFilterDict(self, filterDict: dict):
+    def checkFilterDict(self):
         """
         :return: Returns a filter dictionary containing a list from BottomDictValues
         """
         # Currently only checking if list of list str not typechecked all(map(self.__checkStr, val)
-        assert all(isinstance(val, list) for val in self.returnBottomDictValues(filterDict)), \
+        assert all(isinstance(val, list) for val in self.returnBottomDictValues(self.__filterDict)), \
             f'All values in filter dictionaries have to be lists, but are not'
 
     def returnBottomDictKeys(self, baseDict: dict, lst: list = None) -> list:
