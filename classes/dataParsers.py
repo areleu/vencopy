@@ -173,17 +173,20 @@ class DataParser:
         self.subDict = {key: conversionDict[key] for key in conversionDict.keys() & keys}
         self.data = self.data.astype(self.subDict)
 
-    def returnBottomDictValues(self, baseDict: dict, lst: list = []) -> list:
+    def returnDictBottomValues(self, baseDict: dict, lst: list = []) -> list:
         """
+        Returns a list of all dictionary values of the last dictionary level (the bottom) of baseDict. The parameter
+        lst is used as an interface between recursion levels.
+
         :param baseDict: Dictionary of variables
-        :param lst: empty list
+        :param lst: empty list, is used as interface to next recursion
         :return: Returns a list with all the bottom dictionary values
         """
         # review: It is unclear to me which concept is referenced by bottom dict.
         #  I suggest we add some explanation about the concept of bottomDict to the doc string
         for iKey, iVal in baseDict.items():
             if isinstance(iVal, dict):
-                lst = self.returnBottomDictValues(iVal, lst)
+                lst = self.returnDictBottomValues(iVal, lst)
             else:
                 if iVal is not None:
                     lst.append(iVal)
@@ -194,11 +197,14 @@ class DataParser:
         :return: Returns a filter dictionary containing a list from BottomDictValues
         """
         # Currently only checking if list of list str not typechecked all(map(self.__checkStr, val)
-        assert all(isinstance(val, list) for val in self.returnBottomDictValues(self.__filterDict)), \
+        assert all(isinstance(val, list) for val in self.returnDictBottomValues(self.__filterDict)), \
             f'All values in filter dictionaries have to be lists, but are not'
 
-    def returnBottomDictKeys(self, baseDict: dict, lst: list = None) -> list:
+    def returnDictBottomKeys(self, baseDict: dict, lst: list = None) -> list:
         """
+        Returns the lowest level keys of baseDict and returns all of them as a list. The parameter lst is used as
+        interface between recursion levels.
+
         :param baseDict: Dictionary of variables
         :param lst: empty list
         :return: Returns a list with all the bottom dictionary keys
@@ -207,16 +213,16 @@ class DataParser:
             lst = []
         for iKey, iVal in baseDict.items():
             if isinstance(iVal, dict):
-                lst = self.returnBottomDictKeys(iVal, lst)
+                lst = self.returnDictBottomKeys(iVal, lst)
             else:
                 if iVal is not None:
                     lst.append(iKey)
         return lst
 
     def filter(self):
-        print(f'Starting filtering, applying {len(self.returnBottomDictKeys(self.__filterDict))} filters.')
+        print(f'Starting filtering, applying {len(self.returnDictBottomKeys(self.__filterDict))} filters.')
         ret = pd.DataFrame(index=self.data.index)
-        # review: as discussed before we could indeed work here with a plug and pray approach.
+        # Future releases: as discussed before we could indeed work here with a plug and pray approach.
         #  we would need to introduce a filter manager and a folder structure where to look for filters.
         #  this is very similar code than the one from ioproc. If we want to go down this route we should
         #  take inspiration from the code there. It was not easy to get it right in the first place. This
