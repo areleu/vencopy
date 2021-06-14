@@ -14,7 +14,6 @@ import yaml
 import os
 from scripts.globalFunctions import createFileString
 
-# FIXME Add distributions and charging power ratings
 
 class GridModeler:
     def __init__(self, config: dict, globalConfig:dict, datasetID : str ='MiD17'):
