@@ -240,7 +240,7 @@ class TripDiaryBuilder:
         #     arrivalIsBelowHalfHour = iSubData['timestampStart'].dt.hour <= 30
 
         # Solution 1: use enumerate in order to get rowNumber instead of index and then .iloc below
-        # Solution 2: Rename columns 
+        # Solution 2: Rename columns
         for idx, iRow in tripData.iterrows():
             isSameHPID = hpID == iRow['hhPersonID']
             if not isSameHPID:
