@@ -51,9 +51,6 @@ class DataParser:
         #  the user to configure the output level it desires.
         print('Parsing properties set up')
         if loadEncrypted:
-            # review: I am unsure if the config field should be called "pathAbsolute" as paths have a
-            #  plethora of meanings. Could we make it more clear that we talk about files on disk here?
-            #  Something like filePaths or dataPaths?
             print(f"Starting to retrieve encrypted data file from {self.globalConfig['pathAbsolute']['encryptedZipfile']}")
             self.loadEncryptedData(pathToZip=Path(self.globalConfig['pathAbsolute']['encryptedZipfile']) / self.globalConfig['files'][self.datasetID]['encryptedZipFileB2'],
                                    pathInZip=globalConfig['files'][self.datasetID]['tripDataZipFileRaw'])
@@ -109,13 +106,17 @@ class DataParser:
         #  Or are uppercase NA guaranteed?
 
     def loadData(self):
-        # review: Are potential error messages (.dta not being a stata file even as the ending matches)
-        #  readable for the user? Should we have a manual error treatment here?
+        # Future releases: Are potential error messages (.dta not being a stata file even as the ending matches)
+        # readable for the user? Should we have a manual error treatment here?
         if self.rawDataPath.suffix == '.dta':
             self.rawData = pd.read_stata(self.rawDataPath, convert_categoricals=False, convert_dates=False,
                                       preserve_dtypes=False)
-        else:  # self.rawDataFileType == '.csv':
+        # This has not been tested before the beta release
+        elif self.rawDataPath.suffix == '.csv':
             self.rawData = pd.read_csv(self.rawDataPath)
+        else:
+            Exception(f"Data type {self.rawDataPath.suffix} not yet specified. Available types so far are .dta and "
+                      f".csv")
 
         print(f'Finished loading {len(self.rawData)} rows of raw data of type {self.rawDataPath.suffix}')
 
