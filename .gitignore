@@ -23,6 +23,9 @@
 # log files
 debug.log
 
+# Git version conflict files
+*.py.orig
+
 # documentation files on local machine
 /build
 
