@@ -12,7 +12,8 @@ import pathlib
 import pandas as pd
 from pathlib import Path
 import matplotlib.pyplot as plt
-from scripts.globalFunctions import createFileString
+from scripts.globalFunctions import createFileString, calculateWeightedAverage
+from classes.flexEstimators import FlexEstimator
 
 
 class Evaluator:
@@ -92,12 +93,8 @@ class Evaluator:
             ret.loc[:, f'{iDatID}_sum'] = iDat.loc[:, self.hourVec].sum(axis=0)
             ret.loc[:, f'{iDatID}_mean'] = iDat.loc[:, self.hourVec].mean(axis=0)
             if self.weightPlot:
-                ret.loc[:, f'{iDatID}_wMean'] = iDat.loc[:, self.hourVec].apply(self.calculateWeightedAverage, args=[iDat.loc[:, 'tripWeight']])
+                ret.loc[:, f'{iDatID}_wMean'] = iDat.loc[:, self.hourVec].apply(calculateWeightedAverage, args=[iDat.loc[:, 'tripWeight']])
         return ret
-
-    @staticmethod
-    def calculateWeightedAverage(col, weightCol):
-        return sum(col * weightCol) / sum(weightCol)
 
     def calcVariableSpecAggregates(self, by):
         ret = pd.DataFrame()
@@ -108,7 +105,7 @@ class Evaluator:
             ret.loc[:, f'{iDatID}_mean'] = iDat.loc[:, self.hourVec].groupby(level=by).mean().stack()
             if self.weightPlot:
                 # ret.loc[:, f'{iDatID}_wMean'] = iDat.loc[:,
-                #                                 self.hourVec].groupby(level=by).apply(self.calculateWeightedAverage,
+                #                                 self.hourVec].groupby(level=by).apply(calculateWeightedAverage,
                 #                                                     weightCol=[iDat.loc[:, 'tripWeight']]).stack()
                 ret.loc[:, f'{iDatID}_wMean'] = self.calcWeightedTripValues(dataIn=iDat, idxLvl=by[0])
         return ret
@@ -122,7 +119,7 @@ class Evaluator:
         for iVar in vars:
             dataSlice = data.loc[data.loc[:, idxLvl] == iVar, self.hourVec]
             weightSlice = weights.loc[data.loc[:, idxLvl] == iVar, 'tripWeight']
-            ret.loc[:, iVar] = dataSlice.apply(self.calculateWeightedAverage, weightCol=weightSlice)
+            ret.loc[:, iVar] = dataSlice.apply(calculateWeightedAverage, weightCol=weightSlice)
         ret = ret.stack()
         ret.index = ret.index.swaplevel(0, 1)
         return ret
@@ -208,6 +205,19 @@ class Evaluator:
                               # 1
                               50
                                 ])
+
+    def compileDictList(self, compareTo, profileNameList):
+        ret = []
+        keys = [self.datasetID, compareTo.datasetID]
+        for iProf in profileNameList:
+            iDict = self.compileProfileComparisonDict(keys=keys,
+                                                      values=[getattr(self, iProf), getattr(compareTo, iProf)])
+            ret.append(iDict)
+        return ret
+
+    @staticmethod
+    def compileProfileComparisonDict(keys: list, values: list):
+        return {iKey: iVal for iKey, iVal in zip(keys, values)}
 
 if __name__ == '__main__':
     pathConfig = pathlib.Path.cwd().parent / 'config' / 'config.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
