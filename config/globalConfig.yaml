@@ -52,6 +52,7 @@ files:
         inputDataDriveProfiles: inputProfiles_Drive  # inputProfiles_Drive_runTest_MiD08.csv
         inputDataPlugProfiles: inputProfiles_Plug  # inputProfiles_Plug_runTest_MiD08.csv
         vencoPyOutput: vencoPyOutput
+        flexPlotName: flexProfileComparison
 #        inputDataDriveProfiles: inputProfiles_Drive_MiD08.csv
 #        inputDataPlugProfiles: inputProfiles_Plug_MiD08.csv
     vencoPyOutput: vencoPyOutput

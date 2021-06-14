@@ -25,10 +25,6 @@ from scripts.globalFunctions import createFileString, mergeVariables, calculateW
 class FlexEstimator:
     def __init__(self, config: dict, globalConfig: dict, evaluatorConfig: dict, ParseData: DataParser,
                  datasetID: str='MiD17'):
-        # review: could be not pass one config dict into this class instead of three?
-        #  we could encapsulate all three into one dict with the three keys and then
-        #  extract the information inside. This would make the interface leaner and
-        #  all classes could use the same convention of one config parameter?
         self.config = config
         self.globalConfig = globalConfig
         self.evaluatorConfig = evaluatorConfig
@@ -37,7 +33,6 @@ class FlexEstimator:
         self.scalars, self.driveProfilesIn, \
             self.plugProfilesIn = self.readVencoInput(datasetID=datasetID)
         self.mergeDataToWeightsAndDays(ParseData)
-
         self.weights = self.indexWeights(self.driveProfilesIn.loc[:, ['hhPersonID', 'tripStartWeekday', 'tripWeight']])
         self.outputConfig = yaml.load(open(Path(self.globalConfig['pathRelative']['config']) /
                                            self.globalConfig['files']['outputConfig']), Loader=yaml.SafeLoader)
@@ -47,10 +42,9 @@ class FlexEstimator:
         self.scalarsProc = self.procScalars(self.driveProfilesIn, self.plugProfilesIn,
                                        self.driveProfiles, self.plugProfiles)
 
-        # review: with so many values to be initialized, it might be a good idea to take a step back and
-        #  think together about a composition approach with a dataclass based encapsulation.
-        #  this would also make it easy to communicate the data to the outside of the class
-        #  as the fields are then no longer directly in the main processing class.
+        #  Future release: with so many values to be initialized, a composition approach with a dataclass based
+        #  encapsulation might be a good idea. This would also make it easy to communicate the data to the outside of
+        #  the class as the fields are then no longer directly in the main processing class.
 
         # Base profile attributes
         self.drainProfiles = None
@@ -113,7 +107,6 @@ class FlexEstimator:
         :return: Returns a dataframe with an index column and two value columns. The first value column holds numbers the
             second one holds units.
         """
-        #scalarInput = Assumptions
         inputRaw = pd.read_excel(filePath,
                                  header=5,
                                  usecols='A:C',
@@ -137,19 +130,10 @@ class FlexEstimator:
     def booleanMapping(self, df: pd.DataFrame) -> pd.DataFrame:
         """
         Replaces given strings with python values for true or false.
-        FixMe: Foreseen to be more flexible in next release.
 
         :param df: Dataframe holding strings defining true or false values
         :return: Dataframe holding true and false
         """
-
-        # review: Just one remark on the wording. In SE this
-        #  data structure is called a mapping. A dict is the python
-        #  incarnation of a mapping. As we here clearly refer to the concept of a
-        #  mapping it would be more natural to call it booleanMapping (bol is also a
-        #  funny abbreviation for boolean). This needs not to change but should be cleaned
-        #  up over time especially for an external release. Also new variables should
-        #  strictly avoid type declaration in the names.
         dictBol = {'WAHR': True,
                    'FALSCH': False}
         outBool = df.replace(to_replace=dictBol, value=None)
@@ -179,10 +163,6 @@ class FlexEstimator:
         :return: Returns four dataframes: A path dictionary, scalars, drive profile data and plug profile
         data, the latter three ones in a raw data format.
         """
-
-        # pathDict = self.initializePathMgr(config, globalConfig, datasetID)
-
-        # review: have you considered using the logging module for these kind of outputs?
         print('Reading Venco input scalars, drive profiles and boolean plug profiles')
 
         scalars = self.readInputScalars(Path(self.globalConfig['pathRelative']['input']) /
@@ -199,7 +179,7 @@ class FlexEstimator:
         print('There are ' + str(len(driveProfiles_raw)) + ' drive profiles and ' +
               str(len(driveProfiles_raw)) + ' plug profiles.')
 
-        return scalars, driveProfiles_raw, plugProfiles_raw  #pathDict,
+        return scalars, driveProfiles_raw, plugProfiles_raw
 
     def procScalars(self, driveProfiles_raw, plugProfiles_raw, driveProfiles: pd.DataFrame,
                     plugProfiles: pd.DataFrame):
@@ -261,20 +241,6 @@ class FlexEstimator:
         plugProfiles = self.indexProfile(plugData, nHours)
         return driveProfiles.droplevel(dropIdxLevel), plugProfiles.droplevel(dropIdxLevel)
 
-    # DEPRECATED may be dropped deprecated in future
-    def readInData(self, fileKey: str, datasetID: str) -> pd.DataFrame:
-        """
-        Generic read-in function for mobility datasets. This serves as interface between the daily trip distance
-        and purpose calculation and the class Evaluator.
-
-        :param fileKey: List of VencoPy-internal names for the filekeys to read in
-        :return: a named pd.Series of all datasets with the given filekey_datasets as identifiers
-        """
-
-        return pd.read_csv(Path(self.globalConfig['pathRelative']['input']) /
-                           createFileString(globalConfig=self.globalConfig, fileKey=fileKey, datasetID=datasetID),
-                           dtype={'hhPersonID': int}, index_col=['hhPersonID', 'tripStartWeekday'])
-
     def mergeDataToWeightsAndDays(self, ParseData):
         self.driveProfilesIn = mergeVariables(data=self.driveProfilesIn, variableData=ParseData.data,
                                               variables=['tripStartWeekday', 'tripWeight'])
@@ -331,7 +297,6 @@ class FlexEstimator:
         for idxIt in range(nIter):
             print(f'Starting with iteration {idxIt}')
             for iHour in range(nHours):
-                # print(f'Starting with hour {iHour}')
                 if iHour == 0:
                     chargeMaxProfiles[iHour] = chargeMaxProfiles[nHours - 1].where(
                         chargeMaxProfiles[iHour] <= batCapMax,
@@ -353,7 +318,6 @@ class FlexEstimator:
             print(devCrit)
         chargeMaxProfiles.drop(labels='newCharge', axis='columns', inplace=True)
         return chargeMaxProfiles
-
 
     def calcChargeProfilesUncontrolled(self, chargeMaxProfiles: pd.DataFrame,
                                        scalarsProc: pd.DataFrame) -> pd.DataFrame:
@@ -385,7 +349,7 @@ class FlexEstimator:
     def calcDriveProfilesFuelAux(self, chargeMaxProfiles: pd.DataFrame, chargeProfilesUncontrolled: pd.DataFrame,
                                  driveProfiles: pd.DataFrame, scalars: pd.DataFrame,
                                  scalarsProc: pd.DataFrame) -> pd.DataFrame:
-        # ToDo: alternative vectorized format for looping over columns? numpy, pandas: broadcasting-rules
+        # FixMe: alternative vectorized format for looping over columns? numpy, pandas: broadcasting-rules
         """
          Calculates necessary fuel consumption profile of a potential auxilliary unit (e.g. a gasoline motor) based
         on gasoline consumption given in scalar input data (in l/100 km). Auxilliary fuel is needed if an hourly
@@ -400,8 +364,10 @@ class FlexEstimator:
         completely be fulfilled with electric driving under the given consumption and battery size assumptions.
         """
 
-        # review: the hardcoding of the column names can cause a lot of problems for people later on if we do not ship the date with the tool.
-        # I would recommend to move these column names to a config file similar to i18n strategies
+        # Future release:
+        # the hardcoding of the column names can cause a lot of problems for people later on if we do not ship
+        # the date with the tool. I would recommend to move these column names to a config file similar to i18n
+        # strategies
         consumptionPower = scalars.loc['Electric_consumption_NEFZ', 'value']
         consumptionFuel = scalars.loc['Fuel_consumption_NEFZ', 'value']
 
@@ -424,7 +390,6 @@ class FlexEstimator:
     def calcChargeMinProfiles(self, chargeProfiles: pd.DataFrame, consumptionProfiles: pd.DataFrame,
                               driveProfilesFuelAux: pd.DataFrame, scalars: pd.DataFrame, scalarsProc: pd.DataFrame,
                               nIter: int) -> pd.DataFrame:
-        # ToDo param minSecurityFactor
         """
         Calculates minimum SoC profiles assuming that the hourly mileage has to exactly be fulfilled but no battery charge
         is kept inspite of fulfilling the mobility demand. It represents the minimum charge that a vehicle battery has to
@@ -442,11 +407,6 @@ class FlexEstimator:
         :return: Returns an indexed DataFrame containing minimum SOC values for each profile in each hour in the same
             format as chargeProfiles, consumptionProfiles and other input parameters.
         """
-
-        # review general remark: white spaces in column names give me the creeps as it is easy to mistype
-        # and create all kind of wired errors.
-        # Especially if there are columns with similar names only differing in whitespaces.
-        # This is clearly not the case here, but did you consider naming columns with underscores for easier reference?
         chargeMinProfiles = chargeProfiles.copy()
         batCapMin = scalars.loc['Battery_capacity', 'value'] * scalars.loc['Minimum_SOC', 'value']
         batCapMax = scalars.loc['Battery_capacity', 'value'] * scalars.loc['Maximum_SOC', 'value']
@@ -482,7 +442,6 @@ class FlexEstimator:
         self.chargeProfiles = self.calcChargeProfiles(self.plugProfiles, self.scalars)
         self.chargeMaxProfiles = self.calcChargeMaxProfiles(self.chargeProfiles, self.drainProfiles, self.scalars,
                                                        self.scalarsProc, nIter=3)
-        # self.splitChargeMaxCalc(chargeProfiles=self.chargeProfiles, drainProfiles=self.drainProfiles)
         self.chargeProfilesUncontrolled = self.calcChargeProfilesUncontrolled(self.chargeMaxProfiles, self.scalarsProc)
         self.auxFuelDemandProfiles = self.calcDriveProfilesFuelAux(self.chargeMaxProfiles,
                                                                    self.chargeProfilesUncontrolled, self.driveProfiles,
@@ -606,8 +565,6 @@ class FlexEstimator:
 
         chargeMinProfilesDSM = chargeMinProfiles.copy()
         chargeMaxProfilesDSM = chargeMaxProfiles.copy()
-        # if len(chargeMaxProfilesCons) == len(filterCons): #len(chargeMaxProfilesCons) = len(chargeMinProfilesCons) by design
-        # How can I catch pandas.core.indexing.IndexingError ?
         try:
             chargeMinProfilesDSM.loc[~filterCons['indexDSM'].astype('bool'), :] = minValue
             chargeMaxProfilesDSM.loc[~filterCons['indexDSM'].astype('bool'), :] = maxValue
@@ -615,8 +572,6 @@ class FlexEstimator:
             print("Declaration doesn't work. "
                   "Maybe the length of filterCons differs from the length of chargeMaxProfiles")
             raise E
-            # raise user defined
-
         return chargeMaxProfilesDSM, chargeMinProfilesDSM
 
     def filterConsProfiles(self, profile: pd.DataFrame, filterCons: pd.DataFrame, critCol) -> pd.DataFrame:
@@ -632,7 +587,7 @@ class FlexEstimator:
         outputProfile = profile.loc[filterCons[critCol], :]
         return outputProfile
 
-    def socProfileSelection(self, profilesMin: pd.DataFrame, profilesMax: pd.DataFrame, filter, alpha) -> pd.Series:
+    def socProfileSelection(self, profilesMin: pd.DataFrame, profilesMax: pd.DataFrame, filter, alpha) -> tuple:
         """
         Selects the nth highest value for each hour for min (max profiles based on the percentage given in parameter
         'alpha'. If alpha = 10, the 10%-biggest (10%-smallest) value is selected, all other values are disregarded.
@@ -660,15 +615,11 @@ class FlexEstimator:
                 profileMaxOut[col] = max(profilesMax[col].nsmallest(noProfilesFilter))
 
         else:
-            # review have you considered implementing your own error like class FilterError(Exception):
-            # pass which would give the user an additional hint on what went wrong?
             raise ValueError('You selected a filter method that is not implemented.')
         return profileMinOut, profileMaxOut
 
     def normalizeProfiles(self, scalars: pd.DataFrame, socMin: pd.Series, socMax: pd.Series, normReferenceParam) -> \
-            pd.Series:
-        # ToDo: Implement a normalization to the maximum of a given profile
-
+            tuple:
         """
         Normalizes given profiles with a given scalar reference.
 
@@ -686,8 +637,6 @@ class FlexEstimator:
             socMaxNorm = socMax.div(float(normReference))
 
         except ValueError as E:
-            # review general so is this not a problem at all if this happens?
-            # s I understand this code, socMin and socMax would be unchanged by this function call
             raise (f"There was a value error. {E} I don't know what to tell you.")
         return socMinNorm, socMaxNorm
 
@@ -703,21 +652,23 @@ class FlexEstimator:
 
         # Additional fuel consumption is subtracted from the consumption
         self.electricPowerProfiles = self.calcElectricPowerProfiles(self.drainProfiles, self.auxFuelDemandProfiles,
-                                                               self.scalars, self.profileSelectors, self.scalarsProc,
-                                                               filterIndex='indexDSM')
+                                                                    self.scalars, self.profileSelectors, self.scalarsProc,
+                                                                    filterIndex='indexDSM')
 
         # Profile filtering for flow profiles
         self.plugProfilesCons = self.filterConsProfiles(self.plugProfiles, self.profileSelectors, critCol='indexCons')
         self.electricPowerProfilesCons = self.filterConsProfiles(self.electricPowerProfiles, self.profileSelectors,
-                                                            critCol='indexCons')
-        self.chargeProfilesUncontrolledCons = self.filterConsProfiles(self.chargeProfilesUncontrolled, self.profileSelectors,
                                                                  critCol='indexCons')
+        self.chargeProfilesUncontrolledCons = self.filterConsProfiles(self.chargeProfilesUncontrolled,
+                                                                      self.profileSelectors, critCol='indexCons')
         self.auxFuelDemandProfilesCons = self.filterConsProfiles(self.auxFuelDemandProfiles, self.profileSelectors,
-                                                            critCol='indexCons')
+                                                                 critCol='indexCons')
 
         # Profile filtering for state profiles
-        self.profilesSOCMinCons = self.filterConsProfiles(self.chargeMinProfiles, self.profileSelectors, critCol='indexDSM')
-        self.profilesSOCMaxCons = self.filterConsProfiles(self.chargeMaxProfiles, self.profileSelectors, critCol='indexDSM')
+        self.profilesSOCMinCons = self.filterConsProfiles(self.chargeMinProfiles, self.profileSelectors,
+                                                          critCol='indexDSM')
+        self.profilesSOCMaxCons = self.filterConsProfiles(self.chargeMaxProfiles, self.profileSelectors,
+                                                          critCol='indexDSM')
 
     def aggregateProfilesMean(self, profilesIn: pd.DataFrame) -> pd.Series:
         """
@@ -746,10 +697,13 @@ class FlexEstimator:
 
     def aggregateDiffVariable(self, data: pd.DataFrame, by: str, weights: pd.Series, hourVec: list) -> pd.Series:
         """
+        A separate aggregation function differentiating by the variable defined as a string in str. Weights as
+        given in MiD.
+
         :param data: list of strings declaring the datasets to be read in
-        :param by:
-        :param weights:
-        :param hourVec:
+        :param by: String specifyzing a variable.
+        :param weights: Weight vector as given in the MiD
+        :param hourVec: hour vector specifying the hours used for VencoPy analysis
         :return:
         """
         vars = set(data.index.get_level_values(by))
@@ -766,6 +720,11 @@ class FlexEstimator:
         return ret
 
     def aggregate(self):
+        """
+        Aggregates profiles from individual vehicle level to fleet level. This is done in two categories: Aggregating
+        to one representative weekday with 24 hours and aggregating for a representative week. Within these categories
+        mean and weighted mean values are calculated for comparison.
+        """
         # Profile aggregation for flow profiles by averaging
         self.plugProfilesAgg = self.aggregateProfilesMean(self.plugProfilesCons)
         self.electricPowerProfilesAgg = self.aggregateProfilesMean(self.electricPowerProfilesCons)
@@ -796,8 +755,10 @@ class FlexEstimator:
                                                               dataMax=self.profilesSOCMaxCons,
                                                               by='tripStartWeekday', filter='singleValue', alpha=10)
 
-    def socSelectionVar(self, dataMin: pd.DataFrame, dataMax: pd.DataFrame, by, filter, alpha) -> pd.Series:
+    def socSelectionVar(self, dataMin: pd.DataFrame, dataMax: pd.DataFrame, by, filter, alpha) -> tuple:
         """
+        SOC selection function to aggregate state profiles from individual vehicle to fleet level.
+
         :param dataMin:
         :param dataMax:
         :param by:
@@ -845,7 +806,6 @@ class FlexEstimator:
             consumptionFuelArtemis = scalars.loc['Fuel_consumption_Artemis', 'value']
             corrFactor = consumptionFuelArtemis / consumptionFuelNEFZ
         else:
-            # review I expect raising an exception here. Would it not be a problem if the processing continues silently?
             print(f'Either parameter "{profType}" is not given or not assigned to either "electric" or "fuel".')
         profileOut = corrFactor * profile
         return profileOut
@@ -963,11 +923,7 @@ class FlexEstimator:
                                           self.datasetID + '_state'],
                                ylim=[1, 0.9, 50])
 
-# review: This should be a method of FlexEstimation with name run().
-#  this is a common approach to define a workflow for a class based structure.
-#  I suggest to not return Flexstimator.
     def run(self):
-        # review: Flexstimator should be lower case as it is an instance not a class.
         self.baseProfileCalculation()
         self.filter()
         self.aggregate()

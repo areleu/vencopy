@@ -30,8 +30,6 @@ class GridModeler:
     def assignSimpleGridViaPurposes(self):
         print(f'Starting with charge connection replacement of location purposes')
         self.chargeAvailability = self.purposeData.replace(self.gridDistributions)
-
-        # self.chargeAvailability.set_index(['hhPersonID', 'tripStartWeekday', 'tripWeight'], inplace=True)
         self.chargeAvailability.set_index(['hhPersonID'], inplace=True)
         self.chargeAvailability = (~(self.chargeAvailability != True))
         print('Grid connection assignment complete')

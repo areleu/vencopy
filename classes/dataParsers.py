@@ -14,8 +14,6 @@ import yaml
 from zipfile import ZipFile
 
 class DataParser:
-    # Separate datasets that know each other
-    # @profile(immediate=True)
     def __init__(self, parseConfig: dict, globalConfig: dict, localPathConfig: dict, datasetID: str = 'MiD17',
                  loadEncrypted=True):
         """
@@ -30,11 +28,11 @@ class DataParser:
         parseConfig. For some columns, raw data is transferred to human readable strings and respective columns are
         added. Pandas timestamp columns are synthesized from the given trip start and trip end time information.
 
-        :param parseConfig: A yaml config file holding a dictionary with the keys 'pathRelative' and 'pathAbsolute'
-        :param globalConfig:
-        :param localPathConfig:
-        :param datasetID:
-        :param loadEncrypted:
+        :param parseConfig: A yaml config file holding a dictionary with the keys 'pathRelative'
+        :param globalConfig: A yaml config file holding mainly filenames and file labels
+        :param localPathConfig: A config thats not synchronized holding local paths
+        :param datasetID: Currently, MiD08 and MiD17 are implemented as travel survey data sets
+        :param loadEncrypted: If True, load an encrypted ZIP file as specified in parseConfig
         """
         self.datasetID = self.checkDatasetID(datasetID, parseConfig)
         self.parseConfig = parseConfig
@@ -47,8 +45,6 @@ class DataParser:
         self.columns = self.compileVariableList()
         self.filterDictNameList = ['include', 'exclude', 'greaterThan', 'smallerThan']
         self.updateFilterDict()
-        # review: Why do we not use the standard logging library of python for these output. It would empower
-        #  the user to configure the output level it desires.
         print('Parsing properties set up')
         if loadEncrypted:
             print(f"Starting to retrieve encrypted data file from {self.globalConfig['pathAbsolute']['encryptedZipfile']}")
@@ -74,6 +70,8 @@ class DataParser:
 
     def checkDatasetID(self, datasetID: str, parseConfig: dict) -> str:
         """
+        General check if data set ID is defined.
+
         :param datasetID: list of strings declaring the datasets to be read in
         :param parseConfig: A yaml config file holding a dictionary with the keys 'pathRelative' and 'pathAbsolute'
         :return: Returns a string value of a mobility data
@@ -88,22 +86,22 @@ class DataParser:
         listIndex = self.parseConfig['dataVariables']['datasetID'].index(self.datasetID)
         variables = [val[listIndex] if not val[listIndex] == 'NA' else 'NA' for key, val in self.parseConfig['dataVariables'].items()]
         variables.remove(self.datasetID)
-        if 'NA' in variables:
-            self.removeNA(variables)
+        self.removeNA(variables)
         return variables
 
     def removeNA(self, variables: list):
         """
+        Removes all strings that can be capitalized to 'NA' from the list of variables
+
         :param variables: List of variables of the mobility dataset
         :return: Returns a list with non NA values
         """
-        variables.remove('NA')
-        if 'NA' in variables:
-            self.removeNA(variables)
-
-        # review: is this maybe to exact a filter? Should we not also accept "na" as a synonym for NA?
-        #  If yes, we would need to loop once over the values in variables and capitalize them before filtering.
-        #  Or are uppercase NA guaranteed?
+        vars = [iVar.upper() for iVar in variables]
+        counter = 0
+        for idx, iVar in enumerate(vars):
+            if iVar == 'NA':
+                del variables[idx - counter]
+                counter += 1
 
     def loadData(self):
         # Future releases: Are potential error messages (.dta not being a stata file even as the ending matches)
@@ -126,8 +124,6 @@ class DataParser:
         :param pathInZip:
         :return:
         """
-        # review: What happens wif pathToZip is ot on the hard drive? Do we get an error or
-        #  is a file created?
         with ZipFile(pathToZip) as myzip:
             if '.dta' in pathInZip:
                 self.rawData = pd.read_stata(myzip.open(pathInZip, pwd=bytes(self.parseConfig['encryptionPW'],
@@ -186,8 +182,6 @@ class DataParser:
         :param lst: empty list, is used as interface to next recursion
         :return: Returns a list with all the bottom dictionary values
         """
-        # review: It is unclear to me which concept is referenced by bottom dict.
-        #  I suggest we add some explanation about the concept of bottomDict to the doc string
         for iKey, iVal in baseDict.items():
             if isinstance(iVal, dict):
                 lst = self.returnDictBottomValues(iVal, lst)
@@ -419,7 +413,7 @@ class DataParser:
 
 
 class ParseMID(DataParser):
-    # Inherited data class to at some point differentiate between abstract interfaces such as vencopz internal
+    # Inherited data class to differentiate between abstract interfaces such as vencopy internal
     # variable namings and data set specific functions such as filters etc. Currently not used (06/14/2021)
     pass
 

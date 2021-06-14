@@ -28,7 +28,6 @@ class TripDiaryBuilder:
         # ONLY FOR DEBUGGING PURPOSES
         self.tripDataClean = self.calculateConsistentHourlyShares(data=ParseData.data.loc[0:2000, :])
         self.tripDistanceDiary = self.tripDistanceAllocation(globalConfig)
-        # self.hhPersonMap = self.mapHHPIDToTripID(self.tripDataClean)
         self.tripPurposeAllocation()
         self.writeOut(globalConfig=globalConfig, datasetID=datasetID, dataDrive=self.tripDistanceDiary,
                  dataPurpose=self.tripPurposeDiary)
@@ -148,16 +147,14 @@ class TripDiaryBuilder:
         return hourlyArray
 
     def mergeTrips(self, tripData: pd.DataFrame) -> pd.DataFrame:
-        # uniqueHHPersons = tripData.loc[:, 'hhPersonID'].unique()
-        # dataDay = pd.DataFrame(index=uniqueHHPersons, columns=tripData.columns)
         dataDay = tripData.groupby(['hhPersonID']).sum()
         dataDay = dataDay.drop('tripID', axis=1)
         return dataDay
 
     def initiateColRange(self, row):
         if row['tripStartHour'] + 1 < row['tripEndHour']:
-            return range(row['tripStartHour'] + 1, row[
-                'tripEndHour'])  # The hour of arrival (tripEndHour) will not be indexed further below but is part of the range() object
+            return range(row['tripStartHour'] + 1, row['tripEndHour'])  # The hour of arrival (tripEndHour) will
+            # not be indexed further below but is part of the range() object
         else:
             return None
 
@@ -173,8 +170,9 @@ class TripDiaryBuilder:
         print('Finished trip distance diary setup')
 
     def assignDriving(self, driveData: pd.DataFrame) -> pd.DataFrame:
-        # assign hours where drivData != 0/NA to 'driving'
         """
+        Assign hours where driveData != 0/NA to 'driving'
+
         :param driveData: driving data
         :return: Returns driving data with 'driving' instead of hours having 0/NA
         """
@@ -322,7 +320,6 @@ class TripDiaryBuilder:
 
 class FillHourValues:
     def __init__(self, data, rangeFunction):
-        # self.data = data
         self.startHour = data['tripStartHour']
         self.distanceStartHour = data['shareStartHour'] * data['tripDistance']
         self.endHour = data['tripEndHour']
@@ -357,5 +354,5 @@ if __name__ == '__main__':
     with open(pathLocalPathConfig) as ipf:
         localPathConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
     os.chdir(localPathConfig['pathAbsolute']['vencoPyRoot'])
-    vpData = DataParser(config=parseConfig, globalConfig=globalConfig, loadEncrypted=False)
+    vpData = DataParser(parseConfig=parseConfig, globalConfig=globalConfig, loadEncrypted=False)
     vpDiary = TripDiaryBuilder(config=tripConfig, globalConfig=globalConfig, ParseData=vpData)
