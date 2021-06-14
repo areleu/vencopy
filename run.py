@@ -41,7 +41,7 @@ with open(pathFlexConfig) as ipf:
     flexConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
 
 
-vpData = DataParser(datasetID=datasetID, config=parseConfig, globalConfig=globalConfig, localPathConfig=localPathConfig, loadEncrypted=False)
+vpData = DataParser(datasetID=datasetID, parseConfig=parseConfig, globalConfig=globalConfig, localPathConfig=localPathConfig, loadEncrypted=False)
 
 # Trip distance and purpose diary compositions
 vpTripDiary = TripDiaryBuilder(datasetID=datasetID, config=tripConfig, globalConfig=globalConfig, ParseData=vpData)

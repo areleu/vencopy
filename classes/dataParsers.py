@@ -16,17 +16,28 @@ from zipfile import ZipFile
 class DataParser:
     # Separate datasets that know each other
     # @profile(immediate=True)
-    def __init__(self, config: dict, globalConfig: dict, localPathConfig: dict, datasetID: str = 'MiD17', loadEncrypted=True):
-        # review: This doc string could do with some love. It is currently not saying much helpful
-        #  in the description.
+    def __init__(self, parseConfig: dict, globalConfig: dict, localPathConfig: dict, datasetID: str = 'MiD17',
+                 loadEncrypted=True):
         """
-        This is some explanation
+        Basic class for parsing a mobility survey trip data set. Currently the both German travel surveys MiD 2008 and
+        MiD 2017 are pre-configured and one of the two can be given (default: MiD 2017).
+        The data set can be provided from an encrypted file on a server in which case the link to the ZIP-file as well
+        as a link to the file within the ZIP-file have to be supplied in the globalConfig and a password has to be
+        supplied in the parseConfig.
+        Columns relevant for the EV simulation are selected from the entirety of the data and renamed to VencoPy
+        internal variable names given in the dictionary parseConfig['dataVariables'] for the respective survey data set.
+        Manually configured exclude, include, greaterThan and smallerThan filters are applied as they are specified in
+        parseConfig. For some columns, raw data is transferred to human readable strings and respective columns are
+        added. Pandas timestamp columns are synthesized from the given trip start and trip end time information.
 
-        :param config: A yaml config file holding a dictionary with the keys 'pathRelative' and 'pathAbsolute'
+        :param parseConfig: A yaml config file holding a dictionary with the keys 'pathRelative' and 'pathAbsolute'
         :param globalConfig:
+        :param localPathConfig:
+        :param datasetID:
+        :param loadEncrypted:
         """
-        self.datasetID = self.checkDatasetID(datasetID, config)
-        self.config = config
+        self.datasetID = self.checkDatasetID(datasetID, parseConfig)
+        self.parseConfig = parseConfig
         self.globalConfig = globalConfig
         self.rawDataPath = Path(localPathConfig['pathAbsolute'][self.datasetID]) / globalConfig['files'][self.datasetID]['tripsDataRaw']
         self.subDict = {}
@@ -63,24 +74,24 @@ class DataParser:
         print('Parsing completed')
 
     def updateFilterDict(self) -> None:
-        self.__filterDict = self.config['filterDicts'][self.datasetID]
+        self.__filterDict = self.parseConfig['filterDicts'][self.datasetID]
         self.__filterDict = {iKey: iVal for iKey, iVal in self.__filterDict.items() if self.__filterDict[iKey] is not None}
 
-    def checkDatasetID(self, datasetID: str, config: dict) -> str:
+    def checkDatasetID(self, datasetID: str, parseConfig: dict) -> str:
         """
         :param datasetID: list of strings declaring the datasets to be read in
-        :param config: A yaml config file holding a dictionary with the keys 'pathRelative' and 'pathAbsolute'
+        :param parseConfig: A yaml config file holding a dictionary with the keys 'pathRelative' and 'pathAbsolute'
         :return: Returns a string value of a mobility data
         """
-        availableDatasetIDs = config['dataVariables']['datasetID']
+        availableDatasetIDs = parseConfig['dataVariables']['datasetID']
         assert datasetID in availableDatasetIDs, \
-            f'Defined datasetID {datasetID} not specified under dataVariables in config. Specified datasetIDs are ' \
+            f'Defined datasetID {datasetID} not specified under dataVariables in parseConfig. Specified datasetIDs are ' \
                 f'{availableDatasetIDs}'
         return datasetID
 
     def compileVariableList(self) -> list:
-        listIndex = self.config['dataVariables']['datasetID'].index(self.datasetID)
-        variables = [val[listIndex] if not val[listIndex] == 'NA' else 'NA' for key, val in self.config['dataVariables'].items()]
+        listIndex = self.parseConfig['dataVariables']['datasetID'].index(self.datasetID)
+        variables = [val[listIndex] if not val[listIndex] == 'NA' else 'NA' for key, val in self.parseConfig['dataVariables'].items()]
         variables.remove(self.datasetID)
         if 'NA' in variables:
             self.removeNA(variables)
@@ -120,11 +131,11 @@ class DataParser:
         #  is a file created?
         with ZipFile(pathToZip) as myzip:
             if '.dta' in pathInZip:
-                self.rawData = pd.read_stata(myzip.open(pathInZip, pwd=bytes(self.config['encryptionPW'],
+                self.rawData = pd.read_stata(myzip.open(pathInZip, pwd=bytes(self.parseConfig['encryptionPW'],
                                                                              encoding='utf-8')),
                                              convert_categoricals=False, convert_dates=False, preserve_dtypes=False)
             else:  # if '.csv' in pathInZip:
-                self.rawData = pd.read_csv(myzip.open(pathInZip, pwd=bytes(self.config['encryptionPW'],
+                self.rawData = pd.read_csv(myzip.open(pathInZip, pwd=bytes(self.parseConfig['encryptionPW'],
                                                                            encoding='utf-8')), sep=';', decimal=',')
 
         print(f'Finished loading {len(self.rawData)} rows of raw data of type {self.rawDataPath.suffix}')
@@ -136,7 +147,7 @@ class DataParser:
         """
         :return: Returns the variable names of 2008 MiD data harmonized with the variable names for 2017 MiD data
         """
-        replacementDict = self.createReplacementDict(self.datasetID, self.config['dataVariables'])
+        replacementDict = self.createReplacementDict(self.datasetID, self.parseConfig['dataVariables'])
         dataRenamed = self.data.rename(columns=replacementDict)
         if self.datasetID == 'MiD08':
             dataRenamed['hhPersonID'] = (dataRenamed['hhID'].astype('string') +
@@ -158,7 +169,7 @@ class DataParser:
 
     def convertTypes(self):
         # Filter for dataset specific columns
-        conversionDict = self.config['inputDTypes']
+        conversionDict = self.parseConfig['inputDTypes']
         keys = {iCol for iCol in conversionDict.keys() if iCol in self.data.columns}
         self.subDict = {key: conversionDict[key] for key in conversionDict.keys() & keys}
         self.data = self.data.astype(self.subDict)
@@ -221,7 +232,7 @@ class DataParser:
             elif iKey == 'smallerThan':
                 ret = ret.join(self.setSmallerThanFilter(iVal, self.data.index))
             else:
-                warnings.warn(f'A filter dictionary was defined in the config with an unknown filtering key. '
+                warnings.warn(f'A filter dictionary was defined in the parseConfig with an unknown filtering key. '
                               f'Current filtering keys comprise include, exclude, smallerThan and greaterThan.'
                               f'Continuing with ignoring the dictionary {iKey}')
         self.data = self.data[ret.all(axis='columns')]
@@ -229,7 +240,7 @@ class DataParser:
 
     def setIncludeFilter(self, includeFilterDict: dict, dataIndex) -> pd.DataFrame:
         """
-        :param includeFilterDict: Dictionary of include filters defined in config.yaml
+        :param includeFilterDict: Dictionary of include filters defined in parseConfig.yaml
         :param dataIndex: Index for the data frame
         :return: Returns a data frame with individuals using car as a mode of transport
         """
@@ -240,7 +251,7 @@ class DataParser:
 
     def setExcludeFilter(self, excludeFilterDict: dict, dataIndex) -> pd.DataFrame:
         """
-        :param excludeFilterDict: Dictionary of exclude filters defined in config.yaml
+        :param excludeFilterDict: Dictionary of exclude filters defined in parseConfig.yaml
         :param dataIndex: Index for the data frame
         :return: Returns a filtered data frame with exclude filters
         """
@@ -251,7 +262,7 @@ class DataParser:
 
     def setGreaterThanFilter(self, greaterThanFilterDict: dict, dataIndex):
         """
-        :param greaterThanFilterDict: Dictionary of greater than filters defined in config.yaml
+        :param greaterThanFilterDict: Dictionary of greater than filters defined in parseConfig.yaml
         :param dataIndex: Index for the data frame
         :return:
         """
@@ -260,12 +271,12 @@ class DataParser:
             greaterThanFilterCols[greaterCol] = self.data[greaterCol] >= greaterElements.pop()
             if len(greaterElements) > 0:
                 warnings.warn(f'You specified more than one value as lower limit for filtering column {greaterCol}.'
-                              f'Only considering the last element given in the config.')
+                              f'Only considering the last element given in the parseConfig.')
         return greaterThanFilterCols
 
     def setSmallerThanFilter(self, smallerThanFilterDict: dict, dataIndex) -> pd.DataFrame:
         """
-        :param smallerThanFilterDict: Dictionary of smaller than filters defined in config.yaml
+        :param smallerThanFilterDict: Dictionary of smaller than filters defined in parseConfig.yaml
         :param dataIndex: Index for the data frame
         :return: Returns a data frame of trips covering a distance of less than 1000 km
         """
@@ -274,7 +285,7 @@ class DataParser:
             smallerThanFilterCols[smallerCol] = self.data[smallerCol] <= smallerElements.pop()
             if len(smallerElements) > 0:
                 warnings.warn(f'You specified more than one value as upper limit for filtering column {smallerCol}.'
-                              f'Only considering the last element given in the config.')
+                              f'Only considering the last element given in the parseConfig.')
         return smallerThanFilterCols
 
     def filterAnalysis(self, filterData: pd.DataFrame):
@@ -326,7 +337,7 @@ class DataParser:
         :return: None
         """
         self.data.loc[:, colName] \
-            = self.data.loc[:, varName].replace(self.config['midReplacements'][varName])
+            = self.data.loc[:, varName].replace(self.parseConfig['midReplacements'][varName])
 
     def composeIndex(self):
         # review: pycharm complains that this method is never used. I am not totally convinced. If true we
@@ -416,12 +427,16 @@ class ParseMID(DataParser):
 
 
 if __name__ == '__main__':
+    pathLocalPathConfig = Path.cwd().parent / 'config' / 'localPathConfig.yaml'
+    with open(pathLocalPathConfig) as ipf:
+        localPathConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
     pathParseConfig = Path.cwd().parent / 'config' / 'parseConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
     with open(pathParseConfig) as ipf:
         parseConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
     pathGlobalConfig = Path.cwd().parent / 'config' / 'globalConfig.yaml'
     with open(pathGlobalConfig) as ipf:
         globalConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
-    p = DataParser(config=parseConfig, globalConfig=globalConfig, loadEncrypted=False)
+    p = DataParser(localPathConfig=localPathConfig, parseConfig=parseConfig, globalConfig=globalConfig,
+                   loadEncrypted=False)
     print(p.data.head())
     print('end')
