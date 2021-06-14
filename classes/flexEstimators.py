@@ -19,8 +19,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from random import seed, random
 from classes.dataParsers import DataParser
-from classes.evaluators import Evaluator
-from scripts.globalFunctions import createFileString, mergeVariables
+from scripts.globalFunctions import createFileString, mergeVariables, calculateWeightedAverage
 
 
 class FlexEstimator:
@@ -745,7 +744,7 @@ class FlexEstimator:
         """
         profilesIn = profilesIn.loc[~profilesIn.apply(lambda x: x.isna(), axis=0).any(axis=1), :]
         weights = weights.loc[profilesIn.index, :]  # Filtering weight data to equate lengths
-        profilesOut = profilesIn.apply(Evaluator.calculateWeightedAverage, weightCol=weights['tripWeight'])
+        profilesOut = profilesIn.apply(calculateWeightedAverage, weightCol=weights['tripWeight'])
         return profilesOut
 
     def aggregateDiffVariable(self, data: pd.DataFrame, by: str, weights: pd.Series, hourVec: list) -> pd.Series:
@@ -763,7 +762,7 @@ class FlexEstimator:
         for iVar in vars:
             dataSlice = data.loc[data.loc[:, by] == iVar, hourVec]
             weightSlice = weights.loc[weights.loc[:, by] == iVar, 'tripWeight']
-            ret.loc[:, iVar] = dataSlice.apply(Evaluator.calculateWeightedAverage, weightCol=weightSlice)
+            ret.loc[:, iVar] = dataSlice.apply(calculateWeightedAverage, weightCol=weightSlice)
         ret = ret.stack()
         ret.index.names = ['time', by]
         # ret.index = ret.index.swaplevel(0, 1)
@@ -967,48 +966,18 @@ class FlexEstimator:
                                           self.datasetID + '_state'],
                                ylim=[1, 0.9, 50])
 
-
-    def compileDictList(self, compareTo, profileNameList):
-        ret = []
-        keys = [self.datasetID, compareTo.datasetID]
-        for iProf in profileNameList:
-            iDict = self.compileProfileComparisonDict(keys=keys,
-                                                      values=[getattr(self, iProf), getattr(compareTo, iProf)])
-            ret.append(iDict)
-        return ret
-
-    @staticmethod
-    def compileProfileComparisonDict(keys: list, values: list):
-        return {iKey: iVal for iKey, iVal in zip(keys, values)}
-
 # review: This should be a method of FlexEstimation with name run().
 #  this is a common approach to define a workflow for a class based structure.
 #  I suggest to not return Flexstimator.
-def runFlexEstimation(config, globalConfig, evaluatorConfig, ParseData: DataParser, datasetID: str='MiD17'):
-    Flexstimator = FlexEstimator(config=config, globalConfig=globalConfig, evaluatorConfig=evaluatorConfig,
-                                 datasetID=datasetID, ParseData=ParseData)
-    # review: Flexstimator should be lower case as it is an instance not a class.
-    Flexstimator.baseProfileCalculation()
-    Flexstimator.filter()
-    Flexstimator.aggregate()
-    Flexstimator.correct()
-    Flexstimator.normalize()
-    Flexstimator.writeOut()
-    # Flexstimator.plotProfiles()
-    return Flexstimator
-#
-# def runFlexstimation(config, datasetID, variable):
-#     indexedDriveData = mergeVariables(data=driveDataDays, variableData=tripDataClean, variables=['tripStartWeekday',
-#                                                                                                 'tripWeight'])
-#     indexedPurposeData = mergeVariables(data=purposeDataDays, variableData=tripDataClean, variables=['tripStartWeekday',
-#                                                                                                     'tripWeight'])
-#     Flexstimator = FlexEstimator(config=config, datasetID=datasetID)
-#     Flexstimator.baseProfileCalculation()
-#     Flexstimator.filter()
-#     Flexstimator.aggregate()
-#     Flexstimator.correct()
-#     Flexstimator.normalize()
-#     Flexstimator.writeOut()
+    def run(self):
+        # review: Flexstimator should be lower case as it is an instance not a class.
+        self.baseProfileCalculation()
+        self.filter()
+        self.aggregate()
+        self.correct()
+        self.normalize()
+        self.writeOut()
+        self.plotProfiles()
 
 if __name__ == '__main__':
     pathGlobalConfig = Path.cwd().parent / 'config' / 'globalConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
@@ -1029,10 +998,9 @@ if __name__ == '__main__':
     os.chdir(localPathConfig['pathAbsolute']['vencoPyRoot'])
 
     vpData = DataParser(config=parseConfig, globalConfig=globalConfig, loadEncrypted=False)
-    vpFlexEst17 = runFlexEstimation(config=flexConfig, globalConfig=globalConfig, evaluatorConfig=evaluatorConfig,
-                                    ParseData=vpData, datasetID='MiD17')
+    vpFlexEst17 = FlexEstimator(config=flexConfig, globalConfig=globalConfig, evaluatorConfig=evaluatorConfig,
+                                ParseData=vpData, datasetID='MiD17')
+    vpFlexEst17.run()
 
     print(f'Total absolute electricity charged in uncontrolled charging based on MiD08: '
           f'{vpFlexEst17.chargeProfilesUncontrolled.sum().sum()} based on MiD17')
-
-    print('This is the end')

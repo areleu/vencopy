@@ -37,3 +37,7 @@ def mergeVariables(data, variableData, variables):
     mergedData = pd.concat([variableDataMerge, data], axis=1)
     mergedData.reset_index(inplace=True)
     return mergedData
+
+
+def calculateWeightedAverage(col, weightCol):
+    return sum(col * weightCol) / sum(weightCol)
