@@ -302,6 +302,11 @@ def wavg(data, avg_name, weight_name):
     except ZeroDivisionError:
         return d.mean()
 
+def determinePurposeHourRange(self, departure, arrival):
+    tripDuration = arrival - departure
+    startHour = self.determinePurposeStartHour(departure, tripDuration)
+    return range(startHour, self.endHour)
+
 ### EXPERIMENTAL SANDBOX PART
 # def fillDayPurposesPerformant(tripData, purposeDataDays):  #FixMe: Ask Ben for performance improvements
 #     # This is an adaptation of fillDayPurposes()

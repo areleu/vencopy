@@ -104,7 +104,7 @@ class FlexEstimator:
 
         print('Flex Estimator initialization complete')
 
-    def readInputScalar(self, filePath) -> pd.DataFrame:
+    def readInputScalars(self, filePath) -> pd.DataFrame:
         """
         Method that gets the path to a venco scalar input file specifying technical assumptions such as battery capacity
         specific energy consumption, usable battery capacity share for load shifting and charge power.
@@ -113,9 +113,6 @@ class FlexEstimator:
         :return: Returns a dataframe with an index column and two value columns. The first value column holds numbers the
             second one holds units.
         """
-        # review: As far as I can recon, this returns a list of scalars. If yes I would opt for renaming
-        #  the method to readInputScalars (plural) as it returns more than one.
-
         #scalarInput = Assumptions
         inputRaw = pd.read_excel(filePath,
                                  header=5,
@@ -137,7 +134,7 @@ class FlexEstimator:
         inputData = inputData.convert_dtypes()
         return inputData
 
-    def stringToBoolean(self, df: pd.DataFrame) -> pd.DataFrame:
+    def booleanMapping(self, df: pd.DataFrame) -> pd.DataFrame:
         """
         Replaces given strings with python values for true or false.
         FixMe: Foreseen to be more flexible in next release.
@@ -167,7 +164,7 @@ class FlexEstimator:
         """
 
         inputRaw = self.readInputCSV(filePath)
-        inputData = self.stringToBoolean(inputRaw)
+        inputData = self.booleanMapping(inputRaw)
         return inputData
 
     def readVencoInput(self, datasetID: str) -> pd.DataFrame:
@@ -188,7 +185,7 @@ class FlexEstimator:
         # review: have you considered using the logging module for these kind of outputs?
         print('Reading Venco input scalars, drive profiles and boolean plug profiles')
 
-        scalars = self.readInputScalar(Path(self.globalConfig['pathRelative']['input']) /
+        scalars = self.readInputScalars(Path(self.globalConfig['pathRelative']['input']) /
                                        self.globalConfig['files']['inputDataScalars'])
         driveProfiles_raw = self.readInputCSV(Path(self.globalConfig['pathRelative']['input']) /
                                               createFileString(globalConfig=self.globalConfig,

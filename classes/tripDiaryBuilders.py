@@ -182,12 +182,6 @@ class TripDiaryBuilder:
         locationData = locationData.where(locationData == 0, other='DRIVING')
         return locationData
 
-    # review: is this obsolete?
-    # def determinePurposeHourRange(self, departure, arrival):
-    #     tripDuration = arrival - departure
-    #     startHour = self.determinePurposeStartHour(departure, tripDuration)
-    #     return range(startHour, self.endHour)
-
     def determinePurposeStartHour(self, departure: np.datetime64, arrival: np.datetime64):
         """
 
