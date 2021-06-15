@@ -16,9 +16,10 @@ Indices and tables
 
 
 
+
 .. toctree::
     :maxdepth: 2
-    :caption: Contents:
+    :caption: Documentation Overview:
     
     intro
     installation
@@ -28,6 +29,7 @@ Indices and tables
     functions
     filtering
     outputProfileSpecification
+    publications
     howToContribute
 
 
@@ -41,5 +43,7 @@ Documentation
 * :ref:'functions'.
 * :ref:'filtering'.
 * :ref:'outputProfileSpecification'.
+* :ref:'publications'.
 * :ref:'howToContribute'.
+
 

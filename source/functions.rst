@@ -13,21 +13,7 @@ This part of the documentation holds the function definitions of VencoPy from th
 ´run.py´ and the library files.
 
 
-.. automodule:: venco_main
+.. automodule:: run
     :members:
 
-.. automodule:: scripts.libInput
-    :members:
-
-.. automodule:: scripts.libPreprocessing
-    :members:
-    
-.. automodule:: scripts.libProfileCalculation
-    :members:
-
-.. automodule:: scripts.libOutput
-    :members:
-
-.. automodule:: scripts.libLogging
-    :members:
 
