@@ -23,10 +23,11 @@ from scripts.globalFunctions import createFileString, mergeVariables, calculateW
 
 
 class FlexEstimator:
-    def __init__(self, config: dict, globalConfig: dict, evaluatorConfig: dict, ParseData: DataParser,
+    def __init__(self, globalConfig: dict, flexConfig : dict, evaluatorConfig: dict, ParseData: DataParser,
                  datasetID: str='MiD17'):
-        self.config = config
+        #self.config = config
         self.globalConfig = globalConfig
+        self.flexConfig = flexConfig
         self.evaluatorConfig = evaluatorConfig
         self.hourVec = range(self.globalConfig['numberOfHours'])
         self.datasetID = datasetID
@@ -863,7 +864,7 @@ class FlexEstimator:
         data.index = data.index.swaplevel(0, 1)
         return data.sort_index()
 
-    def linePlot(self, profileDict, pathOutput, config, show=True, write=True, ylabel='Normalized profiles', ylim=None,
+    def linePlot(self, profileDict, pathOutput, show=True, write=True, ylabel='Normalized profiles', ylim=None,
                  filename=''):
         plt.rcParams.update(self.evaluatorConfig['plotConfig']['plotRCParameters'])  # set plot layout
         fig, ax = plt.subplots()
@@ -892,15 +893,15 @@ class FlexEstimator:
         if write:
             fig.savefig(filePlot)
 
-    def separateLinePlots(self, profileDictList, config, datasetID='MiD17', show=True, write=True,
+    def separateLinePlots(self, profileDictList, datasetID='MiD17', show=True, write=True,
                           ylabel=[], ylim=[], filenames=[]):
         for iDict, iYLabel, iYLim, iName in zip(profileDictList, ylabel, ylim, filenames):
             self.writeProfilesToCSV(profileDictOut=iDict, singleFile=False, datasetID=datasetID)
-            self.linePlot(iDict, pathOutput=Path(self.globalConfig['pathRelative']['plots']), config=config, show=show,
+            self.linePlot(iDict, pathOutput=Path(self.globalConfig['pathRelative']['plots']), show=show,
                           write=write, ylabel=iYLabel, ylim=iYLim, filename=iName)
 
     def plotProfiles(self):
-        self.linePlot(self.profileDictOut, pathOutput=Path(self.globalConfig['pathRelative']['plots']), config=self.config,
+        self.linePlot(self.profileDictOut, pathOutput=Path(self.globalConfig['pathRelative']['plots']),
                       show=True, write=True, filename='allPlots' + self.datasetID)
 
         # Separately plot flow and state profiles
@@ -917,7 +918,7 @@ class FlexEstimator:
 
         profileDictList = [profileDictConnectionShare, profileDictFlowsAbs, profileDictStateAbs]
 
-        self.separateLinePlots(profileDictList, self.config, show=True, write=True,
+        self.separateLinePlots(profileDictList, show=True, write=True,
                                ylabel=['Average EV connection share', 'Average EV flow in kW', 'Average EV SOC in kWh'],
                                filenames=[self.datasetID + '_connection', self.datasetID + '_flows',
                                           self.datasetID + '_state'],
@@ -950,8 +951,8 @@ if __name__ == '__main__':
         localPathConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
     os.chdir(localPathConfig['pathAbsolute']['vencoPyRoot'])
 
-    vpData = DataParser(config=parseConfig, globalConfig=globalConfig, loadEncrypted=False)
-    vpFlexEst17 = FlexEstimator(config=flexConfig, globalConfig=globalConfig, evaluatorConfig=evaluatorConfig,
+    vpData = DataParser(parseConfig=parseConfig, globalConfig=globalConfig, localPathConfig=localPathConfig, loadEncrypted=False)
+    vpFlexEst17 = FlexEstimator(flexConfig=flexConfig, globalConfig=globalConfig, evaluatorConfig=evaluatorConfig,
                                 ParseData=vpData, datasetID='MiD17')
     vpFlexEst17.run()
 

@@ -17,8 +17,8 @@ from classes.dataParsers import DataParser
 from scripts.globalFunctions import createFileString
 
 class TripDiaryBuilder:
-    def __init__(self, config: dict, globalConfig: dict, ParseData: DataParser, datasetID: str = 'MiD17'):
-        self.config = config
+    def __init__(self, tripConfig: dict, globalConfig: dict, ParseData: DataParser, datasetID: str = 'MiD17'):
+        self.tripConfig = tripConfig
         self.globalConfig = globalConfig
         self.parsedData = ParseData
         self.tripDataClean = None
@@ -354,5 +354,5 @@ if __name__ == '__main__':
     with open(pathLocalPathConfig) as ipf:
         localPathConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
     os.chdir(localPathConfig['pathAbsolute']['vencoPyRoot'])
-    vpData = DataParser(parseConfig=parseConfig, globalConfig=globalConfig, loadEncrypted=False)
-    vpDiary = TripDiaryBuilder(config=tripConfig, globalConfig=globalConfig, ParseData=vpData)
+    vpData = DataParser(parseConfig=parseConfig, globalConfig=globalConfig, localPathConfig=localPathConfig, loadEncrypted=False)
+    vpDiary = TripDiaryBuilder(tripConfig=tripConfig, globalConfig=globalConfig, ParseData=vpData)

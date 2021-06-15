@@ -44,10 +44,10 @@ with open(pathFlexConfig) as ipf:
 vpData = DataParser(datasetID=datasetID, parseConfig=parseConfig, globalConfig=globalConfig, localPathConfig=localPathConfig, loadEncrypted=False)
 
 # Trip distance and purpose diary compositions
-vpTripDiary = TripDiaryBuilder(datasetID=datasetID, config=tripConfig, globalConfig=globalConfig, ParseData=vpData)
+vpTripDiary = TripDiaryBuilder(datasetID=datasetID, tripConfig=tripConfig, globalConfig=globalConfig, ParseData=vpData)
 
 # Grid model applications
-vpGrid = GridModeler(config=gridConfig, globalConfig=globalConfig, datasetID=datasetID)
+vpGrid = GridModeler(gridConfig=gridConfig, globalConfig=globalConfig, datasetID=datasetID)
 vpGrid.assignSimpleGridViaPurposes()
 vpGrid.writeOutGridAvailability()
 
@@ -59,7 +59,7 @@ vpGrid.writeOutGridAvailability()
 # vpEval.plotAggregates()
 
 # Estimate charging flexibility based on driving profiles and charge connection
-vpFlex = FlexEstimator(config=flexConfig, globalConfig=globalConfig, evaluatorConfig=evaluatorConfig, datasetID=datasetID, ParseData=vpData)
+vpFlex = FlexEstimator(flexConfig=flexConfig, globalConfig=globalConfig, evaluatorConfig=evaluatorConfig, datasetID=datasetID, ParseData=vpData)
 vpFlex.baseProfileCalculation()
 vpFlex.filter()
 vpFlex.aggregate()

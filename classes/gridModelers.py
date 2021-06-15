@@ -16,11 +16,11 @@ from scripts.globalFunctions import createFileString
 
 
 class GridModeler:
-    def __init__(self, config: dict, globalConfig:dict, datasetID : str ='MiD17'):
+    def __init__(self, gridConfig: dict, globalConfig:dict, datasetID : str ='MiD17'):
         self.inputFileName = createFileString(globalConfig=globalConfig, fileKey='purposesProcessed',
                                               datasetID=datasetID)
         self.inputFilePath = Path(globalConfig['pathRelative']['input']) / self.inputFileName
-        self.gridDistributions = config['chargingInfrastructureDistributions']
+        self.gridDistributions = gridConfig['chargingInfrastructureDistributions']
         self.outputFileName = createFileString(globalConfig=globalConfig, fileKey='inputDataPlugProfiles',
                                                datasetID=datasetID)
         self.outputFilePath = Path(globalConfig['pathRelative']['input']) / self.outputFileName
@@ -49,6 +49,6 @@ if __name__ == '__main__':
     with open(pathLocalPathConfig) as ipf:
         localPathConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
     os.chdir(localPathConfig['pathAbsolute']['vencoPyRoot'])
-    vpg = GridModeler(config=gridConfig, globalConfig=globalConfig)
+    vpg = GridModeler(gridConfig=gridConfig, globalConfig=globalConfig)
     vpg.assignSimpleGridViaPurposes()
     vpg.writeOutGridAvailability()
