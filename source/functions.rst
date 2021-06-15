@@ -16,4 +16,33 @@ This part of the documentation holds the function definitions of VencoPy from th
 .. automodule:: run
     :members:
 
+.. automodule:: classes.dataParsers
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: classes.tripDiaryBuilders
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: classes.gridModelers
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: classes.flexEstimators
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: scripts.globalFunctions
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: scripts.libLogging
+    :members:
+    :undoc-members:
+    :show-inheritance:
 

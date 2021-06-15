@@ -49,7 +49,7 @@ Organizational information
    * - Stakeholders
      - Hans Christian Gils, Department of energy system analysis at Institute of Networked Energy Systems, DLR
    * - Timeline
-     - Alpha release in Q3 2020, Beta release in Q1 2021
+     - Alpha release in Q3 2020, Beta release in Q2 2021
    * - Open source ready
      - Features, dependencies and components which are contraindicative or at odds with an open source publication should not be used
    * - Development tools
