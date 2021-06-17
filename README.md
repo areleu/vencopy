@@ -1,3 +1,7 @@
+[![License: BSD 3-Clause](https://img.shields.io/badge/license-BSD%203--Clause-blue.svg)](https://github.com/TechSmith/hyde/blob/master/LICENSE.txt)
+
+
+
 # VencoPy Readme file
 - Author: Niklas Wulff
 - Contact: niklas.wulff@dlr.de
