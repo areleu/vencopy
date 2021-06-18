@@ -16,7 +16,7 @@ plotConfig:
     show: True
     save: True
     xAxis:
-        xTickSteps: 24
+        xTickSteps: 168
         weekdays: ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN']
         hours: [0, 12]
 #        hours: [0]

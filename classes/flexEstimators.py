@@ -701,7 +701,7 @@ class FlexEstimator:
         A separate aggregation function differentiating by the variable defined as a string in str. Weights as
         given in MiD.
 
-        :param data: list of strings declaring the datasets to be read in
+        :param data: list of strings declaring the datasetIDs to be read in
         :param by: String specifyzing a variable.
         :param weights: Weight vector as given in the MiD
         :param hourVec: hour vector specifying the hours used for VencoPy analysis
@@ -855,7 +855,7 @@ class FlexEstimator:
         self.writeProfilesToCSV(profileDictOut=self.profileDictOut, singleFile=True,
                                 datasetID=self.datasetID)
 
-    def sortData(data):
+    def sortData(self, data):
         """
         Method used for plotting to order index values
 
@@ -864,6 +864,7 @@ class FlexEstimator:
         data.index = data.index.swaplevel(0, 1)
         return data.sort_index()
 
+    # DEPRECATED HERE IN THE CODE AND SHIFTED TO EVALUATOR
     def linePlot(self, profileDict, pathOutput, show=True, write=True, ylabel='Normalized profiles', ylim=None,
                  filename=''):
         plt.rcParams.update(self.evaluatorConfig['plotConfig']['plotRCParameters'])  # set plot layout
@@ -907,16 +908,14 @@ class FlexEstimator:
         # Separately plot flow and state profiles
         profileDictConnectionShare = dict(gridConnectionShare=self.plugProfilesAgg)
 
-        profileDictFlowsNorm = dict(uncontrolledCharging=self.chargeProfilesUncontrolledCorr,
-                                    electricityDemandDriving=self.electricPowerProfilesCorr,
-                                    gridConnectionShare=self.plugProfilesAgg)
         profileDictFlowsAbs = dict(uncontrolledCharging=self.chargeProfilesUncontrolledAgg,
                                    electricityDemandDriving=self.electricPowerProfilesAgg)
-
-        profileDictStateNorm = dict(socMax=self.socMaxNorm, socMin=self.socMinNorm)
         profileDictStateAbs = dict(socMax=self.socMax, socMin=self.socMin)
 
+
+
         profileDictList = [profileDictConnectionShare, profileDictFlowsAbs, profileDictStateAbs]
+        # profileDictList = [profileDictConnectionShareDiffDay, profileDictFlowsAbsDiffDay, profileDictStateAbs]
 
         self.separateLinePlots(profileDictList, show=True, write=True,
                                ylabel=['Average EV connection share', 'Average EV flow in kW', 'Average EV SOC in kWh'],

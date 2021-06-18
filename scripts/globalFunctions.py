@@ -11,7 +11,7 @@ import yaml
 import pathlib
 
 
-def createFileString(globalConfig: dict, fileKey: str, datasetID: str, manualLabel: str = '',
+def createFileString(globalConfig: dict, fileKey: str, datasetID: str=None, manualLabel: str = '',
                      filetypeStr: str = 'csv'):
     #pathGlobalConfig = pathlib.Path.cwd().parent / 'config' / 'globalConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
     #globalConfig = yaml.load(open(pathGlobalConfig), Loader=yaml.SafeLoader)
@@ -37,6 +37,10 @@ def mergeVariables(data, variableData, variables):
     mergedData = pd.concat([variableDataMerge, data], axis=1)
     mergedData.reset_index(inplace=True)
     return mergedData
+
+
+def mergeDataToWeightsAndDays(diaryData, ParseData):
+    return mergeVariables(data=diaryData, variableData=ParseData.data, variables=['tripStartWeekday', 'tripWeight'])
 
 
 def calculateWeightedAverage(col, weightCol):

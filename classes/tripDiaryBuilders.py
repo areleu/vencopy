@@ -24,7 +24,7 @@ class TripDiaryBuilder:
         self.tripDataClean = None
         self.tripDistanceDiary = None
         self.tripPurposeDiary = None
-        # self.calculateConsistentHourlyShares(data=ParseData.data)
+        # self.calculateConsistentHourlyShares(data=parseData.data)
         # ONLY FOR DEBUGGING PURPOSES
         self.tripDataClean = self.calculateConsistentHourlyShares(data=ParseData.data.loc[0:2000, :])
         self.tripDistanceDiary = self.tripDistanceAllocation(globalConfig)
@@ -68,7 +68,7 @@ class TripDiaryBuilder:
     def calcDistanceShares(self, data: pd.DataFrame, duration, timestampSt: np.datetime64,
                            timestampEn: np.datetime64) -> tuple:
         """
-        :param data: list of strings declaring the datasets to be read in
+        :param data: list of strings declaring the datasetIDs to be read in
         :param duration: duration of a trip
         :param timestampSt:  start time of a trip
         :param timestampEn:  end time of a trip
@@ -108,7 +108,7 @@ class TripDiaryBuilder:
 
     def calcHourlyShares(self, data: pd.DataFrame, ts_st: np.datetime64, ts_en: np.datetime64) -> pd.DataFrame:
         """
-        :param data: list of strings declaring the datasets to be read in
+        :param data: list of strings declaring the datasetIDs to be read in
         :param ts_st: start time of a trip
         :param ts_en: end time of a trip
         :return: data frame consisting additional information regarding share of a trip, number of full hours and lenght of each trip

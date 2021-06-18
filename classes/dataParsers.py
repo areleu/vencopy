@@ -72,7 +72,7 @@ class DataParser:
         """
         General check if data set ID is defined.
 
-        :param datasetID: list of strings declaring the datasets to be read in
+        :param datasetID: list of strings declaring the datasetIDs to be read in
         :param parseConfig: A yaml config file holding a dictionary with the keys 'pathRelative' and 'pathAbsolute'
         :return: Returns a string value of a mobility data
         """
@@ -156,7 +156,7 @@ class DataParser:
 
     def createReplacementDict(self, datasetID : str, dictRaw : dict) -> None:
         """
-        :param datasetID: list of strings declaring the datasets to be read in
+        :param datasetID: list of strings declaring the datasetIDs to be read in
         :param dictRaw: Contains dictionary of the raw data
         :return:
         """

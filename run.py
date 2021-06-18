@@ -10,10 +10,12 @@ __license__ = 'BSD-3-Clause'
 #----- imports & packages ------
 import yaml
 import pathlib
+import pandas as pd
 from classes.dataParsers import DataParser
 from classes.tripDiaryBuilders import TripDiaryBuilder
 from classes.gridModelers import GridModeler
 from classes.flexEstimators import FlexEstimator
+from classes.evaluators import Evaluator
 
 # Set dataset and config to analyze
 datasetID = 'MiD17'
@@ -54,9 +56,10 @@ vpGrid.writeOutGridAvailability()
 # review: Is this still valid code or left overs? I ignored this code for now.
 #  Maybe we should schedule a cleanup.
 # Evaluate drive and trip purpose profiles
-# vpEval = Evaluator(config, label='SESPaperTest')
-# vpEval.hourlyAggregates = vpEval.calcVariableSpecAggregates(by=['tripStartWeekday'])
-# vpEval.plotAggregates()
+vpEval = Evaluator(globalConfig=globalConfig, evaluatorConfig=evaluatorConfig,
+                   parseData=pd.Series(data=vpData, index=[datasetID]), label='SESPaperTest')
+vpEval.hourlyAggregates = vpEval.calcVariableSpecAggregates(by=['tripStartWeekday'])
+vpEval.plotAggregates()
 
 # Estimate charging flexibility based on driving profiles and charge connection
 vpFlex = FlexEstimator(flexConfig=flexConfig, globalConfig=globalConfig, evaluatorConfig=evaluatorConfig, datasetID=datasetID, ParseData=vpData)
