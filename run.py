@@ -69,6 +69,7 @@ vpFlex.aggregate()
 vpFlex.correct()
 vpFlex.normalize()
 vpFlex.writeOut()
-vpFlex.plotProfiles()
+
+vpEval.plotProfiles(flexEstimator=vpFlex)
 
 

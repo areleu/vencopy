@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from random import seed, random
 from classes.dataParsers import DataParser
-from scripts.globalFunctions import createFileString, mergeVariables, calculateWeightedAverage
+from scripts.globalFunctions import createFileString, mergeVariables, calculateWeightedAverage, writeProfilesToCSV
 
 
 class FlexEstimator:
@@ -822,29 +822,6 @@ class FlexEstimator:
         self.socMinNorm, self.socMaxNorm = self.normalizeProfiles(self.scalars, self.socMin, self.socMax,
                                                                   normReferenceParam='Battery_capacity')
 
-    def writeProfilesToCSV(self, profileDictOut, singleFile=True, datasetID='MiD17'):
-        """
-        Function to write VencoPy profiles to either one or five .csv files in the output folder specified in outputFolder.
-
-        :param outputFolder: path to output folder
-        :param profileDictOut: Dictionary with profile names in keys and profiles as pd.Series containing a VencoPy
-        profile each to be written in value
-        :param singleFile: If True, all profiles will be appended and written to one .csv file. If False, five files are
-        written
-        :param strAdd: String addition for filenames
-        :return: None
-        """
-
-        if singleFile:
-            dataOut = pd.DataFrame(profileDictOut)
-            dataOut.to_csv(Path(self.globalConfig['pathRelative']['dataOutput']) /
-                           createFileString(globalConfig=self.globalConfig, fileKey='vencoPyOutput',
-                                            datasetID=datasetID), header=True)
-        else:
-            for iName, iProf in profileDictOut.items():
-                iProf.to_csv(Path(self.globalConfig['pathRelative']['dataOutput']) /
-                             Path(r'vencoPyOutput_' + iName + datasetID + '.csv'), header=True)
-
     def writeOut(self):
         self.profileDictOut = dict(uncontrolledCharging=self.chargeProfilesUncontrolledCorr,
                                    electricityDemandDriving=self.electricPowerProfilesCorr,
@@ -852,76 +829,76 @@ class FlexEstimator:
                                    gridConnectionShare=self.plugProfilesAgg,
                                    auxFuelDriveProfile=self.auxFuelDemandProfilesCorr)
 
-        self.writeProfilesToCSV(profileDictOut=self.profileDictOut, singleFile=True,
+        writeProfilesToCSV(profileDictOut=self.profileDictOut, globalConfig=self.globalConfig, singleFile=True,
                                 datasetID=self.datasetID)
 
-    def sortData(self, data):
-        """
-        Method used for plotting to order index values
-
-        :param data: Pandas Dataframe with two indices
-        """
-        data.index = data.index.swaplevel(0, 1)
-        return data.sort_index()
-
-    # DEPRECATED HERE IN THE CODE AND SHIFTED TO EVALUATOR
-    def linePlot(self, profileDict, pathOutput, show=True, write=True, ylabel='Normalized profiles', ylim=None,
-                 filename=''):
-        plt.rcParams.update(self.evaluatorConfig['plotConfig']['plotRCParameters'])  # set plot layout
-        fig, ax = plt.subplots()
-        plt.tick_params(labelsize=self.evaluatorConfig['plotConfig']['plotRCParameters']['font.size'])
-        for iKey, iVal in profileDict.items():
-            if isinstance(iVal.index, pd.MultiIndex):
-                iVal = self.sortData(iVal)
-                sns.lineplot(range(iVal.index.size), iVal, label=iKey, sort=False)
-            else:
-                sns.lineplot(iVal.index, iVal, label=iKey, sort=False)
-        xRange = range(0, len(profileDict[list(profileDict)[0]]) + 1, self.evaluatorConfig['plotConfig']['xAxis']['xTickSteps'])
-        # xLabels = [f'{iDay}\n{str(iTime)}:00' for iDay in config['plotConfig']['xAxis']['weekdays'] for iTime in config['plotConfig']['xAxis']['hours']]
-        xLabels = [f'{str(iTime)}:00' for iTime in self.evaluatorConfig['plotConfig']['xAxis']['hours']]
-        ax.set_xticks(xRange)
-        ax.set_xticklabels(xLabels, fontsize=self.evaluatorConfig['plotConfig']['xAxis']['ticklabelsize'])
-        ax.set_ylim(bottom=0, top=ylim)
-        ax.set_xlabel('Hour', fontsize=self.evaluatorConfig['plotConfig']['plotRCParameters']['axes.labelsize'])
-        ax.set_ylabel(ylabel, fontsize=self.evaluatorConfig['plotConfig']['plotRCParameters']['axes.labelsize'])
-        plt.legend(loc='upper center')  # , bbox_to_anchor=(0.5, 1.3) ncol=2,
-        plt.tight_layout()
-        filePlot = pathOutput / Path(
-            createFileString(globalConfig=self.globalConfig, datasetID=self.datasetID, fileKey='flexPlotName', manualLabel=filename,
-                             filetypeStr='svg'))
-        if show:
-            plt.show()
-        if write:
-            fig.savefig(filePlot)
-
-    def separateLinePlots(self, profileDictList, datasetID='MiD17', show=True, write=True,
-                          ylabel=[], ylim=[], filenames=[]):
-        for iDict, iYLabel, iYLim, iName in zip(profileDictList, ylabel, ylim, filenames):
-            self.writeProfilesToCSV(profileDictOut=iDict, singleFile=False, datasetID=datasetID)
-            self.linePlot(iDict, pathOutput=Path(self.globalConfig['pathRelative']['plots']), show=show,
-                          write=write, ylabel=iYLabel, ylim=iYLim, filename=iName)
-
-    def plotProfiles(self):
-        self.linePlot(self.profileDictOut, pathOutput=Path(self.globalConfig['pathRelative']['plots']),
-                      show=True, write=True, filename='allPlots' + self.datasetID)
-
-        # Separately plot flow and state profiles
-        profileDictConnectionShare = dict(gridConnectionShare=self.plugProfilesAgg)
-
-        profileDictFlowsAbs = dict(uncontrolledCharging=self.chargeProfilesUncontrolledAgg,
-                                   electricityDemandDriving=self.electricPowerProfilesAgg)
-        profileDictStateAbs = dict(socMax=self.socMax, socMin=self.socMin)
-
-
-
-        profileDictList = [profileDictConnectionShare, profileDictFlowsAbs, profileDictStateAbs]
-        # profileDictList = [profileDictConnectionShareDiffDay, profileDictFlowsAbsDiffDay, profileDictStateAbs]
-
-        self.separateLinePlots(profileDictList, show=True, write=True,
-                               ylabel=['Average EV connection share', 'Average EV flow in kW', 'Average EV SOC in kWh'],
-                               filenames=[self.datasetID + '_connection', self.datasetID + '_flows',
-                                          self.datasetID + '_state'],
-                               ylim=[1, 0.9, 50])
+    # def sortData(self, data):
+    #     """
+    #     Method used for plotting to order index values
+    #
+    #     :param data: Pandas Dataframe with two indices
+    #     """
+    #     data.index = data.index.swaplevel(0, 1)
+    #     return data.sort_index()
+    #
+    # # DEPRECATED HERE IN THE CODE AND SHIFTED TO EVALUATOR
+    # def linePlot(self, profileDict, pathOutput, show=True, write=True, ylabel='Normalized profiles', ylim=None,
+    #              filename=''):
+    #     plt.rcParams.update(self.evaluatorConfig['plotConfig']['plotRCParameters'])  # set plot layout
+    #     fig, ax = plt.subplots()
+    #     plt.tick_params(labelsize=self.evaluatorConfig['plotConfig']['plotRCParameters']['font.size'])
+    #     for iKey, iVal in profileDict.items():
+    #         if isinstance(iVal.index, pd.MultiIndex):
+    #             iVal = self.sortData(iVal)
+    #             sns.lineplot(range(iVal.index.size), iVal, label=iKey, sort=False)
+    #         else:
+    #             sns.lineplot(iVal.index, iVal, label=iKey, sort=False)
+    #     xRange = range(0, len(profileDict[list(profileDict)[0]]) + 1, self.evaluatorConfig['plotConfig']['xAxis']['xTickSteps'])
+    #     # xLabels = [f'{iDay}\n{str(iTime)}:00' for iDay in config['plotConfig']['xAxis']['weekdays'] for iTime in config['plotConfig']['xAxis']['hours']]
+    #     xLabels = [f'{str(iTime)}:00' for iTime in self.evaluatorConfig['plotConfig']['xAxis']['hours']]
+    #     ax.set_xticks(xRange)
+    #     ax.set_xticklabels(xLabels, fontsize=self.evaluatorConfig['plotConfig']['xAxis']['ticklabelsize'])
+    #     ax.set_ylim(bottom=0, top=ylim)
+    #     ax.set_xlabel('Hour', fontsize=self.evaluatorConfig['plotConfig']['plotRCParameters']['axes.labelsize'])
+    #     ax.set_ylabel(ylabel, fontsize=self.evaluatorConfig['plotConfig']['plotRCParameters']['axes.labelsize'])
+    #     plt.legend(loc='upper center')  # , bbox_to_anchor=(0.5, 1.3) ncol=2,
+    #     plt.tight_layout()
+    #     filePlot = pathOutput / Path(
+    #         createFileString(globalConfig=self.globalConfig, datasetID=self.datasetID, fileKey='flexPlotName', manualLabel=filename,
+    #                          filetypeStr='svg'))
+    #     if show:
+    #         plt.show()
+    #     if write:
+    #         fig.savefig(filePlot)
+    #
+    # def separateLinePlots(self, profileDictList, datasetID='MiD17', show=True, write=True,
+    #                       ylabel=[], ylim=[], filenames=[]):
+    #     for iDict, iYLabel, iYLim, iName in zip(profileDictList, ylabel, ylim, filenames):
+    #         self.writeProfilesToCSV(profileDictOut=iDict, singleFile=False, datasetID=datasetID)
+    #         self.linePlot(iDict, pathOutput=Path(self.globalConfig['pathRelative']['plots']), show=show,
+    #                       write=write, ylabel=iYLabel, ylim=iYLim, filename=iName)
+    #
+    # def plotProfiles(self):
+    #     self.linePlot(self.profileDictOut, pathOutput=Path(self.globalConfig['pathRelative']['plots']),
+    #                   show=True, write=True, filename='allPlots' + self.datasetID)
+    #
+    #     # Separately plot flow and state profiles
+    #     profileDictConnectionShare = dict(gridConnectionShare=self.plugProfilesAgg)
+    #
+    #     profileDictFlowsAbs = dict(uncontrolledCharging=self.chargeProfilesUncontrolledAgg,
+    #                                electricityDemandDriving=self.electricPowerProfilesAgg)
+    #     profileDictStateAbs = dict(socMax=self.socMax, socMin=self.socMin)
+    #
+    #
+    #
+    #     profileDictList = [profileDictConnectionShare, profileDictFlowsAbs, profileDictStateAbs]
+    #     # profileDictList = [profileDictConnectionShareDiffDay, profileDictFlowsAbsDiffDay, profileDictStateAbs]
+    #
+    #     self.separateLinePlots(profileDictList, show=True, write=True,
+    #                            ylabel=['Average EV connection share', 'Average EV flow in kW', 'Average EV SOC in kWh'],
+    #                            filenames=[self.datasetID + '_connection', self.datasetID + '_flows',
+    #                                       self.datasetID + '_state'],
+    #                            ylim=[1, 0.9, 50])
 
     def run(self):
         self.baseProfileCalculation()

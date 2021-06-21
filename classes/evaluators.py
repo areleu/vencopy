@@ -13,12 +13,25 @@ import pandas as pd
 import seaborn as sns
 from pathlib import Path
 import matplotlib.pyplot as plt
-from scripts.globalFunctions import createFileString, calculateWeightedAverage, mergeDataToWeightsAndDays
+from scripts.globalFunctions import createFileString, calculateWeightedAverage, mergeDataToWeightsAndDays, \
+    writeProfilesToCSV
 from classes.flexEstimators import FlexEstimator
 from classes.dataParsers import DataParser
 
 class Evaluator:
-    def __init__(self, globalConfig:dict, evaluatorConfig: dict, label, parseData: pd.Series, weightPlot=True):
+    def __init__(self, globalConfig:dict, evaluatorConfig: dict, label: str, parseData: pd.Series=None, weightPlot=True):
+        """
+        CURRENTLY IN SEMI-PROUDCTION MODE. Some interfaces may only apply to specific cases.
+        Overall evaluation class for assessing vencopy mobility and charging profiles.
+
+        :param globalConfig: global config instances for paths
+        :param evaluatorConfig: evaluator config mainly for plot properties
+        :param label: String for saving plots to hard disk
+        :param parseData: Series with instances of VencoPy class ParseData and keys specifying the name of the
+            respective class
+        :param weightPlot: If True, profiles are weighted for plotting
+        """
+
         self.globalConfig = globalConfig
         self.evaluatorConfig = evaluatorConfig
         self.label = label
@@ -62,11 +75,24 @@ class Evaluator:
         return ret
 
     def mergeDaysAndWeights(self):
+        """
+        Method to merge mobility data to respective trip weights and days.
+
+        :return: None
+        """
         for iDat in self.datasetIDs:
             self.inputData[iDat] = mergeDataToWeightsAndDays(self.inputDataRaw[iDat], self.parseData[iDat])
             self.inputData[iDat].dropna()
 
+    # DEPRECATED WILL BE DELETED ON NEXT RELEASE
     def assignWeight(self, datasetIDs: list):
+        """
+        Reformatting function
+
+        :param datasetIDs:
+        :return:
+        """
+
         ret = pd.Series(dtype=object)
         for iDat in datasetIDs:
             weightData = mergeDataToWeightsAndDays(self.inputData[iDat], self.parseData[iDat])
@@ -90,12 +116,24 @@ class Evaluator:
         isNoTrip.apply(any, axis=1)
 
     def reindexData(self):
+        """
+        Formatting function to set index of profiles with weekday and weight, in preparation for plotting
+
+        :return: None
+        """
+
         for iDat in self.datasetIDs:
             self.data[iDat] = self.inputData[iDat].set_index(['hhPersonID', 'tripStartWeekday'], drop=True)
             self.data[iDat].dropna(inplace=True)
 
     # Maybe not needed at all?
     def stackData(self):
+        """
+        Function to rearrange and rename data for plotting
+
+        :return: None
+        """
+
         ret = {}
         for idx, iDat in self.inputData.items():
             iDatRaw = iDat.drop(columns=['hhPersonID']).set_index('tripStartWeekday',
@@ -106,6 +144,12 @@ class Evaluator:
         return ret
 
     def setupAggDict(self):
+        """
+        Setup lookup-dictionaries for plotting.
+
+        :return: Updated dictionary of data set IDs
+        """
+
         IDDict = {'sum': None, 'mean': None, 'wMean': None}
         IDDict['sum'] = [f'{iDatID}_sum' for iDatID in self.datasetIDs]
         IDDict['mean'] = [f'{iDatID}_mean' for iDatID in self.datasetIDs]
@@ -113,6 +157,14 @@ class Evaluator:
         return IDDict
 
     def aggregateAcrossTrips(self):
+        """
+        Aggregate trip distances across all trops for specific hours. Aggregation is carried out threefold: Summation,
+        simple average and weighted average if self.weightPlot is True.
+
+        :return: DataFrame with a column for each aggregated time series and a row for each hour in the original data
+            set
+        """
+
         ret = pd.DataFrame()
         for iDatID, iDat in self.inputData.items():
             ret.loc[:, f'{iDatID}_sum'] = iDat.loc[:, self.hourVec].sum(axis=0)
@@ -122,7 +174,16 @@ class Evaluator:
                                                                                 args=[iDat.loc[:, 'tripWeight']])
         return ret
 
-    def calcVariableSpecAggregates(self, by):
+    def calcVariableSpecAggregates(self, by: list):
+        """
+        Aggregation method that calculated aggregates such in aggregateAcrossTrips but differentiating one additional
+        criterium given in by. The method is used to calculate weekday specific aggregates.
+
+        :param by: List of column names to add differentiation. Currently only tested for tripStartWeekday
+        :return: Pandas DataFrame with three columns each one for summed, average and weighted average and a multiindex
+            differentiating between hours and one additional variable specificied in by.
+        """
+
         ret = pd.DataFrame()
         for iDatID, iDat in self.data.items():
             if not all([iBy in iDat.index.names for iBy in by]):
@@ -137,7 +198,13 @@ class Evaluator:
         return ret
 
     def calcWeightedTripValues(self, dataIn, idxLvl):
-        # Option 3: Looping :(
+        """
+        Function to calculate weighted trip values with an additional differentiating column given in idxLvl.
+
+        :param dataIn: Input data for aggregation
+        :param idxLvl: Index level specifying additional differentiation criterium
+        :return:
+        """
         vars = set(dataIn.index.get_level_values(idxLvl))
         ret = pd.DataFrame(index=self.hourVec, columns=vars)
         data = dataIn.loc[:, self.hourVec].reset_index(level=idxLvl)
@@ -160,6 +227,15 @@ class Evaluator:
         return data.sort_index()
 
     def plotAggregates(self):
+        """
+        Plotting method for plotting aggregates that are differentiated with one additional variable. In the current
+        implementation both summed and averaged values are plotted. Arguments show and write in the evaluator config
+        determine if plots are shown to the user and/or written to hard disk. X axis ticks are currently manually
+        configured to fit weekday and hour differentiation for one week.
+
+        :return: None
+        """
+
         self.hourlyAggregates = self.hourlyAggregates.swaplevel(0, 1)
         # Plotting aggregates
         fig, ax = plt.subplots(2, 1)
@@ -194,8 +270,22 @@ class Evaluator:
                                         filetypeStr='svg')
             fig.savefig(Path(self.globalConfig['pathRelative']['plots']) / fileName, bbox_inches='tight')
 
-    def linePlot(self, profileDict, pathOutput, show=True, write=True, ylabel='Normalized profiles', ylim=None,
+    def linePlot(self, profileDict, pathOutput, flexEstimator: FlexEstimator, show=True, write=True, ylabel='Normalized profiles', ylim=None,
                  filename=''):
+        """
+        Basic line plot functionality
+
+        :param profileDict: Dictionary specifiying which profiles should be plotted together in one plot
+        :param pathOutput: Path to write Figure to
+        :param flexEstimator: Instance of VencoPy class FlexEstimator for plotting of charging profiles
+        :param show: If True, Figure is displayed during runtime
+        :param write: If True, Figrue is written to hard disk
+        :param ylabel: Label for y Axis
+        :param ylim: Manually set y limit
+        :param filename: Manually set name of file written to hard disk
+        :return: None
+        """
+
         plt.rcParams.update(self.evaluatorConfig['plotConfig']['plotRCParameters'])  # set plot layout
         fig, ax = plt.subplots()
         plt.tick_params(labelsize=self.evaluatorConfig['plotConfig']['plotRCParameters']['font.size'])
@@ -216,45 +306,71 @@ class Evaluator:
         plt.legend(loc='upper center')  # , bbox_to_anchor=(0.5, 1.3) ncol=2,
         plt.tight_layout()
         filePlot = pathOutput / Path(
-            createFileString(globalConfig=self.globalConfig, datasetID=self.datasetID, fileKey='flexPlotName', manualLabel=filename,
-                             filetypeStr='svg'))
+            createFileString(globalConfig=self.globalConfig, datasetID=flexEstimator.datasetID, fileKey='flexPlotName',
+                             manualLabel=filename, filetypeStr='svg'))
         if show:
             plt.show()
         if write:
             fig.savefig(filePlot)
 
-    def separateLinePlots(self, profileDictList, datasetID='MiD17', show=True, write=True,
-                          ylabel=[], ylim=[], filenames=[]):
-        for iDict, iYLabel, iYLim, iName in zip(profileDictList, ylabel, ylim, filenames):
-            self.writeProfilesToCSV(profileDictOut=iDict, singleFile=False, datasetID=datasetID)
-            self.linePlot(iDict, pathOutput=Path(self.globalConfig['pathRelative']['plots']), show=show,
-                          write=write, ylabel=iYLabel, ylim=iYLim, filename=iName)
+    def separateLinePlots(self, profileDictList: list, flexEstimator: FlexEstimator, show=True,
+                          write=True, ylabel=[], ylim=[], filenames=[]):
+        """
+        Wrapper function to draw and write multiple plots using linePlot().
 
-    def plotProfiles(self):
-        self.linePlot(self.profileDictOut, pathOutput=Path(self.globalConfig['pathRelative']['plots']),
-                      show=True, write=True, filename='allPlots' + self.datasetID)
+        :param profileDictList: List of dictionaries. Each dictionary specifies one plot drawn.
+        :param flexEstimator: Instance of VencoPy class FlexEstimator for data set ID
+        :param show: If True, plots are shown to the user during runtime
+        :param write: If True, plots are written to hard drive
+        :param ylabel: List of ylabels. Has to be of same length as profileDictList
+        :param ylim: List of ylimits. Has to be of same length as profileDictList
+        :param filenames: Name of file to be written to hard drive
+        :return: None
+        """
+        for iDict, iYLabel, iYLim, iName in zip(profileDictList, ylabel, ylim, filenames):
+            writeProfilesToCSV(profileDictOut=iDict, globalConfig=self.globalConfig, singleFile=False,
+                               datasetID=flexEstimator.datasetID)
+            self.linePlot(iDict, pathOutput=Path(self.globalConfig['pathRelative']['plots']),
+                          flexEstimator=flexEstimator, show=show, write=write, ylabel=iYLabel, ylim=iYLim,
+                          filename=iName)
+
+    def plotProfiles(self, flexEstimator: FlexEstimator):
+        """
+        Wrapper function to plot both one Figure with all resulting output profiles and separate Figures for flow,
+        connection and state profiles after VencoPy flexibility estimation.
+
+        :param flexEstimator: Instance of VencoPy class FlexEstimator
+        :return: None
+        """
+        self.linePlot(flexEstimator.profileDictOut, pathOutput=Path(flexEstimator.globalConfig['pathRelative']['plots']),
+                      flexEstimator=flexEstimator, show=True, write=True, filename='allPlots' + flexEstimator.datasetID)
 
         # Separately plot flow and state profiles
-        profileDictConnectionShare = dict(gridConnectionShare=self.plugProfilesAgg)
+        profileDictConnectionShare = dict(gridConnectionShare=flexEstimator.plugProfilesAgg)
 
-        profileDictFlowsNorm = dict(uncontrolledCharging=self.chargeProfilesUncontrolledCorr,
-                                    electricityDemandDriving=self.electricPowerProfilesCorr,
-                                    gridConnectionShare=self.plugProfilesAgg)
-        profileDictFlowsAbs = dict(uncontrolledCharging=self.chargeProfilesUncontrolledAgg,
-                                   electricityDemandDriving=self.electricPowerProfilesAgg)
+        profileDictFlowsNorm = dict(uncontrolledCharging=flexEstimator.chargeProfilesUncontrolledCorr,
+                                    electricityDemandDriving=flexEstimator.electricPowerProfilesCorr,
+                                    gridConnectionShare=flexEstimator.plugProfilesAgg)
+        profileDictFlowsAbs = dict(uncontrolledCharging=flexEstimator.chargeProfilesUncontrolledAgg,
+                                   electricityDemandDriving=flexEstimator.electricPowerProfilesAgg)
 
-        profileDictStateNorm = dict(socMax=self.socMaxNorm, socMin=self.socMinNorm)
-        profileDictStateAbs = dict(socMax=self.socMax, socMin=self.socMin)
+        profileDictStateNorm = dict(socMax=flexEstimator.socMaxNorm, socMin=flexEstimator.socMinNorm)
+        profileDictStateAbs = dict(socMax=flexEstimator.socMax, socMin=flexEstimator.socMin)
 
         profileDictList = [profileDictConnectionShare, profileDictFlowsAbs, profileDictStateAbs]
 
-        self.separateLinePlots(profileDictList, show=True, write=True,
+        self.separateLinePlots(profileDictList, show=True, write=True, flexEstimator=flexEstimator,
                                ylabel=['Average EV connection share', 'Average EV flow in kW', 'Average EV SOC in kWh'],
-                               filenames=[self.datasetID + '_connection', self.datasetID + '_flows',
-                                          self.datasetID + '_state'],
+                               filenames=[flexEstimator.datasetID + '_connection', flexEstimator.datasetID + '_flows',
+                                          flexEstimator.datasetID + '_state'],
                                ylim=[1, 0.9, 50])
 
     def compareProfiles(self, compareTo):
+        """
+        EXPERIMENTAL STATE. Deprecated method to compare profiles of MiD08 and MiD17. Currently not in production and
+        not tested.
+        """
+
         if not isinstance(compareTo, FlexEstimator):
             raise('Argument to compare to is not a class instance of FlexEstimator')
 
@@ -304,6 +420,14 @@ class Evaluator:
                                 ])
 
     def compileDictList(self, compareTo, profileNameList):
+        """
+        Helper function for compareProfiles()
+
+        :param compareTo: Dataset to compare to
+        :param profileNameList: List of names of files to be written
+        :return:
+        """
+
         ret = []
         keys = [self.datasetID, compareTo.datasetID]
         for iProf in profileNameList:
