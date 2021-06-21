@@ -17,7 +17,7 @@ from classes.gridModelers import GridModeler
 from classes.flexEstimators import FlexEstimator
 from classes.evaluators import Evaluator
 
-# Set dataset and config to analyze TEST ADD CHARACTERS
+# Set dataset and config to analyze
 datasetID = 'MiD17'
 # review: should the datasetID not be part of the config files?
 pathGlobalConfig = pathlib.Path.cwd() / 'config' / 'globalConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
