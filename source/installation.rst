@@ -4,7 +4,7 @@
 
 .. _installation:
 
-Installation and Set-up
+Installation and Setup
 ===================================
 
 

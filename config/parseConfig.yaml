@@ -1,0 +1,119 @@
+#-*- coding:utf-8 -*-
+
+# __version__ = '0.0.9'
+# __maintainer__ = 'Niklas Wulff 2019-02-12'
+# __contributors__ = 'Fabia Miorelli, Parth Butte'
+# __email__ = 'Niklas.Wulff@dlr.de'
+# __birthdate__ = '2019-02-12'
+# __status__ = 'dev'  # options are: dev, test, prod
+
+# This config holds all relative paths and filenames for dataParsers.py
+
+encryptionPW: 'PW'
+
+
+dataVariables:
+    datasetID: ['MiD08', 'MiD17']
+    isMIVDriver: ['pkw_f','W_VM_G']
+    hhID: ['hhid', 'H_ID_Reg']
+    personID: ['pid', 'P_ID']
+    hhPersonID: ['NA','HP_ID_Reg']
+    tripID: ['wid', 'W_ID']
+    tripWeight: ['w_gew','W_GEW']
+    tripScaleFactor: ['NA', 'W_HOCH']
+    tripStartClock: ['st_time', 'W_SZ']
+    tripEndClock: ['en_time', 'W_AZ']
+    tripPurpose: ['w04', 'zweck']
+    tripDistance: ['wegkm_k', 'wegkm']
+    travelTime : ['wegmin_k', 'wegmin_imp1']
+    tripStartYear: ['stich_j', 'ST_JAHR']
+    tripStartMonth: ['stich_m', 'ST_MONAT']
+    tripStartWeek: ['stichwo', 'ST_WOCHE']
+    tripStartWeekday: ['stichtag', 'ST_WOTAG']
+    tripStartHour: ['st_std', 'W_SZS']
+    tripStartMinute: ['st_min', 'W_SZM']
+    tripEndHour: ['en_std', 'W_AZS']
+    tripEndMinute: ['en_min', 'W_AZM']
+    tripEndNextDay: ['en_dat', 'W_FOLGETAG']
+    tripIsIntermodal: ['NA', 'weg_intermod']
+    tripStartLocation: [ 'NA', 'KKZ_SO' ]
+    tripEndLocation: [ 'NA', 'KKZ_ZO' ]
+
+inputDTypes:
+    isMIVDriver: 'bool'
+    hhPersonID: 'int'
+    tripID: 'int'
+    tripWeight: 'float'
+#    tripStartClock: 'f'
+#    tripEndClock: 'f'
+    tripPurpose: 'int'
+    tripDistance: 'float'
+    tripStartYear: 'int'
+    tripStartMonth: 'int'
+    tripStartWeek: 'int'
+    tripStartWeekday: 'int'
+    tripStartHour: 'int'
+    tripStartMinute: 'int'
+    tripEndHour: 'int'
+    tripEndMinute: 'int'
+    tripEndNextDay: 'bool'
+    tripIsIntermodal: 'int'
+
+filterDicts:
+    MiD08:
+        include:
+            isMIVDriver: [1]
+        exclude:
+            tripStartHour: [301]
+            tripStartMinute: [301]
+            tripEndHour: [301]
+            tripEndMinute: [301]
+            tripStartClock: ['301:00']
+            tripEndClock: ['301:00']
+            tripPurpose: [97, 98]
+        greaterThan:
+        smallerThan:
+            tripDistance: [1000]
+
+    MiD17:
+        include:
+            isMIVDriver: [1]
+        exclude:
+            tripStartHour: [99, 701]
+            tripEndHour: [99, 701]
+            tripStartClock: [' ']
+            tripEndClock: [' ']
+            tripPurpose: [99]
+            tripIsIntermodal: [1, 703, 708]
+        greaterThan:
+        smallerThan:
+            tripDistance: [1000]
+
+#    tripData = tripData.loc[(tripData['tripStartClock'] <= tripData['tripEndClock']) |
+#    (tripData['tripEndNextDay'] == 1), :]  # departure must be before arrival or the trip must end the following day
+
+midReplacements:
+    tripStartWeekday:
+        1: 'MON'
+        2: 'TUE'
+        3: 'WED'
+        4: 'THU'
+        5: 'FRI'
+        6: 'SAT'
+        7: 'SUN'
+    tripPurpose:
+        1: 'WORK'  # Erreichen des Arbeitsplatzes
+        2: 'WORK'  # dienstlich/geschäftlich
+        3: 'SCHOOL'  # Erreichen der Ausbildungsstätte/Schule
+        4: 'SHOPPING'  # Einkauf
+        5: 'SHOPPING'  # private Erledigung
+        6: 'LEISURE'  # Bringen/Holen/Begleiten von Personen
+        7: 'LEISURE'  # Freizeitaktivität
+        8: 'HOME'  # nach Hause
+        9: 'HOME'  # Rückweg vom vorherigen Weg
+        10: 'OTHER'  # anderer Zweck
+        11: 'HOME'  # Begleitung Erwachsener (MiD08)
+        31: 'SCHOOL'  # Zur Schule oder Vorschule (MiD08)
+        32: 'SCHOOL'  # Kindertagesstaette oder Kindergarten (MiD08)
+        99: 'NA'  # keine Angabe
+

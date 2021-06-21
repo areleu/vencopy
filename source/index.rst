@@ -16,9 +16,10 @@ Indices and tables
 
 
 
+
 .. toctree::
     :maxdepth: 2
-    :caption: Documentation:
+    :caption: Documentation Overview
     
     intro
     installation
@@ -28,4 +29,9 @@ Indices and tables
     functions
     filtering
     outputProfileSpecification
+    publications
     howToContribute
+
+
+
+

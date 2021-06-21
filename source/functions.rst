@@ -10,24 +10,39 @@ Functions
 
 
 This part of the documentation holds the function definitions of VencoPy from the main run file
-´venco_main.py´ and the library files.
+´run.py´ and the library files.
 
 
-.. automodule:: venco_main
+.. automodule:: run
     :members:
 
-.. automodule:: scripts.libInput
+.. automodule:: classes.dataParsers
     :members:
+    :undoc-members:
+    :show-inheritance:
 
-.. automodule:: scripts.libPreprocessing
+.. automodule:: classes.tripDiaryBuilders
     :members:
-    
-.. automodule:: scripts.libProfileCalculation
-    :members:
+    :undoc-members:
+    :show-inheritance:
 
-.. automodule:: scripts.libOutput
+.. automodule:: classes.gridModelers
     :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: classes.flexEstimators
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: scripts.globalFunctions
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
 .. automodule:: scripts.libLogging
     :members:
+    :undoc-members:
+    :show-inheritance:
 

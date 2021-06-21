@@ -4,7 +4,11 @@
     
 .. _codestyle:
 
+<<<<<<< HEAD
 Code style guideline
+=======
+Codestyle guideline
+>>>>>>> MiD2017
 ===================================
 
 
