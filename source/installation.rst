@@ -16,10 +16,11 @@ This part of the documentation holds a step-by-step installation guide for Venco
 
 1.  Set-up your environment. For this, open a console, navigate to the folder of your VencoPy repo and
     enter the following command::
-        
-        conda create --file <requirementsFile.yml>
+
+        conda create --file <requirements.yaml>
         conda activate <VencoPy_preRelease>
-    
+
+
 2.  Configure your config files if you want to use absolute links. This is only needed if you want to reference your own
     local data or want to post-process VencoPy results and write them to a model input folder somewhere on your drive.
     You will find your config file in your repo under /config/config.yaml Input filenames have to be set. 
