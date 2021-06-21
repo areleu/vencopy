@@ -248,10 +248,10 @@ class Evaluator:
         xLabels = [f'{iDay}\n{str(iTime)}:00' for iDay in self.evaluatorConfig['plotConfig']['xAxis']['weekdays']
                    for iTime in self.evaluatorConfig['plotConfig']['xAxis']['hours']]
         # xLabels = [f'{str(iTime)}:00' for iTime in self.evaluatorConfig['plotConfig']['xAxis']['hours']]
-        ax[1].set_xticks(xRange)
+        ax[1].set_xticks(xRange[:-1])
         ax[1].set_xticklabels(xLabels, fontsize=self.evaluatorConfig['plotConfig']['xAxis']['ticklabelsize'])
         ax[0].ticklabel_format(axis='y', style='sci', scilimits=(0, 0), useMathText=True)
-        ax[0].set_xticks(xRange)
+        ax[0].set_xticks(xRange[:-1])
         ax[0].set_xticklabels('')
         ax[0].set_xlabel('')
         ax[0].set_ylabel('Sum of all trips \n in sample in km',
@@ -292,13 +292,13 @@ class Evaluator:
         for iKey, iVal in profileDict.items():
             if isinstance(iVal.index, pd.MultiIndex):
                 iVal = self.sortData(iVal)
-                sns.lineplot(range(iVal.index.size), iVal, label=iKey, sort=False)
+                sns.lineplot(x=range(iVal.index.size), y=iVal, label=iKey, sort=False)
             else:
-                sns.lineplot(iVal.index, iVal, label=iKey, sort=False)
+                sns.lineplot(x=iVal.index, y=iVal, label=iKey, sort=False)
         xRange = range(0, len(profileDict[list(profileDict)[0]]) + 1, self.evaluatorConfig['plotConfig']['xAxis']['xTickSteps'])
         # xLabels = [f'{iDay}\n{str(iTime)}:00' for iDay in config['plotConfig']['xAxis']['weekdays'] for iTime in config['plotConfig']['xAxis']['hours']]
         xLabels = [f'{str(iTime)}:00' for iTime in self.evaluatorConfig['plotConfig']['xAxis']['hours']]
-        ax.set_xticks(xRange)
+        ax.set_xticks(xRange[:-1])
         ax.set_xticklabels(xLabels, fontsize=self.evaluatorConfig['plotConfig']['xAxis']['ticklabelsize'])
         ax.set_ylim(bottom=0, top=ylim)
         ax.set_xlabel('Hour', fontsize=self.evaluatorConfig['plotConfig']['plotRCParameters']['axes.labelsize'])
