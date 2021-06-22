@@ -20,7 +20,7 @@ class GridModeler:
         self.inputFileName = createFileString(globalConfig=globalConfig, fileKey='purposesProcessed',
                                               datasetID=datasetID)
         self.inputFilePath = Path(globalConfig['pathRelative']['input']) / self.inputFileName
-        self.gridDistributions = gridConfig['chargingInfrastructureDistributions']
+        self.gridDistributions = gridConfig['chargingInfrastructureMappings']
         self.outputFileName = createFileString(globalConfig=globalConfig, fileKey='inputDataPlugProfiles',
                                                datasetID=datasetID)
         self.outputFilePath = Path(globalConfig['pathRelative']['input']) / self.outputFileName
