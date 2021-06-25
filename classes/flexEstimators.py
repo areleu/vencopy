@@ -150,8 +150,8 @@ class FlexEstimator:
         """
 
         inputRaw = self.readInputCSV(filePath)
-        inputData = self.booleanMapping(inputRaw)
-        return inputData
+        #inputData = self.booleanMapping(inputRaw)
+        return inputRaw
 
     def readVencoInput(self, datasetID: str) -> pd.DataFrame:
         """
@@ -386,7 +386,7 @@ class FlexEstimator:
 
         # Setting value of hour=0 equal to the average of hour=1 and last hour
         driveProfilesFuelAux[0] = (driveProfilesFuelAux[nHours - 1] + driveProfilesFuelAux[1]) / 2
-        driveProfilesFuelAux = driveProfilesFuelAux.round(4)
+        driveProfilesFuelAux = driveProfilesFuelAux.astype(float).round(4)
         return driveProfilesFuelAux
 
     def calcChargeMinProfiles(self, chargeProfiles: pd.DataFrame, consumptionProfiles: pd.DataFrame,
@@ -547,7 +547,7 @@ class FlexEstimator:
             if filterIndex == 'indexCons':
                 electricPowerProfiles[iHour] = electricPowerProfiles[iHour] * indexCons
             elif filterIndex == 'indexDSM':
-                electricPowerProfiles[iHour] = electricPowerProfiles[iHour] * indexDSM
+                electricPowerProfiles[iHour] = electricPowerProfiles[iHour] * indexDSM.astype(int)
         return electricPowerProfiles
 
     def setUnconsideredBatProfiles(self, chargeMaxProfiles: pd.DataFrame, chargeMinProfiles: pd.DataFrame,

@@ -53,7 +53,7 @@ def mergeVariables(data, variableData, variables):
     variableDataMerge = variableDataUnique.loc[:, variables].set_index('hhPersonID')
     if 'hhPersonID' not in data.index.names:
         data.set_index('hhPersonID', inplace=True, drop=True)
-    mergedData = pd.concat([variableDataMerge, data], axis=1)
+    mergedData = pd.concat([variableDataMerge, data], axis=1, join='inner')
     mergedData.reset_index(inplace=True)
     return mergedData
 
