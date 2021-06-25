@@ -15,6 +15,7 @@ import os
 import yaml
 import pandas as pd
 import numpy as np
+import time
 import matplotlib.pyplot as plt
 import seaborn as sns
 from random import seed, random
@@ -35,8 +36,8 @@ class FlexEstimator:
             self.plugProfilesIn = self.readVencoInput(datasetID=datasetID)
         self.mergeDataToWeightsAndDays(ParseData)
         self.weights = self.indexWeights(self.driveProfilesIn.loc[:, ['hhPersonID', 'tripStartWeekday', 'tripWeight']])
-        self.outputConfig = yaml.load(open(Path(self.globalConfig['pathRelative']['config']) /
-                                           self.globalConfig['files']['outputConfig']), Loader=yaml.SafeLoader)
+        # self.outputConfig = yaml.load(open(Path(self.globalConfig['pathRelative']['config']) /
+        #                                    self.globalConfig['files']['outputConfig']), Loader=yaml.SafeLoader)
         self.driveProfiles, self.plugProfiles = self.indexDriveAndPlugData(self.driveProfilesIn, self.plugProfilesIn,
                                                                       dropIdxLevel='tripWeight',
                                                                       nHours=self.globalConfig['numberOfHours'])
@@ -54,6 +55,7 @@ class FlexEstimator:
         self.chargeProfilesUncontrolled = None
         self.auxFuelDemandProfiles = None
         self.chargeMinProfiles = None
+        self.connectionType = None
 
         # Filtering attributes
         self.randNoPerProfile = None
@@ -318,7 +320,41 @@ class FlexEstimator:
             devCrit = chargeMaxProfiles[nHours - 1].sum() - chargeMaxProfiles[0].sum()
             print(devCrit)
         chargeMaxProfiles.drop(labels='newCharge', axis='columns', inplace=True)
+        chargeMaxProfiles.to_csv('chargeMaxProfiles.csv')
         return chargeMaxProfiles
+
+    def assignConnectionType(self):
+        connectionType = self.chargeMaxProfiles.copy()
+        connectionType= connectionType.drop(connectionType.index[318:144950])
+        time1 = time.time()
+        for iHour, row in connectionType.iterrows():
+            capacity = row.copy()
+            for j in range(0, len(row)):
+                if j == 0:
+                    if capacity[j] == 48.5:
+                        row[j] = 'idle'             #idle- fully charged but not unpluged from charging station
+                    elif capacity[j] == 1.5:
+                        row[j] = 'not charging'     #no charging station is available
+                    elif capacity[j] == capacity[j + 1]:
+                        row[j] = 'not charging'     #no charging station is available
+                    elif capacity[j] < 48.5:
+                        row[j] = 'charging'         #charging is available and EV is charging
+
+                if j > 0:
+                    if capacity[j] == 48.5 and capacity[j] > capacity[j - 1]:
+                        row[j] = 'charging'
+                    elif capacity[j] == 48.5:
+                        row[j] = 'idle'
+                    elif capacity[j] > capacity[j - 1]:
+                        row[j] = 'charging'
+                    elif capacity[j] < 48.5 and capacity[j] < capacity[j - 1]:
+                        row[j] = 'not charging'                 #can also be called as driving
+                    elif capacity[j] < 48.5 and capacity[j] == capacity[j - 1]:
+                        row[j] = 'not charging'
+            connectionType.loc[iHour] = row
+        connectionType.to_csv('ConnectionProfiles.csv')
+        print(time.time() - time1)
+        return connectionType
 
     def calcChargeProfilesUncontrolled(self, chargeMaxProfiles: pd.DataFrame,
                                        scalarsProc: pd.DataFrame) -> pd.DataFrame:
@@ -443,6 +479,7 @@ class FlexEstimator:
         self.chargeProfiles = self.calcChargeProfiles(self.plugProfiles, self.scalars)
         self.chargeMaxProfiles = self.calcChargeMaxProfiles(self.chargeProfiles, self.drainProfiles, self.scalars,
                                                        self.scalarsProc, nIter=3)
+        self.connectionType = self.assignConnectionType()
         self.chargeProfilesUncontrolled = self.calcChargeProfilesUncontrolled(self.chargeMaxProfiles, self.scalarsProc)
         self.auxFuelDemandProfiles = self.calcDriveProfilesFuelAux(self.chargeMaxProfiles,
                                                                    self.chargeProfilesUncontrolled, self.driveProfiles,
@@ -907,7 +944,7 @@ class FlexEstimator:
         self.correct()
         self.normalize()
         self.writeOut()
-        self.plotProfiles()
+        # self.plotProfiles()
 
 if __name__ == '__main__':
     pathGlobalConfig = Path.cwd().parent / 'config' / 'globalConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro

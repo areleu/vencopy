@@ -18,7 +18,7 @@ chargingInfrastructureMappings:  # Grid model 1: Explicit mapping given for each
     'OTHER': False
     'NA': False
 
-chargingInfrastructureDistributions:  # Grid model 2: Probabilities given for each location aka trip purpose and capacity
+chargingInfrastructureDistributionsModel1:  # Grid model 2: Probabilities given for each location aka trip purpose and capacity
     'DRIVING':
         1: 0
     'HOME':
@@ -33,5 +33,38 @@ chargingInfrastructureDistributions:  # Grid model 2: Probabilities given for ea
         0.5: 11
     'OTHER':
         0.5: 11
+    'NA':
+        1: 0
+
+chargingInfrastructureDistributionsModel2:  # Grid model 3: Probabilities given for each location aka trip purpose and capacity
+    'DRIVING':
+        1: 0
+        #0.005: 75
+        #0.005: 150
+    'HOME':
+        0.25: 11        #public home charging of 11 kW
+        0.05: 22        #public home charging of 22 kW
+        0.5: 3.6        #home charging of 3.6 kW
+        0.2: 0          #no home charging
+    'WORK':
+        0.2: 22         #workplace charging of 22 kW
+        0.5: 11         #workplace charging of 11 kW
+        0.3: 0          #no workplace charging
+    'SCHOOL':
+        0.2: 22
+        0.35: 11
+        0.45: 0
+    'SHOPPING':
+        0.2: 22
+        0.35: 11
+        0.45: 0
+    'LEISURE':
+        0.2: 22
+        0.35: 11
+        0.45: 0
+    'OTHER':
+        0.10: 22
+        0.20: 11
+        0.7: 0
     'NA':
         1: 0
