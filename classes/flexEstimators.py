@@ -334,23 +334,23 @@ class FlexEstimator:
                     if capacity[j] == 48.5:
                         row[j] = 'idle'             #idle- fully charged but not unpluged from charging station
                     elif capacity[j] == 1.5:
-                        row[j] = 'not charging'     #no charging station is available
+                        row[j] = 'parkingWithoutCharging'     #no charging station is available
                     elif capacity[j] == capacity[j + 1]:
-                        row[j] = 'not charging'     #no charging station is available
+                        row[j] = 'parkingWithoutCharging'     #no charging station is available
                     elif capacity[j] < 48.5:
                         row[j] = 'charging'         #charging is available and EV is charging
 
                 if j > 0:
                     if capacity[j] == 48.5 and capacity[j] > capacity[j - 1]:
-                        row[j] = 'charging'
+                        row[j] = 'chargingFull'
                     elif capacity[j] == 48.5:
                         row[j] = 'idle'
                     elif capacity[j] > capacity[j - 1]:
                         row[j] = 'charging'
                     elif capacity[j] < 48.5 and capacity[j] < capacity[j - 1]:
-                        row[j] = 'not charging'                 #can also be called as driving
+                        row[j] = 'driving'                 #can also be called as driving
                     elif capacity[j] < 48.5 and capacity[j] == capacity[j - 1]:
-                        row[j] = 'not charging'
+                        row[j] = 'parkingWithoutCharging'
             connectionType.loc[iHour] = row
         connectionType.to_csv('ConnectionProfiles.csv')
         print(time.time() - time1)
@@ -478,7 +478,7 @@ class FlexEstimator:
         self.drainProfiles = self.calcDrainProfiles(self.driveProfiles, self.scalars)
         self.chargeProfiles = self.calcChargeProfiles(self.plugProfiles, self.scalars)
         self.chargeMaxProfiles = self.calcChargeMaxProfiles(self.chargeProfiles, self.drainProfiles, self.scalars,
-                                                       self.scalarsProc, nIter=3)
+                                                       self.scalarsProc, nIter=10)
         self.connectionType = self.assignConnectionType()
         self.chargeProfilesUncontrolled = self.calcChargeProfilesUncontrolled(self.chargeMaxProfiles, self.scalarsProc)
         self.auxFuelDemandProfiles = self.calcDriveProfilesFuelAux(self.chargeMaxProfiles,

@@ -51,10 +51,9 @@ vpTripDiary = TripDiaryBuilder(datasetID=datasetID, tripConfig=tripConfig, globa
 # Grid model applications
 vpGrid = GridModeler(gridConfig=gridConfig, globalConfig=globalConfig, datasetID=datasetID)
 # vpGrid.assignSimpleGridViaPurposes()
-# vpGrid.writeOutGridAvailability()
-vpGrid.assignGridViaProbabilities()
-# vpGrid.writeOutGridAvailablitiyViaProbabilityModel1()
-vpGrid.writeOutGridAvailablitiyViaProbabilityModel2()
+vpGrid.assignGridViaProbabilities(model='distribution')
+vpGrid.writeOutGridAvailability()
+vpGrid.stackPlot()
 # review: Is this still valid code or left overs? I ignored this code for now.
 #  Maybe we should schedule a cleanup.
 # Evaluate drive and trip purpose profiles

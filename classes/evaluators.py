@@ -363,7 +363,7 @@ class Evaluator:
                                ylabel=['Average EV connection share', 'Average EV flow in kW', 'Average EV SOC in kWh'],
                                filenames=[flexEstimator.datasetID + '_connection', flexEstimator.datasetID + '_flows',
                                           flexEstimator.datasetID + '_state'],
-                               ylim=[1, 0.9, 50])
+                               ylim=[10, 0.9, 50])
 
     def compareProfiles(self, compareTo):
         """
