@@ -4,15 +4,11 @@
     
 .. _codestyle:
 
-<<<<<<< HEAD
-Code style guideline
-=======
 Codestyle guideline
->>>>>>> MiD2017
 ===================================
 
 
 VencoPy sticks to the codestyle conventions used in the department of energy system analysis at DLR mainly put forward 
-by Benjamin Fuchs. We use PEP-8 with the exception of lowerCamelCase for variable and method names and UpperCamelCase 
+by Benjamin Fuchs. It uses PEP-8 with the exception of lowerCamelCase for variable and method names and UpperCamelCase
 for class objects. 
 
