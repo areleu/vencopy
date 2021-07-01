@@ -64,13 +64,18 @@ class DataParser:
         print('Parsing completed')
 
     def updateFilterDict(self) -> None:
+        """
+        Internal function to parse the filter dictionary of a specified data set from parseConfig.yaml
+
+        :return: None
+        """
         self.__filterDict = self.parseConfig['filterDicts'][self.datasetID]
         self.__filterDict = {iKey: iVal for iKey, iVal in self.__filterDict.items() if self.__filterDict[iKey] is not
                              None}
 
     def checkDatasetID(self, datasetID: str, parseConfig: dict) -> str:
         """
-        General check if data set ID is defined.
+        General check if data set ID is defined in parseConfig.yaml
 
         :param datasetID: list of strings declaring the datasetIDs to be read in
         :param parseConfig: A yaml config file holding a dictionary with the keys 'pathRelative' and 'pathAbsolute'
@@ -83,6 +88,14 @@ class DataParser:
         return datasetID
 
     def compileVariableList(self) -> list:
+        """
+        Clean up the replacement dictionary of raw data file variable (column) names. This has to be done because some
+        variables that may be relevant for the analysis later on are only contained in one raw data set while not
+        contained in another one. E.g. if a trip is an intermodal trip was only assessed in the MiD 2017 while it wasn't
+        in the MiD 2008. This has to be mirrored by the filter dict for the respective data set.
+
+        :return: List of variables
+        """
         listIndex = self.parseConfig['dataVariables']['datasetID'].index(self.datasetID)
         variables = [val[listIndex] if not val[listIndex] == 'NA' else 'NA' for key, val in self.parseConfig['dataVariables'].items()]
         variables.remove(self.datasetID)
@@ -104,11 +117,18 @@ class DataParser:
                 counter += 1
 
     def loadData(self):
+        """
+        Loads data specified in self.rawDataPath and stores it in self.rawData. Raises an exception if a invalid suffix
+        is specified in self.rawDataPath. READ IN OF CSV HAS NOT BEEN EXGTENSIVELY TESTED BEFORE VENCOPY BETA RELEASE.
+
+        :return: None
+        """
         # Future releases: Are potential error messages (.dta not being a stata file even as the ending matches)
         # readable for the user? Should we have a manual error treatment here?
         if self.rawDataPath.suffix == '.dta':
             self.rawData = pd.read_stata(self.rawDataPath, convert_categoricals=False, convert_dates=False,
                                       preserve_dtypes=False)
+
         # This has not been tested before the beta release
         elif self.rawDataPath.suffix == '.csv':
             self.rawData = pd.read_csv(self.rawDataPath)
@@ -120,9 +140,13 @@ class DataParser:
 
     def loadEncryptedData(self, pathToZip, pathInZip):
         """
-        :param pathToZip:
-        :param pathInZip:
-        :return:
+        Since the MiD data sets are only accessible by an extensive data security contract, VencoPy provides the
+        possibility to access encrypted zip files. An encryption password has to be given in parseConfig.yaml in order
+        to access the encrypted file. Loaded data is stored in self.rawData
+
+        :param pathToZip: path from current working directory to the zip file or absolute path to zipfile
+        :param pathInZip: Path to trip data file within the encrypted zipfile
+        :return: None
         """
         with ZipFile(pathToZip) as myzip:
             if '.dta' in pathInZip:
@@ -136,7 +160,13 @@ class DataParser:
         print(f'Finished loading {len(self.rawData)} rows of raw data of type {self.rawDataPath.suffix}')
 
     def selectColumns(self):
-        rawData = self.rawData
+        """
+        Function to filter the rawData for only relevant columns as specified by parseConfig and cleaned in
+        self.compileVariablesList(). Stores the subset of data in self.data
+
+        :return: None
+        """
+
         self.data = self.rawData.loc[:, self.columns]
         
     def harmonizeVariables(self):
@@ -155,12 +185,16 @@ class DataParser:
         self.data = dataRenamed
         print('Finished harmonization of variables')
 
-    def createReplacementDict(self, datasetID : str, dictRaw : dict) -> None:
+    def createReplacementDict(self, datasetID: str, dictRaw: dict) -> dict:
         """
+        Creates the mapping dictionary from raw data variable names to VencoPy internal variable names as specified
+        in parseConfig.yaml for the specified data set.
+
         :param datasetID: list of strings declaring the datasetIDs to be read in
         :param dictRaw: Contains dictionary of the raw data
-        :return:
+        :return: Dictionary with internal names as keys and raw data column names as values.
         """
+
         if datasetID in dictRaw['datasetID']:
             listIndex = dictRaw['datasetID'].index(datasetID)
             return {val[listIndex]: key for (key, val) in dictRaw.items()}
@@ -168,6 +202,14 @@ class DataParser:
             raise ValueError(f'Data set {datasetID} not specified in MiD variable dictionary.')
 
     def convertTypes(self):
+        """
+        Convert raw column types to predefined python types as specified in parseConfig['inputDTypes']. This is mainly
+        done for performance reasons. But also in order to avoid index values that are of type int to be cast to float.
+        The function operates only on self.data and writes back changes to self.data
+
+        :return: None
+        """
+
         # Filter for dataset specific columns
         conversionDict = self.parseConfig['inputDTypes']
         keys = {iCol for iCol in conversionDict.keys() if iCol in self.data.columns}
@@ -193,9 +235,12 @@ class DataParser:
 
     def checkFilterDict(self):
         """
-        :return: Returns a filter dictionary containing a list from BottomDictValues
+        Checking if all values of filter dictionaries are of type list.  Currently only checking if list of list str
+        not typechecked all(map(self.__checkStr, val). Conditionally triggers an assert.
+
+        :return: None
         """
-        # Currently only checking if list of list str not typechecked all(map(self.__checkStr, val)
+
         assert all(isinstance(val, list) for val in self.returnDictBottomValues(self.__filterDict)), \
             f'All values in filter dictionaries have to be lists, but are not'
 
@@ -205,9 +250,10 @@ class DataParser:
         interface between recursion levels.
 
         :param baseDict: Dictionary of variables
-        :param lst: empty list
-        :return: Returns a list with all the bottom dictionary keys
+        :param lst: empty list, used as interface between recursion levels
+        :return: Returns a list with all the bottom level dictionary keys
         """
+
         if lst is None:
             lst = []
         for iKey, iVal in baseDict.items():
@@ -219,6 +265,14 @@ class DataParser:
         return lst
 
     def filter(self):
+        """
+        Wrapper function to carry out filtering for the four filter logics of including, excluding, greaterThan and
+        smallerThan. If a filterDict is defined with a different key, a warning is thrown. The function operates on
+        self.data class-internally.
+
+        :return: None
+        """
+
         print(f'Starting filtering, applying {len(self.returnDictBottomKeys(self.__filterDict))} filters.')
         ret = pd.DataFrame(index=self.data.index)
         # Future releases: as discussed before we could indeed work here with a plug and pray approach.
@@ -244,10 +298,13 @@ class DataParser:
 
     def setIncludeFilter(self, includeFilterDict: dict, dataIndex) -> pd.DataFrame:
         """
+        Read-in function for include filter dict from parseConfig.yaml
+
         :param includeFilterDict: Dictionary of include filters defined in parseConfig.yaml
         :param dataIndex: Index for the data frame
         :return: Returns a data frame with individuals using car as a mode of transport
         """
+
         incFilterCols = pd.DataFrame(index=dataIndex, columns=includeFilterDict.keys())
         for incCol, incElements in includeFilterDict.items():
             incFilterCols[incCol] = self.data[incCol].isin(incElements)
@@ -255,6 +312,8 @@ class DataParser:
 
     def setExcludeFilter(self, excludeFilterDict: dict, dataIndex) -> pd.DataFrame:
         """
+        Read-in function for exclude filter dict from parseConfig.yaml
+
         :param excludeFilterDict: Dictionary of exclude filters defined in parseConfig.yaml
         :param dataIndex: Index for the data frame
         :return: Returns a filtered data frame with exclude filters
@@ -266,6 +325,8 @@ class DataParser:
 
     def setGreaterThanFilter(self, greaterThanFilterDict: dict, dataIndex):
         """
+        Read-in function for greaterThan filter dict from parseConfig.yaml
+
         :param greaterThanFilterDict: Dictionary of greater than filters defined in parseConfig.yaml
         :param dataIndex: Index for the data frame
         :return:
@@ -280,6 +341,8 @@ class DataParser:
 
     def setSmallerThanFilter(self, smallerThanFilterDict: dict, dataIndex) -> pd.DataFrame:
         """
+        Read-in function for smallerThan filter dict from parseConfig.yaml
+
         :param smallerThanFilterDict: Dictionary of smaller than filters defined in parseConfig.yaml
         :param dataIndex: Index for the data frame
         :return: Returns a data frame of trips covering a distance of less than 1000 km
@@ -294,9 +357,13 @@ class DataParser:
 
     def filterAnalysis(self, filterData: pd.DataFrame):
         """
+        Function supplies some aggregate info of the data after filtering to the user Function doesnt't change any
+        class attributes
+
         :param filterData:
-        :return:
+        :return: None
         """
+
         lenData = sum(filterData.all(axis='columns'))
         boolDict = {iCol: sum(filterData[iCol]) for iCol in filterData}
         print(f'The following values were taken into account after filtering:')

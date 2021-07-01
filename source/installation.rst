@@ -33,6 +33,6 @@ This part of the documentation holds a step-by-step installation guide for Venco
 
 4.  You're now ready to run VencoPy for the first time by typing::
         
-        python venco_main.py
+        python run.py
 
 5.  Have fun calculating electric vehicle flexibility!
