@@ -136,8 +136,9 @@ class DataParser:
         print(f'Finished loading {len(self.rawData)} rows of raw data of type {self.rawDataPath.suffix}')
 
     def selectColumns(self):
+        rawData = self.rawData
         self.data = self.rawData.loc[:, self.columns]
-
+        
     def harmonizeVariables(self):
         """
         Harmonizes the input data variables to match internal VencoPy names given as specified in the mapping in

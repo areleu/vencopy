@@ -36,8 +36,8 @@ dataVariables:
     tripEndMinute: ['en_min', 'W_AZM']
     tripEndNextDay: ['en_dat', 'W_FOLGETAG']
     tripIsIntermodal: ['NA', 'weg_intermod']
-    tripStartLocation: [ 'NA', 'KKZ_SO' ]
-    tripEndLocation: [ 'NA', 'KKZ_ZO' ]
+#    tripStartLocation: [ 'NA', 'KKZ_SO' ]
+#    tripEndLocation: [ 'NA', 'KKZ_ZO' ]
 
 inputDTypes:
     isMIVDriver: 'bool'
