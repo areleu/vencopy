@@ -5,6 +5,12 @@ import numpy as np
 
 
 def getData(globalConfig: dict, localPathConfig: dict, datasetID: str = 'MiD17'):
+    '''
+    :param globalConfig:
+    :param localPathConfig:
+    :param datasetID:
+    :return:
+    '''
     rawDataPath = Path(localPathConfig['pathAbsolute'][datasetID]) / globalConfig['files'][datasetID]['tripsDataRaw']
     rawData = pd.read_stata(rawDataPath, convert_categoricals=False, convert_dates=False, preserve_dtypes=False)
     dataSample = rawData.copy().loc[:, 'HP_ID_Reg'].sample(n=500, random_state=0).sort_values()
