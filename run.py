@@ -44,7 +44,6 @@ with open(pathFlexConfig) as ipf:
 
 
 vpData = DataParser(datasetID=datasetID, parseConfig=parseConfig, globalConfig=globalConfig, localPathConfig=localPathConfig, loadEncrypted=False)
-
 # Trip distance and purpose diary compositions
 vpTripDiary = TripDiaryBuilder(datasetID=datasetID, tripConfig=tripConfig, globalConfig=globalConfig, ParseData=vpData)
 

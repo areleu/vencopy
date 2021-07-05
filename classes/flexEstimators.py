@@ -320,7 +320,7 @@ class FlexEstimator:
             devCrit = chargeMaxProfiles[nHours - 1].sum() - chargeMaxProfiles[0].sum()
             print(devCrit)
         chargeMaxProfiles.drop(labels='newCharge', axis='columns', inplace=True)
-        chargeMaxProfiles.to_csv('chargeMaxProfiles.csv')
+        # chargeMaxProfiles.to_csv('chargeMaxProfiles.csv')
         return chargeMaxProfiles
 
     def assignConnectionType(self):
@@ -352,7 +352,7 @@ class FlexEstimator:
                     elif capacity[j] < 48.5 and capacity[j] == capacity[j - 1]:
                         row[j] = 'parkingWithoutCharging'
             connectionType.loc[iHour] = row
-        connectionType.to_csv('ConnectionProfiles.csv')
+        # connectionType.to_csv('ConnectionProfiles.csv')
         print(time.time() - time1)
         return connectionType
 
