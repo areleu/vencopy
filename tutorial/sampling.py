@@ -3,6 +3,7 @@ from pathlib import Path
 import yaml
 import numpy as np
 
+
 def getData(globalConfig: dict, localPathConfig: dict, datasetID: str = 'MiD17'):
     rawDataPath = Path(localPathConfig['pathAbsolute'][datasetID]) / globalConfig['files'][datasetID]['tripsDataRaw']
     rawData = pd.read_stata(rawDataPath, convert_categoricals=False, convert_dates=False, preserve_dtypes=False)
@@ -11,9 +12,11 @@ def getData(globalConfig: dict, localPathConfig: dict, datasetID: str = 'MiD17')
     rawData= rawData.loc[:, :].where(rawData['HP_ID_Reg'].isin(dataSample)).dropna()
     return rawData
 
+
 def selectColumns(rawData: pd.DataFrame):
     data = rawData.loc[:, compileVariableList(parseConfig=parseConfig)]
     return data
+
 
 def compileVariableList(parseConfig, datasetID: str = 'MiD17') -> list:
     listIndex = parseConfig['dataVariables']['datasetID'].index(datasetID)
@@ -21,6 +24,7 @@ def compileVariableList(parseConfig, datasetID: str = 'MiD17') -> list:
     variables.remove(datasetID)
     removeNA(variables)
     return variables
+
 
 def removeNA(variables: list):
     vars = [iVar.upper() for iVar in variables]
@@ -30,10 +34,12 @@ def removeNA(variables: list):
             del variables[idx - counter]
             counter += 1
 
+
 def harmonizeVariables(data, datasetID: str = 'MiD17'):
     replacementDict = createReplacementDict(datasetID, parseConfig['dataVariables'])
     dataHarmonized = data.rename(columns=replacementDict)
     return dataHarmonized
+
 
 def createReplacementDict(datasetID : str, dictRaw : dict) -> None:
 
@@ -42,6 +48,7 @@ def createReplacementDict(datasetID : str, dictRaw : dict) -> None:
         return {val[listIndex]: key for (key, val) in dictRaw.items()}
     else:
         raise ValueError(f'Data set {datasetID} not specified in MiD variable dictionary.')
+
 
 def convertTypes(dataHarmonized, parseConfig: dict):
     conversionDict = parseConfig['inputDTypes']
@@ -76,3 +83,4 @@ if __name__ == '__main__':
     dataHarmonized = harmonizeVariables(data)
     dataConverted = convertTypes(dataHarmonized, parseConfig=parseConfig)
     dataSampled = replaceHouseholdPersonID(dataConverted)
+    print('END')
