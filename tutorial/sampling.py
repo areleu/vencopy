@@ -3,6 +3,7 @@ from pathlib import Path
 import yaml
 import numpy as np
 
+
 def getData(globalConfig: dict, localPathConfig: dict, datasetID: str = 'MiD17'):
     '''
     :param globalConfig:
@@ -47,6 +48,7 @@ def harmonizeVariables(data, datasetID: str = 'MiD17'):
     dataHarmonized = data.rename(columns=dataFlipped)
     return dataHarmonized
 
+
 def createReplacementDict(datasetID : str, dictRaw : dict) -> None:
 
     if datasetID in dictRaw['datasetID']:
@@ -57,7 +59,6 @@ def createReplacementDict(datasetID : str, dictRaw : dict) -> None:
 
 
 def replaceHouseholdPersonID(dataConverted):
-    dataHarmonized.to_csv('data.csv')
     dataSampled= dataConverted.drop(['H_ID_Reg', 'P_ID'], axis=1)
     np.random.seed(1)
     nums_hhPersonID = np.random.choice(range(len(dataSampled)), size=dataSampled['HP_ID_Reg'].nunique(), replace=False)

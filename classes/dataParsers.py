@@ -13,6 +13,7 @@ from pathlib import Path
 import yaml
 from zipfile import ZipFile
 
+
 class DataParser:
     def __init__(self, parseConfig: dict, globalConfig: dict, localPathConfig: dict, datasetID: str = 'MiD17',
                  loadEncrypted=True):
