@@ -22,14 +22,38 @@ class GridModeler:
         self.inputFileName = createFileString(globalConfig=globalConfig, fileKey='purposesProcessed',
                                               datasetID=datasetID)
         self.inputFilePath = Path(globalConfig['pathRelative']['input']) / self.inputFileName
+        self.inputDriveProfilesName = createFileString(globalConfig=globalConfig, fileKey='inputDataDriveProfiles',
+                                                       datasetID=datasetID)
+        self.inputDriveProfilesPath = Path(globalConfig['pathRelative']['input']) / self.inputDriveProfilesName
+        self.scalarsPath = (Path(globalConfig['pathRelative']['input']) / globalConfig['files']['inputDataScalars'])
         self.gridMappings = gridConfig['chargingInfrastructureMappings']
         self.gridProbability = gridConfig['gridAvailabilityProbability']
         self.gridDistribution = gridConfig['gridAvailabilityDistribution']
+        self.gridFastCharging = gridConfig['gridAvailabilityFastCharging']
         self.outputFileName = createFileString(globalConfig=globalConfig, fileKey='inputDataPlugProfiles',
                                                datasetID=datasetID)
         self.outputFilePath = Path(globalConfig['pathRelative']['input']) / self.outputFileName
         self.purposeData = pd.read_csv(self.inputFilePath, keep_default_na=False)
+        self.driveData = pd.read_csv(self.inputDriveProfilesPath, keep_default_na=False)
         self.chargeAvailability = None
+
+    def trips(self):
+        self.scalars = pd.read_excel(self.scalarsPath, header=5, usecols='A:C', skiprows=0)
+        scalarsOut = self.scalars.set_index('parameter')
+        driveProfiles = self.driveData.set_index(['hhPersonID'])
+        driveProfiles = driveProfiles.loc[:].sum(axis=1)
+        driveProfiles = driveProfiles * (scalarsOut.loc['Electric_consumption_NEFZ', 'value'] / 100)
+        driveProfiles = np.where(driveProfiles > (0.80 * (scalarsOut.loc['Battery_capacity', 'value'])), driveProfiles, 0)
+        driveProfiles = pd.DataFrame(driveProfiles)
+        driveProfiles.set_index(self.driveData['hhPersonID'], inplace=True)
+        driveProfiles = driveProfiles.replace(0, np.nan)
+        driveProfiles = driveProfiles.dropna(how='all', axis=0)
+        driveProfiles.reset_index(inplace=True)
+        drive = pd.Series(driveProfiles['hhPersonID'])
+        driveList = []
+        for i, item in drive.items():
+            driveList.append(item)
+        return driveList
 
     def assignSimpleGridViaPurposes(self):
         print(f'Starting with charge connection replacement of location purposes')
@@ -38,28 +62,46 @@ class GridModeler:
         self.chargeAvailability = (~(self.chargeAvailability != True))
         print('Grid connection assignment complete')
 
-    def assignGridViaProbabilities(self, model: str):
+    def assignGridViaProbabilities(self, model: str, driveList):
         self.chargeAvailability = self.purposeData.copy()
         self.chargeAvailability.set_index(['hhPersonID'], inplace=True)
         print('Starting with charge connection replacement ')
         np.random.seed(42)
+
         for hhPersonID, row in self.chargeAvailability.iterrows():
             activity = row.copy(deep=True)
-            for iHour in range(0, len(row)):
-                if iHour == 0:
-                    if model == 'probability':
-                        row[iHour] = self.getRandomNumberForModel1(activity[iHour])
-                    elif model == 'distribution':
-                        row[iHour] = self.getRandomNumberForModel2(activity[iHour])
-                elif iHour > 0:
-                    if activity[iHour] == activity[iHour - 1]:
-                        # print(row[j-1])
-                        row[iHour] = row[iHour - 1]
-                    else:
+            if hhPersonID in driveList:
+                for iHour in range(0, len(row)):
+                    if iHour == 0:
+                        if model == 'probability':
+                            row[iHour] = self.getRandomNumberForModel1(activity[iHour])
+                        elif model == 'distribution':
+                            row[iHour] = self.getRandomNumberForModel3(activity[iHour])
+                    elif iHour > 0:
+                        if activity[iHour] == activity[iHour - 1]:
+                            # print(row[j-1])
+                            row[iHour] = row[iHour - 1]
+                        else:
+                            if model == 'probability':
+                                row[iHour] = self.getRandomNumberForModel1(activity[iHour])
+                            elif model == 'distribution':
+                                row[iHour] = self.getRandomNumberForModel3(activity[iHour])
+            else:
+                for iHour in range(0, len(row)):
+                    if iHour == 0:
                         if model == 'probability':
                             row[iHour] = self.getRandomNumberForModel1(activity[iHour])
                         elif model == 'distribution':
                             row[iHour] = self.getRandomNumberForModel2(activity[iHour])
+                    elif iHour > 0:
+                        if activity[iHour] == activity[iHour - 1]:
+                            # print(row[j-1])
+                            row[iHour] = row[iHour - 1]
+                        else:
+                            if model == 'probability':
+                                row[iHour] = self.getRandomNumberForModel1(activity[iHour])
+                            elif model == 'distribution':
+                                row[iHour] = self.getRandomNumberForModel2(activity[iHour])
             self.chargeAvailability.loc[hhPersonID] = row
         print('Grid connection assignment complete')
 
@@ -128,7 +170,9 @@ class GridModeler:
             total = prob_min + key
             range_dict.update({index: {'min_range': prob_min, 'max_range': total}})
             prob_min = total
-            # print(range_dict, purpose)
+            # print('first total: ', total)
+            # print('range: ', range_dict)
+            # print('probmin: ', prob_min)
 
         # for i in range(0, length):
         #     total = prob_min + n2
@@ -148,7 +192,43 @@ class GridModeler:
                 # print(keyValue, rangeValue, rnd, purpose)
                 # print(rangeValue['min_range'], rangeValue['max_range'])
                 power = values[keyValue]
-                print(power, purpose, rnd, keyValue)
+                # print(power, purpose, rnd, keyValue)
+                break
+        return power
+
+    def getRandomNumberForModel3(self, purpose):
+        rnd = np.random.random_sample()
+
+        keys = list(self.gridFastCharging[purpose].keys())
+        values = list(self.gridFastCharging[purpose].values())
+        range_dict_fast = {}
+        prob_min = 0
+        length = len(keys)
+        count = 0
+        n2 = keys[0]
+
+        # for i in range(0, length):
+        #     total = prob_min + n2
+        #     range_dict_fast.update({count: {'min_range': prob_min, "max_range": total}})
+        #     # 0: {'min_range': 0, "max_range": 0.5}
+        #     # 1: {'min_range': 0.5, "max_range": 0.75}
+        #     # 2: {'min_range': 0.75, "max_range": 80}
+        #     # 3: {'min_range': 0.80, "max_range": 1}
+        #     prob_min = total
+        #     count += 1
+        #     if count >= length:
+        #         continue
+        #     n2 = keys[length - (length - count)]
+
+        for index, (key, value) in enumerate(self.gridFastCharging[purpose].items()):
+            total = prob_min + key
+            range_dict_fast.update({index: {'min_range': prob_min, 'max_range': total}})
+            prob_min = total
+
+        for keyValue, rangeValue in range_dict_fast.items():
+            if rangeValue['min_range'] <= rnd <= rangeValue['max_range']:
+                power = values[keyValue]
+                # print(rnd, power, purpose)
                 break
         return power
 
@@ -160,10 +240,11 @@ class GridModeler:
         total3kW = capacity.where(capacity.loc[:] == 3.6).count(axis=1)
         total11kW = capacity.where(capacity.loc[:, :] == 11).count(axis=1)
         total22kW = capacity.where(capacity.loc[:, :] == 22).count(axis=1)
-        # total50kW = capacity.where(capacity.loc[:, :] == 50).count(axis=1)
+        total50kW = capacity.where(capacity.loc[:, :] == 50).count(axis=1)
+        total75kW = capacity.where(capacity.loc[:, :] == 75).count(axis=1)
         total0kW = capacity.where(capacity.loc[:, :] == 0).count(axis=1)
-        totalChargingStation = pd.concat([total3kW, total11kW, total22kW, total0kW], axis=1)
-        totalChargingStation.rename(columns={0: '3.6 kW', 1: '11 kW', 2: '22 kW', 3: '0 kW'}, inplace=True)
+        totalChargingStation = pd.concat([total3kW, total11kW, total22kW, total50kW, total75kW, total0kW], axis=1)
+        totalChargingStation.rename(columns={0: '3.6 kW', 1: '11 kW', 2: '22 kW', 3: '50 kW', 4: '75 kW', 5: '0 kW'}, inplace=True)
         totalChargingStation = totalChargingStation
         totalChargingStation.plot(kind='area', title='Vehicles connected to different charging station over 24 hours', figsize=(10, 8))
         plt.show()
@@ -197,7 +278,8 @@ if __name__ == '__main__':
         localPathConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
     os.chdir(localPathConfig['pathAbsolute']['vencoPyRoot'])
     vpg = GridModeler(gridConfig=gridConfig, globalConfig=globalConfig)
+    driveList = vpg.trips()
     # vpg.assignSimpleGridViaPurposes()
-    vpg.assignGridViaProbabilities(model='distribution')
+    vpg.assignGridViaProbabilities(model='distribution', driveList= driveList)
     vpg.writeOutGridAvailability()
     vpg.stackPlot()
