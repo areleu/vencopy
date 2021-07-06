@@ -50,7 +50,8 @@ vpTripDiary = TripDiaryBuilder(datasetID=datasetID, tripConfig=tripConfig, globa
 # Grid model applications
 vpGrid = GridModeler(gridConfig=gridConfig, globalConfig=globalConfig, datasetID=datasetID)
 # vpGrid.assignSimpleGridViaPurposes()
-vpGrid.assignGridViaProbabilities(model='distribution')
+driveList = vpGrid.trips()
+vpGrid.assignGridViaProbabilities(model='distribution', driveList=driveList)
 vpGrid.writeOutGridAvailability()
 vpGrid.stackPlot()
 # review: Is this still valid code or left overs? I ignored this code for now.

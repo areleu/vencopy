@@ -55,7 +55,7 @@ class FlexEstimator:
         self.chargeProfilesUncontrolled = None
         self.auxFuelDemandProfiles = None
         self.chargeMinProfiles = None
-        self.connectionType = None
+        # self.connectionType = None
 
         # Filtering attributes
         self.randNoPerProfile = None
@@ -323,38 +323,38 @@ class FlexEstimator:
         # chargeMaxProfiles.to_csv('chargeMaxProfiles.csv')
         return chargeMaxProfiles
 
-    def assignConnectionType(self):
-        connectionType = self.chargeMaxProfiles.copy()
-        connectionType= connectionType.drop(connectionType.index[318:144950])
-        time1 = time.time()
-        for iHour, row in connectionType.iterrows():
-            capacity = row.copy()
-            for j in range(0, len(row)):
-                if j == 0:
-                    if capacity[j] == 48.5:
-                        row[j] = 'idle'             #idle- fully charged but not unpluged from charging station
-                    elif capacity[j] == 1.5:
-                        row[j] = 'parkingWithoutCharging'     #no charging station is available
-                    elif capacity[j] == capacity[j + 1]:
-                        row[j] = 'parkingWithoutCharging'     #no charging station is available
-                    elif capacity[j] < 48.5:
-                        row[j] = 'charging'         #charging is available and EV is charging
-
-                if j > 0:
-                    if capacity[j] == 48.5 and capacity[j] > capacity[j - 1]:
-                        row[j] = 'chargingFull'
-                    elif capacity[j] == 48.5:
-                        row[j] = 'idle'
-                    elif capacity[j] > capacity[j - 1]:
-                        row[j] = 'charging'
-                    elif capacity[j] < 48.5 and capacity[j] < capacity[j - 1]:
-                        row[j] = 'driving'                 #can also be called as driving
-                    elif capacity[j] < 48.5 and capacity[j] == capacity[j - 1]:
-                        row[j] = 'parkingWithoutCharging'
-            connectionType.loc[iHour] = row
-        # connectionType.to_csv('ConnectionProfiles.csv')
-        print(time.time() - time1)
-        return connectionType
+    # def assignConnectionType(self):
+    #     connectionType = self.chargeMaxProfiles.copy()
+    #     connectionType= connectionType.drop(connectionType.index[318:144950])
+    #     time1 = time.time()
+    #     for iHour, row in connectionType.iterrows():
+    #         capacity = row.copy()
+    #         for j in range(0, len(row)):
+    #             if j == 0:
+    #                 if capacity[j] == 48.5:
+    #                     row[j] = 'idle'             #idle- fully charged but not unpluged from charging station
+    #                 elif capacity[j] == 1.5:
+    #                     row[j] = 'parkingWithoutCharging'     #no charging station is available
+    #                 elif capacity[j] == capacity[j + 1]:
+    #                     row[j] = 'parkingWithoutCharging'     #no charging station is available
+    #                 elif capacity[j] < 48.5:
+    #                     row[j] = 'charging'         #charging is available and EV is charging
+    #
+    #             if j > 0:
+    #                 if capacity[j] == 48.5 and capacity[j] > capacity[j - 1]:
+    #                     row[j] = 'chargingFull'
+    #                 elif capacity[j] == 48.5:
+    #                     row[j] = 'idle'
+    #                 elif capacity[j] > capacity[j - 1]:
+    #                     row[j] = 'charging'
+    #                 elif capacity[j] < 48.5 and capacity[j] < capacity[j - 1]:
+    #                     row[j] = 'driving'                 #can also be called as driving
+    #                 elif capacity[j] < 48.5 and capacity[j] == capacity[j - 1]:
+    #                     row[j] = 'parkingWithoutCharging'
+    #         connectionType.loc[iHour] = row
+    #     # connectionType.to_csv('ConnectionProfiles.csv')
+    #     print(time.time() - time1)
+    #     return connectionType
 
     def calcChargeProfilesUncontrolled(self, chargeMaxProfiles: pd.DataFrame,
                                        scalarsProc: pd.DataFrame) -> pd.DataFrame:
@@ -479,7 +479,7 @@ class FlexEstimator:
         self.chargeProfiles = self.calcChargeProfiles(self.plugProfiles, self.scalars)
         self.chargeMaxProfiles = self.calcChargeMaxProfiles(self.chargeProfiles, self.drainProfiles, self.scalars,
                                                        self.scalarsProc, nIter=10)
-        self.connectionType = self.assignConnectionType()
+        # self.connectionType = self.assignConnectionType()
         self.chargeProfilesUncontrolled = self.calcChargeProfilesUncontrolled(self.chargeMaxProfiles, self.scalarsProc)
         self.auxFuelDemandProfiles = self.calcDriveProfilesFuelAux(self.chargeMaxProfiles,
                                                                    self.chargeProfilesUncontrolled, self.driveProfiles,
