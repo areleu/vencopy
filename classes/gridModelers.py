@@ -38,7 +38,7 @@ class GridModeler:
         self.chargeAvailability = None
 
     def trips(self):
-        self.scalars = pd.read_excel(self.scalarsPath, header=5, usecols='A:C', skiprows=0)
+        self.scalars = pd.read_excel(self.scalarsPath, header=5, usecols='A:C', skiprows=0, engine='openpyxl')
         scalarsOut = self.scalars.set_index('parameter')
         driveProfiles = self.driveData.set_index(['hhPersonID'])
         driveProfiles = driveProfiles.loc[:].sum(axis=1)
@@ -77,15 +77,15 @@ class GridModeler:
                             row[iHour] = self.getRandomNumberForModel1(activity[iHour])
                         elif model == 'distribution':
                             row[iHour] = self.getRandomNumberForModel3(activity[iHour])
+                            print(row[iHour], activity[iHour], hhPersonID)
                     elif iHour > 0:
                         if activity[iHour] == activity[iHour - 1]:
                             # print(row[j-1])
                             row[iHour] = row[iHour - 1]
-                        else:
-                            if model == 'probability':
-                                row[iHour] = self.getRandomNumberForModel1(activity[iHour])
-                            elif model == 'distribution':
-                                row[iHour] = self.getRandomNumberForModel3(activity[iHour])
+                        elif model == 'probability':
+                            row[iHour] = self.getRandomNumberForModel1(activity[iHour])
+                        elif model == 'distribution':
+                            row[iHour] = self.getRandomNumberForModel3(activity[iHour])
             else:
                 for iHour in range(0, len(row)):
                     if iHour == 0:
@@ -93,15 +93,15 @@ class GridModeler:
                             row[iHour] = self.getRandomNumberForModel1(activity[iHour])
                         elif model == 'distribution':
                             row[iHour] = self.getRandomNumberForModel2(activity[iHour])
+                            print(row[iHour], activity[iHour], hhPersonID)
                     elif iHour > 0:
                         if activity[iHour] == activity[iHour - 1]:
                             # print(row[j-1])
                             row[iHour] = row[iHour - 1]
-                        else:
-                            if model == 'probability':
-                                row[iHour] = self.getRandomNumberForModel1(activity[iHour])
-                            elif model == 'distribution':
-                                row[iHour] = self.getRandomNumberForModel2(activity[iHour])
+                        elif model == 'probability':
+                            row[iHour] = self.getRandomNumberForModel1(activity[iHour])
+                        elif model == 'distribution':
+                            row[iHour] = self.getRandomNumberForModel2(activity[iHour])
             self.chargeAvailability.loc[hhPersonID] = row
         print('Grid connection assignment complete')
 
