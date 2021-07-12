@@ -30,6 +30,7 @@ class GridModeler:
         self.gridProbability = gridConfig['gridAvailabilityProbability']
         self.gridDistribution = gridConfig['gridAvailabilityDistribution']
         self.gridFastCharging = gridConfig['gridAvailabilityFastCharging']
+        self.gridFastChargingThreshold = gridConfig['fastChargingThreshold']
         self.outputFileName = createFileString(globalConfig=globalConfig, fileKey='inputDataPlugProfiles',
                                                datasetID=datasetID)
         self.outputFilePath = Path(globalConfig['pathRelative']['input']) / self.outputFileName
@@ -37,23 +38,26 @@ class GridModeler:
         self.driveData = pd.read_csv(self.inputDriveProfilesPath, keep_default_na=False)
         self.chargeAvailability = None
 
-    def trips(self):
+    def fastChargingList(self):
+        '''
+        Returns a list of household trips having consumption greater than 80% (40 kWh) of battery capacity (50 kWh)
+        '''
         self.scalars = pd.read_excel(self.scalarsPath, header=5, usecols='A:C', skiprows=0, engine='openpyxl')
         scalarsOut = self.scalars.set_index('parameter')
         driveProfiles = self.driveData.set_index(['hhPersonID'])
         driveProfiles = driveProfiles.loc[:].sum(axis=1)
         driveProfiles = driveProfiles * (scalarsOut.loc['Electric_consumption_NEFZ', 'value'] / 100)
-        driveProfiles = np.where(driveProfiles > (0.80 * (scalarsOut.loc['Battery_capacity', 'value'])), driveProfiles, 0)
+        driveProfiles = np.where(driveProfiles > (self.gridFastChargingThreshold * (scalarsOut.loc['Battery_capacity', 'value'])), driveProfiles, 0)
         driveProfiles = pd.DataFrame(driveProfiles)
         driveProfiles.set_index(self.driveData['hhPersonID'], inplace=True)
         driveProfiles = driveProfiles.replace(0, np.nan)
         driveProfiles = driveProfiles.dropna(how='all', axis=0)
         driveProfiles.reset_index(inplace=True)
         drive = pd.Series(driveProfiles['hhPersonID'])
-        driveList = []
+        fastChargingHHID = []
         for i, item in drive.items():
-            driveList.append(item)
-        return driveList
+            fastChargingHHID.append(item)
+        return fastChargingHHID
 
     def assignSimpleGridViaPurposes(self):
         print(f'Starting with charge connection replacement of location purposes')
@@ -62,22 +66,27 @@ class GridModeler:
         self.chargeAvailability = (~(self.chargeAvailability != True))
         print('Grid connection assignment complete')
 
-    def assignGridViaProbabilities(self, model: str, driveList):
+    def assignGridViaProbabilities(self, model: str, fastChargingHHID):
+        '''
+        :param model: Input for assigning probability according to models presented in gridConfig
+        :param fastChargingHHID: List of household trips for fast charging
+        :return: Returns a dataFrame holding charging capacity for each trip assigned with probability distribution
+        '''
         self.chargeAvailability = self.purposeData.copy()
         self.chargeAvailability.set_index(['hhPersonID'], inplace=True)
         print('Starting with charge connection replacement ')
+        print('There are ' + str(len(fastChargingHHID)) + ' trips having consumption greater than ' + str(self.gridFastChargingThreshold) + '% of battery capacity')
         np.random.seed(42)
-
         for hhPersonID, row in self.chargeAvailability.iterrows():
             activity = row.copy(deep=True)
-            if hhPersonID in driveList:
+            if hhPersonID in fastChargingHHID:
                 for iHour in range(0, len(row)):
                     if iHour == 0:
                         if model == 'probability':
                             row[iHour] = self.getRandomNumberForModel1(activity[iHour])
                         elif model == 'distribution':
                             row[iHour] = self.getRandomNumberForModel3(activity[iHour])
-                            print(row[iHour], activity[iHour], hhPersonID)
+                            # print(row[iHour], activity[iHour], hhPersonID)
                     elif iHour > 0:
                         if activity[iHour] == activity[iHour - 1]:
                             # print(row[j-1])
@@ -93,19 +102,24 @@ class GridModeler:
                             row[iHour] = self.getRandomNumberForModel1(activity[iHour])
                         elif model == 'distribution':
                             row[iHour] = self.getRandomNumberForModel2(activity[iHour])
-                            print(row[iHour], activity[iHour], hhPersonID)
+                            # print(f'Power: {row[iHour]}, Activity: {activity[iHour]},householdPersonID: {hhPersonID}')
                     elif iHour > 0:
                         if activity[iHour] == activity[iHour - 1]:
-                            # print(row[j-1])
                             row[iHour] = row[iHour - 1]
                         elif model == 'probability':
                             row[iHour] = self.getRandomNumberForModel1(activity[iHour])
                         elif model == 'distribution':
                             row[iHour] = self.getRandomNumberForModel2(activity[iHour])
+                            # print(f'Power: {row[iHour]}, Activity: {activity[iHour]}, householdPersonID: {hhPersonID}')
             self.chargeAvailability.loc[hhPersonID] = row
         print('Grid connection assignment complete')
 
     def getRandomNumberForModel1(self, purpose):
+        '''
+        Assigns a random number between 0 and 1 for all the purposes, and allots a charging station according to the probability distribution
+        :param purpose: Purpose of each hour of a trip
+        :return: Returns a charging capacity for a purpose based on probability distribution 1
+        '''
         if purpose == "HOME":
             rnd = np.random.random_sample()
             if rnd <= 1:
@@ -153,82 +167,58 @@ class GridModeler:
         return rnd
 
     def getRandomNumberForModel2(self, purpose):
+        '''
+        Assigns a random number between 0 and 1 for all the purposes, and allots a charging station according to the probability distribution
+        :param purpose: Purpose of each hour of a trip
+        :return: Returns a charging capacity for a purpose based on probability distribution model 2
+        '''
         if purpose == 'DRIVING':
+            rnd = 0
+        elif purpose == 0:
             rnd = 0
         else:
             rnd = np.random.random_sample()
 
-        keys = list(self.gridDistribution[purpose].keys())
         values = list(self.gridDistribution[purpose].values())
         range_dict = {}
-        length = len(keys)
-        count = 0
         prob_min = 0
-        n2 = keys[0]
 
         for index, (key, value) in enumerate(self.gridDistribution[purpose].items()):
-            total = prob_min + key
-            range_dict.update({index: {'min_range': prob_min, 'max_range': total}})
-            prob_min = total
-            # print('first total: ', total)
-            # print('range: ', range_dict)
-            # print('probmin: ', prob_min)
+            prob_max = prob_min + key
+            range_dict.update({index: {'min_range': prob_min, 'max_range': prob_max}})
+            prob_min = prob_max
 
-        # for i in range(0, length):
-        #     total = prob_min + n2
-        #     range_dict.update({count: {'min_range': prob_min, "max_range": total}})
-        #     # 0: {'min_range': 0, "max_range": 0.5}
-        #     # 1: {'min_range': 0.5, "max_range": 0.75}
-        #     # 2: {'min_range': 0.75, "max_range": 80}
-        #     # 3: {'min_range': 0.80, "max_range": 1}
-        #     prob_min = total
-        #     count += 1
-        #     if count >= length:
-        #         continue
-        #     n2 = keys[length - (length - count)]
-
-        for keyValue, rangeValue in range_dict.items():
+        for dictIndex, rangeValue in range_dict.items():
             if rangeValue['min_range'] <= rnd <= rangeValue['max_range']:
-                # print(keyValue, rangeValue, rnd, purpose)
-                # print(rangeValue['min_range'], rangeValue['max_range'])
-                power = values[keyValue]
-                # print(power, purpose, rnd, keyValue)
+                power = values[dictIndex]
                 break
         return power
 
     def getRandomNumberForModel3(self, purpose):
-        rnd = np.random.random_sample()
+        '''
+        Assigns a random number between 0 and 1 for all the purposes, and allots a charging station according to the probability distribution
+        :param purpose: Purpose of each hour of a trip
+        :return: Returns a charging capacity for a purpose based on probability distribution model 3 (fast charging)
+        '''
+        if purpose == 'DRIVING':
+            rnd = 0
+        elif purpose == 0:
+            rnd = 0
+        else:
+            rnd = np.random.random_sample()
 
-        keys = list(self.gridFastCharging[purpose].keys())
         values = list(self.gridFastCharging[purpose].values())
         range_dict_fast = {}
         prob_min = 0
-        length = len(keys)
-        count = 0
-        n2 = keys[0]
-
-        # for i in range(0, length):
-        #     total = prob_min + n2
-        #     range_dict_fast.update({count: {'min_range': prob_min, "max_range": total}})
-        #     # 0: {'min_range': 0, "max_range": 0.5}
-        #     # 1: {'min_range': 0.5, "max_range": 0.75}
-        #     # 2: {'min_range': 0.75, "max_range": 80}
-        #     # 3: {'min_range': 0.80, "max_range": 1}
-        #     prob_min = total
-        #     count += 1
-        #     if count >= length:
-        #         continue
-        #     n2 = keys[length - (length - count)]
 
         for index, (key, value) in enumerate(self.gridFastCharging[purpose].items()):
-            total = prob_min + key
-            range_dict_fast.update({index: {'min_range': prob_min, 'max_range': total}})
-            prob_min = total
+            prob_max = prob_min + key
+            range_dict_fast.update({index: {'min_range': prob_min, 'max_range': prob_max}})
+            prob_min = prob_max
 
-        for keyValue, rangeValue in range_dict_fast.items():
+        for dictIndex, rangeValue in range_dict_fast.items():
             if rangeValue['min_range'] <= rnd <= rangeValue['max_range']:
-                power = values[keyValue]
-                # print(rnd, power, purpose)
+                power = values[dictIndex]
                 break
         return power
 
@@ -236,6 +226,9 @@ class GridModeler:
         self.chargeAvailability.to_csv(self.outputFilePath)
 
     def stackPlot(self):
+        '''
+        :return: Plots charging station assigned to each trip and EV's parking area/trip purposes during a time span of 24 hours
+        '''
         capacity = self.chargeAvailability.transpose()
         total3kW = capacity.where(capacity.loc[:] == 3.6).count(axis=1)
         total11kW = capacity.where(capacity.loc[:, :] == 11).count(axis=1)
@@ -244,10 +237,40 @@ class GridModeler:
         total75kW = capacity.where(capacity.loc[:, :] == 75).count(axis=1)
         total0kW = capacity.where(capacity.loc[:, :] == 0).count(axis=1)
         totalChargingStation = pd.concat([total3kW, total11kW, total22kW, total50kW, total75kW, total0kW], axis=1)
-        totalChargingStation.rename(columns={0: '3.6 kW', 1: '11 kW', 2: '22 kW', 3: '50 kW', 4: '75 kW', 5: '0 kW'}, inplace=True)
+        totalChargingStation.rename(columns={0: '3.6 kW', 1: '11 kW', 2: '22 kW', 3: '50 kW', 4: '75 kW', 5: '0 kW'},
+                                    inplace=True)
         totalChargingStation = totalChargingStation
-        totalChargingStation.plot(kind='area', title='Vehicles connected to different charging station over 24 hours', figsize=(10, 8))
+        totalChargingStation.plot(kind='area', title='Vehicles connected to different charging station over 24 hours',
+                                  figsize=(10, 8))
         plt.show()
+
+        # capacityNormalCharging = list(self.gridDistribution.values())
+        # uniqueNormalChargingList = list(set(val for dic in capacityNormalCharging for val in dic.values()))
+        # capacityFastCharging = list(self.gridFastCharging.values())
+        # uniquefastChargingList= list(set(val for dic in capacityFastCharging for val in dic.values()))
+        # capacityList = list(set(uniqueNormalChargingList + uniquefastChargingList))
+        # capacityList.sort()
+        # totalChargingStation = pd.DataFrame()
+        #
+        # for i in range(0, len(capacityList)):
+        #     total = capacity.where(capacity.loc[:] == capacityList[i]).count(axis=1)
+        #     print(total)
+        #     # total3kW = capacity.where(capacity.loc[:, :] == capacityList[i]).count(axis=1)
+        #     # total11kW = capacity.where(capacity.loc[:, :] == capacityList[i]).count(axis=1)
+        #     # total22kW = capacity.where(capacity.loc[:, :] == capacityList[i]).count(axis=1)
+        #     # total50kW = capacity.where(capacity.loc[:, :] == capacityList[i]).count(axis=1)
+        #     # total75kW = capacity.where(capacity.loc[:, :] == capacityList[i]).count(axis=1)
+        #
+        #     totalChargingStation= totalChargingStation.append(total, ignore_index=True)
+        # # totalChargingStation = totalChargingStation.reindex(sorted(totalChargingStation.columns), axis=1)
+        # totalChargingStation = totalChargingStation.transpose()
+        # totalChargingStation.sort_index(ascending=True, inplace=True)
+        # totalChargingStation
+        # # totalChargingStation = pd.concat([total3kW, total11kW, total22kW, total50kW, total75kW, total0kW], axis=1)
+        # totalChargingStation.rename(columns={0: '0 kW', 1: '3.6 kW', 2: '11 kW', 3: '22 kW', 4: '50 kW', 5: '75 kW'}, inplace=True)
+        # totalChargingStation = totalChargingStation.sort_index(ascending=True)
+        # plt.show()
+
 
         purposes = self.purposeData.copy()
         purposes = purposes.replace('0.0', 0)
@@ -262,8 +285,28 @@ class GridModeler:
         totalNA = purposes.where(purposes.loc[:] == 0).count(axis=1)
         totalTripPurpose = pd.concat([totalHome, totalWork, totalDriving, totalShopping, totalLeisure, totalSchool, totalOther, totalNA], axis=1)
         totalTripPurpose.rename(columns={0: 'Home', 1: 'Work', 2: 'Driving', 3: 'Shopping', 4: 'Leisure', 5: 'School', 6: 'Other', 7: 'NA'}, inplace=True)
-        totalTripPurpose = totalTripPurpose/len(purposes.columns)
-        totalTripPurpose.plot(kind='area', title='Trip purposes during 24 hours', figsize=(10, 8))
+        # totalTripPurpose = totalTripPurpose/len(purposes.columns)
+        # totalTripPurpose.plot(kind='area', title='Trip purposes during 24 hours', figsize=(10, 8))
+        totalTripPurpose.index = np.arange(1, len(totalTripPurpose)+1)
+
+
+        fig, ax = plt.subplots(1, figsize=(20, 8))
+        x = np.arange(0, len(totalTripPurpose.index))
+        plt.bar(x-0.4375, totalTripPurpose['Home'], width=0.125, color='#1D2F6F')
+        plt.bar(x-0.3125, totalTripPurpose['Work'], width=0.125, color='#D35400')
+        plt.bar(x-0.1875, totalTripPurpose['Driving'], width=0.125, color='#928aed')
+        plt.bar(x-0.0625, totalTripPurpose['Shopping'], width=0.125, color='#6EAF46')
+        plt.bar(x+0.0625, totalTripPurpose['Leisure'], width=0.125, color='#FAC748')
+        plt.bar(x+0.1875, totalTripPurpose['School'], width=0.125, color='#FA8390')
+        plt.bar(x+0.3125, totalTripPurpose['Other'], width=0.125, color='#FF0000')
+        plt.bar(x+0.4375, totalTripPurpose['NA'], width=0.125, color='#1ABC9C')
+        plt.ylabel('Trip purposes during 24 hours')
+        plt.xlabel('Time (hours)')
+        plt.xticks(x, totalTripPurpose.index)
+        plt.xlim(-1, 24)
+        ax.yaxis.grid(color='black', linestyle='dashed', alpha=0.3)
+        # plt.title('EV parking during 24 hours', loc='left')
+        plt.legend(['HOME', 'WORK', 'DRIVING', 'SHOPPING', 'LEISURE', 'SCHOOL', 'OTHER', 'NA'], loc='upper center', ncol= 8)
         plt.show()
 
 if __name__ == '__main__':
@@ -278,8 +321,8 @@ if __name__ == '__main__':
         localPathConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
     os.chdir(localPathConfig['pathAbsolute']['vencoPyRoot'])
     vpg = GridModeler(gridConfig=gridConfig, globalConfig=globalConfig)
-    driveList = vpg.trips()
+    fastChargingHHID = vpg.fastChargingList()
     # vpg.assignSimpleGridViaPurposes()
-    vpg.assignGridViaProbabilities(model='distribution', driveList= driveList)
+    vpg.assignGridViaProbabilities(model='distribution', fastChargingHHID=fastChargingHHID)
     vpg.writeOutGridAvailability()
     vpg.stackPlot()

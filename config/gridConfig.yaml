@@ -8,6 +8,9 @@
 
 # This config holds all relative paths and filenames for gridModelers.py
 
+fastChargingThreshold: 0.8       # Battery threshold for fast charging
+
+
 chargingInfrastructureMappings:  # Grid model 1: Explicit mapping given for each location aka trip purpose
     'DRIVING': False
     'HOME': True
