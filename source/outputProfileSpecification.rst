@@ -40,12 +40,9 @@ we're left with 17000 profiles still in hourly values of kW. Function: `filterCo
 `libProfileCalculation.py`.
 
 3. The filtered individual profiles are then aggregated by a simple averaging of each hourly value to calculate the 
-average electricity consumption for one model vehicle for the complete EV fleet. We're left with one 
-<<<<<<< HEAD
-profile in hourly values of kW. Function: `aggregateProfiles()` in the library `libProfileCalculation.py`.
-=======
+average electricity consumption for one model vehicle for the complete EV fleet. We're left with one profile in hourly values of kW. Function: `aggregateProfiles()` in the library `libProfileCalculation.py`.
 profile in hourly values of kW. Function: `aggregateProfilesMean()` in the library `libProfileCalculation.py`.
->>>>>>> MiD2017
+
 
 This profile may later be scaled by the number of vehicles in an EV fleet to calculate the average maximum hourly 
 recharge capacity of the EV fleet. 
@@ -79,11 +76,9 @@ we're left with 17000 profiles still in hourly values of kW. Function: `filterCo
 
 3. The filtered individual profiles are then aggregated by a simple averaging of each hourly value to calculate the 
 average uncontrolled charging power for one "representative" vehicle for the complete EV fleet. We're left with one 
-<<<<<<< HEAD
-profile in hourly values of kW. Function: `aggregateProfiles()` in the library `libProfileCalculation.py`.
-=======
+
 profile in hourly values of kW. Function: `aggregateProfilesMean()` in the library `libProfileCalculation.py`.
->>>>>>> MiD2017
+
 
 4. The aggregated profile is then corrected according to more realistic specific electric consumption measurements. 
 Function: `correctProfiles()` in the library `libProfileCalculation.py`.
@@ -111,24 +106,16 @@ profiles are scaled with the electric consumption given in the technical vehicle
 capacity doesn't suffice for the trip distance, additional fuel demand is subtracted to only account for electricity
 consumption. 
 
-<<<<<<< HEAD
-We're left with 18000 hourly profiles in kW. Functions: `calcConsumptionProfiles()` and 
-=======
-We're left with 18000 hourly profiles in kW. Functions: `calcDrainProfiles()` and
->>>>>>> MiD2017
-`calcElectricPowerProfiles()` in the library `libProfileCalculation.py`.
+We're left with 18000 hourly profiles in kW. Functions: `calcDrainProfiles()` and `calcElectricPowerProfiles()` in the library `libProfileCalculation.py`.
 
 2. The profiles are filtered according to a specified selector. If 1000 profiles don't fulfill the selection criteria,
 we're left with 17000 profiles still in hourly values of kW. Function: `filterConsProfiles()` in the library 
 `libProfileCalculation.py`.
 
 3. The filtered individual profiles are then aggregated by a simple averaging of each hourly value to calculate the 
-average electricity consumption for one model vehicle for the complete EV fleet. We're left with one 
-<<<<<<< HEAD
-profile in hourly values of kW. Function: `aggregateProfiles()` in the library `libProfileCalculation.py`.
-=======
+average electricity consumption for one model vehicle for the complete EV fleet. We're left with one
 profile in hourly values of kW. Function: `aggregateProfilesMean()` in the library `libProfileCalculation.py`.
->>>>>>> MiD2017
+
 
 4. The aggregated profile is then corrected according to more realistic specific electric consumption measurements. 
 Function: `correctProfiles()` in the library `libProfileCalculation.py`.
@@ -163,12 +150,9 @@ we're left with 17000 profiles still in hourly values of l fuel. Function: `filt
 `libProfileCalculation.py`.
 
 3. The filtered individual profiles are then aggregated by a simple averaging of each hourly value to calculate the 
-average fuel consumption for one model vehicle for the complete EV fleet. We're left with one profile in hourly values 
-<<<<<<< HEAD
-of l fuel. Function: `aggregateProfiles()` in the library `libProfileCalculation.py`.
-=======
+average fuel consumption for one model vehicle for the complete EV fleet. We're left with one profile in hourly values
 of l fuel. Function: `aggregateProfilesMean()` in the library `libProfileCalculation.py`.
->>>>>>> MiD2017
+
 
 4. The aggregated profile is then corrected according to more realistic specific fuel consumption measurements. 
 Function: `correctProfiles()` in the library `libProfileCalculation.py`.
@@ -180,6 +164,7 @@ needed by the hybrid electric vehicle fleet.
 **************
 State profiles
 **************
+
 Maximum state-of-charge profile
 #################################################################
 

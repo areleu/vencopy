@@ -20,6 +20,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from random import seed, random
 from classes.dataParsers import DataParser
+from classes.evaluators import Evaluator
 from scripts.globalFunctions import createFileString, mergeVariables, calculateWeightedAverage, writeProfilesToCSV
 
 
@@ -151,8 +152,8 @@ class FlexEstimator:
         """
 
         inputRaw = self.readInputCSV(filePath)
-        inputData = self.booleanMapping(inputRaw)
-        return inputData
+        #inputData = self.booleanMapping(inputRaw)
+        return inputRaw
 
     def readVencoInput(self, datasetID: str) -> pd.DataFrame:
         """
@@ -320,41 +321,7 @@ class FlexEstimator:
             devCrit = chargeMaxProfiles[nHours - 1].sum() - chargeMaxProfiles[0].sum()
             print(devCrit)
         chargeMaxProfiles.drop(labels='newCharge', axis='columns', inplace=True)
-        # chargeMaxProfiles.to_csv('chargeMaxProfiles.csv')
         return chargeMaxProfiles
-
-    # def assignConnectionType(self):
-    #     connectionType = self.chargeMaxProfiles.copy()
-    #     connectionType= connectionType.drop(connectionType.index[318:144950])
-    #     time1 = time.time()
-    #     for iHour, row in connectionType.iterrows():
-    #         capacity = row.copy()
-    #         for j in range(0, len(row)):
-    #             if j == 0:
-    #                 if capacity[j] == 48.5:
-    #                     row[j] = 'idle'             #idle- fully charged but not unpluged from charging station
-    #                 elif capacity[j] == 1.5:
-    #                     row[j] = 'parkingWithoutCharging'     #no charging station is available
-    #                 elif capacity[j] == capacity[j + 1]:
-    #                     row[j] = 'parkingWithoutCharging'     #no charging station is available
-    #                 elif capacity[j] < 48.5:
-    #                     row[j] = 'charging'         #charging is available and EV is charging
-    #
-    #             if j > 0:
-    #                 if capacity[j] == 48.5 and capacity[j] > capacity[j - 1]:
-    #                     row[j] = 'chargingFull'
-    #                 elif capacity[j] == 48.5:
-    #                     row[j] = 'idle'
-    #                 elif capacity[j] > capacity[j - 1]:
-    #                     row[j] = 'charging'
-    #                 elif capacity[j] < 48.5 and capacity[j] < capacity[j - 1]:
-    #                     row[j] = 'driving'                 #can also be called as driving
-    #                 elif capacity[j] < 48.5 and capacity[j] == capacity[j - 1]:
-    #                     row[j] = 'parkingWithoutCharging'
-    #         connectionType.loc[iHour] = row
-    #     # connectionType.to_csv('ConnectionProfiles.csv')
-    #     print(time.time() - time1)
-    #     return connectionType
 
     def calcChargeProfilesUncontrolled(self, chargeMaxProfiles: pd.DataFrame,
                                        scalarsProc: pd.DataFrame) -> pd.DataFrame:
@@ -421,7 +388,7 @@ class FlexEstimator:
 
         # Setting value of hour=0 equal to the average of hour=1 and last hour
         driveProfilesFuelAux[0] = (driveProfilesFuelAux[nHours - 1] + driveProfilesFuelAux[1]) / 2
-        driveProfilesFuelAux = driveProfilesFuelAux.round(4)
+        driveProfilesFuelAux = driveProfilesFuelAux.astype(float).round(4)
         return driveProfilesFuelAux
 
     def calcChargeMinProfiles(self, chargeProfiles: pd.DataFrame, consumptionProfiles: pd.DataFrame,
@@ -583,7 +550,7 @@ class FlexEstimator:
             if filterIndex == 'indexCons':
                 electricPowerProfiles[iHour] = electricPowerProfiles[iHour] * indexCons
             elif filterIndex == 'indexDSM':
-                electricPowerProfiles[iHour] = electricPowerProfiles[iHour] * indexDSM
+                electricPowerProfiles[iHour] = electricPowerProfiles[iHour] * indexDSM.astype(int)
         return electricPowerProfiles
 
     def setUnconsideredBatProfiles(self, chargeMaxProfiles: pd.DataFrame, chargeMinProfiles: pd.DataFrame,
@@ -860,82 +827,24 @@ class FlexEstimator:
                                                                   normReferenceParam='Battery_capacity')
 
     def writeOut(self):
-        self.profileDictOut = dict(uncontrolledCharging=self.chargeProfilesUncontrolledCorr,
-                                   electricityDemandDriving=self.electricPowerProfilesCorr,
-                                   socMax=self.socMaxNorm, socMin=self.socMinNorm,
-                                   gridConnectionShare=self.plugProfilesAgg,
-                                   auxFuelDriveProfile=self.auxFuelDemandProfilesCorr)
+        # Daily profile plotting
+        # self.profileDictOut = dict(uncontrolledCharging=self.chargeProfilesUncontrolledCorr,
+        #                            electricityDemandDriving=self.electricPowerProfilesCorr,
+        #                            socMax=self.socMaxNorm, socMin=self.socMinNorm,
+        #                            gridConnectionShare=self.plugProfilesAgg,
+        #                            auxFuelDriveProfile=self.auxFuelDemandProfilesCorr)
+        #
+        # writeProfilesToCSV(profileDictOut=self.profileDictOut, globalConfig=self.globalConfig, singleFile=True,
+        #                         datasetID=self.datasetID)
+
+        self.profileDictOut = dict(uncontrolledCharging=self.chargeProfilesUncontrolledWAggVar,
+                                   electricityDemandDriving=self.electricPowerProfilesWAggVar,
+                                   socMax=self.socMaxVar, socMin=self.socMinVar,
+                                   gridConnectionShare=self.plugProfilesWAggVar,
+                                   auxFuelDriveProfile=self.auxFuelDemandProfilesWAggVar)
 
         writeProfilesToCSV(profileDictOut=self.profileDictOut, globalConfig=self.globalConfig, singleFile=True,
                                 datasetID=self.datasetID)
-
-    # def sortData(self, data):
-    #     """
-    #     Method used for plotting to order index values
-    #
-    #     :param data: Pandas Dataframe with two indices
-    #     """
-    #     data.index = data.index.swaplevel(0, 1)
-    #     return data.sort_index()
-    #
-    # # DEPRECATED HERE IN THE CODE AND SHIFTED TO EVALUATOR
-    # def linePlot(self, profileDict, pathOutput, show=True, write=True, ylabel='Normalized profiles', ylim=None,
-    #              filename=''):
-    #     plt.rcParams.update(self.evaluatorConfig['plotConfig']['plotRCParameters'])  # set plot layout
-    #     fig, ax = plt.subplots()
-    #     plt.tick_params(labelsize=self.evaluatorConfig['plotConfig']['plotRCParameters']['font.size'])
-    #     for iKey, iVal in profileDict.items():
-    #         if isinstance(iVal.index, pd.MultiIndex):
-    #             iVal = self.sortData(iVal)
-    #             sns.lineplot(range(iVal.index.size), iVal, label=iKey, sort=False)
-    #         else:
-    #             sns.lineplot(iVal.index, iVal, label=iKey, sort=False)
-    #     xRange = range(0, len(profileDict[list(profileDict)[0]]) + 1, self.evaluatorConfig['plotConfig']['xAxis']['xTickSteps'])
-    #     # xLabels = [f'{iDay}\n{str(iTime)}:00' for iDay in config['plotConfig']['xAxis']['weekdays'] for iTime in config['plotConfig']['xAxis']['hours']]
-    #     xLabels = [f'{str(iTime)}:00' for iTime in self.evaluatorConfig['plotConfig']['xAxis']['hours']]
-    #     ax.set_xticks(xRange)
-    #     ax.set_xticklabels(xLabels, fontsize=self.evaluatorConfig['plotConfig']['xAxis']['ticklabelsize'])
-    #     ax.set_ylim(bottom=0, top=ylim)
-    #     ax.set_xlabel('Hour', fontsize=self.evaluatorConfig['plotConfig']['plotRCParameters']['axes.labelsize'])
-    #     ax.set_ylabel(ylabel, fontsize=self.evaluatorConfig['plotConfig']['plotRCParameters']['axes.labelsize'])
-    #     plt.legend(loc='upper center')  # , bbox_to_anchor=(0.5, 1.3) ncol=2,
-    #     plt.tight_layout()
-    #     filePlot = pathOutput / Path(
-    #         createFileString(globalConfig=self.globalConfig, datasetID=self.datasetID, fileKey='flexPlotName', manualLabel=filename,
-    #                          filetypeStr='svg'))
-    #     if show:
-    #         plt.show()
-    #     if write:
-    #         fig.savefig(filePlot)
-    #
-    # def separateLinePlots(self, profileDictList, datasetID='MiD17', show=True, write=True,
-    #                       ylabel=[], ylim=[], filenames=[]):
-    #     for iDict, iYLabel, iYLim, iName in zip(profileDictList, ylabel, ylim, filenames):
-    #         self.writeProfilesToCSV(profileDictOut=iDict, singleFile=False, datasetID=datasetID)
-    #         self.linePlot(iDict, pathOutput=Path(self.globalConfig['pathRelative']['plots']), show=show,
-    #                       write=write, ylabel=iYLabel, ylim=iYLim, filename=iName)
-    #
-    # def plotProfiles(self):
-    #     self.linePlot(self.profileDictOut, pathOutput=Path(self.globalConfig['pathRelative']['plots']),
-    #                   show=True, write=True, filename='allPlots' + self.datasetID)
-    #
-    #     # Separately plot flow and state profiles
-    #     profileDictConnectionShare = dict(gridConnectionShare=self.plugProfilesAgg)
-    #
-    #     profileDictFlowsAbs = dict(uncontrolledCharging=self.chargeProfilesUncontrolledAgg,
-    #                                electricityDemandDriving=self.electricPowerProfilesAgg)
-    #     profileDictStateAbs = dict(socMax=self.socMax, socMin=self.socMin)
-    #
-    #
-    #
-    #     profileDictList = [profileDictConnectionShare, profileDictFlowsAbs, profileDictStateAbs]
-    #     # profileDictList = [profileDictConnectionShareDiffDay, profileDictFlowsAbsDiffDay, profileDictStateAbs]
-    #
-    #     self.separateLinePlots(profileDictList, show=True, write=True,
-    #                            ylabel=['Average EV connection share', 'Average EV flow in kW', 'Average EV SOC in kWh'],
-    #                            filenames=[self.datasetID + '_connection', self.datasetID + '_flows',
-    #                                       self.datasetID + '_state'],
-    #                            ylim=[1, 0.9, 50])
 
     def run(self):
         self.baseProfileCalculation()
@@ -944,9 +853,10 @@ class FlexEstimator:
         self.correct()
         self.normalize()
         self.writeOut()
-        # self.plotProfiles()
+
 
 if __name__ == '__main__':
+    datasetID = 'MiD17'
     pathGlobalConfig = Path.cwd().parent / 'config' / 'globalConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
     with open(pathGlobalConfig) as ipf:
         globalConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
@@ -965,9 +875,13 @@ if __name__ == '__main__':
     os.chdir(localPathConfig['pathAbsolute']['vencoPyRoot'])
 
     vpData = DataParser(parseConfig=parseConfig, globalConfig=globalConfig, localPathConfig=localPathConfig, loadEncrypted=False)
-    vpFlexEst17 = FlexEstimator(flexConfig=flexConfig, globalConfig=globalConfig, evaluatorConfig=evaluatorConfig,
-                                ParseData=vpData, datasetID='MiD17')
-    vpFlexEst17.run()
+    vpFlexEst = FlexEstimator(flexConfig=flexConfig, globalConfig=globalConfig, evaluatorConfig=evaluatorConfig,
+                                ParseData=vpData, datasetID=datasetID)
+    vpFlexEst.run()
+    vpEval = Evaluator(globalConfig=globalConfig, evaluatorConfig=evaluatorConfig,
+                       parseData=pd.Series(data=vpData, index=[datasetID]), label='SESPaperTest')
+    vpEval.plotProfiles(flexEstimator=vpFlexEst)
+
 
     print(f'Total absolute electricity charged in uncontrolled charging based on MiD08: '
-          f'{vpFlexEst17.chargeProfilesUncontrolled.sum().sum()} based on MiD17')
+          f'{vpFlexEst.chargeProfilesUncontrolled.sum().sum()} based on MiD17')

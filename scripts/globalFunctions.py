@@ -53,7 +53,7 @@ def mergeVariables(data, variableData, variables):
     variableDataMerge = variableDataUnique.loc[:, variables].set_index('hhPersonID')
     if 'hhPersonID' not in data.index.names:
         data.set_index('hhPersonID', inplace=True, drop=True)
-    mergedData = pd.concat([variableDataMerge, data], axis=1)
+    mergedData = pd.concat([variableDataMerge, data], axis=1, join='inner')
     mergedData.reset_index(inplace=True)
     return mergedData
 
@@ -83,7 +83,8 @@ def writeProfilesToCSV(profileDictOut, globalConfig: dict, singleFile=True, data
         dataOut = pd.DataFrame(profileDictOut)
         dataOut.to_csv(pathlib.Path(globalConfig['pathRelative']['dataOutput']) /
                        createFileString(globalConfig=globalConfig, fileKey='vencoPyOutput',
-                                        datasetID=datasetID), header=True)
+                                        manualLabel=globalConfig['labels']['technologyLabel'], datasetID=datasetID),
+                       header=True)
     else:
         for iName, iProf in profileDictOut.items():
             iProf.to_csv(pathlib.Path(globalConfig['pathRelative']['dataOutput']) /

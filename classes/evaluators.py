@@ -15,11 +15,13 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 from scripts.globalFunctions import createFileString, calculateWeightedAverage, mergeDataToWeightsAndDays, \
     writeProfilesToCSV
-from classes.flexEstimators import FlexEstimator
+# from classes.flexEstimators import FlexEstimator
 from classes.dataParsers import DataParser
 
+
 class Evaluator:
-    def __init__(self, globalConfig:dict, evaluatorConfig: dict, label: str, parseData: pd.Series=None, weightPlot=True):
+    def __init__(self, globalConfig:dict, evaluatorConfig: dict, label: str, parseData: pd.Series=None,
+                 weightPlot=True):
         """
         CURRENTLY IN SEMI-PROUDCTION MODE. Some interfaces may only apply to specific cases.
         Overall evaluation class for assessing vencopy mobility and charging profiles.
@@ -50,7 +52,7 @@ class Evaluator:
         self.dataStacked = None
         self.aggregateIDDict = self.setupAggDict()
         self.hourlyAggregates = self.aggregateAcrossTrips()
-        # self.hourlyAggregates = self.sortData(self.hourlyAggregates)
+
         print('Evaluator initialization complete')
 
     def readInData(self, fileKeys: list, datasets: list) -> pd.Series:
@@ -270,7 +272,7 @@ class Evaluator:
                                         filetypeStr='svg')
             fig.savefig(Path(self.globalConfig['pathRelative']['plots']) / fileName, bbox_inches='tight')
 
-    def linePlot(self, profileDict, pathOutput, flexEstimator: FlexEstimator, show=True, write=True, ylabel='Normalized profiles', ylim=None,
+    def linePlot(self, profileDict, pathOutput, flexEstimator, show=True, write=True, ylabel='Normalized profiles', ylim=None,
                  filename=''):
         """
         Basic line plot functionality
@@ -295,15 +297,20 @@ class Evaluator:
                 sns.lineplot(x=range(iVal.index.size), y=iVal, label=iKey, sort=False)
             else:
                 sns.lineplot(x=iVal.index, y=iVal, label=iKey, sort=False)
-        xRange = range(0, len(profileDict[list(profileDict)[0]]) + 1, self.evaluatorConfig['plotConfig']['xAxis']['xTickSteps'])
-        # xLabels = [f'{iDay}\n{str(iTime)}:00' for iDay in config['plotConfig']['xAxis']['weekdays'] for iTime in config['plotConfig']['xAxis']['hours']]
-        xLabels = [f'{str(iTime)}:00' for iTime in self.evaluatorConfig['plotConfig']['xAxis']['hours']]
+        xRange = range(0, len(profileDict[list(profileDict)[0]]) + 1,
+                       self.evaluatorConfig['plotConfig']['xAxis']['xTickSteps'])
+        xLabels = [f'{iDay}\n{str(iTime)}:00' for iDay in self.evaluatorConfig['plotConfig']['xAxis']['weekdays']
+                   for iTime in self.evaluatorConfig['plotConfig']['xAxis']['hours']]
+
+        # Labeling for 24 hour plots
+        # xLabels = [f'{str(iTime)}:00' for iTime in self.evaluatorConfig['plotConfig']['xAxis']['hours']]
         ax.set_xticks(xRange[:-1])
         ax.set_xticklabels(xLabels, fontsize=self.evaluatorConfig['plotConfig']['xAxis']['ticklabelsize'])
         ax.set_ylim(bottom=0, top=ylim)
-        ax.set_xlabel('Hour', fontsize=self.evaluatorConfig['plotConfig']['plotRCParameters']['axes.labelsize'])
+        ax.set_xlabel('Weekday and Hour',
+                      fontsize=self.evaluatorConfig['plotConfig']['plotRCParameters']['axes.labelsize'])
         ax.set_ylabel(ylabel, fontsize=self.evaluatorConfig['plotConfig']['plotRCParameters']['axes.labelsize'])
-        plt.legend(loc='upper center')  # , bbox_to_anchor=(0.5, 1.3) ncol=2,
+        plt.legend(loc='upper center')
         plt.tight_layout()
         filePlot = pathOutput / Path(
             createFileString(globalConfig=self.globalConfig, datasetID=flexEstimator.datasetID, fileKey='flexPlotName',
@@ -313,7 +320,7 @@ class Evaluator:
         if write:
             fig.savefig(filePlot)
 
-    def separateLinePlots(self, profileDictList: list, flexEstimator: FlexEstimator, show=True,
+    def separateLinePlots(self, profileDictList: list, flexEstimator, show=True,
                           write=True, ylabel=[], ylim=[], filenames=[]):
         """
         Wrapper function to draw and write multiple plots using linePlot().
@@ -334,36 +341,44 @@ class Evaluator:
                           flexEstimator=flexEstimator, show=show, write=write, ylabel=iYLabel, ylim=iYLim,
                           filename=iName)
 
-    def plotProfiles(self, flexEstimator: FlexEstimator):
+    def plotProfiles(self, flexEstimator, profileDictList: dict = None, yLabels: list = None, yLimits: list = None,
+                     filenames: list = None):
         """
         Wrapper function to plot both one Figure with all resulting output profiles and separate Figures for flow,
         connection and state profiles after VencoPy flexibility estimation.
 
         :param flexEstimator: Instance of VencoPy class FlexEstimator
+        :param profileDictList: List of diciontaries with keys specifying the profile name and value holding a pandas
+        dataframe with a multiindex series
+        :param yLabels: list of y axis labels. Has to be of same length as profileDictList
+        :param yLimitsL List of y axis limits. Has to be of same length as profileDictList
+        :param filenames: List of filenames to write the plots to. Has to be of same length as profileDictList
         :return: None
         """
-        self.linePlot(flexEstimator.profileDictOut, pathOutput=Path(flexEstimator.globalConfig['pathRelative']['plots']),
-                      flexEstimator=flexEstimator, show=True, write=True, filename='allPlots' + flexEstimator.datasetID)
+        # self.linePlot(flexEstimator.profileDictOut, pathOutput=Path(flexEstimator.globalConfig['pathRelative']['plots']),
+        #               flexEstimator=flexEstimator, show=True, write=True, filename='allPlots' + flexEstimator.datasetID)
 
+        if profileDictList is None:
         # Separately plot flow and state profiles
-        profileDictConnectionShare = dict(gridConnectionShare=flexEstimator.plugProfilesAgg)
+            profileDictConnectionShare = dict(gridConnectionShare=flexEstimator.plugProfilesWAggVar)
 
-        profileDictFlowsNorm = dict(uncontrolledCharging=flexEstimator.chargeProfilesUncontrolledCorr,
-                                    electricityDemandDriving=flexEstimator.electricPowerProfilesCorr,
-                                    gridConnectionShare=flexEstimator.plugProfilesAgg)
-        profileDictFlowsAbs = dict(uncontrolledCharging=flexEstimator.chargeProfilesUncontrolledAgg,
-                                   electricityDemandDriving=flexEstimator.electricPowerProfilesAgg)
+            # profileDictFlowsNorm = dict(uncontrolledCharging=flexEstimator.chargeProfilesUncontrolledCorr,
+            #                             electricityDemandDriving=flexEstimator.electricPowerProfilesCorr,
+            #                             gridConnectionShare=flexEstimator.plugProfilesAgg)
+            profileDictFlowsAbs = dict(uncontrolledCharging=flexEstimator.chargeProfilesUncontrolledWAggVar,
+                                       electricityDemandDriving=flexEstimator.electricPowerProfilesWAggVar)
 
-        profileDictStateNorm = dict(socMax=flexEstimator.socMaxNorm, socMin=flexEstimator.socMinNorm)
-        profileDictStateAbs = dict(socMax=flexEstimator.socMax, socMin=flexEstimator.socMin)
+            # profileDictStateNorm = dict(socMax=flexEstimator.socMaxNorm, socMin=flexEstimator.socMinNorm)
+            profileDictStateAbs = dict(socMax=flexEstimator.socMaxVar, socMin=flexEstimator.socMinVar)
 
-        profileDictList = [profileDictConnectionShare, profileDictFlowsAbs, profileDictStateAbs]
+            profileDictList = [profileDictConnectionShare, profileDictFlowsAbs, profileDictStateAbs]
 
+        yLabels = ['Average EV connection share', 'Average EV flow in kW', 'Average EV SOC in kWh']
+        yLimits = [1, 5, 50]
+        filenames = [flexEstimator.datasetID + '_connection', flexEstimator.datasetID + '_flows',
+                                      flexEstimator.datasetID + '_state']
         self.separateLinePlots(profileDictList, show=True, write=True, flexEstimator=flexEstimator,
-                               ylabel=['Average EV connection share', 'Average EV flow in kW', 'Average EV SOC in kWh'],
-                               filenames=[flexEstimator.datasetID + '_connection', flexEstimator.datasetID + '_flows',
-                                          flexEstimator.datasetID + '_state'],
-                               ylim=[15, 0.9, 50])
+                               ylabel=yLabels, filenames=filenames, ylim=yLimits)
 
     def compareProfiles(self, compareTo):
         """
@@ -371,8 +386,8 @@ class Evaluator:
         not tested.
         """
 
-        if not isinstance(compareTo, FlexEstimator):
-            raise('Argument to compare to is not a class instance of FlexEstimator')
+        # if not isinstance(compareTo, FlexEstimator):
+        #     raise('Argument to compare to is not a class instance of FlexEstimator')
 
         profileList = [
                        # 'plugProfilesAgg', 'plugProfilesWAgg', 'chargeProfilesUncontrolledAgg',
