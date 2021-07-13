@@ -840,7 +840,7 @@ class FlexEstimator:
                                    auxFuelDriveProfile=self.auxFuelDemandProfilesWAggVar)
 
         writeProfilesToCSV(profileDictOut=self.profileDictOut, globalConfig=self.globalConfig, singleFile=True,
-                                datasetID=self.datasetID)
+                           datasetID=self.datasetID)
 
     def run(self):
         self.baseProfileCalculation()
