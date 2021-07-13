@@ -8,16 +8,16 @@ __status__ = 'dev'  # options are: dev, test, prod
 
 import pandas as pd
 import numpy as np
-import typing
 from typing import Callable
 from pathlib import Path
 import yaml
 import os
-from classes.dataParsers import DataParser
 from scripts.globalFunctions import createFileString
 
+
+
 class TripDiaryBuilder:
-    def __init__(self, tripConfig: dict, globalConfig: dict, ParseData: DataParser, datasetID: str = 'MiD17'):
+    def __init__(self, tripConfig: dict, globalConfig: dict, ParseData, datasetID: str = 'MiD17'):
         self.tripConfig = tripConfig
         self.globalConfig = globalConfig
         self.parsedData = ParseData
@@ -338,6 +338,7 @@ class FillHourValues:
 
 
 if __name__ == '__main__':
+    from classes.dataParsers import DataParser
     pathGlobalConfig = Path.cwd().parent / 'config' / 'globalConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
     with open(pathGlobalConfig) as ipf:
         globalConfig = yaml.load(ipf, Loader=yaml.SafeLoader)

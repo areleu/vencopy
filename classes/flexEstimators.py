@@ -18,13 +18,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from random import seed, random
-from classes.dataParsers import DataParser
-from classes.evaluators import Evaluator
+
 from scripts.globalFunctions import createFileString, mergeVariables, calculateWeightedAverage, writeProfilesToCSV
 
 
 class FlexEstimator:
-    def __init__(self, globalConfig: dict, flexConfig : dict, evaluatorConfig: dict, ParseData: DataParser,
+    def __init__(self, globalConfig: dict, flexConfig : dict, evaluatorConfig: dict, ParseData,
                  datasetID: str='MiD17'):
         #self.config = config
         self.globalConfig = globalConfig
@@ -853,6 +852,8 @@ class FlexEstimator:
 
 
 if __name__ == '__main__':
+    from classes.dataParsers import DataParser
+    from classes.evaluators import Evaluator
     datasetID = 'MiD17'
     pathGlobalConfig = Path.cwd().parent / 'config' / 'globalConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
     with open(pathGlobalConfig) as ipf:

@@ -27,7 +27,7 @@ pathRelative:
 numberOfHours: 24
 
 files:
-    inputDataScalars: VencoPy_scalarInputSES.xlsx
+    inputDataScalars: VencoPy_scalarInput.xlsx
 #    inputDataDriveProfiles: inputProfiles_Drive_MiD17_woWeights.csv
 #    inputDataPlugProfiles: inputProfiles_Plug_MiD17_woWeights.csv
     MiD17:
