@@ -453,7 +453,7 @@ class FlexEstimator:
                                                                    self.scalars, self.scalarsProc)
         self.chargeMinProfiles = self.calcChargeMinProfiles(self.chargeProfiles, self.drainProfiles,
                                                        self.auxFuelDemandProfiles, self.scalars, self.scalarsProc,
-                                                       nIter=10)
+                                                       nIter=3)
         print(f'Base profile calculation complete for dataset {self.datasetID}')
 
     def createRandNo(self, driveProfiles: pd.DataFrame, setSeed=1):

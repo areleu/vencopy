@@ -79,6 +79,7 @@ class GridModeler:
         np.random.seed(42)
         for hhPersonID, row in self.chargeAvailability.iterrows():
             activity = row.copy(deep=True)
+            # if None:
             if hhPersonID in fastChargingHHID:
                 for iHour in range(0, len(row)):
                     if iHour == 0:
@@ -116,7 +117,8 @@ class GridModeler:
 
     def getRandomNumberForModel1(self, purpose):
         '''
-        Assigns a random number between 0 and 1 for all the purposes, and allots a charging station according to the probability distribution
+        Assigns a random number between 0 and 1 for all the purposes, and allots a charging station according to the
+        probability distribution
         :param purpose: Purpose of each hour of a trip
         :return: Returns a charging capacity for a purpose based on probability distribution 1
         '''
@@ -168,13 +170,12 @@ class GridModeler:
 
     def getRandomNumberForModel2(self, purpose):
         '''
-        Assigns a random number between 0 and 1 for all the purposes, and allots a charging station according to the probability distribution
+        Assigns a random number between 0 and 1 for all the purposes, and allots a charging station according to the
+        probability distribution
         :param purpose: Purpose of each hour of a trip
         :return: Returns a charging capacity for a purpose based on probability distribution model 2
         '''
         if purpose == 'DRIVING':
-            rnd = 0
-        elif purpose == 0:
             rnd = 0
         else:
             rnd = np.random.random_sample()
@@ -187,6 +188,7 @@ class GridModeler:
             prob_max = prob_min + key
             range_dict.update({index: {'min_range': prob_min, 'max_range': prob_max}})
             prob_min = prob_max
+        # print(range_dict)
 
         for dictIndex, rangeValue in range_dict.items():
             if rangeValue['min_range'] <= rnd <= rangeValue['max_range']:
@@ -196,13 +198,12 @@ class GridModeler:
 
     def getRandomNumberForModel3(self, purpose):
         '''
-        Assigns a random number between 0 and 1 for all the purposes, and allots a charging station according to the probability distribution
+        Assigns a random number between 0 and 1 for all the purposes, and allots a charging station according to the
+        probability distribution
         :param purpose: Purpose of each hour of a trip
         :return: Returns a charging capacity for a purpose based on probability distribution model 3 (fast charging)
         '''
         if purpose == 'DRIVING':
-            rnd = 0
-        elif purpose == 0:
             rnd = 0
         else:
             rnd = np.random.random_sample()
@@ -227,86 +228,58 @@ class GridModeler:
 
     def stackPlot(self):
         '''
-        :return: Plots charging station assigned to each trip and EV's parking area/trip purposes during a time span of 24 hours
+        :return: Plots charging station assigned to each trip and EV's parking area/trip purposes during a time span of
+        24 hours
         '''
+        capacityNormalCharging = list(self.gridDistribution.values())
+        uniqueNormalChargingList = list(set(val for dic in capacityNormalCharging for val in dic.values()))
+        capacityFastCharging = list(self.gridFastCharging.values())
+        uniquefastChargingList = list(set(val for dic in capacityFastCharging for val in dic.values()))
+        capacityList = list(set(uniqueNormalChargingList + uniquefastChargingList))
+        capacityList.sort()
         capacity = self.chargeAvailability.transpose()
-        total3kW = capacity.where(capacity.loc[:] == 3.6).count(axis=1)
-        total11kW = capacity.where(capacity.loc[:, :] == 11).count(axis=1)
-        total22kW = capacity.where(capacity.loc[:, :] == 22).count(axis=1)
-        total50kW = capacity.where(capacity.loc[:, :] == 50).count(axis=1)
-        total75kW = capacity.where(capacity.loc[:, :] == 75).count(axis=1)
-        total0kW = capacity.where(capacity.loc[:, :] == 0).count(axis=1)
-        totalChargingStation = pd.concat([total3kW, total11kW, total22kW, total50kW, total75kW, total0kW], axis=1)
-        totalChargingStation.rename(columns={0: '3.6 kW', 1: '11 kW', 2: '22 kW', 3: '50 kW', 4: '75 kW', 5: '0 kW'},
-                                    inplace=True)
-        totalChargingStation = totalChargingStation
+
+        totalChargingStation = pd.DataFrame()
+        for i in range(0, len(capacityList)):
+            total = capacity.where(capacity.loc[:] == capacityList[i]).count(axis=1)
+            totalChargingStation = pd.concat([totalChargingStation, total], ignore_index=True, axis=1)
+        totalChargingStation.columns = totalChargingStation.columns[:-len(capacityList)].tolist() + capacityList
+        totalChargingStation.index = np.arange(1, len(totalChargingStation)+1)
         totalChargingStation.plot(kind='area', title='Vehicles connected to different charging station over 24 hours',
-                                  figsize=(10, 8))
+                                  figsize=(10, 8), colormap='Paired')
+        plt.xlim(1, 24)
+        plt.xlabel('Time (hours)')
+        plt.ylabel('Number of vehicles')
+        plt.legend(capacityList, loc='upper center', ncol=len(capacityList))
         plt.show()
 
-        # capacityNormalCharging = list(self.gridDistribution.values())
-        # uniqueNormalChargingList = list(set(val for dic in capacityNormalCharging for val in dic.values()))
-        # capacityFastCharging = list(self.gridFastCharging.values())
-        # uniquefastChargingList= list(set(val for dic in capacityFastCharging for val in dic.values()))
-        # capacityList = list(set(uniqueNormalChargingList + uniquefastChargingList))
-        # capacityList.sort()
-        # totalChargingStation = pd.DataFrame()
-        #
-        # for i in range(0, len(capacityList)):
-        #     total = capacity.where(capacity.loc[:] == capacityList[i]).count(axis=1)
-        #     print(total)
-        #     # total3kW = capacity.where(capacity.loc[:, :] == capacityList[i]).count(axis=1)
-        #     # total11kW = capacity.where(capacity.loc[:, :] == capacityList[i]).count(axis=1)
-        #     # total22kW = capacity.where(capacity.loc[:, :] == capacityList[i]).count(axis=1)
-        #     # total50kW = capacity.where(capacity.loc[:, :] == capacityList[i]).count(axis=1)
-        #     # total75kW = capacity.where(capacity.loc[:, :] == capacityList[i]).count(axis=1)
-        #
-        #     totalChargingStation= totalChargingStation.append(total, ignore_index=True)
-        # # totalChargingStation = totalChargingStation.reindex(sorted(totalChargingStation.columns), axis=1)
-        # totalChargingStation = totalChargingStation.transpose()
-        # totalChargingStation.sort_index(ascending=True, inplace=True)
-        # totalChargingStation
-        # # totalChargingStation = pd.concat([total3kW, total11kW, total22kW, total50kW, total75kW, total0kW], axis=1)
-        # totalChargingStation.rename(columns={0: '0 kW', 1: '3.6 kW', 2: '11 kW', 3: '22 kW', 4: '50 kW', 5: '75 kW'}, inplace=True)
-        # totalChargingStation = totalChargingStation.sort_index(ascending=True)
-        # plt.show()
-
-
+        purposeList = list(self.gridDistribution)
         purposes = self.purposeData.copy()
-        purposes = purposes.replace('0.0', 0)
         purposes = purposes.set_index(['hhPersonID']).transpose()
-        totalHome = purposes.where(purposes.loc[:] == 'HOME').count(axis=1)
-        totalWork = purposes.where(purposes.loc[:] == 'WORK').count(axis=1)
-        totalDriving = purposes.where(purposes.loc[:] == 'DRIVING').count(axis=1)
-        totalShopping = purposes.where(purposes.loc[:] == 'SHOPPING').count(axis=1)
-        totalLeisure = purposes.where(purposes.loc[:] == 'LEISURE').count(axis=1)
-        totalSchool = purposes.where(purposes.loc[:] == 'SCHOOL').count(axis=1)
-        totalOther = purposes.where(purposes.loc[:] == 'OTHER').count(axis=1)
-        totalNA = purposes.where(purposes.loc[:] == 0).count(axis=1)
-        totalTripPurpose = pd.concat([totalHome, totalWork, totalDriving, totalShopping, totalLeisure, totalSchool, totalOther, totalNA], axis=1)
-        totalTripPurpose.rename(columns={0: 'Home', 1: 'Work', 2: 'Driving', 3: 'Shopping', 4: 'Leisure', 5: 'School', 6: 'Other', 7: 'NA'}, inplace=True)
-        # totalTripPurpose = totalTripPurpose/len(purposes.columns)
-        # totalTripPurpose.plot(kind='area', title='Trip purposes during 24 hours', figsize=(10, 8))
-        totalTripPurpose.index = np.arange(1, len(totalTripPurpose)+1)
+        totalTripPurpose = pd.DataFrame()
 
+        for i in range(0, len(purposeList)):
+            total = purposes.where(purposes.loc[:] == purposeList[i]).count(axis=1)
+            totalTripPurpose = pd.concat([totalTripPurpose, total], ignore_index=True, axis=1)
+        totalTripPurpose.columns = totalTripPurpose.columns[:-len(purposeList)].tolist() + purposeList
+        totalTripPurpose.index = np.arange(1, len(totalTripPurpose) + 1)
 
         fig, ax = plt.subplots(1, figsize=(20, 8))
         x = np.arange(0, len(totalTripPurpose.index))
-        plt.bar(x-0.4375, totalTripPurpose['Home'], width=0.125, color='#1D2F6F')
-        plt.bar(x-0.3125, totalTripPurpose['Work'], width=0.125, color='#D35400')
-        plt.bar(x-0.1875, totalTripPurpose['Driving'], width=0.125, color='#928aed')
-        plt.bar(x-0.0625, totalTripPurpose['Shopping'], width=0.125, color='#6EAF46')
-        plt.bar(x+0.0625, totalTripPurpose['Leisure'], width=0.125, color='#FAC748')
-        plt.bar(x+0.1875, totalTripPurpose['School'], width=0.125, color='#FA8390')
-        plt.bar(x+0.3125, totalTripPurpose['Other'], width=0.125, color='#FF0000')
-        plt.bar(x+0.4375, totalTripPurpose['NA'], width=0.125, color='#1ABC9C')
+        plt.bar(x-0.4375, totalTripPurpose['DRIVING'], width=0.125, color='#D35400')
+        plt.bar(x-0.3125, totalTripPurpose['HOME'], width=0.125, color='#1D2F6F')
+        plt.bar(x-0.1875, totalTripPurpose['WORK'], width=0.125, color='#928aed')
+        plt.bar(x-0.0625, totalTripPurpose['SCHOOL'], width=0.125, color='#6EAF46')
+        plt.bar(x+0.0625, totalTripPurpose['SHOPPING'], width=0.125, color='#FAC748')
+        plt.bar(x+0.1875, totalTripPurpose['LEISURE'], width=0.125, color='#FA8390')
+        plt.bar(x+0.3125, totalTripPurpose['OTHER'], width=0.125, color='#FF0000')
+        plt.bar(x+0.4375, totalTripPurpose['0.0'], width=0.125, color='#1ABC9C')
         plt.ylabel('Trip purposes during 24 hours')
         plt.xlabel('Time (hours)')
         plt.xticks(x, totalTripPurpose.index)
         plt.xlim(-1, 24)
         ax.yaxis.grid(color='black', linestyle='dashed', alpha=0.3)
-        # plt.title('EV parking during 24 hours', loc='left')
-        plt.legend(['HOME', 'WORK', 'DRIVING', 'SHOPPING', 'LEISURE', 'SCHOOL', 'OTHER', 'NA'], loc='upper center', ncol= 8)
+        plt.legend(purposeList, loc='upper center', ncol=len(purposeList))
         plt.show()
 
 if __name__ == '__main__':
