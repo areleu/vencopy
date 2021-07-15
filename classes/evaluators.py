@@ -16,7 +16,6 @@ import matplotlib.pyplot as plt
 from scripts.globalFunctions import createFileString, calculateWeightedAverage, mergeDataToWeightsAndDays, \
     writeProfilesToCSV
 # from classes.flexEstimators import FlexEstimator
-from classes.dataParsers import DataParser
 
 
 class Evaluator:
@@ -454,6 +453,7 @@ class Evaluator:
         return {iKey: iVal for iKey, iVal in zip(keys, values)}
 
 if __name__ == '__main__':
+    from classes.dataParsers import DataParser
     pathGlobalConfig = Path.cwd().parent / 'config' / 'globalConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
     with open(pathGlobalConfig) as ipf:
         globalConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
