@@ -27,7 +27,7 @@ pathRelative:
 numberOfHours: 24
 
 files:
-    inputDataScalars: VencoPy_scalarInputSES.xlsx
+    inputDataScalars: VencoPy_scalarInput.xlsx
 #    inputDataDriveProfiles: inputProfiles_Drive_MiD17_woWeights.csv
 #    inputDataPlugProfiles: inputProfiles_Plug_MiD17_woWeights.csv
     MiD17:
@@ -62,7 +62,7 @@ files:
 
 
 labels:
-    runLabel: sesRepro
-    technologyLabel: BEV-S
+    runLabel: phdSeminar
+    technologyLabel: _cons20_batCap50_36home
     outputFileName: VencoPy_MR1_alpha1_batCap40_cons15
     strAdd:
