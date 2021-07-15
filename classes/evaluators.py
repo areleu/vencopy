@@ -19,7 +19,7 @@ from scripts.globalFunctions import createFileString, calculateWeightedAverage, 
 
 
 class Evaluator:
-    def __init__(self, globalConfig:dict, evaluatorConfig: dict, label: str, parseData: pd.Series=None,
+    def __init__(self, globalConfig:dict, evaluatorConfig: dict, label: str = None, parseData: pd.Series = None,
                  weightPlot=True):
         """
         CURRENTLY IN SEMI-PROUDCTION MODE. Some interfaces may only apply to specific cases.
@@ -41,16 +41,17 @@ class Evaluator:
         self.dailyMileageGermany2008 = 3.080e9  # pkm/d
         self.dailyMileageGermany2017 = 3.214e9  # pkm/d
         self.hourVec = [str(i) for i in range(0, globalConfig['numberOfHours'])]
-        self.datasetIDs = list(parseData.index)
-        self.parseData = parseData
-        self.inputDataRaw = self.readInData(['inputDataDriveProfiles'], self.datasetIDs)
-        self.inputData = pd.Series(dtype=object)
-        self.mergeDaysAndWeights()
-        self.data = pd.Series(dtype=object)
-        self.reindexData()
-        self.dataStacked = None
-        self.aggregateIDDict = self.setupAggDict()
-        self.hourlyAggregates = self.aggregateAcrossTrips()
+        if parseData is not None:
+            self.datasetIDs = list(parseData.index)
+            self.parseData = parseData
+            self.inputDataRaw = self.readInData(['inputDataDriveProfiles'], self.datasetIDs)
+            self.inputData = pd.Series(dtype=object)
+            self.mergeDaysAndWeights()
+            self.data = pd.Series(dtype=object)
+            self.reindexData()
+            self.dataStacked = None
+            self.aggregateIDDict = self.setupAggDict()
+            self.hourlyAggregates = self.aggregateAcrossTrips()
 
         print('Evaluator initialization complete')
 
@@ -372,7 +373,7 @@ class Evaluator:
 
             profileDictList = [profileDictConnectionShare, profileDictFlowsAbs, profileDictStateAbs]
             yLabels = ['Average EV connection share', 'Average EV flow in kW', 'Average EV SOC in kWh']
-            yLimits = [1, 5, 50]
+            yLimits = [1, 1, 20]
             filenames = [flexEstimator.datasetID + '_connection', flexEstimator.datasetID + '_flows',
                                           flexEstimator.datasetID + '_state']
         self.separateLinePlots(profileDictList, show=True, write=True, flexEstimator=flexEstimator,
@@ -451,6 +452,19 @@ class Evaluator:
 
     def compileProfileComparisonDict(keys: list, values: list):
         return {iKey: iVal for iKey, iVal in zip(keys, values)}
+
+    def compareUncontrolledCharging(self, pathToFile: str, sheetname: str):
+        dataIn = pd.read_excel(io=pathToFile, sheet_name=sheetname, header=1, engine='openpyxl')
+        data = dataIn.groupby(by=['day']).sum().drop(columns='hour')
+        # fix, ax = plt.subplots()
+        data.plot()
+        plt.show()
+        print(data)
+
+    def boxPlot(self, profiles):
+        profiles.boxplot()
+        plt.show()
+
 
 if __name__ == '__main__':
     from classes.dataParsers import DataParser
