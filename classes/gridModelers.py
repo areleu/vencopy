@@ -16,7 +16,6 @@ import yaml
 import os
 from scripts.globalFunctions import createFileString
 
-
 class GridModeler:
     def __init__(self, gridConfig: dict, globalConfig:dict, datasetID : str ='MiD17'):
         self.inputFileName = createFileString(globalConfig=globalConfig, fileKey='purposesProcessed',
@@ -72,6 +71,11 @@ class GridModeler:
         :param fastChargingHHID: List of household trips for fast charging
         :return: Returns a dataFrame holding charging capacity for each trip assigned with probability distribution
         '''
+        # keys = list(self.gridDistribution['HOME'])
+        # keys[0]+0.1
+        # keys[2]-0.1
+        # d1 = self.gridDistribution['HOME'][0.9]-0.1
+        # self.gridDistribution['HOME'].update(d1)
         self.chargeAvailability = self.purposeData.copy()
         self.chargeAvailability.set_index(['hhPersonID'], inplace=True)
         print('Starting with charge connection replacement ')
@@ -79,39 +83,48 @@ class GridModeler:
         np.random.seed(42)
         for hhPersonID, row in self.chargeAvailability.iterrows():
             activity = row.copy(deep=True)
+            activity
             # if None:
-            if hhPersonID in fastChargingHHID:
-                for iHour in range(0, len(row)):
-                    if iHour == 0:
-                        if model == 'probability':
-                            row[iHour] = self.getRandomNumberForModel1(activity[iHour])
-                        elif model == 'distribution':
-                            row[iHour] = self.getRandomNumberForModel3(activity[iHour])
-                            # print(row[iHour], activity[iHour], hhPersonID)
-                    elif iHour > 0:
-                        if activity[iHour] == activity[iHour - 1]:
-                            # print(row[j-1])
-                            row[iHour] = row[iHour - 1]
-                        elif model == 'probability':
-                            row[iHour] = self.getRandomNumberForModel1(activity[iHour])
-                        elif model == 'distribution':
-                            row[iHour] = self.getRandomNumberForModel3(activity[iHour])
-            else:
-                for iHour in range(0, len(row)):
-                    if iHour == 0:
-                        if model == 'probability':
-                            row[iHour] = self.getRandomNumberForModel1(activity[iHour])
-                        elif model == 'distribution':
-                            row[iHour] = self.getRandomNumberForModel2(activity[iHour])
-                            # print(f'Power: {row[iHour]}, Activity: {activity[iHour]},householdPersonID: {hhPersonID}')
-                    elif iHour > 0:
-                        if activity[iHour] == activity[iHour - 1]:
-                            row[iHour] = row[iHour - 1]
-                        elif model == 'probability':
-                            row[iHour] = self.getRandomNumberForModel1(activity[iHour])
-                        elif model == 'distribution':
-                            row[iHour] = self.getRandomNumberForModel2(activity[iHour])
-                            # print(f'Power: {row[iHour]}, Activity: {activity[iHour]}, householdPersonID: {hhPersonID}')
+            # # if hhPersonID in fastChargingHHID:
+            #     for iHour in range(0, len(row)):
+            #         if iHour == 0:
+            #             if model == 'probability':
+            #                 row[iHour] = self.getRandomNumberForModel1(activity[iHour])
+            #             elif model == 'distribution':
+            #                 row[iHour] = self.getRandomNumberForModel3(activity[iHour])
+            #                 # print(row[iHour], activity[iHour], hhPersonID)
+            #         elif iHour > 0:
+            #             if activity[iHour] == activity[iHour - 1]:
+            #                 # print(row[j-1])
+            #                 row[iHour] = row[iHour - 1]
+            #             elif activity[iHour] == 'HOME' and (activity[iHour] in activity[range(0, iHour)].values):
+            #                 selector = activity[activity == 'HOME']
+            #                 selectorindex = selector.index[0]
+            #                 row[iHour] = row[selectorindex]
+            #             elif model == 'probability':
+            #                 row[iHour] = self.getRandomNumberForModel1(activity[iHour])
+            #             elif model == 'distribution':
+            #                 row[iHour] = self.getRandomNumberForModel3(activity[iHour])
+            # else:
+            for iHour in range(0, len(row)):
+                if iHour == 0:
+                    if model == 'probability':
+                        row[iHour] = self.getRandomNumberForModel1(activity[iHour])
+                    elif model == 'distribution':
+                        row[iHour] = self.getRandomNumberForModel2(activity[iHour])
+                        # print(f'Power: {row[iHour]}, Activity: {activity[iHour]},householdPersonID: {hhPersonID}')
+                elif iHour > 0:
+                    if activity[iHour] == activity[iHour - 1]:
+                        row[iHour] = row[iHour - 1]
+                    elif activity[iHour] == 'HOME' and (activity[iHour] in activity[range(0, iHour)].values):
+                        selector = activity[activity == 'HOME']
+                        selectorindex = selector.index[0]
+                        row[iHour] = row[selectorindex]
+                    elif model == 'probability':
+                        row[iHour] = self.getRandomNumberForModel1(activity[iHour])
+                    elif model == 'distribution':
+                        row[iHour] = self.getRandomNumberForModel2(activity[iHour])
+                    # print(f'Power: {row[iHour]}, Activity: {activity[iHour]}, householdPersonID: {hhPersonID}')
             self.chargeAvailability.loc[hhPersonID] = row
         print('Grid connection assignment complete')
 
@@ -180,19 +193,18 @@ class GridModeler:
         else:
             rnd = np.random.random_sample()
 
-        values = list(self.gridDistribution[purpose].values())
+        keys = list(self.gridDistribution[purpose].keys())
         range_dict = {}
         prob_min = 0
 
         for index, (key, value) in enumerate(self.gridDistribution[purpose].items()):
-            prob_max = prob_min + key
+            prob_max = prob_min + value
             range_dict.update({index: {'min_range': prob_min, 'max_range': prob_max}})
             prob_min = prob_max
-        # print(range_dict)
 
         for dictIndex, rangeValue in range_dict.items():
             if rangeValue['min_range'] <= rnd <= rangeValue['max_range']:
-                power = values[dictIndex]
+                power = keys[dictIndex]
                 break
         return power
 
@@ -208,18 +220,18 @@ class GridModeler:
         else:
             rnd = np.random.random_sample()
 
-        values = list(self.gridFastCharging[purpose].values())
+        keys = list(self.gridFastCharging[purpose].keys())
         range_dict_fast = {}
         prob_min = 0
 
         for index, (key, value) in enumerate(self.gridFastCharging[purpose].items()):
-            prob_max = prob_min + key
+            prob_max = prob_min + value
             range_dict_fast.update({index: {'min_range': prob_min, 'max_range': prob_max}})
             prob_min = prob_max
 
         for dictIndex, rangeValue in range_dict_fast.items():
             if rangeValue['min_range'] <= rnd <= rangeValue['max_range']:
-                power = values[dictIndex]
+                power = keys[dictIndex]
                 break
         return power
 
@@ -231,11 +243,19 @@ class GridModeler:
         :return: Plots charging station assigned to each trip and EV's parking area/trip purposes during a time span of
         24 hours
         '''
-        capacityNormalCharging = list(self.gridDistribution.values())
-        uniqueNormalChargingList = list(set(val for dic in capacityNormalCharging for val in dic.values()))
-        capacityFastCharging = list(self.gridFastCharging.values())
-        uniquefastChargingList = list(set(val for dic in capacityFastCharging for val in dic.values()))
-        capacityList = list(set(uniqueNormalChargingList + uniquefastChargingList))
+        keys = []
+        for key, value in self.gridDistribution.items():
+            for nestedKey, nestedValue in value.items():
+                keys.append(nestedKey)
+        capacityList = keys
+        # capacityList.remove(1)
+        capacityList = list(set(capacityList))
+        # capacityNormalCharging = list(self.gridDistribution(self.gridDistribution.values()))
+        # uniqueNormalChargingList = list(set(val for dic in capacityNormalCharging for val in dic.values()))
+        # capacityFastCharging = list(self.gridFastCharging.values())
+        # uniquefastChargingList = list(set(val for dic in capacityFastCharging for val in dic.values()))
+        # capacityList = list(set(uniqueNormalChargingList + uniquefastChargingList))
+        # capacityList = list(set(capacityNormalCharging + capacityFastCharging))
         capacityList.sort()
         capacity = self.chargeAvailability.transpose()
 
@@ -247,10 +267,13 @@ class GridModeler:
         totalChargingStation.index = np.arange(1, len(totalChargingStation)+1)
         totalChargingStation.plot(kind='area', title='Vehicles connected to different charging station over 24 hours',
                                   figsize=(10, 8), colormap='Paired')
+        capacityListStr = [str(x) for x in capacityList]
+        appendStr = ' kW'
+        capacityListStr = [sub + appendStr for sub in capacityListStr]
         plt.xlim(1, 24)
         plt.xlabel('Time (hours)')
         plt.ylabel('Number of vehicles')
-        plt.legend(capacityList, loc='upper center', ncol=len(capacityList))
+        plt.legend(capacityListStr, loc='upper center', ncol=len(capacityList))
         plt.show()
 
         purposeList = list(self.gridDistribution)
@@ -299,3 +322,18 @@ if __name__ == '__main__':
     vpg.assignGridViaProbabilities(model='distribution', fastChargingHHID=fastChargingHHID)
     vpg.writeOutGridAvailability()
     vpg.stackPlot()
+
+    # print('Data Analysis Started')
+    # objs = [GridModeler(gridConfig=gridConfig, globalConfig=globalConfig) for i in range(8)]
+    # for obj in objs:
+    #     # keys = list(obj.gridDistribution.keys())
+    #     # print(keys)
+    #     # for i in np.arange(0.1, 1.0, 0.1):
+    #     obj.gridDistribution['HOME'][11] = obj.gridDistribution['HOME'][11]+0.1
+    #     # print(obj.gridDistribution)
+    #     obj.gridDistribution['HOME'][0] = obj.gridDistribution['HOME'][0]-0.1
+    #     print(obj.gridDistribution)
+    #     fastChargingHHID = obj.fastChargingList()
+    #     obj.assignGridViaProbabilities(model='distribution', fastChargingHHID=fastChargingHHID)
+    #     obj.writeOutGridAvailability()
+    #     obj.stackPlot()

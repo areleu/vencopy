@@ -62,7 +62,7 @@ files:
 
 
 labels:
-    runLabel: sesRepro
-    technologyLabel: BEV-S
+    runLabel: dataAnalysisHOME_11kW_0.1_0kW_0.9
+    technologyLabel: HOME
     outputFileName: VencoPy_MR1_alpha1_batCap40_cons15
     strAdd:

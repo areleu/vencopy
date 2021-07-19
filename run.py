@@ -45,15 +45,15 @@ with open(pathFlexConfig) as ipf:
 
 vpData = DataParser(datasetID=datasetID, parseConfig=parseConfig, globalConfig=globalConfig, localPathConfig=localPathConfig, loadEncrypted=False)
 # Trip distance and purpose diary compositions
-vpTripDiary = TripDiaryBuilder(datasetID=datasetID, tripConfig=tripConfig, globalConfig=globalConfig, ParseData=vpData)
+# vpTripDiary = TripDiaryBuilder(datasetID=datasetID, tripConfig=tripConfig, globalConfig=globalConfig, ParseData=vpData)
 
 # Grid model applications
-vpGrid = GridModeler(gridConfig=gridConfig, globalConfig=globalConfig, datasetID=datasetID)
+# vpGrid = GridModeler(gridConfig=gridConfig, globalConfig=globalConfig, datasetID=datasetID)
 # vpGrid.assignSimpleGridViaPurposes()
-fastChargingHHID = vpGrid.fastChargingList()
-vpGrid.assignGridViaProbabilities(model='distribution', fastChargingHHID=fastChargingHHID)
-vpGrid.writeOutGridAvailability()
-vpGrid.stackPlot()
+# fastChargingHHID = vpGrid.fastChargingList()
+# vpGrid.assignGridViaProbabilities(model='distribution', fastChargingHHID=fastChargingHHID)
+# vpGrid.writeOutGridAvailability()
+# vpGrid.stackPlot()
 # review: Is this still valid code or left overs? I ignored this code for now.
 #  Maybe we should schedule a cleanup.
 # Evaluate drive and trip purpose profiles
