@@ -7,7 +7,7 @@
 # __birthdate__ = '2019-02-12'
 # __status__ = 'dev'  # options are: dev, test, prod
 
-# This config holds all relative paths and filenames for VENCO
+# This config holds all relative paths and filenames for VencoPy
 
 pathRelative:
     input: ./inputData/
@@ -16,13 +16,6 @@ pathRelative:
     scripts: ./scripts/
     config: ./config/
 
-#pathAbsolute:
-#    MiD17: C:/Users/butt_pa/Documents/MiD/B2_Regional-Datensatzpaket/STATA    
-#    MiD17: C:/8_Work/Data/MiD17/B2_Regional-DatensatzpaketEncrypted/STATA
-#    MiD17: C:/Users/wulf_ni/Documents/11 Data/Transport data/Germany/MiD/2017/proprietary/B2/STATA/
-#    vencoPyRoot: C:/repos/vencopy_internal/vencopy
-#    vencoPyRoot: C:/8_Work/VencoPy/VencoPy_internal/vencopy
-#    vencoPyRoot: C:/vencopy_repo/
 
 numberOfHours: 24
 

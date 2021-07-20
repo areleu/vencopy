@@ -64,19 +64,19 @@ def replaceHouseholdPersonID(dataConverted):
     nums_hhPersonID = np.random.choice(range(len(dataSampled)), size=dataSampled['HP_ID_Reg'].nunique(), replace=False)
     dataSampled['HP_ID_Reg'] = dataSampled['HP_ID_Reg'].map(dict(zip(dataSampled['HP_ID_Reg'].unique(), nums_hhPersonID)))
     dataSampled.reset_index(drop=True, inplace=True)
-    dataSampled.to_csv('sampleData.csv')
+    dataSampled.to_csv('MiD17.csv')
     print('Data sampling completed')
     return dataSampled
 
 
 if __name__ == '__main__':
-    pathLocalPathConfig = Path.cwd().parent / 'config' / 'localPathConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
+    pathLocalPathConfig = Path.cwd().parent.parent / 'config' / 'localPathConfig.yaml'
     with open(pathLocalPathConfig) as ipf:
         localPathConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
-    pathParseConfig = Path.cwd().parent / 'config' / 'parseConfig.yaml'
+    pathParseConfig = Path.cwd().parent.parent / 'config' / 'parseConfig.yaml'
     with open(pathParseConfig) as ipf:
         parseConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
-    pathGlobalConfig = Path.cwd().parent / 'config' / 'globalConfig.yaml'
+    pathGlobalConfig = Path.cwd().parent.parent / 'config' / 'globalConfig.yaml'
     with open(pathGlobalConfig) as ipf:
         globalConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
     rawData = getData(globalConfig=globalConfig, localPathConfig=localPathConfig)
