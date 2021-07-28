@@ -15,8 +15,6 @@ import os
 import yaml
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
 from random import seed, random
 
 from scripts.globalFunctions import createFileString, mergeVariables, calculateWeightedAverage, writeProfilesToCSV
@@ -25,6 +23,29 @@ from scripts.globalFunctions import createFileString, mergeVariables, calculateW
 class FlexEstimator:
     def __init__(self, globalConfig: dict, flexConfig : dict, evaluatorConfig: dict, ParseData,
                  datasetID: str='MiD17'):
+        """
+        Class to estimate uncontrolled charging, electricity drain, grid connection, auxilliary fuel, SOC min and
+        SOC max profiles based on hourly driving and boolean grid connection profiles. Requires a .xlsx file specifying
+        a global value for specific electric consumption (in kWh/ 100 km) and a global rated capacity of considered
+        charging stations. Automatically compiles input file names from the filekeys "inputDataDriveProfiles" /
+        "inputDataPlugProfiles", runlabel (as specified in globalConfig) and datasetID (as given on instantiation). The
+        number of iterations for SOC max and min calculations is defined in the function self.baseProfielCalculation as
+        parameter of calcChargeMinProfiles() and calcChargeMaxProfiles(). A complete estimation consists of the
+        following calls also specified in self.run():
+        self.baseProfileCalculation()
+        self.filter()
+        self.aggregate()
+        self.correct()
+        self.normalize()
+        self.writeOut()
+
+        :param globalConfig: Dictionary used for relative paths, filenames and runlabels
+        :param flexConfig: So far not used
+        :param evaluatorConfig: DEPRECATED, may be cleared soon
+        :param ParseData: Class instance of type DataParser
+        :param datasetID: String used for file name composition on input files
+        """
+
         #self.config = config
         self.globalConfig = globalConfig
         self.flexConfig = flexConfig
@@ -209,10 +230,26 @@ class FlexEstimator:
         return scalarsProc
 
     def indexWeights(self, weights: pd.DataFrame) -> pd.DataFrame:
+        """
+        Reduces the dtype from string to float if possible and sets the index of the weights to align with the indices
+        of drive and plug profiles (hhPersonIDs and tripStartWeekday).
+
+        :param weights: dataframe containing the MiD trip weights of the original trips
+        :return: An indexed pandas DataFrame of the MiD trip weights
+        """
         weights = weights.convert_dtypes()
         return weights.set_index(['hhPersonID', 'tripStartWeekday'], drop=True)
 
     def findIndexCols(self, data: pd.DataFrame, nHours: int) -> list:
+        """
+        Identifies columns that contain index strings rather than numeric data. It does so by checking for column
+        names equal to the numbers from 0 to the number of hours.
+
+        :param data: Pandas DataFrame where index columns should be found
+        :param nHours: Integer giving the analyzed number of hours
+        :return: List of index columns
+        """
+
         dataCols = [str(i) for i in range(0, nHours + 1)]
         return data.columns[~data.columns.isin(dataCols)]
 
@@ -237,12 +274,29 @@ class FlexEstimator:
         return dataIndexed
 
     def indexDriveAndPlugData(self, driveData: pd.DataFrame, plugData: pd.DataFrame, dropIdxLevel: str,
-                              nHours: int) -> pd.DataFrame:
+                              nHours: int) -> tuple[pd.DataFrame, pd.DataFrame]:
+        """
+        Wrapper function for indexing drive and plug profiles so that value columns are all made up of hourly data.
+
+        :param driveData: Hourly drive data for individual vehicles as floats
+        :param plugData: Hourly plug data for individual vehicles as boolean
+        :param dropIdxLevel: Column to be dropped
+        :param nHours: Integer specifying the number of values columns
+        :return: Tuple of indexed drive and plug profiles as pandas DataFrames
+        """
         driveProfiles = self.indexProfile(driveData, nHours)
         plugProfiles = self.indexProfile(plugData, nHours)
         return driveProfiles.droplevel(dropIdxLevel), plugProfiles.droplevel(dropIdxLevel)
 
     def mergeDataToWeightsAndDays(self, ParseData):
+        """
+        Function to merging weekday and trip weight data to driving and plugging data of respective personHHIDs. It is
+        assumed that trips occur on one daz and trip weights are equal for all trips of one hhPersonID
+
+        :param ParseData: Class instance of type DataParser
+        :return: None
+        """
+
         self.driveProfilesIn = mergeVariables(data=self.driveProfilesIn, variableData=ParseData.data,
                                               variables=['tripStartWeekday', 'tripWeight'])
         self.plugProfilesIn = mergeVariables(data=self.plugProfilesIn, variableData=ParseData.data,
@@ -439,6 +493,14 @@ class FlexEstimator:
         return chargeMinProfiles
 
     def baseProfileCalculation(self):
+        """
+        Wrapper function for first part of flexibility estimation calculating the six resulting profiles for all
+        individual vehicles. The number of iterations for calcChargeMaxProfiles() and calcChargeMinProfiles() can be
+        specified here.
+
+        :return: None
+        """
+
         self.drainProfiles = self.calcDrainProfiles(self.driveProfiles, self.scalars)
         self.chargeProfiles = self.calcChargeProfiles(self.plugProfiles, self.scalars)
         self.chargeMaxProfiles = self.calcChargeMaxProfiles(self.chargeProfiles, self.drainProfiles, self.scalars,
@@ -628,20 +690,23 @@ class FlexEstimator:
         :param socMin: Minimum SOC profile subject to normalization
         :param socMax: Minimum SOC profile subject to normalization
         :param normReferenceParam: Reference parameter that is taken for normalization.
-        This has to be given in scalar input data and is most likely the battery capacity.
+        This has to be given in scalar input data and is most likely the 'Battery_capacity'.
         :return: Writes the normalized profiles to the DataManager under the specified keys
         """
 
         normReference = scalars.loc[normReferenceParam, 'value']
-        try:
-            socMinNorm = socMin.div(float(normReference))
-            socMaxNorm = socMax.div(float(normReference))
-
-        except ValueError as E:
-            raise (f"There was a value error. {E} I don't know what to tell you.")
+        socMinNorm = socMin.div(float(normReference))
+        socMaxNorm = socMax.div(float(normReference))
         return socMinNorm, socMaxNorm
 
     def filter(self):
+        """
+        Wrapper function to carry out filtering and selection procedures. A tolerance for needing additional fuel to
+        carry out trips can be specified to keep profiles in the analyzed data basis.
+
+        :return: None
+        """
+
         self.randNoPerProfile = self.createRandNo(driveProfiles=self.driveProfiles)
 
         self.profileSelectors = self.calcProfileSelectors(chargeProfiles=self.chargeProfiles,
@@ -687,18 +752,20 @@ class FlexEstimator:
 
     def aggregateProfilesWeight(self, profilesIn: pd.DataFrame, weights: pd.DataFrame) -> pd.Series:
         """
+        Aggregation of profiles considering the specific weights given for the household person IDs. No rescaling of
+        the weights is carried out so far. The function calculateWeightedAverage() is specified in globalFunctions.py
+
         :param profilesIn: Dataframe of hourly values of all filtered profiles
         :param weights: Returns a Dataframe with hourly values considering the weight of individual trip
         :return:
         """
         profilesIn = profilesIn.loc[~profilesIn.apply(lambda x: x.isna(), axis=0).any(axis=1), :]
         weights = weights.loc[profilesIn.index, :]  # Filtering weight data to equate lengths
-        profilesOut = profilesIn.apply(calculateWeightedAverage, weightCol=weights['tripWeight'])
-        return profilesOut
+        return profilesIn.apply(calculateWeightedAverage, weightCol=weights['tripWeight'])
 
     def aggregateDiffVariable(self, data: pd.DataFrame, by: str, weights: pd.Series, hourVec: list) -> pd.Series:
         """
-        A separate aggregation function differentiating by the variable defined as a string in str. Weights as
+        A separate weighted aggregation function differentiating by the variable defined as a string in str. Weights as
         given in MiD.
 
         :param data: list of strings declaring the datasetIDs to be read in
@@ -722,10 +789,15 @@ class FlexEstimator:
 
     def aggregate(self):
         """
-        Aggregates profiles from individual vehicle level to fleet level. This is done in two categories: Aggregating
-        to one representative weekday with 24 hours and aggregating for a representative week. Within these categories
-        mean and weighted mean values are calculated for comparison.
+        Wrapper function to aggregate profiles from individual vehicle level to fleet level. This is done in two
+        categories: Aggregating to one representative weekday with 24 hours and aggregating for a representative week.
+        Within these categories mean and weighted mean values are calculated for comparison. Simple means are only
+        calculated for 24 hour profiles. For state of charge profiles (soc max and soc min), simple estimations of
+        minimum and maximum state-of-charge profiles are carried out. This is done based on
+        https://elib.dlr.de/92151/1/Dissertation_Diego_Luca_de_Tena.pdf by selecting the nth maximum or minimum value.
+        See https://doi.org/10.3390/en14144349 for further explanations.
         """
+
         # Profile aggregation for flow profiles by averaging
         self.plugProfilesAgg = self.aggregateProfilesMean(self.plugProfilesCons)
         self.electricPowerProfilesAgg = self.aggregateProfilesMean(self.electricPowerProfilesCons)
@@ -756,16 +828,20 @@ class FlexEstimator:
                                                               dataMax=self.profilesSOCMaxCons,
                                                               by='tripStartWeekday', filter='singleValue', alpha=10)
 
-    def socSelectionVar(self, dataMin: pd.DataFrame, dataMax: pd.DataFrame, by, filter, alpha) -> tuple:
+    def socSelectionVar(self, dataMin: pd.DataFrame, dataMax: pd.DataFrame, by: str, filter: str, alpha: int) -> tuple:
         """
         SOC selection function to aggregate state profiles from individual vehicle to fleet level.
 
-        :param dataMin:
-        :param dataMax:
-        :param by:
-        :param filter:
-        :param alpha:
-        :return:
+        :param dataMin: Pandas Dataframe of hourly SOC min profiles for each household person ID
+        :param dataMax: Pandas Dataframe of hourly SOC max profiles for each household person ID
+        :param by: index level to differentiate selections by. Given as a string.
+        :param filter: Filter method given as a string. Currently only 'singleValue' is implemented
+        :param alpha: Percentile value to filter out extreme minimum and maximum soc values. E.g. 10 selects the 90th
+        percentile for SOC max and the 10th percentile for SOC min values in each hour. These 24 values most likely do
+        not belong to the same profile.
+        :return: Returns a touple of estimated fleet socMin and socMax profiles for nHour x len(set(dataMin.loc[:, by])
+        values. E.g. if running for 24 hour profiles additionally differentiating weekdays, this yields 168 values per
+        resulting profile.
         """
         socSelectionPartial = functools.partial(self.socProfileSelection, filter=filter, alpha=alpha)
         vars = set(dataMin.index.get_level_values(by))
@@ -807,32 +883,41 @@ class FlexEstimator:
             consumptionFuelArtemis = scalars.loc['Fuel_consumption_Artemis', 'value']
             corrFactor = consumptionFuelArtemis / consumptionFuelNEFZ
         else:
-            print(f'Either parameter "{profType}" is not given or not assigned to either "electric" or "fuel".')
-        profileOut = corrFactor * profile
-        return profileOut
+            raise Exception(f'Either parameter "{profType}" is not given or not assigned to either "electric" or '
+                            f'"fuel".')
+        return corrFactor * profile
 
     def correct(self):
+        """
+        Wrapper function to correct all electric and fuel demand profiles with more realistic specific consumption
+        values.
+
+        :return: None
+        """
+
         self.chargeProfilesUncontrolledCorr = self.correctProfiles(self.scalars, self.chargeProfilesUncontrolledAgg,
                                                                    'electric')
         self.electricPowerProfilesCorr = self.correctProfiles(self.scalars, self.electricPowerProfilesAgg, 'electric')
         self.auxFuelDemandProfilesCorr = self.correctProfiles(self.scalars, self.auxFuelDemandProfilesAgg, 'fuel')
 
     def normalize(self):
-        # Profile normalization for state profiles with the basis battery capacity
+        """
+        Normalization of soc profiles with regard to the battery capacity.
+
+        :return: None
+        """
+
         self.socMinNorm, self.socMaxNorm = self.normalizeProfiles(self.scalars, self.socMin, self.socMax,
                                                                   normReferenceParam='Battery_capacity')
 
     def writeOut(self):
-        # Daily profile plotting
-        # self.profileDictOut = dict(uncontrolledCharging=self.chargeProfilesUncontrolledCorr,
-        #                            electricityDemandDriving=self.electricPowerProfilesCorr,
-        #                            socMax=self.socMaxNorm, socMin=self.socMinNorm,
-        #                            gridConnectionShare=self.plugProfilesAgg,
-        #                            auxFuelDriveProfile=self.auxFuelDemandProfilesCorr)
-        #
-        # writeProfilesToCSV(profileDictOut=self.profileDictOut, globalConfig=self.globalConfig, singleFile=True,
-        #                         datasetID=self.datasetID)
+        """
+        Generic write-out function for estimated flexibility profiles. Profiles are all written to output/data as
+        specified in the globalConfig and ammended by "vencoPyOutput", the runlabel as specified in the globalConfig
+        as well as the datasetID. Output profiles are all written to one single file.
 
+        :return: None
+        """
         self.profileDictOut = dict(uncontrolledCharging=self.chargeProfilesUncontrolledWAggVar,
                                    electricityDemandDriving=self.electricPowerProfilesWAggVar,
                                    socMax=self.socMaxVar, socMin=self.socMinVar,
@@ -843,6 +928,12 @@ class FlexEstimator:
                            datasetID=self.datasetID)
 
     def run(self):
+        """
+        Wrapper function for the whole flexibility estimation workflow containing the six above described wrapper
+        functions.
+
+        :return: None
+        """
         self.baseProfileCalculation()
         self.filter()
         self.aggregate()
