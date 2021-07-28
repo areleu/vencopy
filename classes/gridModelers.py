@@ -16,7 +16,19 @@ from scripts.globalFunctions import createFileString
 
 
 class GridModeler:
-    def __init__(self, gridConfig: dict, globalConfig:dict, datasetID : str ='MiD17'):
+    def __init__(self, gridConfig: dict, globalConfig: dict, datasetID: str ='MiD17'):
+        """
+        Class for modeling individual vehicle connection options dependent on parking purposes. Configurations on
+        charging station availabilities can be parametrized in gridConfig. globalConfig and datasetID are needed for
+        reading the input files.
+
+        :param gridConfig: Dictionary containing a key chargingInfrastructureMapping with a sub-dictionary mapping the
+        relevant parking purposes to grid availability (true/false). The gridConfig will contain dictionaries with
+        probabilistic grid availabilities per parking purpose and rated charging power.
+        :param globalConfig: Dictionary with relative paths and filenames. Used for referencing the purpose input file
+        :param datasetID: String, used for referencing the purpose input file
+        """
+
         self.inputFileName = createFileString(globalConfig=globalConfig, fileKey='purposesProcessed',
                                               datasetID=datasetID)
         self.inputFilePath = Path(globalConfig['pathRelative']['input']) / self.inputFileName
@@ -28,6 +40,12 @@ class GridModeler:
         self.chargeAvailability = None
 
     def assignSimpleGridViaPurposes(self):
+        """
+        Method to translate hourly purpose profiles into hourly profiles of true/false giving the charging station
+        availability in each hour for each individual vehicle.
+
+        :return: None
+        """
         print(f'Starting with charge connection replacement of location purposes')
         self.chargeAvailability = self.purposeData.replace(self.gridDistributions)
         self.chargeAvailability.set_index(['hhPersonID'], inplace=True)
@@ -35,6 +53,13 @@ class GridModeler:
         print('Grid connection assignment complete')
 
     def writeOutGridAvailability(self):
+        """
+        Function to write out the boolean charging station availability for each vehicle in each hour to the output
+        file path.
+
+        :return: None
+        """
+
         self.chargeAvailability.to_csv(self.outputFilePath)
 
 
