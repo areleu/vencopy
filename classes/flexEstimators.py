@@ -505,6 +505,7 @@ class FlexEstimator:
         self.chargeProfiles = self.calcChargeProfiles(self.plugProfiles, self.scalars)
         self.chargeMaxProfiles = self.calcChargeMaxProfiles(self.chargeProfiles, self.drainProfiles, self.scalars,
                                                        self.scalarsProc, nIter=3)
+        # self.connectionType = self.assignConnectionType()
         self.chargeProfilesUncontrolled = self.calcChargeProfilesUncontrolled(self.chargeMaxProfiles, self.scalarsProc)
         self.auxFuelDemandProfiles = self.calcDriveProfilesFuelAux(self.chargeMaxProfiles,
                                                                    self.chargeProfilesUncontrolled, self.driveProfiles,
