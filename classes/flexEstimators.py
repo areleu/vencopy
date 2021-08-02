@@ -274,7 +274,7 @@ class FlexEstimator:
         return dataIndexed
 
     def indexDriveAndPlugData(self, driveData: pd.DataFrame, plugData: pd.DataFrame, dropIdxLevel: str,
-                              nHours: int) -> tuple[pd.DataFrame, pd.DataFrame]:
+                              nHours: int) -> tuple:
         """
         Wrapper function for indexing drive and plug profiles so that value columns are all made up of hourly data.
 
