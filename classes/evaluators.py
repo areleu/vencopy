@@ -19,7 +19,7 @@ from scripts.globalFunctions import createFileString, calculateWeightedAverage, 
 
 
 class Evaluator:
-    def __init__(self, globalConfig:dict, evaluatorConfig: dict, label: str = None, parseData: pd.Series = None,
+    def __init__(self, globalConfig:dict, evaluatorConfig: dict, parseData: pd.Series = None,
                  weightPlot=True):
         """
         CURRENTLY IN SEMI-PROUDCTION MODE. Some interfaces may only apply to specific cases.
@@ -35,7 +35,6 @@ class Evaluator:
 
         self.globalConfig = globalConfig
         self.evaluatorConfig = evaluatorConfig
-        self.label = label
         self.weightPlot = weightPlot
         self.normPlotting = True
         self.dailyMileageGermany2008 = 3.080e9  # pkm/d
@@ -268,7 +267,7 @@ class Evaluator:
         if self.evaluatorConfig['plotConfig']['show']:
             plt.show()
         if self.evaluatorConfig['plotConfig']['save']:
-            fileName = createFileString(globalConfig=self.globalConfig, fileKey='aggPlotName', manualLabel=self.label,
+            fileName = createFileString(globalConfig=self.globalConfig, fileKey='aggPlotName', manualLabel=self.globalConfig['labels']['runLabel'],
                                         filetypeStr='svg')
             fig.savefig(Path(self.globalConfig['pathRelative']['plots']) / fileName, bbox_inches='tight')
 

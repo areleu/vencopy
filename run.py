@@ -56,7 +56,7 @@ if __name__ == '__main__':
 
     # Evaluate drive and trip purpose profiles
     vpEval = Evaluator(globalConfig=globalConfig, evaluatorConfig=evaluatorConfig,
-                       parseData=pd.Series(data=vpData, index=[datasetID]), label='SESPaperTest')
+                       parseData=pd.Series(data=vpData, index=[datasetID]))
     vpEval.hourlyAggregates = vpEval.calcVariableSpecAggregates(by=['tripStartWeekday'])
     vpEval.plotAggregates()
 

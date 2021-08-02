@@ -489,6 +489,7 @@ class ParseMID(DataParser):
 
 
 if __name__ == '__main__':
+    datasetID = 'MiD17'
     pathLocalPathConfig = Path.cwd().parent / 'config' / 'localPathConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
     with open(pathLocalPathConfig) as ipf:
         localPathConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
@@ -499,6 +500,6 @@ if __name__ == '__main__':
     with open(pathGlobalConfig) as ipf:
         globalConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
     p = DataParser(localPathConfig=localPathConfig, parseConfig=parseConfig, globalConfig=globalConfig,
-                   loadEncrypted=False, datasetID='MiD17')
+                   loadEncrypted=False, datasetID=datasetID)
     print(p.data.head())
     print('end')

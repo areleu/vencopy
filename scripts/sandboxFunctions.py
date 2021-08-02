@@ -307,6 +307,23 @@ def determinePurposeHourRange(self, departure, arrival):
     startHour = self.determinePurposeStartHour(departure, tripDuration)
     return range(startHour, self.endHour)
 
+def readInputScalars(self, filePath) -> pd.DataFrame:
+    """
+    Method that gets the path to a venco scalar input file specifying technical assumptions such as battery capacity
+    specific energy consumption, usable battery capacity share for load shifting and charge power.
+
+    :param filePath: The relative file path to the input file
+    :return: Returns a dataframe with an index column and two value columns. The first value column holds numbers the
+        second one holds units.
+    """
+    inputRaw = pd.read_excel(filePath,
+                             header=5,
+                             usecols='A:C',
+                             skiprows=0,
+                             engine='openpyxl')
+    scalarsOut = inputRaw.set_index('parameter')
+    return scalarsOut
+
 ### EXPERIMENTAL SANDBOX PART
 # def fillDayPurposesPerformant(tripData, purposeDataDays):  #FixMe: Ask Ben for performance improvements
 #     # This is an adaptation of fillDayPurposes()

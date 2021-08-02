@@ -52,8 +52,7 @@ class FlexEstimator:
         self.evaluatorConfig = evaluatorConfig
         self.hourVec = range(self.globalConfig['numberOfHours'])
         self.datasetID = datasetID
-        self.scalars, self.driveProfilesIn, \
-            self.plugProfilesIn = self.readVencoInput(datasetID=datasetID)
+        self.driveProfilesIn, self.plugProfilesIn = self.readVencoInput(datasetID=datasetID)
         self.mergeDataToWeightsAndDays(ParseData)
         self.weights = self.indexWeights(self.driveProfilesIn.loc[:, ['hhPersonID', 'tripStartWeekday', 'tripWeight']])
         # self.outputConfig = yaml.load(open(Path(self.globalConfig['pathRelative']['config']) /
@@ -120,22 +119,7 @@ class FlexEstimator:
 
         print('Flex Estimator initialization complete')
 
-    def readInputScalars(self, filePath) -> pd.DataFrame:
-        """
-        Method that gets the path to a venco scalar input file specifying technical assumptions such as battery capacity
-        specific energy consumption, usable battery capacity share for load shifting and charge power.
 
-        :param filePath: The relative file path to the input file
-        :return: Returns a dataframe with an index column and two value columns. The first value column holds numbers the
-            second one holds units.
-        """
-        inputRaw = pd.read_excel(filePath,
-                                 header=5,
-                                 usecols='A:C',
-                                 skiprows=0,
-                                 engine='openpyxl')
-        scalarsOut = inputRaw.set_index('parameter')
-        return scalarsOut
 
     def readInputCSV(self, filePath) -> pd.DataFrame:
         """
@@ -187,8 +171,7 @@ class FlexEstimator:
         """
         print('Reading Venco input scalars, drive profiles and boolean plug profiles')
 
-        scalars = self.readInputScalars(Path(self.globalConfig['pathRelative']['input']) /
-                                       self.globalConfig['files']['inputDataScalars'])
+        #scalars = self.readInputScalars(self.flexConfig['inputDataScalars'])
         driveProfiles_raw = self.readInputCSV(Path(self.globalConfig['pathRelative']['input']) /
                                               createFileString(globalConfig=self.globalConfig,
                                                                fileKey='inputDataDriveProfiles',
@@ -201,7 +184,7 @@ class FlexEstimator:
         print('There are ' + str(len(driveProfiles_raw)) + ' drive profiles and ' +
               str(len(driveProfiles_raw)) + ' plug profiles.')
 
-        return scalars, driveProfiles_raw, plugProfiles_raw
+        return driveProfiles_raw, plugProfiles_raw
 
     def procScalars(self, driveProfiles_raw, plugProfiles_raw, driveProfiles: pd.DataFrame,
                     plugProfiles: pd.DataFrame):
@@ -302,33 +285,33 @@ class FlexEstimator:
         self.plugProfilesIn = mergeVariables(data=self.plugProfilesIn, variableData=ParseData.data,
                                              variables=['tripStartWeekday', 'tripWeight'])
 
-    def calcDrainProfiles(self, driveProfiles: pd.DataFrame, scalars: pd.DataFrame) -> pd.DataFrame:
+    def calcDrainProfiles(self, driveProfiles: pd.DataFrame, flexConfig) -> pd.DataFrame:
         """
         Calculates electrical consumption profiles from drive profiles assuming specific consumption (in kWh/100 km)
         given in scalar input data file.
 
         :param driveProfiles: indexed profile file
-        :param Scalars: dataframe holding technical assumptions
+        :param flexConfig: YAML config which holds all relative paths and filenames for flexEstimators.py
         :return: Returns a dataframe with consumption profiles in kWh/h in same format and length as driveProfiles but
         scaled with the specific consumption assumption.
         """
 
-        return driveProfiles * scalars.loc['Electric_consumption_NEFZ', 'value'] / float(100)
+        return driveProfiles * flexConfig['inputDataScalars']['Electric_consumption_NEFZ'] / float(100)
 
-    def calcChargeProfiles(self, plugProfiles: pd.DataFrame, scalars: pd.DataFrame) -> pd.DataFrame:
+    def calcChargeProfiles(self, plugProfiles: pd.DataFrame, flexConfig) -> pd.DataFrame:
         '''
         Calculates the maximum possible charge power based on the plug profile assuming the charge column power
         given in the scalar input data file (so far under Panschluss).
 
         :param plugProfiles: indexed boolean profiles for vehicle connection to grid
-        :param scalars: VencoPy scalar dataframe
+        :param flexConfig: YAML config which holds all relative paths and filenames for flexEstimators.py
         :return: Returns scaled plugProfile in the same format as plugProfiles.
         '''
 
-        return plugProfiles * scalars.loc['Rated_power_of_charging_column', 'value'].astype(float)
+        return plugProfiles * flexConfig['inputDataScalars']['Rated_power_of_charging_column']
 
     def calcChargeMaxProfiles(self, chargeProfiles: pd.DataFrame, consumptionProfiles: pd.DataFrame,
-                              scalars: pd.DataFrame, scalarsProc: pd.DataFrame, nIter: int) -> pd.DataFrame:
+                              nIter: int) -> pd.DataFrame:
         """
         Calculates all maximum SoC profiles under the assumption that batteries are always charged as soon as they
         are plugged to the grid. Values are assured to not fall below SoC_min * battery capacity or surpass
@@ -338,7 +321,7 @@ class FlexEstimator:
 
         :param chargeProfiles: Indexed dataframe of charge profiles.
         :param consumptionProfiles: Indexed dataframe of consumptionProfiles.
-        :param scalars: DataFrame holding techno-economic assumptions.
+        :param flexConfig: YAML config holds all relative paths and filenames for flexEstimators.py
         :param scalarsProc: DataFrame holding information about profile length and number of hours.
         :param nIter: Number of iterations to assure that the minimum and maximum value are approximately the same
         :return: Returns an indexed DataFrame with the same length and form as chargProfiles and consumptionProfiles,
@@ -346,9 +329,9 @@ class FlexEstimator:
         """
 
         chargeMaxProfiles = chargeProfiles.copy()
-        batCapMin = scalars.loc['Battery_capacity', 'value'] * scalars.loc['Minimum_SOC', 'value']
-        batCapMax = scalars.loc['Battery_capacity', 'value'] * scalars.loc['Maximum_SOC', 'value']
-        nHours = scalarsProc['noHours']
+        batCapMin = self.flexConfig['inputDataScalars']['Battery_capacity'] * self.flexConfig['inputDataScalars']['Minimum_SOC']
+        batCapMax = self.flexConfig['inputDataScalars']['Battery_capacity'] * self.flexConfig['inputDataScalars']['Maximum_SOC']
+        nHours = self.scalarsProc['noHours']
         for idxIt in range(nIter):
             print(f'Starting with iteration {idxIt}')
             for iHour in range(nHours):
@@ -402,7 +385,7 @@ class FlexEstimator:
         return chargeProfilesUncontrolled
 
     def calcDriveProfilesFuelAux(self, chargeMaxProfiles: pd.DataFrame, chargeProfilesUncontrolled: pd.DataFrame,
-                                 driveProfiles: pd.DataFrame, scalars: pd.DataFrame,
+                                 driveProfiles: pd.DataFrame, flexConfig,
                                  scalarsProc: pd.DataFrame) -> pd.DataFrame:
         # FixMe: alternative vectorized format for looping over columns? numpy, pandas: broadcasting-rules
         """
@@ -413,7 +396,7 @@ class FlexEstimator:
         :param chargeMaxProfiles: Dataframe holding hourly maximum SOC profiles in kWh for all profiles
         :param chargeProfilesUncontrolled: Dataframe holding hourly uncontrolled charging values in kWh/h for all profiles
         :param driveProfiles: Dataframe holding hourly electric driving demand in kWh/h for all profiles.
-        :param scalars: Dataframe holding technical assumptions
+        :param flexConfig: YAML config which holds all relative paths and filenames for flexEstimators.py
         :param scalarsProc: Dataframe holding meta-infos about the input
         :return: Returns a DataFrame with single-profile values for back-up fuel demand in the case a profile cannot
         completely be fulfilled with electric driving under the given consumption and battery size assumptions.
@@ -423,8 +406,8 @@ class FlexEstimator:
         # the hardcoding of the column names can cause a lot of problems for people later on if we do not ship
         # the date with the tool. I would recommend to move these column names to a config file similar to i18n
         # strategies
-        consumptionPower = scalars.loc['Electric_consumption_NEFZ', 'value']
-        consumptionFuel = scalars.loc['Fuel_consumption_NEFZ', 'value']
+        consumptionPower = flexConfig['inputDataScalars']['Electric_consumption_NEFZ']
+        consumptionFuel = flexConfig['inputDataScalars']['Fuel_consumption_NEFZ']
 
         # initialize data set for filling up later on
         driveProfilesFuelAux = chargeMaxProfiles.copy()
@@ -443,8 +426,8 @@ class FlexEstimator:
         return driveProfilesFuelAux
 
     def calcChargeMinProfiles(self, chargeProfiles: pd.DataFrame, consumptionProfiles: pd.DataFrame,
-                              driveProfilesFuelAux: pd.DataFrame, scalars: pd.DataFrame, scalarsProc: pd.DataFrame,
-                              nIter: int) -> pd.DataFrame:
+                              driveProfilesFuelAux: pd.DataFrame, flexConfig,
+                              nIter: int = 3) -> pd.DataFrame:
         """
         Calculates minimum SoC profiles assuming that the hourly mileage has to exactly be fulfilled but no battery charge
         is kept inspite of fulfilling the mobility demand. It represents the minimum charge that a vehicle battery has to
@@ -455,7 +438,7 @@ class FlexEstimator:
         :param consumptionProfiles: Profiles giving consumed electricity for each trip in each hour assuming specified
             consumption.
         :param driveProfilesFuelAux: Auxilliary fuel demand for fulfilling trips if purely electric driving doesn't suffice.
-        :param scalars: Techno-economic input assumptions such as consumption, battery capacity etc.
+        :param flexConfig: YAML config which holds all relative paths and filenames for flexEstimators.py
         :param scalarsProc: Number of profiles and number of hours of each profile.
         :param nIter: Gives the number of iterations to fulfill the boundary condition of the SoC equalling in the first
             and in the last hour of the profile.
@@ -463,11 +446,11 @@ class FlexEstimator:
             format as chargeProfiles, consumptionProfiles and other input parameters.
         """
         chargeMinProfiles = chargeProfiles.copy()
-        batCapMin = scalars.loc['Battery_capacity', 'value'] * scalars.loc['Minimum_SOC', 'value']
-        batCapMax = scalars.loc['Battery_capacity', 'value'] * scalars.loc['Maximum_SOC', 'value']
-        consElectric = scalars.loc['Electric_consumption_NEFZ', 'value']
-        consGasoline = scalars.loc['Fuel_consumption_NEFZ', 'value']
-        nHours = scalarsProc['noHours']
+        batCapMin = self.flexConfig['inputDataScalars']['Battery_capacity'] * self.flexConfig['inputDataScalars']['Minimum_SOC']
+        batCapMax = self.flexConfig['inputDataScalars']['Battery_capacity'] * self.flexConfig['inputDataScalars']['Maximum_SOC']
+        consElectric = self.flexConfig['inputDataScalars']['Electric_consumption_NEFZ']
+        consGasoline = self.flexConfig['inputDataScalars']['Fuel_consumption_NEFZ']
+        nHours = self.scalarsProc['noHours']
         for idxIt in range(nIter):
             for iHour in range(nHours):
                 if iHour == nHours - 1:
@@ -501,18 +484,16 @@ class FlexEstimator:
         :return: None
         """
 
-        self.drainProfiles = self.calcDrainProfiles(self.driveProfiles, self.scalars)
-        self.chargeProfiles = self.calcChargeProfiles(self.plugProfiles, self.scalars)
-        self.chargeMaxProfiles = self.calcChargeMaxProfiles(self.chargeProfiles, self.drainProfiles, self.scalars,
-                                                       self.scalarsProc, nIter=3)
+        self.drainProfiles = self.calcDrainProfiles(self.driveProfiles, self.flexConfig)
+        self.chargeProfiles = self.calcChargeProfiles(self.plugProfiles, self.flexConfig)
+        self.chargeMaxProfiles = self.calcChargeMaxProfiles(self.chargeProfiles, self.drainProfiles, nIter=3)
         # self.connectionType = self.assignConnectionType()
         self.chargeProfilesUncontrolled = self.calcChargeProfilesUncontrolled(self.chargeMaxProfiles, self.scalarsProc)
         self.auxFuelDemandProfiles = self.calcDriveProfilesFuelAux(self.chargeMaxProfiles,
                                                                    self.chargeProfilesUncontrolled, self.driveProfiles,
-                                                                   self.scalars, self.scalarsProc)
+                                                                   self.flexConfig, self.scalarsProc)
         self.chargeMinProfiles = self.calcChargeMinProfiles(self.chargeProfiles, self.drainProfiles,
-                                                       self.auxFuelDemandProfiles, self.scalars, self.scalarsProc,
-                                                       nIter=3)
+                                                       self.auxFuelDemandProfiles, self.scalarsProc)
         print(f'Base profile calculation complete for dataset {self.datasetID}')
 
     def createRandNo(self, driveProfiles: pd.DataFrame, setSeed=1):
@@ -538,7 +519,6 @@ class FlexEstimator:
                              driveProfiles: pd.DataFrame,
                              driveProfilesFuelAux: pd.DataFrame,
                              randNos: pd.DataFrame,
-                             scalars: pd.DataFrame,
                              fuelDriveTolerance,
                              isBEV: bool) -> pd.DataFrame:
         """
@@ -553,7 +533,6 @@ class FlexEstimator:
         :param driveProfiles:  Indexed DataFrame giving hourly electricity demand profiles for driving.
         :param driveProfilesFuelAux: Indexed DataFrame giving auxiliary fuel demand.
         :param randNos: Indexed Series giving a random number between 0 and 1 for each profiles.
-        :param scalars: Techno-economic assumptions
         :param fuelDriveTolerance: Give a threshold value how many liters may be needed throughout the course of a day
         in order to still consider the profile.
         :param isBEV: Boolean value. If true, more 2030 profiles are taken into account (in general).
@@ -561,11 +540,11 @@ class FlexEstimator:
         indexDSM and the same indices as the other profiles.
         """
 
-        boolBEV = scalars.loc['Is_BEV?', 'value']
-        minDailyMileage = scalars.loc['Minimum_daily_mileage', 'value']
-        batSize = scalars.loc['Battery_capacity', 'value']
-        socMax = scalars.loc['Maximum_SOC', 'value']
-        socMin = scalars.loc['Minimum_SOC', 'value']
+        boolBEV = self.flexConfig['inputDataScalars']['Is_BEV?']
+        minDailyMileage = self.flexConfig['inputDataScalars']['Minimum_daily_mileage']
+        batSize = self.flexConfig['inputDataScalars']['Battery_capacity']
+        socMax = self.flexConfig['inputDataScalars']['Maximum_SOC']
+        socMin = self.flexConfig['inputDataScalars']['Minimum_SOC']
         filterCons = driveProfiles.copy()
         filterCons['randNo'] = randNos
         filterCons['bolFuelDriveTolerance'] = driveProfilesFuelAux.sum(axis='columns') * boolBEV < fuelDriveTolerance
@@ -582,14 +561,13 @@ class FlexEstimator:
         return filterCons_out
 
     def calcElectricPowerProfiles(self, consumptionProfiles: pd.DataFrame, driveProfilesFuelAux: pd.DataFrame,
-                                  scalars: pd.DataFrame, filterCons: pd.DataFrame, scalarsProc: pd.DataFrame,
-                                  filterIndex) -> pd.DataFrame:
+                                  filterCons: pd.DataFrame, filterIndex) -> pd.DataFrame:
         """
         Calculates electric power profiles that serve as outflow of the fleet batteries.
 
         :param consumptionProfiles: Indexed DataFrame containing electric vehicle consumption profiles.
         :param driveProfilesFuelAux: Indexed DataFrame containing
-        :param scalars: VencoPy Dataframe containing technical assumptions
+        :param flexConfig: YAML config which holds all relative paths and filenames for flexEstimators.py
         :param filterCons: Dataframe containing one boolean filter value for each profile
         :param scalarsProc: Dataframe containing meta information of input profiles
         :param filterIndex: Can be either 'indexCons' or 'indexDSM' so far. 'indexDSM' applies stronger filters and results
@@ -597,11 +575,11 @@ class FlexEstimator:
         :return: Returns electric demand from driving filtered and aggregated to one fleet.
         """
 
-        consumptionPower = scalars.loc['Electric_consumption_NEFZ', 'value']
-        consumptionFuel = scalars.loc['Fuel_consumption_NEFZ', 'value']
+        consumptionPower = self.flexConfig['inputDataScalars']['Electric_consumption_NEFZ']
+        consumptionFuel = self.flexConfig['inputDataScalars']['Fuel_consumption_NEFZ']
         indexCons = filterCons.loc[:, 'indexCons']
         indexDSM = filterCons.loc[:, 'indexDSM']
-        nHours = scalarsProc['noHours']
+        nHours = self.scalarsProc['noHours']
         electricPowerProfiles = consumptionProfiles.copy()
         for iHour in range(nHours):
             electricPowerProfiles[iHour] = (consumptionProfiles[iHour] - driveProfilesFuelAux[iHour] *
@@ -682,7 +660,7 @@ class FlexEstimator:
             raise ValueError('You selected a filter method that is not implemented.')
         return profileMinOut, profileMaxOut
 
-    def normalizeProfiles(self, scalars: pd.DataFrame, socMin: pd.Series, socMax: pd.Series, normReferenceParam) -> \
+    def normalizeProfiles(self, socMin: pd.Series, socMax: pd.Series) -> \
             tuple:
         """
         Normalizes given profiles with a given scalar reference.
@@ -695,7 +673,7 @@ class FlexEstimator:
         :return: Writes the normalized profiles to the DataManager under the specified keys
         """
 
-        normReference = scalars.loc[normReferenceParam, 'value']
+        normReference = self.flexConfig['inputDataScalars']['Battery_capacity']
         socMinNorm = socMin.div(float(normReference))
         socMaxNorm = socMax.div(float(normReference))
         return socMinNorm, socMaxNorm
@@ -714,13 +692,18 @@ class FlexEstimator:
                                                      consumptionProfiles=self.drainProfiles,
                                                      driveProfiles=self.driveProfiles,
                                                      driveProfilesFuelAux=self.auxFuelDemandProfiles,
-                                                     randNos=self.randNoPerProfile, scalars=self.scalars,
+                                                     randNos=self.randNoPerProfile,
                                                      fuelDriveTolerance=1, isBEV=True)
+
+
+
 
         # Additional fuel consumption is subtracted from the consumption
         self.electricPowerProfiles = self.calcElectricPowerProfiles(self.drainProfiles, self.auxFuelDemandProfiles,
-                                                                    self.scalars, self.profileSelectors, self.scalarsProc,
-                                                                    filterIndex='indexDSM')
+                                                                    self.profileSelectors, filterIndex='indexDSM')
+
+
+
 
         # Profile filtering for flow profiles
         self.plugProfilesCons = self.filterConsProfiles(self.plugProfiles, self.profileSelectors, critCol='indexCons')
@@ -863,12 +846,12 @@ class FlexEstimator:
         # ret.index = ret.index.swaplevel(0, 1)
         return retMin, retMax
 
-    def correctProfiles(self, scalars: pd.DataFrame, profile: pd.Series, profType) -> pd.Series:
+    def correctProfiles(self, profile: pd.Series, profType) -> pd.Series:
         """
         This method scales given profiles by a correction factor. It was written for VencoPy scaling consumption data
         with the more realistic ARTEMIS driving cycle.
 
-        :param scalars: Dataframe of technical assumptions
+        :param flexConfig: YAML config which holds all relative paths and filenames for flexEstimators.py
         :param profile: Dataframe of profile that should be corrected
         :param profType: A list of strings specifying if the given profile type is an electric or a fuel profile.
         profType has to have the same length as profiles.
@@ -876,12 +859,12 @@ class FlexEstimator:
         """
 
         if profType == 'electric':
-            consumptionElectricNEFZ = scalars.loc['Electric_consumption_NEFZ', 'value']
-            consumptionElectricArtemis = scalars.loc['Electric_consumption_Artemis', 'value']
+            consumptionElectricNEFZ = self.flexConfig['inputDataScalars']['Electric_consumption_NEFZ']
+            consumptionElectricArtemis = self.flexConfig['inputDataScalars']['Electric_consumption_Artemis']
             corrFactor = consumptionElectricArtemis / consumptionElectricNEFZ
         elif profType == 'fuel':
-            consumptionFuelNEFZ = scalars.loc['Fuel_consumption_NEFZ', 'value']
-            consumptionFuelArtemis = scalars.loc['Fuel_consumption_Artemis', 'value']
+            consumptionFuelNEFZ = self.flexConfig['inputDataScalars']['Fuel_consumption_NEFZ']
+            consumptionFuelArtemis = self.flexConfig['inputDataScalars']['Fuel_consumption_Artemis']
             corrFactor = consumptionFuelArtemis / consumptionFuelNEFZ
         else:
             raise Exception(f'Either parameter "{profType}" is not given or not assigned to either "electric" or '
@@ -896,10 +879,10 @@ class FlexEstimator:
         :return: None
         """
 
-        self.chargeProfilesUncontrolledCorr = self.correctProfiles(self.scalars, self.chargeProfilesUncontrolledAgg,
+        self.chargeProfilesUncontrolledCorr = self.correctProfiles(self.chargeProfilesUncontrolledAgg,
                                                                    'electric')
-        self.electricPowerProfilesCorr = self.correctProfiles(self.scalars, self.electricPowerProfilesAgg, 'electric')
-        self.auxFuelDemandProfilesCorr = self.correctProfiles(self.scalars, self.auxFuelDemandProfilesAgg, 'fuel')
+        self.electricPowerProfilesCorr = self.correctProfiles(self.electricPowerProfilesAgg, 'electric')
+        self.auxFuelDemandProfilesCorr = self.correctProfiles(self.auxFuelDemandProfilesAgg, 'fuel')
 
     def normalize(self):
         """
@@ -908,8 +891,8 @@ class FlexEstimator:
         :return: None
         """
 
-        self.socMinNorm, self.socMaxNorm = self.normalizeProfiles(self.scalars, self.socMin, self.socMax,
-                                                                  normReferenceParam='Battery_capacity')
+        self.socMinNorm, self.socMaxNorm = self.normalizeProfiles(self.socMin, self.socMax)
+
 
     def writeOut(self):
         """
@@ -969,7 +952,7 @@ if __name__ == '__main__':
                                 ParseData=vpData, datasetID=datasetID)
     vpFlexEst.run()
     vpEval = Evaluator(globalConfig=globalConfig, evaluatorConfig=evaluatorConfig,
-                       parseData=pd.Series(data=vpData, index=[datasetID]), label='SESPaperTest')
+                       parseData=pd.Series(data=vpData, index=[datasetID]))
     vpEval.plotProfiles(flexEstimator=vpFlexEst)
 
 
