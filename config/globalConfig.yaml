@@ -57,5 +57,7 @@ files:
 labels:
     runLabel: masterBranch
     technologyLabel: bat50_cons20_pow11_
+    runLabel: phdSeminar
+    technologyLabel: cons20_bat50_pow11_
     outputFileName: VencoPy_MR1_alpha1_batCap40_cons15
     strAdd:
