@@ -32,11 +32,9 @@ chargingInfrastructureDistributions:  # Grid model 2: Probabilities given for ea
     'LEISURE':
         0.5: 11
     'OTHER':
-<<<<<<< Updated upstream
         0.5: 11
     'NA':
         1: 0
-=======
         1: 0
 #        0.5: 11
 
@@ -105,4 +103,3 @@ gridAvailabilityFastCharging:  # Grid model 3: Probabilities given for each loca
         0.70: 0
     '0.0':
         1: 0
->>>>>>> Stashed changes

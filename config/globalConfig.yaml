@@ -55,12 +55,9 @@ files:
 
 
 labels:
-<<<<<<< Updated upstream
     runLabel: masterBranch
     technologyLabel: bat50_cons20_pow11_
-=======
     runLabel: phdSeminar
     technologyLabel: cons20_bat50_pow11_
->>>>>>> Stashed changes
     outputFileName: VencoPy_MR1_alpha1_batCap40_cons15
     strAdd:
