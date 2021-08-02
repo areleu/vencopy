@@ -54,8 +54,6 @@ if __name__ == '__main__':
     vpGrid.assignSimpleGridViaPurposes()
     vpGrid.writeOutGridAvailability()
 
-    # review: Is this still valid code or left overs? I ignored this code for now.
-    #  Maybe we should schedule a cleanup.
     # Evaluate drive and trip purpose profiles
     vpEval = Evaluator(globalConfig=globalConfig, evaluatorConfig=evaluatorConfig,
                        parseData=pd.Series(data=vpData, index=[datasetID]), label='SESPaperTest')
