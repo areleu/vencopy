@@ -271,8 +271,8 @@ class Evaluator:
                                         filetypeStr='svg')
             fig.savefig(Path(self.globalConfig['pathRelative']['plots']) / fileName, bbox_inches='tight')
 
-    def linePlot(self, profileDict, pathOutput, flexEstimator, show=True, write=True, ylabel='Normalized profiles', ylim=None,
-                 filename=''):
+    def linePlot(self, profileDict, pathOutput, flexEstimator, show=True, write=True, ylabel='Normalized profiles',
+                 ylim=None, filename=''):
         """
         Basic line plot functionality
 
@@ -305,7 +305,8 @@ class Evaluator:
         # xLabels = [f'{str(iTime)}:00' for iTime in self.evaluatorConfig['plotConfig']['xAxis']['hours']]
         ax.set_xticks(xRange[:-1])
         ax.set_xticklabels(xLabels, fontsize=self.evaluatorConfig['plotConfig']['xAxis']['ticklabelsize'])
-        ax.set_ylim(bottom=0, top=ylim)
+        if ylim:
+            ax.set_ylim(bottom=0, top=ylim)
         ax.set_xlabel('Weekday and Hour',
                       fontsize=self.evaluatorConfig['plotConfig']['plotRCParameters']['axes.labelsize'])
         ax.set_ylabel(ylabel, fontsize=self.evaluatorConfig['plotConfig']['plotRCParameters']['axes.labelsize'])
@@ -333,12 +334,20 @@ class Evaluator:
         :param filenames: Name of file to be written to hard drive
         :return: None
         """
-        for iDict, iYLabel, iYLim, iName in zip(profileDictList, ylabel, ylim, filenames):
-            writeProfilesToCSV(profileDictOut=iDict, globalConfig=self.globalConfig, singleFile=False,
-                               datasetID=flexEstimator.datasetID)
-            self.linePlot(iDict, pathOutput=Path(self.globalConfig['pathRelative']['plots']),
-                          flexEstimator=flexEstimator, show=show, write=write, ylabel=iYLabel, ylim=iYLim,
-                          filename=iName)
+        if ylim:
+            for iDict, iYLabel, iYLim, iName in zip(profileDictList, ylabel, ylim, filenames):
+                writeProfilesToCSV(profileDictOut=iDict, globalConfig=self.globalConfig, singleFile=False,
+                                   datasetID=flexEstimator.datasetID)
+                self.linePlot(iDict, pathOutput=Path(self.globalConfig['pathRelative']['plots']),
+                              flexEstimator=flexEstimator, show=show, write=write, ylabel=iYLabel, ylim=iYLim,
+                              filename=iName)
+        else:
+            for iDict, iYLabel, iName in zip(profileDictList, ylabel, filenames):
+                writeProfilesToCSV(profileDictOut=iDict, globalConfig=self.globalConfig, singleFile=False,
+                                   datasetID=flexEstimator.datasetID)
+                self.linePlot(iDict, pathOutput=Path(self.globalConfig['pathRelative']['plots']),
+                              flexEstimator=flexEstimator, show=show, write=write, ylabel=iYLabel,
+                              filename=iName)
 
     def plotProfiles(self, flexEstimator, profileDictList: dict = None, yLabels: list = None, yLimits: list = None,
                      filenames: list = None):
@@ -372,11 +381,13 @@ class Evaluator:
 
             profileDictList = [profileDictConnectionShare, profileDictFlowsAbs, profileDictStateAbs]
             yLabels = ['Average EV connection share', 'Average EV flow in kW', 'Average EV SOC in kWh']
-            yLimits = [1, 1, 20]
             filenames = [flexEstimator.datasetID + '_connection', flexEstimator.datasetID + '_flows',
                                           flexEstimator.datasetID + '_state']
+            # yLimits = [1, 1, 20]
+        # self.separateLinePlots(profileDictList, show=True, write=True, flexEstimator=flexEstimator,
+        #                        ylabel=yLabels, filenames=filenames, ylim=yLimits)
         self.separateLinePlots(profileDictList, show=True, write=True, flexEstimator=flexEstimator,
-                               ylabel=yLabels, filenames=filenames, ylim=yLimits)
+                               ylabel=yLabels, filenames=filenames)
 
     def compareProfiles(self, compareTo):
         """

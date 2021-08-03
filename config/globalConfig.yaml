@@ -11,8 +11,8 @@
 
 pathRelative:
     input: ./inputData/
-    plots: ./output/plots/
-    dataOutput: ./output/data/
+    plots: ./output/
+    dataOutput: ./output/
     scripts: ./scripts/
     config: ./config/
 
@@ -21,8 +21,6 @@ numberOfHours: 24
 
 files:
 #    inputDataScalars: VencoPy_scalarInput.xlsx
-#    inputDataDriveProfiles: inputProfiles_Drive_MiD17_woWeights.csv
-#    inputDataPlugProfiles: inputProfiles_Plug_MiD17_woWeights.csv
     MiD17:
         enryptedZipFileB1: B1_Standard-DatensatzpaketEncrypted.zip
         enryptedZipFileB2: B2_Regional-DatensatzpaketEncrypted.zip
@@ -30,9 +28,9 @@ files:
         householdsDataRaw: MiD2017_Regional_Haushalte.csv
         personsDataRaw: MiD2017_Regional_Personen.csv
         tripsDataRaw: MiD2017_Regional_Wege.dta
-        purposesProcessed: inputProfiles_Purpose  # inputProfiles_Purpose_runTest_MiD17.csv
-        inputDataDriveProfiles: inputProfiles_Drive  # inputProfiles_Drive_runTest_MiD17.csv
-        inputDataPlugProfiles: inputProfiles_Plug  # inputProfiles_Plug_runTest_MiD17.csv
+        purposesProcessed: inputProfiles_Purpose  # inputProfiles_Purpose_RUNLABEL_MiD17.csv
+        inputDataDriveProfiles: inputProfiles_Drive  # inputProfiles_Drive_RUNLABEL_MiD17.csv
+        inputDataPlugProfiles: inputProfiles_Plug  # inputProfiles_Plug_RUNLABEL_MiD17.csv
         vencoPyOutput: vencoPyOutput
         flexPlotName: flexProfileComparison
     MiD08:
@@ -41,13 +39,11 @@ files:
         tripsDataRaw: MiD2008_PUF_Wege.dta
         tripsProcessedOld: MiD_procCS_caseID-weekday-weight-activity.xlsx
         purposesProcessedOld: MiD_procCS_caseID-weekday-weight-activity.xlsx
-        purposesProcessed: inputProfiles_Purpose  # inputProfiles_Purpose_runTest_MiD08.csv
-        inputDataDriveProfiles: inputProfiles_Drive  # inputProfiles_Drive_runTest_MiD08.csv
-        inputDataPlugProfiles: inputProfiles_Plug  # inputProfiles_Plug_runTest_MiD08.csv
+        purposesProcessed: inputProfiles_Purpose  # inputProfiles_Purpose_RUNLABEL_MiD08.csv
+        inputDataDriveProfiles: inputProfiles_Drive  # inputProfiles_Drive_RUNLABEL_MiD08.csv
+        inputDataPlugProfiles: inputProfiles_Plug  # inputProfiles_Plug_RUNLABEL_MiD08.csv
         vencoPyOutput: vencoPyOutput
         flexPlotName: flexProfileComparison
-#        inputDataDriveProfiles: inputProfiles_Drive_MiD08.csv
-#        inputDataPlugProfiles: inputProfiles_Plug_MiD08.csv
     vencoPyOutput: vencoPyOutput
     aggPlotName: mobilityComparison
     flexPlotName: flexProfileComparison
