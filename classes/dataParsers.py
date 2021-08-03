@@ -15,7 +15,7 @@ from zipfile import ZipFile
 
 
 class DataParser:
-    def __init__(self, parseConfig: dict, globalConfig: dict, localPathConfig: dict, datasetID: str = 'MiD17',
+    def __init__(self, parseConfig: dict, globalConfig: dict, localPathConfig: dict, datasetID: str,
                  loadEncrypted=True):
         """
         Basic class for parsing a mobility survey trip data set. Currently the both German travel surveys MiD 2008 and
@@ -204,7 +204,7 @@ class DataParser:
 
     def convertTypes(self):
         """
-        Convert raw column types to predefined python types as specified in parseConfig['inputDTypes']. This is mainly
+        Convert raw column types to predefined python types as specified in parseConfig['inputDTypes'][datasetID]. This is mainly
         done for performance reasons. But also in order to avoid index values that are of type int to be cast to float.
         The function operates only on self.data and writes back changes to self.data
 
@@ -212,7 +212,16 @@ class DataParser:
         """
 
         # Filter for dataset specific columns
-        conversionDict = self.parseConfig['inputDTypes']
+
+        # if self.datasetID == 'KiD':
+        #     # convert object typed to datetime tripStartClock, tripEndClock
+        #     #self.data['tripStartClock'] = self.data['tripStartClock'].astype('')
+        #     conversionDict = self.parseConfig['inputDTypes'][self.datasetID]
+        #     keys = {iCol for iCol in conversionDict.keys() if iCol in self.data.columns}
+        #     self.subDict = {key: conversionDict[key] for key in conversionDict.keys() & keys}
+        #     self.data = self.data.astype(self.subDict)
+        # else:
+        conversionDict = self.parseConfig['inputDTypes'][self.datasetID]
         keys = {iCol for iCol in conversionDict.keys() if iCol in self.data.columns}
         self.subDict = {key: conversionDict[key] for key in conversionDict.keys() & keys}
         self.data = self.data.astype(self.subDict)
@@ -409,7 +418,7 @@ class DataParser:
         :return: None
         """
         self.data.loc[:, colName] \
-            = self.data.loc[:, varName].replace(self.parseConfig['midReplacements'][varName])
+            = self.data.loc[:, varName].replace(self.parseConfig['Replacements'][self.datasetID][varName])
 
     def composeTimestamp(self, data: pd.DataFrame = None,
                          colYear: str = 'tripStartYear',
@@ -489,7 +498,9 @@ class ParseMID(DataParser):
 
 
 if __name__ == '__main__':
-    datasetID = 'MiD17'
+    #datasetID = 'MiD17'
+    datasetID = 'KiD'
+
     pathLocalPathConfig = Path.cwd().parent / 'config' / 'localPathConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
     with open(pathLocalPathConfig) as ipf:
         localPathConfig = yaml.load(ipf, Loader=yaml.SafeLoader)

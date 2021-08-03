@@ -13,51 +13,82 @@ encryptionPW: 'PW'
 
 
 dataVariables:
-    datasetID: ['MiD08', 'MiD17']
-    isMIVDriver: ['pkw_f','W_VM_G']
-    hhID: ['hhid', 'H_ID_Reg']
-    personID: ['pid', 'P_ID']
-    hhPersonID: ['NA','HP_ID_Reg']
-    tripID: ['wid', 'W_ID']
-    tripWeight: ['w_gew','W_GEW']
-    tripScaleFactor: ['NA', 'W_HOCH']
-    tripStartClock: ['st_time', 'W_SZ']
-    tripEndClock: ['en_time', 'W_AZ']
-    tripPurpose: ['w04', 'zweck']
-    tripDistance: ['wegkm_k', 'wegkm']
-    travelTime : ['wegmin_k', 'wegmin_imp1']
-    tripStartYear: ['stich_j', 'ST_JAHR']
-    tripStartMonth: ['stich_m', 'ST_MONAT']
-    tripStartWeek: ['stichwo', 'ST_WOCHE']
-    tripStartWeekday: ['stichtag', 'ST_WOTAG']
-    tripStartHour: ['st_std', 'W_SZS']
-    tripStartMinute: ['st_min', 'W_SZM']
-    tripEndHour: ['en_std', 'W_AZS']
-    tripEndMinute: ['en_min', 'W_AZM']
-    tripEndNextDay: ['en_dat', 'W_FOLGETAG']
-    tripIsIntermodal: ['NA', 'weg_intermod']
+    datasetID: ['MiD08', 'MiD17', 'KiD']
+    isMIVDriver: ['pkw_f','W_VM_G', 'NA']
+    hhID: ['hhid', 'H_ID_Reg', 'NA']
+    vehicleID: [ 'NA', 'NA', 'k00' ]
+    personID: ['pid', 'P_ID', 'NA']
+    hhPersonID: ['NA','HP_ID_Reg', 'NA']
+    tripID: ['wid', 'W_ID', 'f00']
+    tripWeight: ['w_gew','W_GEW', 'NA']
+    tripScaleFactor: ['NA', 'W_HOCH', 'NA']
+    tripStartClock: ['st_time', 'W_SZ', 'f04']
+    tripEndClock: ['en_time', 'W_AZ', 'f10a']
+    tripPurpose: ['w04', 'zweck', 'f07a']
+    tripDistance: ['wegkm_k', 'wegkm', 'f14']
+    travelTime : ['wegmin_k', 'wegmin_imp1' , 'f15']
+    tripStartYear: ['stich_j', 'ST_JAHR', 'NA']
+    tripStartMonth: ['stich_m', 'ST_MONAT', 'NA']
+    tripStartWeek: ['stichwo', 'ST_WOCHE', 'NA']
+    tripStartWeekday: ['stichtag', 'ST_WOTAG', 'NA']
+    tripStartHour: ['st_std', 'W_SZS', 'NA']
+    tripStartMinute: ['st_min', 'W_SZM', 'NA']
+    tripEndHour: ['en_std', 'W_AZS', 'NA']
+    tripEndMinute: ['en_min', 'W_AZM', 'NA']
+    tripEndNextDay: ['en_dat', 'W_FOLGETAG', 'NA']
+    tripIsIntermodal: ['NA', 'weg_intermod', 'NA']
 #    tripStartLocation: [ 'NA', 'KKZ_SO' ]
 #    tripEndLocation: [ 'NA', 'KKZ_ZO' ]
 
 inputDTypes:
-    isMIVDriver: 'bool'
-    hhPersonID: 'int'
-    tripID: 'int'
-    tripWeight: 'float'
-#    tripStartClock: 'f'
-#    tripEndClock: 'f'
-    tripPurpose: 'int'
-    tripDistance: 'float'
-    tripStartYear: 'int'
-    tripStartMonth: 'int'
-    tripStartWeek: 'int'
-    tripStartWeekday: 'int'
-    tripStartHour: 'int'
-    tripStartMinute: 'int'
-    tripEndHour: 'int'
-    tripEndMinute: 'int'
-    tripEndNextDay: 'bool'
-    tripIsIntermodal: 'int'
+    MiD17:
+        isMIVDriver: 'bool'
+        hhPersonID: 'int'
+        tripID: 'int'
+        tripWeight: 'float'
+    #    tripStartClock: 'f'
+    #    tripEndClock: 'f'
+        tripPurpose: 'int'
+        tripDistance: 'float'
+        tripStartYear: 'int'
+        tripStartMonth: 'int'
+        tripStartWeek: 'int'
+        tripStartWeekday: 'int'
+        tripStartHour: 'int'
+        tripStartMinute: 'int'
+        tripEndHour: 'int'
+        tripEndMinute: 'int'
+        tripEndNextDay: 'bool'
+        tripIsIntermodal: 'int'
+    MiD08:
+        isMIVDriver: 'bool'
+        hhPersonID: 'int'
+        tripID: 'int'
+        tripWeight: 'float'
+        #    tripStartClock: 'f'
+        #    tripEndClock: 'f'
+        tripPurpose: 'int'
+        tripDistance: 'float'
+        tripStartYear: 'int'
+        tripStartMonth: 'int'
+        tripStartWeek: 'int'
+        tripStartWeekday: 'int'
+        tripStartHour: 'int'
+        tripStartMinute: 'int'
+        tripEndHour: 'int'
+        tripEndMinute: 'int'
+        tripEndNextDay: 'bool'
+        tripIsIntermodal: 'int'
+    KiD:
+        vehicleID: 'int'
+        tripID: 'int'
+        tripStartClock: 'str'
+        tripEndClock: 'str'
+        tripPurpose: 'int'
+        tripDistance: 'int'
+        travelTime: 'int'
+
+
 
 filterDicts:
     MiD08:
@@ -81,39 +112,76 @@ filterDicts:
         exclude:
             tripStartHour: [99, 701]
             tripEndHour: [99, 701]
-            tripStartClock: [' ']
-            tripEndClock: [' ']
+            tripStartClock: [ ' ' ]
+            tripEndClock: [ ' ' ]
             tripPurpose: [99]
             tripIsIntermodal: [1, 703, 708]
         greaterThan:
         smallerThan:
             tripDistance: [1000]
 
+    KiD:
+        exclude:
+           # tripStartClock: ['-1:-1']
+           # tripEndClock: ['-1:-1']
+            tripPurpose: [-1]
+        greaterThan:
+        smallerThan:
+            tripDistance: [2500]
+
 #    tripData = tripData.loc[(tripData['tripStartClock'] <= tripData['tripEndClock']) |
 #    (tripData['tripEndNextDay'] == 1), :]  # departure must be before arrival or the trip must end the following day
 
-midReplacements:
-    tripStartWeekday:
-        1: 'MON'
-        2: 'TUE'
-        3: 'WED'
-        4: 'THU'
-        5: 'FRI'
-        6: 'SAT'
-        7: 'SUN'
-    tripPurpose:
-        1: 'WORK'  # Erreichen des Arbeitsplatzes
-        2: 'WORK'  # dienstlich/geschäftlich
-        3: 'SCHOOL'  # Erreichen der Ausbildungsstätte/Schule
-        4: 'SHOPPING'  # Einkauf
-        5: 'SHOPPING'  # private Erledigung
-        6: 'LEISURE'  # Bringen/Holen/Begleiten von Personen
-        7: 'LEISURE'  # Freizeitaktivität
-        8: 'HOME'  # nach Hause
-        9: 'HOME'  # Rückweg vom vorherigen Weg
-        10: 'OTHER'  # anderer Zweck
-        11: 'HOME'  # Begleitung Erwachsener (MiD08)
-        31: 'SCHOOL'  # Zur Schule oder Vorschule (MiD08)
-        32: 'SCHOOL'  # Kindertagesstaette oder Kindergarten (MiD08)
-        99: 'NA'  # keine Angabe
+Replacements:
+    MiD17:
+        tripStartWeekday:
+            1: 'MON'
+            2: 'TUE'
+            3: 'WED'
+            4: 'THU'
+            5: 'FRI'
+            6: 'SAT'
+            7: 'SUN'
+        tripPurpose:
+            1: 'WORK'                                           # Erreichen des Arbeitsplatzes
+            2: 'WORK'                                           # dienstlich/geschäftlich
+            3: 'SCHOOL'                                         # Erreichen der Ausbildungsstätte/Schule
+            4: 'SHOPPING'                                       # Einkauf
+            5: 'SHOPPING'                                       # private Erledigung
+            6: 'LEISURE'                                        # Bringen/Holen/Begleiten von Personen
+            7: 'LEISURE'                                        # Freizeitaktivität
+            8: 'HOME'                                           # nach Hause
+            9: 'HOME'                                           # Rückweg vom vorherigen Weg
+            10: 'OTHER'                                         # anderer Zweck
+            11: 'HOME'                                          # Begleitung Erwachsener (MiD08)
+            31: 'SCHOOL'                                        # Zur Schule oder Vorschule (MiD08)
+            32: 'SCHOOL'                                        # Kindertagesstaette oder Kindergarten (MiD08)
+            99: 'NA'                                            # keine Angabe
+
+    KiD:
+        tripStartWeekday:
+            1: 'MON'
+            2: 'TUE'
+            3: 'WED'
+            4: 'THU'
+            5: 'FRI'
+            6: 'SAT'
+            7: 'SUN'
+        tripPurpose:
+            # 1-5 dienstliche/geschäftliche Fahrtzwecken
+            1: 'TRANSPORT'                                     # Holen, Bringen, Transportieren von Gütern, Waren, Material, Maschinen, Geräten
+            2: 'SERVICES'                                      # Fahrt zur Erbringung beruflicher Leistungen
+            3: 'PEOPLE MOBILITY'                               # Holen, Bringen, Befördern von Personen (dienstlich/geschäftlich)
+            4: 'WORK'                                          # sonstige dienstlich/geschäftliche Erledigung
+            5: 'WORK'                                          # Rukfahrt zum Betrieb/Stellplatz
+            # 5-12 private Fahrtzwecke
+            6: 'WORK'                                          # Fahrt zum Arbeitsplatz
+            7: 'SCHOOL'                                        # Fart zur Ausbildung
+            8: 'SHOPPING'                                      # Privater Einkauf
+            9: 'LEISURE'                                       # Freizeit, Erholung
+            10: 'PEOPLE MOBILITY'                              # Holen, Bringen, Befördern von Personen (privat)
+            11: 'OTHER'                                        # sonstige private Erledigung
+            12: 'HOME'                                         # Fahrt nach Hause
+
+
 

@@ -43,6 +43,17 @@ files:
         inputDataPlugProfiles: inputProfiles_Plug  # inputProfiles_Plug_RUNLABEL_MiD08.csv
         vencoPyOutput: vencoPyOutput
         flexPlotName: flexProfileComparison
+    KiD:
+        householdsDataRaw: KiD2010-Fahrzeug-Datei-puf.dta
+        personDataRaw: KiD2010-Fahrzeug-Datei-puf.dta
+        tripsDataRaw: KiD2010-Fahrten-Datei-puf.dta
+        tripsProcessedOld:
+        purposesProcessedOld:
+        purposesProcessed:
+        inputDataDriveProfiles:
+        inputDataPlugProfiles:
+        vencoPyOutput:
+        flexPlotName:
     vencoPyOutput: vencoPyOutput
     aggPlotName: mobilityComparison
     flexPlotName: flexProfileComparison
