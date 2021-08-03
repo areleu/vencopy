@@ -20,7 +20,6 @@ pathRelative:
 numberOfHours: 24
 
 files:
-#    inputDataScalars: VencoPy_scalarInput.xlsx
     MiD17:
         enryptedZipFileB1: B1_Standard-DatensatzpaketEncrypted.zip
         enryptedZipFileB2: B2_Regional-DatensatzpaketEncrypted.zip
