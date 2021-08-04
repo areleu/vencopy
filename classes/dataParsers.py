@@ -62,6 +62,7 @@ class DataParser:
         self.filterConsistentHours()
         self.addStrColumns()
         self.composeStartAndEndTimestamps()
+        self.updateEndTimestamps()
         print('Parsing completed')
 
     def updateFilterDict(self) -> None:
@@ -120,7 +121,7 @@ class DataParser:
     def loadData(self):
         """
         Loads data specified in self.rawDataPath and stores it in self.rawData. Raises an exception if a invalid suffix
-        is specified in self.rawDataPath. READ IN OF CSV HAS NOT BEEN EXGTENSIVELY TESTED BEFORE VENCOPY BETA RELEASE.
+        is specified in self.rawDataPath. READ IN OF CSV HAS NOT BEEN EXTENSIVELY TESTED BEFORE BETA RELEASE.
 
         :return: None
         """
@@ -471,16 +472,6 @@ class DataParser:
                         pd.to_timedelta(data.loc[:, colMin], unit='minute')
         # return data
 
-    def updateEndTimestamp(self) -> np.datetime64:
-        """
-        :return:
-        """
-        if self.datasetID == 'MiD17' or self.datasetID == 'MiD08':
-            endsFollowingDay = self.data['tripEndNextDay'] == 1
-            self.data.loc[endsFollowingDay, 'timestampEnd'] = self.data.loc[endsFollowingDay,
-                                                                        'timestampEnd'] + pd.offsets.Day(1)
-        if self.datasetID == 'KiD':
-
 
     def composeStartAndEndTimestamps(self) -> np.datetime64:
         """
@@ -491,7 +482,29 @@ class DataParser:
                               colHour='tripEndHour',
                               colMin='tripEndMinute',
                               colName='timestampEnd')
+
+
+    def updateEndTimestamp(self) -> np.datetime64:
+        """
+        :return:
+        """
+        if self.datasetID == 'MiD17' or self.datasetID == 'MiD08':
+            endsFollowingDay = self.data['tripEndNextDay'] == 1
+            self.data.loc[endsFollowingDay, 'timestampEnd'] = self.data.loc[endsFollowingDay,
+                                                                        'timestampEnd'] + pd.offsets.Day(1)
+        if self.datasetID == 'KiD':
+            self.data['tripEndNextDay'] = np.where(self.data['timestampEnd'].dt.day > self.data['timestampStart'].dt.day, 1, 0)
+            endsFollowingDay = self.data['tripEndNextDay'] == 1
+            self.data.loc[endsFollowingDay, 'timestampEnd'] = self.data.loc[endsFollowingDay,
+                                                                            'timestampEnd'] + pd.offsets.Day(1)
+
+
+    def updateEndTimestamps(self) -> np.datetime64:
+        """
+        :return: Returns start and end time of a trip
+        """
         self.updateEndTimestamp()
+
 
 
 class ParseMID(DataParser):
@@ -500,8 +513,8 @@ class ParseMID(DataParser):
     pass
 
 if __name__ == '__main__':
-    datasetID = 'MiD17' #options are MiD08, MiD17, KiD
-    #datasetID = 'KiD'
+    #datasetID = 'MiD17' #options are MiD08, MiD17, KiD
+    datasetID = 'KiD'
 
     pathLocalPathConfig = Path.cwd().parent / 'config' / 'localPathConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
     with open(pathLocalPathConfig) as ipf:
