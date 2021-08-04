@@ -70,8 +70,8 @@ class DataParser:
 
         :return: None
         """
-        self.__filterDict = self.parseConfig['filterDicts'][self.datasetID]
-        self.__filterDict = {iKey: iVal for iKey, iVal in self.__filterDict.items() if self.__filterDict[iKey] is not
+        self.__filterDict[self.datasetID] = self.parseConfig['filterDicts'][self.datasetID]
+        self.__filterDict[self.datasetID] = {iKey: iVal for iKey, iVal in self.__filterDict[self.datasetID].items() if self.__filterDict[self.datasetID][iKey] is not
                              None}
 
     def checkDatasetID(self, datasetID: str, parseConfig: dict) -> str:
@@ -200,7 +200,7 @@ class DataParser:
             listIndex = dictRaw['datasetID'].index(datasetID)
             return {val[listIndex]: key for (key, val) in dictRaw.items()}
         else:
-            raise ValueError(f'Data set {datasetID} not specified in MiD variable dictionary.')
+            raise ValueError(f'Data set {datasetID} not specified in parseConfig variable dictionary.')
 
     def convertTypes(self):
         """
@@ -212,19 +212,20 @@ class DataParser:
         """
 
         # Filter for dataset specific columns
+        if self.datasetID == 'KiD':
+            conversionDict = self.parseConfig['inputDTypes'][self.datasetID]
+            keys = {iCol for iCol in conversionDict.keys() if iCol in self.data.columns}
+            self.subDict = {key: conversionDict[key] for key in conversionDict.keys() & keys}
+            # German df has commas instead of dots in floats
+            for i, x in enumerate(list(self.data.tripDistance)):
+                self.data.at[i, 'tripDistance'] = x.replace(',', '.')
+            self.data = self.data.astype(self.subDict)
+        else:
+            conversionDict = self.parseConfig['inputDTypes'][self.datasetID]
+            keys = {iCol for iCol in conversionDict.keys() if iCol in self.data.columns}
+            self.subDict = {key: conversionDict[key] for key in conversionDict.keys() & keys}
+            self.data = self.data.astype(self.subDict)
 
-        # if self.datasetID == 'KiD':
-        #     # convert object typed to datetime tripStartClock, tripEndClock
-        #     #self.data['tripStartClock'] = self.data['tripStartClock'].astype('')
-        #     conversionDict = self.parseConfig['inputDTypes'][self.datasetID]
-        #     keys = {iCol for iCol in conversionDict.keys() if iCol in self.data.columns}
-        #     self.subDict = {key: conversionDict[key] for key in conversionDict.keys() & keys}
-        #     self.data = self.data.astype(self.subDict)
-        # else:
-        conversionDict = self.parseConfig['inputDTypes'][self.datasetID]
-        keys = {iCol for iCol in conversionDict.keys() if iCol in self.data.columns}
-        self.subDict = {key: conversionDict[key] for key in conversionDict.keys() & keys}
-        self.data = self.data.astype(self.subDict)
 
     def returnDictBottomValues(self, baseDict: dict, lst: list = []) -> list:
         """
@@ -251,7 +252,7 @@ class DataParser:
         :return: None
         """
 
-        assert all(isinstance(val, list) for val in self.returnDictBottomValues(self.__filterDict)), \
+        assert all(isinstance(val, list) for val in self.returnDictBottomValues(self.__filterDict[self.datasetID])), \
             f'All values in filter dictionaries have to be lists, but are not'
 
     def returnDictBottomKeys(self, baseDict: dict, lst: list = None) -> list:
@@ -283,14 +284,14 @@ class DataParser:
         :return: None
         """
 
-        print(f'Starting filtering, applying {len(self.returnDictBottomKeys(self.__filterDict))} filters.')
+        print(f'Starting filtering, applying {len(self.returnDictBottomKeys(self.__filterDict[self.datasetID]))} filters.')
         ret = pd.DataFrame(index=self.data.index)
         # Future releases: as discussed before we could indeed work here with a plug and pray approach.
         #  we would need to introduce a filter manager and a folder structure where to look for filters.
         #  this is very similar code than the one from ioproc. If we want to go down this route we should
         #  take inspiration from the code there. It was not easy to get it right in the first place. This
         #  might be easy to code but hard to implement correctly.
-        for iKey, iVal in self.__filterDict.items():
+        for iKey, iVal in self.__filterDict[self.datasetID].items():
             if iKey == 'include':
                 ret = ret.join(self.setIncludeFilter(iVal, self.data.index))
             elif iKey == 'exclude':
@@ -367,7 +368,7 @@ class DataParser:
 
     def filterAnalysis(self, filterData: pd.DataFrame):
         """
-        Function supplies some aggregate info of the data after filtering to the user Function doesnt't change any
+        Function supplies some aggregate info of the data after filtering to the user Function does not change any
         class attributes
 
         :param filterData:
@@ -388,11 +389,25 @@ class DataParser:
 
         :return: No returns, operates only on the class instance
         """
-        dat = self.data
-        self.data = dat.loc[(dat['tripStartClock'] <= dat['tripEndClock']) | (dat['tripEndNextDay'] == 1), :]
-        # If we want to get rid of tripStartClock and tripEndClock (they are redundant variables)
-        # self.data = dat.loc[pd.to_datetime(dat.loc[:, 'tripStartHour']) <= pd.to_datetime(dat.loc[:, 'tripEndHour']) |
-        #                     (dat['tripEndNextDay'] == 1), :]
+
+        if self.datasetID == 'MiD17' or self.datasetID == 'MiD08':
+            dat = self.data
+            self.data = dat.loc[(dat['tripStartClock'] <= dat['tripEndClock']) | (dat['tripEndNextDay'] == 1), :]
+            # If we want to get rid of tripStartClock and tripEndClock (they are redundant variables)
+            # self.data = dat.loc[pd.to_datetime(dat.loc[:, 'tripStartHour']) <= pd.to_datetime(dat.loc[:, 'tripEndHour']) |
+            #                     (dat['tripEndNextDay'] == 1), :]
+
+    def addStrColumnFromVariable(self, colName: str, varName: str):
+        """
+        Replaces each occurence of a MiD/KiD variable e.g. 1,2,...,7 for weekdays with an explicitly mapped string e.g.
+        'MON', 'TUE',...,'SUN'.
+
+        :param colName: Name of the column in self.data where the explicit string info is stored
+        :param varName: Name of the VencoPy internal variable given in config/parseConfig['dataVariables']
+        :return: None
+        """
+        self.data.loc[:, colName] \
+            = self.data.loc[:, varName].replace(self.parseConfig['Replacements'][self.datasetID][varName])
 
     def addStrColumns(self, weekday=True, purpose=True):
         """
@@ -403,22 +418,34 @@ class DataParser:
         :return: None
         """
 
-        if weekday:
-            self.addStrColumnFromMidVariable(colName='weekdayStr', varName='tripStartWeekday')
-        if purpose:
-            self.addStrColumnFromMidVariable(colName='purposeStr', varName='tripPurpose')
+        if self.datasetID == 'MiD17' or self.datasetID == 'MiD08':
+            if weekday:
+                self.addStrColumnFromVariable(colName='weekdayStr', varName='tripStartWeekday')
+            if purpose:
+                self.addStrColumnFromVariable(colName='purposeStr', varName='tripPurpose')
 
-    def addStrColumnFromMidVariable(self, colName: str, varName: str):
-        """
-        Replaces each occurence of a MID variable e.g. 1,2,...,7 for weekdays with an explicitly mapped string e.g.
-        'MON', 'TUE',...,'SUN'.
+        if self.datasetID == 'KiD':
+            # from tripStartDate retrieve tripStartWeekday, tripStartWeek, tripStartYear, tripStartMonth, tripStartDay
+            # from tripStartClock retrieve tripStartHour, tripStartMinute
+            # from tripEndClock retrieve tripEndHour, tripEndMinute
+            self.data['tripStartDate'] = pd.to_datetime(self.data['tripStartDate'], format='%d.%m.%Y')
+            self.data['tripStartYear'] = self.data['tripStartDate'].dt.year
+            self.data['tripStartMonth'] = self.data['tripStartDate'].dt.month
+            self.data['tripStartDay'] = self.data['tripStartDate'].dt.day
+            self.data['tripStartWeekday'] = self.data['tripStartDate'].dt.weekday
+            self.data['tripStartWeek'] = self.data['tripStartDate'].dt.isocalendar().week
+            self.data['tripStartHour'] = pd.to_datetime(self.data['tripStartClock'], format='%H:%M').dt.hour
+            self.data['tripStartMinute'] = pd.to_datetime(self.data['tripStartClock'], format='%H:%M').dt.minute
+            self.data['tripEndHour'] = pd.to_datetime(self.data['tripEndClock'], format='%H:%M').dt.hour
+            self.data['tripEndMinute'] = pd.to_datetime(self.data['tripEndClock'], format='%H:%M').dt.minute
 
-        :param colName: Name of the column in self.data where the explicit string info is stored
-        :param varName: Name of the VencoPy internal variable given in config/parseConfig['dataVariables']
-        :return: None
-        """
-        self.data.loc[:, colName] \
-            = self.data.loc[:, varName].replace(self.parseConfig['Replacements'][self.datasetID][varName])
+
+            if weekday:
+                self.addStrColumnFromVariable(colName='weekdayStr', varName='tripStartWeekday')
+            if purpose:
+                self.addStrColumnFromVariable(colName='purposeStr', varName='tripPurpose')
+
+
 
     def composeTimestamp(self, data: pd.DataFrame = None,
                          colYear: str = 'tripStartYear',
@@ -444,6 +471,17 @@ class DataParser:
                         pd.to_timedelta(data.loc[:, colMin], unit='minute')
         # return data
 
+    def updateEndTimestamp(self) -> np.datetime64:
+        """
+        :return:
+        """
+        if self.datasetID == 'MiD17' or self.datasetID == 'MiD08':
+            endsFollowingDay = self.data['tripEndNextDay'] == 1
+            self.data.loc[endsFollowingDay, 'timestampEnd'] = self.data.loc[endsFollowingDay,
+                                                                        'timestampEnd'] + pd.offsets.Day(1)
+        if self.datasetID == 'KiD':
+
+
     def composeStartAndEndTimestamps(self) -> np.datetime64:
         """
         :return: Returns start and end time of a trip
@@ -455,51 +493,15 @@ class DataParser:
                               colName='timestampEnd')
         self.updateEndTimestamp()
 
-    def updateEndTimestamp(self) -> np.datetime64:
-        """
-        :return:
-        """
-        endsFollowingDay = self.data['tripEndNextDay'] == 1
-        self.data.loc[endsFollowingDay, 'timestampEnd'] = self.data.loc[endsFollowingDay,
-                                                                        'timestampEnd'] + pd.offsets.Day(1)
-
-    def calcNTripsPerDay(self):
-        """
-        :return: Returns number of trips trips per household person per day
-        """
-        return self.data['hhPersonID'].value_counts().mean()
-
-    def calcDailyTravelDistance(self):
-        """
-        :return: Returns daily travel distance per household
-        """
-        dailyDistances = self.data.loc[:, ['hhPersonID', 'tripDistance']].groupby(by=['hhPersonID']).sum()
-        return dailyDistances.mean()
-
-    def calcDailyTravelTime(self):
-        """
-        :return: Returns daily travel time per household person
-        """
-        travelTime = self.data.loc[:, ['hhPersonID', 'travelTime']].groupby(by=['hhPersonID']).sum()
-        return travelTime.mean()
-
-    def calcAverageTripDistance(self):
-        """
-        :return: Returns daily average trip distance
-        """
-        return self.data.loc[:, 'tripDistance'].mean()
-
 
 class ParseMID(DataParser):
     # Inherited data class to differentiate between abstract interfaces such as vencopy internal
     # variable namings and data set specific functions such as filters etc. Currently not used (06/14/2021)
     pass
 
-
-
 if __name__ == '__main__':
-    #datasetID = 'MiD17'
-    datasetID = 'KiD'
+    datasetID = 'MiD17' #options are MiD08, MiD17, KiD
+    #datasetID = 'KiD'
 
     pathLocalPathConfig = Path.cwd().parent / 'config' / 'localPathConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
     with open(pathLocalPathConfig) as ipf:
