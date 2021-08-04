@@ -120,7 +120,7 @@ class DataParser:
     def loadData(self):
         """
         Loads data specified in self.rawDataPath and stores it in self.rawData. Raises an exception if a invalid suffix
-        is specified in self.rawDataPath. READ IN OF CSV HAS NOT BEEN EXGTENSIVELY TESTED BEFORE VENCOPY BETA RELEASE.
+        is specified in self.rawDataPath. READ IN OF CSV HAS NOT BEEN EXTENSIVELY TESTED BEFORE BETA RELEASE.
 
         :return: None
         """
@@ -358,7 +358,7 @@ class DataParser:
 
     def filterAnalysis(self, filterData: pd.DataFrame):
         """
-        Function supplies some aggregate info of the data after filtering to the user Function doesnt't change any
+        Function supplies some aggregate info of the data after filtering to the user Function does not change any
         class attributes
 
         :param filterData:
@@ -453,32 +453,6 @@ class DataParser:
         endsFollowingDay = self.data['tripEndNextDay'] == 1
         self.data.loc[endsFollowingDay, 'timestampEnd'] = self.data.loc[endsFollowingDay,
                                                                         'timestampEnd'] + pd.offsets.Day(1)
-
-    def calcNTripsPerDay(self):
-        """
-        :return: Returns number of trips trips per household person per day
-        """
-        return self.data['hhPersonID'].value_counts().mean()
-
-    def calcDailyTravelDistance(self):
-        """
-        :return: Returns daily travel distance per household
-        """
-        dailyDistances = self.data.loc[:, ['hhPersonID', 'tripDistance']].groupby(by=['hhPersonID']).sum()
-        return dailyDistances.mean()
-
-    def calcDailyTravelTime(self):
-        """
-        :return: Returns daily travel time per household person
-        """
-        travelTime = self.data.loc[:, ['hhPersonID', 'travelTime']].groupby(by=['hhPersonID']).sum()
-        return travelTime.mean()
-
-    def calcAverageTripDistance(self):
-        """
-        :return: Returns daily average trip distance
-        """
-        return self.data.loc[:, 'tripDistance'].mean()
 
 
 class ParseMID(DataParser):

@@ -324,6 +324,35 @@ def readInputScalars(self, filePath) -> pd.DataFrame:
     scalarsOut = inputRaw.set_index('parameter')
     return scalarsOut
 
+def calcNTripsPerDay(self):
+    """
+    :return: Returns number of trips trips per household person per day
+    """
+    return self.data['hhPersonID'].value_counts().mean()
+
+def calcDailyTravelDistance(self):
+    """
+    :return: Returns daily travel distance per household
+    """
+    dailyDistances = self.data.loc[:, ['hhPersonID', 'tripDistance']].groupby(by=['hhPersonID']).sum()
+    return dailyDistances.mean()
+
+def calcDailyTravelTime(self):
+    """
+    :return: Returns daily travel time per household person
+    """
+    travelTime = self.data.loc[:, ['hhPersonID', 'travelTime']].groupby(by=['hhPersonID']).sum()
+    return travelTime.mean()
+
+def calcAverageTripDistance(self):
+    """
+    :return: Returns daily average trip distance
+    """
+    return self.data.loc[:, 'tripDistance'].mean()
+
+
+
+
 ### EXPERIMENTAL SANDBOX PART
 # def fillDayPurposesPerformant(tripData, purposeDataDays):  #FixMe: Ask Ben for performance improvements
 #     # This is an adaptation of fillDayPurposes()
