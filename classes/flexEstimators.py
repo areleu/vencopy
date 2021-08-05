@@ -22,7 +22,7 @@ from scripts.globalFunctions import createFileString, mergeVariables, calculateW
 
 class FlexEstimator:
     def __init__(self, globalConfig: dict, flexConfig : dict, evaluatorConfig: dict, ParseData,
-                 datasetID: str='MiD17'):
+                 datasetID: str):
         """
         Class to estimate uncontrolled charging, electricity drain, grid connection, auxilliary fuel, SOC min and
         SOC max profiles based on hourly driving and boolean grid connection profiles. Requires a .xlsx file specifying

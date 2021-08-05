@@ -19,7 +19,8 @@ from classes.evaluators import Evaluator
 
 if __name__ == '__main__':
     # Set dataset and config to analyze
-    datasetID = 'MiD17'
+    datasetID = 'KiD'
+    #datasetID = 'MiD17'
     # review: should the datasetID not be part of the config files?
     pathGlobalConfig = pathlib.Path.cwd() / 'config' / 'globalConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
     with open(pathGlobalConfig) as ipf:
@@ -55,10 +56,10 @@ if __name__ == '__main__':
     vpGrid.writeOutGridAvailability()
 
     # Evaluate drive and trip purpose profiles
-    vpEval = Evaluator(globalConfig=globalConfig, evaluatorConfig=evaluatorConfig,
-                       parseData=pd.Series(data=vpData, index=[datasetID]))
-    vpEval.hourlyAggregates = vpEval.calcVariableSpecAggregates(by=['tripStartWeekday'])
-    vpEval.plotAggregates()
+    # vpEval = Evaluator(globalConfig=globalConfig, evaluatorConfig=evaluatorConfig,
+    #                 parseData=pd.Series(data=vpData, index=[datasetID]))
+    # vpEval.hourlyAggregates = vpEval.calcVariableSpecAggregates(by=['tripStartWeekday'])
+    # vpEval.plotAggregates()
 
     # Estimate charging flexibility based on driving profiles and charge connection
     vpFlex = FlexEstimator(flexConfig=flexConfig, globalConfig=globalConfig, evaluatorConfig=evaluatorConfig, datasetID=datasetID, ParseData=vpData)

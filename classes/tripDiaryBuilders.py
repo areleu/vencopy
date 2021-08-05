@@ -17,9 +17,10 @@ from scripts.globalFunctions import createFileString
 
 
 class TripDiaryBuilder:
-    def __init__(self, tripConfig: dict, globalConfig: dict, ParseData, datasetID: str = 'MiD17'):
+    def __init__(self, tripConfig: dict, globalConfig: dict, ParseData, datasetID: str):
         self.tripConfig = tripConfig
         self.globalConfig = globalConfig
+        self.datasetID = datasetID
         self.parsedData = ParseData
         self.tripDataClean = None
         self.tripDistanceDiary = None
@@ -147,7 +148,10 @@ class TripDiaryBuilder:
         return hourlyArray
 
     def mergeTrips(self, tripData: pd.DataFrame) -> pd.DataFrame:
-        dataDay = tripData.groupby(['hhPersonID']).sum()
+        if self.datasetID == 'MiD17' or self.datasetID == 'MiD08':
+            dataDay = tripData.groupby(['hhPersonID']).sum()
+        else: # KiD
+            dataDay = tripData.groupby(['vehicleID']).sum()
         dataDay = dataDay.drop('tripID', axis=1)
         return dataDay
 
@@ -163,9 +167,14 @@ class TripDiaryBuilder:
         self.formatDF = self.initiateHourDataframe(indexCol=self.tripDataClean.index, nHours=globalConfig['numberOfHours'])
         fillHourValues = FillHourValues(data=self.tripDataClean, rangeFunction=self.initiateColRange)
         driveDataTrips = self.fillDataframe(self.formatDF, fillFunction=fillHourValues)
-        driveDataTrips.loc[:, ['hhPersonID', 'tripID']] = pd.DataFrame(self.tripDataClean.loc[:, ['hhPersonID',
+        if self.datasetID == 'MiD17' or self.datasetID == 'MiD08':
+            driveDataTrips.loc[:, ['hhPersonID', 'tripID']] = pd.DataFrame(self.tripDataClean.loc[:, ['hhPersonID',
                                                                                                   'tripID']])
-        driveDataTrips = driveDataTrips.astype({'hhPersonID': int, 'tripID': int})
+            driveDataTrips = driveDataTrips.astype({'hhPersonID': int, 'tripID': int})
+        else: #self.datasetID = 'KiD'
+            driveDataTrips.loc[:, ['vehicleID', 'tripID']] = pd.DataFrame(self.tripDataClean.loc[:, ['vehicleID',
+                                                                                                      'tripID']])
+            driveDataTrips = driveDataTrips.astype({'vehicleID': int, 'tripID': int})
         return self.mergeTrips(driveDataTrips)
         print('Finished trip distance diary setup')
 
@@ -234,12 +243,20 @@ class TripDiaryBuilder:
         # Solution 1: use enumerate in order to get rowNumber instead of index and then .iloc below
         # Solution 2: Rename columns
         for idx, iRow in tripData.iterrows():
-            isSameHPID = hpID == iRow['hhPersonID']
-            if not isSameHPID:
-                hpID = iRow['hhPersonID']
-                allWIDs = tripData.loc[tripData['hhPersonID'] == hpID, 'tripID']  # FIXME perf
-                minWID = allWIDs.min()  # FIXME perf
-                maxWID = allWIDs.max()  # FIXME perf
+            if self.datasetID == 'MiD17' or self.datasetID == 'MiD08':
+                isSameHPID = hpID == iRow['hhPersonID']
+                if not isSameHPID:
+                    hpID = iRow['hhPersonID']
+                    allWIDs = tripData.loc[tripData['hhPersonID'] == hpID, 'tripID']  # FIXME perf
+                    minWID = allWIDs.min()  # FIXME perf
+                    maxWID = allWIDs.max()  # FIXME perf
+            else:
+                isSameHPID = hpID == iRow['vehicleID']
+                if not isSameHPID:
+                    hpID = iRow['vehicleID']
+                    allWIDs = tripData.loc[tripData['vehicleID'] == hpID, 'tripID']  # FIXME perf
+                    minWID = allWIDs.min()  # FIXME perf
+                    maxWID = allWIDs.max()  # FIXME perf
 
             if iRow['tripID'] == 1:  # Differentiate if trip starts in first half hour or not
 
@@ -297,14 +314,14 @@ class TripDiaryBuilder:
         print('Finished purpose replacements')
         print(f'There are {len(self.tripPurposeDiary)} daily trip diaries.')
 
-    # improved purpose allocation approach
-    def mapHHPIDToTripID(self, tripData):
-        idCols = self.tripDataClean.loc[:, ['hhPersonID', 'tripID']]
-        idCols.loc['nextTripID'] = idCols['tripID'].shift(-1, fill_value=0)
-        tripDict = dict.fromkeys(set(idCols['hhPersonID']))
-        for ihhpID in tripDict.keys():
-            tripDict[ihhpID] = set(idCols.loc[idCols['hhPersonID'] == ihhpID, 'tripID'])
-        return tripDict
+    # # improved purpose allocation approach
+    # def mapHHPIDToTripID(self, tripData):
+    #     idCols = self.tripDataClean.loc[:, ['hhPersonID', 'tripID']]
+    #     idCols.loc['nextTripID'] = idCols['tripID'].shift(-1, fill_value=0)
+    #     tripDict = dict.fromkeys(set(idCols['hhPersonID']))
+    #     for ihhpID in tripDict.keys():
+    #         tripDict[ihhpID] = set(idCols.loc[idCols['hhPersonID'] == ihhpID, 'tripID'])
+    #     return tripDict
 
     def writeOut(self, globalConfig:dict, dataDrive: pd.DataFrame, dataPurpose: pd.DataFrame, datasetID: str = 'MiD17'):
         dataDrive.to_csv(Path(globalConfig['pathRelative']['input']) /
@@ -338,6 +355,8 @@ class FillHourValues:
 
 
 if __name__ == '__main__':
+    #datasetID = 'MiD17' #options are MiD08, MiD17, KiD
+    datasetID = 'KiD'
     from classes.dataParsers import DataParser
     pathGlobalConfig = Path.cwd().parent / 'config' / 'globalConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
     with open(pathGlobalConfig) as ipf:
@@ -355,5 +374,5 @@ if __name__ == '__main__':
     with open(pathLocalPathConfig) as ipf:
         localPathConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
     os.chdir(localPathConfig['pathAbsolute']['vencoPyRoot'])
-    vpData = DataParser(parseConfig=parseConfig, globalConfig=globalConfig, localPathConfig=localPathConfig, loadEncrypted=False)
-    vpDiary = TripDiaryBuilder(tripConfig=tripConfig, globalConfig=globalConfig, ParseData=vpData)
+    vpData = DataParser(parseConfig=parseConfig, globalConfig=globalConfig, localPathConfig=localPathConfig, loadEncrypted=False, datasetID=datasetID)
+    vpDiary = TripDiaryBuilder(tripConfig=tripConfig, globalConfig=globalConfig, ParseData=vpData, datasetID=datasetID)

@@ -16,7 +16,7 @@ from scripts.globalFunctions import createFileString
 
 
 class GridModeler:
-    def __init__(self, gridConfig: dict, globalConfig: dict, datasetID: str ='MiD17'):
+    def __init__(self, gridConfig: dict, globalConfig: dict, datasetID: str):
         """
         Class for modeling individual vehicle connection options dependent on parking purposes. Configurations on
         charging station availabilities can be parametrized in gridConfig. globalConfig and datasetID are needed for
@@ -48,7 +48,10 @@ class GridModeler:
         """
         print(f'Starting with charge connection replacement of location purposes')
         self.chargeAvailability = self.purposeData.replace(self.gridDistributions)
-        self.chargeAvailability.set_index(['hhPersonID'], inplace=True)
+        if self.datasetID == 'MiD17' or self.datasetID == 'MiD08':
+            self.chargeAvailability.set_index(['hhPersonID'], inplace=True)
+        else:
+            self.chargeAvailability.set_index(['vehicleID'], inplace=True)
         self.chargeAvailability = (~(self.chargeAvailability != True))
         print('Grid connection assignment complete')
 
@@ -64,6 +67,7 @@ class GridModeler:
 
 
 if __name__ == '__main__':
+    datasetID = 'KiD'
     pathGlobalConfig = Path.cwd().parent / 'config' / 'globalConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
     with open(pathGlobalConfig) as ipf:
         globalConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
@@ -74,6 +78,6 @@ if __name__ == '__main__':
     with open(pathLocalPathConfig) as ipf:
         localPathConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
     os.chdir(localPathConfig['pathAbsolute']['vencoPyRoot'])
-    vpg = GridModeler(gridConfig=gridConfig, globalConfig=globalConfig)
+    vpg = GridModeler(gridConfig=gridConfig, globalConfig=globalConfig, datasetID=datasetID)
     vpg.assignSimpleGridViaPurposes()
     vpg.writeOutGridAvailability()
