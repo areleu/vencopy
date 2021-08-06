@@ -11,6 +11,7 @@ import os
 import pathlib
 import pandas as pd
 import seaborn as sns
+import numpy as np
 from pathlib import Path
 import matplotlib.pyplot as plt
 from scripts.globalFunctions import createFileString, calculateWeightedAverage, mergeDataToWeightsAndDays, \
@@ -474,6 +475,41 @@ class Evaluator:
     def boxPlot(self, profiles):
         profiles.boxplot()
         plt.show()
+
+class chargingTransactionEvaluator:
+    def __init__(self, evaluatorConfig: dict, parseData, gridModeler, flexEstimator):
+        # globalConfig:dict, parseData: pd.Series = None,
+        """
+        Evaluator to specifically assess charging transaction data
+
+        :param evaluatorConfig: Evaluator config mainly for plot properties
+        :param parseData: Series with instances of VencoPy class ParseData and keys specifying the name of the
+            respective class
+        :param gridModeler: GridModeler instance for the analysis of charging transactions. The gridModeler holds both
+            parkPurposeDiaries and plugProfiles
+        :param flexEstimator: FlexEstimator instance providing results of the VencoPy run.
+        """
+
+        self.evaluatorConfig = evaluatorConfig
+        self.parseData = parseData
+        self.gridModeler = gridModeler
+        self.flexEstimator = flexEstimator
+        print('Charging transaction evaluator initialization complete')
+
+    def createTransactionData(self):
+        noTrans = self._countTransactions()
+        df = pd.DataFrame()
+        idxAll = pd.MultiIndex()
+        for iR in noTrans.iterrows():
+            idx = pd.MultiIndex.from_product([[noTrans.index[iR]], range(noTrans.iloc[iR])])
+            idxAll.append(idx)
+        print('blub')
+
+    def _countTransactions(self):
+        dfDiff = self.flexEstimator.chargeProfiles.diff(axis=1)
+        sTrans = pd.Series(data=1, index=dfDiff.index)
+        sTrans.loc[dfDiff.loc[:, 0] == 0, :] = 0
+        return sTrans + dfDiff.gt(0).sum(axis=1)
 
 
 if __name__ == '__main__':
