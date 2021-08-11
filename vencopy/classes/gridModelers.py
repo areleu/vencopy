@@ -12,7 +12,7 @@ from pathlib import Path
 import pandas as pd
 import yaml
 import os
-from scripts.globalFunctions import createFileString
+from vencopy.scripts.globalFunctions import createFileString
 
 
 class GridModeler:

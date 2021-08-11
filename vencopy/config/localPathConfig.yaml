@@ -1,0 +1,24 @@
+#-*- coding:utf-8 -*-
+
+# __version__ = '0.0.9'
+# __maintainer__ = 'Niklas Wulff 2019-02-12'
+# __contributors__ = 'Fabia Miorelli, Parth Butte'
+# __email__ = 'Niklas.Wulff@dlr.de'
+# __birthdate__ = '2019-02-12'
+# __status__ = 'dev'  # options are: dev, test, prod
+
+# This config holds all the local paths
+# During first configuration, optionally fill in absolute links on your system e.g. if you want to have post processed
+# output written to an energy system model input folder
+
+pathAbsolute:
+#    MiD17: C:/Users/butt_pa/Documents/MiD/B2_Regional-Datensatzpaket/STATA
+#    MiD08: C:/8_Work/Data/MiD08/MiD 2008_DVD/MiD 2008_DVD/Daten/STATA/STATA_Public Use File
+#    MiD17: C:/8_Work/Data/MiD17/B2_Regional-DatensatzpaketEncrypted/STATA
+#    KiD: C:/8_Work/Data/KiD/KiD2010_public_use_file/Daten/05_STATA/05-01_STATA-KiD2010_public_use_file
+    MiD08: C:/Users/wulf_ni/Documents/11 Data/Transport data/Germany/MiD/2008/MiD 2008_DVD/Daten/STATA/STATA_Public Use File
+    MiD17: C:/Users/wulf_ni/Documents/11 Data/Transport data/Germany/MiD/2017/proprietary/B2/STATA/
+#    vencoPyRoot: C:/repos/vencopy_internal/vencopy
+#    vencoPyRoot: C:/8_Work/VencoPy/VencoPy_internal/vencopy
+    vencoPyRoot: C:/vencopy_repo/
+

@@ -18,6 +18,8 @@ from classes.flexEstimators import FlexEstimator
 from classes.evaluators import Evaluator
 
 if __name__ == '__main__':
+    
+
     # Set dataset and config to analyze
     datasetID = 'MiD17'
     # review: should the datasetID not be part of the config files?

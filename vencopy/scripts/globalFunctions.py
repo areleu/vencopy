@@ -10,6 +10,8 @@ import pandas as pd
 import yaml
 import pathlib
 
+def setupFolder():
+    pass
 
 def createFileString(globalConfig: dict, fileKey: str, datasetID: str=None, manualLabel: str = '',
                      filetypeStr: str = 'csv'):

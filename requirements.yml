@@ -21,5 +21,6 @@ dependencies:
   - openpyxl
   - sphinx_rtd_theme
   - jupyterlab
+  - click
 
 

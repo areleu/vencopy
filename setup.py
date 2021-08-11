@@ -1,0 +1,32 @@
+from setuptools import setup, find_packages
+
+setup(
+    name='vencopy',
+    version='0.0.9',
+    description='Vehicle Energy Consumption in Python: A tool to simulate load flexibility of electric vehicle fleets.',
+    url='https://gitlab.com/dlr-ve/vencopy',
+    author='Niklas Wulff',
+    author_email='niklas.wulff@dlr.de',
+    license='BSD 3-clause',
+    # package_dir={'': 'vencopy'},
+    # packages=find_packages(where='vencopy'),
+    packages=['vencopy', 'vencopy.classes', 'vencopy.scripts'],
+    install_requires=['pandas',
+                      'matplotlib',
+                      'seaborn',
+                      'sphinx',
+                      'openpyxl',
+                      'sphinx_rtd_theme',
+                      'jupyterlab',
+                      'Click'],
+    package_data={'vencopy': ['./config', './tutorials']},
+    classifiers=[
+        'Development Status :: 4 - Beta',
+        'Intended Audience :: Science/Research',
+        'License :: OSI Approved :: BSD License',
+        'Operating System :: Microsoft :: Windows :: Windows 10',
+        'Operating System :: POSIX :: Linux',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
+        'Topic :: Scientific/Engineering'],
+)

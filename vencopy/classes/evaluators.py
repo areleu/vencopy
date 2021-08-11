@@ -13,7 +13,7 @@ import pandas as pd
 import seaborn as sns
 from pathlib import Path
 import matplotlib.pyplot as plt
-from scripts.globalFunctions import createFileString, calculateWeightedAverage, mergeDataToWeightsAndDays, \
+from vencopy.scripts.globalFunctions import createFileString, calculateWeightedAverage, mergeDataToWeightsAndDays, \
     writeProfilesToCSV
 # from classes.flexEstimators import FlexEstimator
 

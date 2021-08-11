@@ -17,7 +17,7 @@ import pandas as pd
 import numpy as np
 from random import seed, random
 
-from scripts.globalFunctions import createFileString, mergeVariables, calculateWeightedAverage, writeProfilesToCSV
+from vencopy.scripts.globalFunctions import createFileString, mergeVariables, calculateWeightedAverage, writeProfilesToCSV
 
 
 class FlexEstimator:
