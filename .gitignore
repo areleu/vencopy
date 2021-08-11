@@ -1,53 +1,22 @@
 # PyCharm project setup (.idea), jupyter notebook folders and precompiled bytecode (__pycache__)
 /.idea/
-/.ipynb_checkpoints/
 *__pycache__/
-/scripts/__pycache__/
+*/.ipynb_checkpoints/*
 
-/classes/.ipynb_checkpoints/*
-/config/.ipynb_checkpoints/*
-/scripts/.ipynb_checkpoints/*
-/tutorials/data_sampling/.ipynb_checkpoints/
-/tutorials/tutorial_01/.ipynb_checkpoints/
-/tutorials/tutorial_02/.ipynb_checkpoints/
-/tutorials/tutorial_03/.ipynb_checkpoints/
-/tutorials/tutorial_04/.ipynb_checkpoints/
-/tutorials/tutorial_05/.ipynb_checkpoints/
-
-# local outputs
-/output/*
-!/output/.gitkeep
-
-# old or irrelevant files and folders
-/administration
-/archive
-/scripts/lib.py
-/inputData/*.csv
-/inputData/emobpyData
-/inputData/archive
-/presentation
-/JupyterNotebooks
+# Package building related folders
+/vencopy.egg-info
+/build
+/dist
 
 # files still in process
 
 # log files
 debug.log
 Makefile
-demo_VencoPy.ipynb
 make.bat
 
 # Git version conflict files
 *.py.orig
-
-# documentation files on local machine
-/build
-
-# local run files
-runSES.py
-runDataAnalysis.py
-
-# data analysis csv
-MiD_data_analysis.csv
 
 # files with local paths
 /config/localPathConfig.yaml
