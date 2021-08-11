@@ -148,10 +148,7 @@ class TripDiaryBuilder:
         return hourlyArray
 
     def mergeTrips(self, tripData: pd.DataFrame) -> pd.DataFrame:
-        if self.datasetID == 'MiD17' or self.datasetID == 'MiD08':
-            dataDay = tripData.groupby(['hhPersonID']).sum()
-        else: # KiD
-            dataDay = tripData.groupby(['vehicleID']).sum()
+        dataDay = tripData.groupby(['genericID']).sum()
         dataDay = dataDay.drop('tripID', axis=1)
         return dataDay
 
@@ -167,14 +164,9 @@ class TripDiaryBuilder:
         self.formatDF = self.initiateHourDataframe(indexCol=self.tripDataClean.index, nHours=globalConfig['numberOfHours'])
         fillHourValues = FillHourValues(data=self.tripDataClean, rangeFunction=self.initiateColRange)
         driveDataTrips = self.fillDataframe(self.formatDF, fillFunction=fillHourValues)
-        if self.datasetID == 'MiD17' or self.datasetID == 'MiD08':
-            driveDataTrips.loc[:, ['hhPersonID', 'tripID']] = pd.DataFrame(self.tripDataClean.loc[:, ['hhPersonID',
+        driveDataTrips.loc[:, ['genericID', 'tripID']] = pd.DataFrame(self.tripDataClean.loc[:, ['genericID',
                                                                                                   'tripID']])
-            driveDataTrips = driveDataTrips.astype({'hhPersonID': int, 'tripID': int})
-        else: #self.datasetID = 'KiD'
-            driveDataTrips.loc[:, ['vehicleID', 'tripID']] = pd.DataFrame(self.tripDataClean.loc[:, ['vehicleID',
-                                                                                                      'tripID']])
-            driveDataTrips = driveDataTrips.astype({'vehicleID': int, 'tripID': int})
+        driveDataTrips = driveDataTrips.astype({'genericID': int, 'tripID': int})
         return self.mergeTrips(driveDataTrips)
         print('Finished trip distance diary setup')
 
@@ -219,11 +211,11 @@ class TripDiaryBuilder:
         maxWID = int()
         maxHour = len(purposeDataDays.columns)
 
-        # # uniques = tripData['hhPersonID'].unique()
+        # # uniques = tripData['genericID'].unique()
         #
-        # for iSubData in tripData.groupby('hhPersonID'):
+        # for iSubData in tripData.groupby('genericID'):
         #
-        #     currentPerson = tripData['hhPersonID'] == hpID
+        #     currentPerson = tripData['genericID'] == hpID
         #     allWIDs = tripData.loc[currentPerson, 'tripID']  # FIXME perf
         #     minWID = allWIDs.min()  # FIXME perf
         #     maxWID = allWIDs.max()  # FIXME perf
@@ -243,20 +235,12 @@ class TripDiaryBuilder:
         # Solution 1: use enumerate in order to get rowNumber instead of index and then .iloc below
         # Solution 2: Rename columns
         for idx, iRow in tripData.iterrows():
-            if self.datasetID == 'MiD17' or self.datasetID == 'MiD08':
-                isSameHPID = hpID == iRow['hhPersonID']
-                if not isSameHPID:
-                    hpID = iRow['hhPersonID']
-                    allWIDs = tripData.loc[tripData['hhPersonID'] == hpID, 'tripID']  # FIXME perf
-                    minWID = allWIDs.min()  # FIXME perf
-                    maxWID = allWIDs.max()  # FIXME perf
-            else:
-                isSameHPID = hpID == iRow['vehicleID']
-                if not isSameHPID:
-                    hpID = iRow['vehicleID']
-                    allWIDs = tripData.loc[tripData['vehicleID'] == hpID, 'tripID']  # FIXME perf
-                    minWID = allWIDs.min()  # FIXME perf
-                    maxWID = allWIDs.max()  # FIXME perf
+            isSameHPID = hpID == iRow['genericID']
+            if not isSameHPID:
+                hpID = iRow['genericID']
+                allWIDs = tripData.loc[tripData['genericID'] == hpID, 'tripID']  # FIXME perf
+                minWID = allWIDs.min()  # FIXME perf
+                maxWID = allWIDs.max()  # FIXME perf
 
             if iRow['tripID'] == 1:  # Differentiate if trip starts in first half hour or not
 
@@ -316,11 +300,11 @@ class TripDiaryBuilder:
 
     # # improved purpose allocation approach
     # def mapHHPIDToTripID(self, tripData):
-    #     idCols = self.tripDataClean.loc[:, ['hhPersonID', 'tripID']]
+    #     idCols = self.tripDataClean.loc[:, ['genericID', 'tripID']]
     #     idCols.loc['nextTripID'] = idCols['tripID'].shift(-1, fill_value=0)
-    #     tripDict = dict.fromkeys(set(idCols['hhPersonID']))
+    #     tripDict = dict.fromkeys(set(idCols['genericID']))
     #     for ihhpID in tripDict.keys():
-    #         tripDict[ihhpID] = set(idCols.loc[idCols['hhPersonID'] == ihhpID, 'tripID'])
+    #         tripDict[ihhpID] = set(idCols.loc[idCols['genericID'] == ihhpID, 'tripID'])
     #     return tripDict
 
     def writeOut(self, globalConfig:dict, dataDrive: pd.DataFrame, dataPurpose: pd.DataFrame, datasetID: str = 'MiD17'):

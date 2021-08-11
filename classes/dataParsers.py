@@ -63,6 +63,7 @@ class DataParser:
         self.addStrColumns()
         self.composeStartAndEndTimestamps()
         self.updateEndTimestamps()
+        self.harmonizeVariablesGenericIdNames()
         print('Parsing completed')
 
     def updateFilterDict(self) -> None:
@@ -505,6 +506,12 @@ class DataParser:
         """
         self.updateEndTimestamp()
 
+    def harmonizeVariablesGenericIdNames(self):
+        """
+
+        """
+        self.data['genericID'] = self.data[str(self.parseConfig['IDVariablesNames'][self.datasetID])]
+        print('Finished harmonization of ID variables')
 
 
 class ParseMID(DataParser):

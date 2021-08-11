@@ -54,7 +54,7 @@ class FlexEstimator:
         self.datasetID = datasetID
         self.driveProfilesIn, self.plugProfilesIn = self.readVencoInput(datasetID=datasetID)
         self.mergeDataToWeightsAndDays(ParseData)
-        self.weights = self.indexWeights(self.driveProfilesIn.loc[:, ['hhPersonID', 'tripStartWeekday', 'tripWeight']])
+        self.weights = self.indexWeights(self.driveProfilesIn.loc[:, ['genericID', 'tripStartWeekday', 'tripWeight']])
         # self.outputConfig = yaml.load(open(Path(self.globalConfig['pathRelative']['config']) /
         #                                    self.globalConfig['files']['outputConfig']), Loader=yaml.SafeLoader)
         self.driveProfiles, self.plugProfiles = self.indexDriveAndPlugData(self.driveProfilesIn, self.plugProfilesIn,
@@ -171,7 +171,6 @@ class FlexEstimator:
         """
         print('Reading Venco input scalars, drive profiles and boolean plug profiles')
 
-        #scalars = self.readInputScalars(self.flexConfig['inputDataScalars'])
         driveProfiles_raw = self.readInputCSV(Path(self.globalConfig['pathRelative']['input']) /
                                               createFileString(globalConfig=self.globalConfig,
                                                                fileKey='inputDataDriveProfiles',
@@ -215,13 +214,13 @@ class FlexEstimator:
     def indexWeights(self, weights: pd.DataFrame) -> pd.DataFrame:
         """
         Reduces the dtype from string to float if possible and sets the index of the weights to align with the indices
-        of drive and plug profiles (hhPersonIDs and tripStartWeekday).
+        of drive and plug profiles (genericID and tripStartWeekday).
 
         :param weights: dataframe containing the MiD trip weights of the original trips
         :return: An indexed pandas DataFrame of the MiD trip weights
         """
         weights = weights.convert_dtypes()
-        return weights.set_index(['hhPersonID', 'tripStartWeekday'], drop=True)
+        return weights.set_index(['genericID', 'tripStartWeekday'], drop=True)
 
     def findIndexCols(self, data: pd.DataFrame, nHours: int) -> list:
         """
@@ -249,7 +248,7 @@ class FlexEstimator:
         """
 
         indexCols = self.findIndexCols(data, nHours)
-        data = data.convert_dtypes()  # Reduce column data types if possible (specifically hhPersonID column to int)
+        data = data.convert_dtypes()  # Reduce column data types if possible (specifically genericID column to int)
         dataIndexed = data.set_index(list(indexCols))
 
         # Typecast column indices to int for later looping over a range
@@ -274,7 +273,7 @@ class FlexEstimator:
     def mergeDataToWeightsAndDays(self, ParseData):
         """
         Function to merging weekday and trip weight data to driving and plugging data of respective personHHIDs. It is
-        assumed that trips occur on one daz and trip weights are equal for all trips of one hhPersonID
+        assumed that trips occur on one daz and trip weights are equal for all trips of one genericID
 
         :param ParseData: Class instance of type DataParser
         :return: None
@@ -947,7 +946,8 @@ if __name__ == '__main__':
         localPathConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
     os.chdir(localPathConfig['pathAbsolute']['vencoPyRoot'])
 
-    vpData = DataParser(parseConfig=parseConfig, globalConfig=globalConfig, localPathConfig=localPathConfig, loadEncrypted=False)
+    vpData = DataParser(parseConfig=parseConfig, globalConfig=globalConfig, localPathConfig=localPathConfig,
+                        datasetID=datasetID, loadEncrypted=False)
     vpFlexEst = FlexEstimator(flexConfig=flexConfig, globalConfig=globalConfig, evaluatorConfig=evaluatorConfig,
                                 ParseData=vpData, datasetID=datasetID)
     vpFlexEst.run()

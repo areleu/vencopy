@@ -41,6 +41,13 @@ dataVariables:
 #    tripStartLocation: [ 'NA', 'KKZ_SO' ]
 #    tripEndLocation: [ 'NA', 'KKZ_ZO' ]
 
+
+IDVariablesNames:
+    MiD08: 'hhPersonID'
+    MiD17: 'hhPersonID'
+    KiD: 'vehicleID'
+
+
 inputDTypes:
     MiD17:
         isMIVDriver: 'bool'

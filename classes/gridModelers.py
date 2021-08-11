@@ -48,10 +48,7 @@ class GridModeler:
         """
         print(f'Starting with charge connection replacement of location purposes')
         self.chargeAvailability = self.purposeData.replace(self.gridDistributions)
-        if self.datasetID == 'MiD17' or self.datasetID == 'MiD08':
-            self.chargeAvailability.set_index(['hhPersonID'], inplace=True)
-        else:
-            self.chargeAvailability.set_index(['vehicleID'], inplace=True)
+        self.chargeAvailability.set_index(['genericID'], inplace=True)
         self.chargeAvailability = (~(self.chargeAvailability != True))
         print('Grid connection assignment complete')
 
