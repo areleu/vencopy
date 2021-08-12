@@ -44,9 +44,9 @@ files:
         vencoPyOutput: vencoPyOutput
         flexPlotName: flexProfileComparison
     KiD:
-        householdsDataRaw: KiD2010-Fahrzeug-Datei-puf.dta
-        personDataRaw: KiD2010-Fahrzeug-Datei-puf.dta
-        tripsDataRaw: KiD2010-Fahrten-Datei-puf.dta
+        householdsDataRaw:
+        personDataRaw:
+        tripsDataRaw: KiD2010_merged.dta
         tripsProcessedOld:
         purposesProcessedOld:
         purposesProcessed:

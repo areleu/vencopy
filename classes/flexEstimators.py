@@ -24,7 +24,7 @@ class FlexEstimator:
     def __init__(self, globalConfig: dict, flexConfig : dict, evaluatorConfig: dict, ParseData,
                  datasetID: str):
         """
-        Class to estimate uncontrolled charging, electricity drain, grid connection, auxilliary fuel, SOC min and
+        Class to estimate uncontrolled charging, electricity drain, grid connection, auxiliary fuel, SOC min and
         SOC max profiles based on hourly driving and boolean grid connection profiles. Requires a .xlsx file specifying
         a global value for specific electric consumption (in kWh/ 100 km) and a global rated capacity of considered
         charging stations. Automatically compiles input file names from the filekeys "inputDataDriveProfiles" /
@@ -928,7 +928,7 @@ class FlexEstimator:
 if __name__ == '__main__':
     from classes.dataParsers import DataParser
     from classes.evaluators import Evaluator
-    datasetID = 'MiD17'
+    datasetID = 'KiD'
     pathGlobalConfig = Path.cwd().parent / 'config' / 'globalConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
     with open(pathGlobalConfig) as ipf:
         globalConfig = yaml.load(ipf, Loader=yaml.SafeLoader)

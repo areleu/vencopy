@@ -20,8 +20,8 @@ dataVariables:
     personID: ['pid', 'P_ID', 'NA']
     hhPersonID: ['NA','HP_ID_Reg', 'NA']
     tripID: ['wid', 'W_ID', 'f00']
-    tripWeight: ['w_gew','W_GEW', 'NA']
-    tripScaleFactor: ['NA', 'W_HOCH', 'NA']
+    tripWeight: ['w_gew','W_GEW', 'k93']
+    tripScaleFactor: ['NA', 'W_HOCH', 'k90']
     tripStartClock: ['st_time', 'W_SZ', 'f04']
     tripEndClock: ['en_time', 'W_AZ', 'f10a']
     tripPurpose: ['w04', 'zweck', 'f07a']
@@ -90,6 +90,7 @@ inputDTypes:
     KiD:
         vehicleID: 'int'
         tripID: 'int'
+        tripWeight: 'float'
         tripStartClock: 'str'
         tripEndClock: 'str'
         tripPurpose: 'int'

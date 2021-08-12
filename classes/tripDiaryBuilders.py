@@ -25,13 +25,13 @@ class TripDiaryBuilder:
         self.tripDataClean = None
         self.tripDistanceDiary = None
         self.tripPurposeDiary = None
-        #self.tripDataClean = self.calculateConsistentHourlyShares(data=ParseData.data)
+        # self.tripDataClean = self.calculateConsistentHourlyShares(data=ParseData.data)
         # ONLY FOR DEBUGGING PURPOSES
         self.tripDataClean = self.calculateConsistentHourlyShares(data=ParseData.data.loc[0:2000, :])
         self.tripDistanceDiary = self.tripDistanceAllocation(globalConfig)
         self.tripPurposeAllocation()
         self.writeOut(globalConfig=globalConfig, datasetID=datasetID, dataDrive=self.tripDistanceDiary,
-                 dataPurpose=self.tripPurposeDiary)
+                      dataPurpose=self.tripPurposeDiary)
 
     def tripDuration(self, timestampStart: np.datetime64, timestampEnd: np.datetime64) -> np.datetime64:
         """
@@ -47,7 +47,8 @@ class TripDiaryBuilder:
         :param timestampStart: start time of a trip
         :param timestampEnd:  end time of a trip
         :param duration: duration of a trip
-        :return: Returns a data frame of share of individual trip for trips completed in an hour and more w.r.t start time of the trip
+        :return: Returns a data frame of share of individual trip for trips completed in an hour and more w.r.t start
+        time of the trip
         """
         isSameHourTrip = timestampStart.dt.hour == timestampEnd.dt.hour
         shareSameHour = (timestampEnd.dt.minute - timestampStart.dt.minute) / (duration.dt.seconds / 60)
@@ -61,7 +62,8 @@ class TripDiaryBuilder:
         :param timestampEnd: end time of a trip
         :param duration: duration of a trip
         :param isSameHourTrip: data frame containing same start time of various trips
-        :return: Returns a data frame of share of individual trip for trips completed in an hour and more w.r.t end time of the trip
+        :return: Returns a data frame of share of individual trip for trips completed in an hour and more w.r.t end
+        time of the trip
         """
         share = timestampEnd.dt.minute / (duration.dt.seconds / 60)
         return share.where(~isSameHourTrip, 0)
@@ -112,25 +114,27 @@ class TripDiaryBuilder:
         :param data: list of strings declaring the datasetIDs to be read in
         :param ts_st: start time of a trip
         :param ts_en: end time of a trip
-        :return: data frame consisting additional information regarding share of a trip, number of full hours and lenght of each trip
+        :return: data frame consisting additional information regarding share of a trip, number of full hours and
+        lenght of each trip
         """
         duration = self.tripDuration(data.loc[:, ts_st], data.loc[:, ts_en])
-        data.loc[:, 'shareStartHour'], data.loc[:, 'shareEndHour'] = self.calcDistanceShares(data, duration, ts_st, ts_en)
+        data.loc[:, 'shareStartHour'], data.loc[:, 'shareEndHour'] = self.calcDistanceShares(data, duration, ts_st,
+                                                                                             ts_en)
         data.loc[:, 'noOfFullHours'] = self.numberOfFullHours(data.loc[:, ts_st], data.loc[:, ts_en])
         data.loc[:, 'fullHourTripLength'] = self.calcFullHourTripLength(duration, data.loc[:, 'noOfFullHours'],
-                                                                   data.loc[:, 'tripDistance'])
+                                                                        data.loc[:, 'tripDistance'])
         return data
 
     def calculateConsistentHourlyShares(self, data: pd.DataFrame):
         print('Calculating hourly shares')
         if not data._is_view:
-            data = data.copy()  #FIXME: why is data._is_view False if we get a view
+            data = data.copy()  # FIXME: why is data._is_view False if we get a view
         tripDataWHourlyShares = self.calcHourlyShares(data, ts_st='timestampStart', ts_en='timestampEnd')
 
         # Filter out implausible hourly share combinations
         return tripDataWHourlyShares.loc[~((tripDataWHourlyShares['shareStartHour'] != 1) &
-                                                       (tripDataWHourlyShares['shareEndHour'] == 0) &
-                                                       (tripDataWHourlyShares['noOfFullHours'] == 0)), :]
+                                           (tripDataWHourlyShares['shareEndHour'] == 0) &
+                                           (tripDataWHourlyShares['noOfFullHours'] == 0)), :]
 
     def initiateHourDataframe(self, indexCol, nHours: int) -> pd.DataFrame:
         """
@@ -159,13 +163,14 @@ class TripDiaryBuilder:
         else:
             return None
 
-    def tripDistanceAllocation(self, globalConfig : dict):
+    def tripDistanceAllocation(self, globalConfig: dict):
         print('Trip distance diary setup starting')
-        self.formatDF = self.initiateHourDataframe(indexCol=self.tripDataClean.index, nHours=globalConfig['numberOfHours'])
+        self.formatDF = self.initiateHourDataframe(indexCol=self.tripDataClean.index,
+                                                   nHours=globalConfig['numberOfHours'])
         fillHourValues = FillHourValues(data=self.tripDataClean, rangeFunction=self.initiateColRange)
         driveDataTrips = self.fillDataframe(self.formatDF, fillFunction=fillHourValues)
         driveDataTrips.loc[:, ['genericID', 'tripID']] = pd.DataFrame(self.tripDataClean.loc[:, ['genericID',
-                                                                                                  'tripID']])
+                                                                                                 'tripID']])
         driveDataTrips = driveDataTrips.astype({'genericID': int, 'tripID': int})
         return self.mergeTrips(driveDataTrips)
         print('Finished trip distance diary setup')
@@ -201,7 +206,8 @@ class TripDiaryBuilder:
                 startHour = arrival.hour + 1  # Cases 2a and b
         return startHour
 
-    def fillDayPurposes(self, tripData: pd.DataFrame, purposeDataDays: pd.DataFrame) -> pd.DataFrame:  # FixMe: Ask Ben for performance improvements
+    def fillDayPurposes(self, tripData: pd.DataFrame, purposeDataDays: pd.DataFrame) -> pd.DataFrame:
+        # FixMe: Ask Ben for performance improvements
         """
         :param tripData: data frame holding all the information about individual trip
         :param purposeDataDays:
@@ -263,7 +269,7 @@ class TripDiaryBuilder:
                     purposeDataDays.loc[hpID, range(iRow['tripEndHour'] + 1, maxHour)] = 'HOME'
             else:
                 purposeHourStart = self.determinePurposeStartHour(tripData.loc[idxOld, 'timestampStart'],
-                                                             tripData.loc[idxOld, 'timestampEnd'])  # FIXME perf?
+                                                                  tripData.loc[idxOld, 'timestampEnd'])  # FIXME perf?
                 if iRow['timestampStart'].minute <= 30:
                     hoursBetween = range(purposeHourStart,
                                          iRow['tripStartHour'])  # FIXME: case differentiation on arrival hour
@@ -281,7 +287,8 @@ class TripDiaryBuilder:
                 # else:
                 #     # hoursBetween = range(purposeHourStart,
                 #     #                      iRow['tripStartHour'] + 1)
-                #     purposeDataDays.loc[hpID, purposeHourStart:iRow['tripStartHour'] + 1] = tripData.loc[idxOld, 'purposeStr']
+                #     purposeDataDays.loc[hpID, purposeHourStart:iRow['tripStartHour'] + 1] = tripData.loc[idxOld,
+                #     'purposeStr']
                 if iRow['tripID'] == maxWID:
                     if iRow['timestampEnd'].minute <= 30:
                         purposeDataDays.loc[hpID, range(iRow['tripEndHour'], maxHour)] = 'HOME'
@@ -307,13 +314,14 @@ class TripDiaryBuilder:
     #         tripDict[ihhpID] = set(idCols.loc[idCols['genericID'] == ihhpID, 'tripID'])
     #     return tripDict
 
-    def writeOut(self, globalConfig:dict, dataDrive: pd.DataFrame, dataPurpose: pd.DataFrame, datasetID: str = 'MiD17'):
+    def writeOut(self, globalConfig: dict, dataDrive: pd.DataFrame, dataPurpose: pd.DataFrame, datasetID: str = 'MiD17'):
         dataDrive.to_csv(Path(globalConfig['pathRelative']['input']) /
                          createFileString(globalConfig=globalConfig, fileKey='inputDataDriveProfiles',
                                           datasetID=datasetID),
                          na_rep=0)
         dataPurpose.to_csv(Path(globalConfig['pathRelative']['input']) /
-                          createFileString(globalConfig=globalConfig, fileKey='purposesProcessed', datasetID=datasetID))
+                           createFileString(globalConfig=globalConfig, fileKey='purposesProcessed',
+                                            datasetID=datasetID))
         print(f"Drive data and trip purposes written to files "
               f"{createFileString(globalConfig=globalConfig, fileKey='inputDataDriveProfiles', datasetID=datasetID)} "
               f"and {createFileString(globalConfig=globalConfig, fileKey='purposesProcessed', datasetID=datasetID)}")
@@ -339,10 +347,10 @@ class FillHourValues:
 
 
 if __name__ == '__main__':
-    #datasetID = 'MiD17' #options are MiD08, MiD17, KiD
+    # datasetID = 'MiD17' #options are MiD08, MiD17, KiD
     datasetID = 'KiD'
     from classes.dataParsers import DataParser
-    pathGlobalConfig = Path.cwd().parent / 'config' / 'globalConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
+    pathGlobalConfig = Path.cwd().parent / 'config' / 'globalConfig.yaml'
     with open(pathGlobalConfig) as ipf:
         globalConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
     pathParseConfig = Path.cwd().parent / 'config' / 'parseConfig.yaml'
@@ -358,5 +366,6 @@ if __name__ == '__main__':
     with open(pathLocalPathConfig) as ipf:
         localPathConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
     os.chdir(localPathConfig['pathAbsolute']['vencoPyRoot'])
-    vpData = DataParser(parseConfig=parseConfig, globalConfig=globalConfig, localPathConfig=localPathConfig, loadEncrypted=False, datasetID=datasetID)
+    vpData = DataParser(parseConfig=parseConfig, globalConfig=globalConfig, localPathConfig=localPathConfig,
+                        loadEncrypted=False, datasetID=datasetID)
     vpDiary = TripDiaryBuilder(tripConfig=tripConfig, globalConfig=globalConfig, ParseData=vpData, datasetID=datasetID)

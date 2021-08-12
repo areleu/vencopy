@@ -221,6 +221,8 @@ class DataParser:
             # German df has commas instead of dots in floats
             for i, x in enumerate(list(self.data.tripDistance)):
                 self.data.at[i, 'tripDistance'] = x.replace(',', '.')
+            for i, x in enumerate(list(self.data.tripWeight)):
+                self.data.at[i, 'tripWeight'] = x.replace(',', '.')
             self.data = self.data.astype(self.subDict)
         else:
             conversionDict = self.parseConfig['inputDTypes'][self.datasetID]
