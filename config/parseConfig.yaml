@@ -135,7 +135,7 @@ filterDicts:
             tripStartClock: ['-1:-1']
             tripEndClock: ['-1:-1']
             tripStartDate: ['-1']
-            tripPurpose: [-1]
+            tripPurpose: []
         greaterThan:
         smallerThan:
             tripDistance: [2500]

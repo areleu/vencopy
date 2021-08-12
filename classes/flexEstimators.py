@@ -295,7 +295,7 @@ class FlexEstimator:
         scaled with the specific consumption assumption.
         """
 
-        return driveProfiles * flexConfig['inputDataScalars']['Electric_consumption_NEFZ'] / float(100)
+        return driveProfiles * flexConfig['inputDataScalars'][self.datasetID]['Electric_consumption_NEFZ'] / float(100)
 
     def calcChargeProfiles(self, plugProfiles: pd.DataFrame, flexConfig) -> pd.DataFrame:
         '''
@@ -307,7 +307,7 @@ class FlexEstimator:
         :return: Returns scaled plugProfile in the same format as plugProfiles.
         '''
 
-        return plugProfiles * flexConfig['inputDataScalars']['Rated_power_of_charging_column']
+        return plugProfiles * flexConfig['inputDataScalars'][self.datasetID]['Rated_power_of_charging_column']
 
     def calcChargeMaxProfiles(self, chargeProfiles: pd.DataFrame, consumptionProfiles: pd.DataFrame,
                               nIter: int) -> pd.DataFrame:
@@ -328,8 +328,8 @@ class FlexEstimator:
         """
 
         chargeMaxProfiles = chargeProfiles.copy()
-        batCapMin = self.flexConfig['inputDataScalars']['Battery_capacity'] * self.flexConfig['inputDataScalars']['Minimum_SOC']
-        batCapMax = self.flexConfig['inputDataScalars']['Battery_capacity'] * self.flexConfig['inputDataScalars']['Maximum_SOC']
+        batCapMin = self.flexConfig['inputDataScalars'][self.datasetID]['Battery_capacity'] * self.flexConfig['inputDataScalars'][self.datasetID]['Minimum_SOC']
+        batCapMax = self.flexConfig['inputDataScalars'][self.datasetID]['Battery_capacity'] * self.flexConfig['inputDataScalars'][self.datasetID]['Maximum_SOC']
         nHours = self.scalarsProc['noHours']
         for idxIt in range(nIter):
             print(f'Starting with iteration {idxIt}')
@@ -405,8 +405,8 @@ class FlexEstimator:
         # the hardcoding of the column names can cause a lot of problems for people later on if we do not ship
         # the date with the tool. I would recommend to move these column names to a config file similar to i18n
         # strategies
-        consumptionPower = flexConfig['inputDataScalars']['Electric_consumption_NEFZ']
-        consumptionFuel = flexConfig['inputDataScalars']['Fuel_consumption_NEFZ']
+        consumptionPower = flexConfig['inputDataScalars'][self.datasetID]['Electric_consumption_NEFZ']
+        consumptionFuel = flexConfig['inputDataScalars'][self.datasetID]['Fuel_consumption_NEFZ']
 
         # initialize data set for filling up later on
         driveProfilesFuelAux = chargeMaxProfiles.copy()
@@ -445,10 +445,10 @@ class FlexEstimator:
             format as chargeProfiles, consumptionProfiles and other input parameters.
         """
         chargeMinProfiles = chargeProfiles.copy()
-        batCapMin = self.flexConfig['inputDataScalars']['Battery_capacity'] * self.flexConfig['inputDataScalars']['Minimum_SOC']
-        batCapMax = self.flexConfig['inputDataScalars']['Battery_capacity'] * self.flexConfig['inputDataScalars']['Maximum_SOC']
-        consElectric = self.flexConfig['inputDataScalars']['Electric_consumption_NEFZ']
-        consGasoline = self.flexConfig['inputDataScalars']['Fuel_consumption_NEFZ']
+        batCapMin = self.flexConfig['inputDataScalars'][self.datasetID]['Battery_capacity'] * self.flexConfig['inputDataScalars'][self.datasetID]['Minimum_SOC']
+        batCapMax = self.flexConfig['inputDataScalars'][self.datasetID]['Battery_capacity'] * self.flexConfig['inputDataScalars'][self.datasetID]['Maximum_SOC']
+        consElectric = self.flexConfig['inputDataScalars'][self.datasetID]['Electric_consumption_NEFZ']
+        consGasoline = self.flexConfig['inputDataScalars'][self.datasetID]['Fuel_consumption_NEFZ']
         nHours = self.scalarsProc['noHours']
         for idxIt in range(nIter):
             for iHour in range(nHours):
@@ -539,11 +539,11 @@ class FlexEstimator:
         indexDSM and the same indices as the other profiles.
         """
 
-        boolBEV = self.flexConfig['inputDataScalars']['Is_BEV?']
-        minDailyMileage = self.flexConfig['inputDataScalars']['Minimum_daily_mileage']
-        batSize = self.flexConfig['inputDataScalars']['Battery_capacity']
-        socMax = self.flexConfig['inputDataScalars']['Maximum_SOC']
-        socMin = self.flexConfig['inputDataScalars']['Minimum_SOC']
+        boolBEV = self.flexConfig['inputDataScalars'][self.datasetID]['Is_BEV?']
+        minDailyMileage = self.flexConfig['inputDataScalars'][self.datasetID]['Minimum_daily_mileage']
+        batSize = self.flexConfig['inputDataScalars'][self.datasetID]['Battery_capacity']
+        socMax = self.flexConfig['inputDataScalars'][self.datasetID]['Maximum_SOC']
+        socMin = self.flexConfig['inputDataScalars'][self.datasetID]['Minimum_SOC']
         filterCons = driveProfiles.copy()
         filterCons['randNo'] = randNos
         filterCons['bolFuelDriveTolerance'] = driveProfilesFuelAux.sum(axis='columns') * boolBEV < fuelDriveTolerance
@@ -574,8 +574,8 @@ class FlexEstimator:
         :return: Returns electric demand from driving filtered and aggregated to one fleet.
         """
 
-        consumptionPower = self.flexConfig['inputDataScalars']['Electric_consumption_NEFZ']
-        consumptionFuel = self.flexConfig['inputDataScalars']['Fuel_consumption_NEFZ']
+        consumptionPower = self.flexConfig['inputDataScalars'][self.datasetID]['Electric_consumption_NEFZ']
+        consumptionFuel = self.flexConfig['inputDataScalars'][self.datasetID]['Fuel_consumption_NEFZ']
         indexCons = filterCons.loc[:, 'indexCons']
         indexDSM = filterCons.loc[:, 'indexDSM']
         nHours = self.scalarsProc['noHours']
@@ -672,7 +672,7 @@ class FlexEstimator:
         :return: Writes the normalized profiles to the DataManager under the specified keys
         """
 
-        normReference = self.flexConfig['inputDataScalars']['Battery_capacity']
+        normReference = self.flexConfig['inputDataScalars'][self.datasetID]['Battery_capacity']
         socMinNorm = socMin.div(float(normReference))
         socMaxNorm = socMax.div(float(normReference))
         return socMinNorm, socMaxNorm
@@ -858,12 +858,12 @@ class FlexEstimator:
         """
 
         if profType == 'electric':
-            consumptionElectricNEFZ = self.flexConfig['inputDataScalars']['Electric_consumption_NEFZ']
-            consumptionElectricArtemis = self.flexConfig['inputDataScalars']['Electric_consumption_Artemis']
+            consumptionElectricNEFZ = self.flexConfig['inputDataScalars'][self.datasetID]['Electric_consumption_NEFZ']
+            consumptionElectricArtemis = self.flexConfig['inputDataScalars'][self.datasetID]['Electric_consumption_Artemis']
             corrFactor = consumptionElectricArtemis / consumptionElectricNEFZ
         elif profType == 'fuel':
-            consumptionFuelNEFZ = self.flexConfig['inputDataScalars']['Fuel_consumption_NEFZ']
-            consumptionFuelArtemis = self.flexConfig['inputDataScalars']['Fuel_consumption_Artemis']
+            consumptionFuelNEFZ = self.flexConfig['inputDataScalars'][self.datasetID]['Fuel_consumption_NEFZ']
+            consumptionFuelArtemis = self.flexConfig['inputDataScalars'][self.datasetID]['Fuel_consumption_Artemis']
             corrFactor = consumptionFuelArtemis / consumptionFuelNEFZ
         else:
             raise Exception(f'Either parameter "{profType}" is not given or not assigned to either "electric" or '
