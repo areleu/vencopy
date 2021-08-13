@@ -338,7 +338,7 @@ class FillHourValues:
 
 
 if __name__ == '__main__':
-    from classes.dataParsers import DataParser
+    from vencopy.classes.dataParsers import DataParser
     pathGlobalConfig = Path.cwd().parent / 'config' / 'globalConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
     with open(pathGlobalConfig) as ipf:
         globalConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
@@ -355,5 +355,6 @@ if __name__ == '__main__':
     with open(pathLocalPathConfig) as ipf:
         localPathConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
     os.chdir(localPathConfig['pathAbsolute']['vencoPyRoot'])
-    vpData = DataParser(parseConfig=parseConfig, globalConfig=globalConfig, localPathConfig=localPathConfig, loadEncrypted=False)
+    vpData = DataParser(parseConfig=parseConfig, globalConfig=globalConfig, localPathConfig=localPathConfig,
+                        loadEncrypted=False)
     vpDiary = TripDiaryBuilder(tripConfig=tripConfig, globalConfig=globalConfig, ParseData=vpData)

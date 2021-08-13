@@ -29,13 +29,13 @@ setup(
     # packages=find_packages(where='vencopy'),
     packages=['vencopy', 'vencopy.classes', 'vencopy.scripts'],
     package_data={'': dataFilePaths},
-    install_requires=['pandas >= 1.1.1',  # 1.1.1
-                      'seaborn >= 0.9.0',  # 0.9.0
-                      'sphinx >= 2.3.1',  # 2.3.1
-                      'openpyxl >= 3.0.3',  # 3.0.3
-                      'sphinx_rtd_theme >= 0.5.2',  # 0.5.2
-                      'jupyterlab >= 3.1.0',  # 3.1.0
-                      'Click >= 8.0.1',  # 8.0.1
+    install_requires=['pandas >= 1.1.1, <= 1.2.5',
+                      'seaborn >= 0.9.0',
+                      'sphinx >= 2.3.1',
+                      'openpyxl >= 3.0.3',
+                      'sphinx_rtd_theme >= 0.5.2',
+                      'jupyterlab >= 3.1.0',
+                      'Click >= 8.0.1',
                       'pyyaml >= 5.1.2'],
     entry_points={
         'console_scripts': [

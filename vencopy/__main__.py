@@ -4,10 +4,11 @@ __contributors__ = 'Fabia Miorelli, Benjamin Fuchs'
 __credits__ = 'German Aerospace Center (DLR)'
 __license__ = 'BSD-3-Clause'
 
-import click
 import os
+import yaml
 import shutil
 import pathlib
+import click
 import vencopy
 
 
@@ -25,13 +26,13 @@ def create(name: str, tutorials: bool):
     if not os.path.exists(target):
         os.mkdir(target)
         setupFolders(src=source, trg=target, tutorials=tutorials)
-        click.echo(f'VecnoPy user folder created under {target}')
+        click.echo(f'VencoPy user folder created under {target}')
     elif os.path.exists(target) and not os.path.exists(target / 'run.py'):
         setupFolders(src=source, trg=target, tutorials=tutorials)
-        click.echo(f'VecnoPy user folder filled under {target}')
+        click.echo(f'VencoPy user folder filled under {target}')
     else:
         click.echo('File run.py already exists in specified folder, for a new setup please specify a non-existent '
-                   'folder or delete the run.py file')
+                   'folder name')
 
 
 def setupFolders(src: pathlib.Path, trg: pathlib.Path, tutorials: bool):
@@ -49,6 +50,17 @@ def setupFolders(src: pathlib.Path, trg: pathlib.Path, tutorials: bool):
     shutil.copytree(src=src / 'config', dst=trg / 'config')
     if tutorials:
         shutil.copytree(src=src / 'tutorials', dst=trg / 'tutorials')
+    updateLocalPathCfg(newVPRoot=trg)
+
+
+def updateLocalPathCfg(newVPRoot: pathlib.Path):
+    with open(newVPRoot / 'config' / 'localPathConfig.yaml') as f:
+        pathCfg = yaml.load(f, Loader=yaml.SafeLoader)
+
+    pathCfg['pathAbsolute']['vencoPyRoot'] = newVPRoot.__str__()
+
+    with open(newVPRoot / 'config' / 'localPathConfig.yaml', 'w') as f:
+        yaml.dump(pathCfg, f)
 
 
 if __name__ == '__main__':
