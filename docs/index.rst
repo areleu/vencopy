@@ -29,6 +29,7 @@ Indices and tables
     functions
     filtering
     outputProfileSpecification
+    releaseTimeline
     publications
     howToContribute
 
