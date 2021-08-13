@@ -3,9 +3,9 @@
 
 
 # VencoPy README File
-- Author: Niklas Wulff
+- Authors: Niklas Wulff, Fabia Miorelli
 - Contact: niklas.wulff@dlr.de
-- Version: 0.0.9 (pre-release)
+- Version: 0.1.0
 
 Contents
 ========
