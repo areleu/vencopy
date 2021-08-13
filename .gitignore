@@ -8,8 +8,6 @@
 /build
 /dist
 
-# files still in process
-
 # log files
 debug.log
 Makefile

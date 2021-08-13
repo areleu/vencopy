@@ -11,24 +11,27 @@ import pathlib
 import vencopy
 
 
+# @click.option("--dir", default='', help='Specify separate aboslute path where the user folder should be set up')
 @click.command()
 @click.option("--name", default='vencopy_user', prompt="Please type the user folder name:",
               help="The folder name of the vencopy user folder created at command line working directory")
 @click.option("--tutorials", default='true', help='Specify if tutorials should be copied to the user folder on set up. '
                                                   'Defaults to true')
-# @click.option("--dir", default='', help='Specify separate aboslute path where the user folder should be set up')
 def create(name: str, tutorials: bool):
     """VencoPy folder set up after installation"""
     cwd = pathlib.Path(os.getcwd())
     target = cwd / name
     source = pathlib.Path(vencopy.__file__).parent.resolve()
-    if not os.path.exist(target):
+    if not os.path.exists(target):
         os.mkdir(target)
-        setupFolders(src=target, trg=tutorials)
-    elif os.path.exist(target) and not os.path.exist(target / 'run.py'):
-        setupFolders(src=source, trg=target)
+        setupFolders(src=source, trg=target, tutorials=tutorials)
+        click.echo(f'VecnoPy user folder created under {target}')
+    elif os.path.exists(target) and not os.path.exists(target / 'run.py'):
+        setupFolders(src=source, trg=target, tutorials=tutorials)
+        click.echo(f'VecnoPy user folder filled under {target}')
     else:
-        click.echo('VencoPy user folder is already set up')
+        click.echo('File run.py already exists in specified folder, for a new setup please specify a non-existent '
+                   'folder or delete the run.py file')
 
 
 def setupFolders(src: pathlib.Path, trg: pathlib.Path, tutorials: bool):
@@ -43,9 +46,10 @@ def setupFolders(src: pathlib.Path, trg: pathlib.Path, tutorials: bool):
     os.mkdir(trg / 'inputData')
     os.mkdir(trg / 'output')
     shutil.copy(src=src / 'run.py', dst=trg)
-    shutil.copy(src=src / 'config', dst=trg)
+    shutil.copytree(src=src / 'config', dst=trg / 'config')
     if tutorials:
-        shutil.copy(src=src / 'tutorials', dst=trg)
+        shutil.copytree(src=src / 'tutorials', dst=trg / 'tutorials')
+
 
 if __name__ == '__main__':
     create()
