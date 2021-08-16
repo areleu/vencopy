@@ -10,8 +10,10 @@ import pandas as pd
 import yaml
 import pathlib
 
+
 def setupFolder():
     pass
+
 
 def createFileString(globalConfig: dict, fileKey: str, datasetID: str=None, manualLabel: str = '',
                      filetypeStr: str = 'csv'):
@@ -29,15 +31,9 @@ def createFileString(globalConfig: dict, fileKey: str, datasetID: str=None, manu
 
     if datasetID is None:
 
-        return "%s_%s%s.%s" % (globalConfig['files'][fileKey],
-                               globalConfig['labels']['runLabel'],
-                               manualLabel,
-                               filetypeStr)
-    return "%s_%s%s_%s.%s" % (globalConfig['files'][datasetID][fileKey],
-                              globalConfig['labels']['runLabel'],
-                              manualLabel,
-                              datasetID,
-                              filetypeStr)
+        return f"{globalConfig['files'][fileKey]}_{globalConfig['labels']['runLabel']}_{manualLabel}.{filetypeStr}"
+    return f"{globalConfig['files'][datasetID][fileKey]}_{globalConfig['labels']['runLabel']}_{manualLabel}_" \
+           f"{datasetID}.{filetypeStr}"
 
 
 def mergeVariables(data, variableData, variables):
@@ -84,10 +80,10 @@ def writeProfilesToCSV(profileDictOut, globalConfig: dict, singleFile=True, data
     if singleFile:
         dataOut = pd.DataFrame(profileDictOut)
         dataOut.to_csv(pathlib.Path(globalConfig['pathRelative']['flexOutput']) /
-                       createFileString(globalConfig=globalConfig, fileKey='vencoPyOutput',
+                       createFileString(globalConfig=globalConfig, fileKey='output',
                                         manualLabel=globalConfig['labels']['technologyLabel'], datasetID=datasetID),
                        header=True)
     else:
         for iName, iProf in profileDictOut.items():
             iProf.to_csv(pathlib.Path(globalConfig['pathRelative']['flexOutput']) /
-                         pathlib.Path(r'vencoPyOutput_' + iName + datasetID + '.csv'), header=True)
+                         pathlib.Path(f'vencopy_{iName}_{datasetID}.csv'), header=True)

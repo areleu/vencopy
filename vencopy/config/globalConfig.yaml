@@ -33,7 +33,7 @@ files:
         purposesProcessed: inputProfiles_Purpose  # inputProfiles_Purpose_RUNLABEL_MiD17.csv
         inputDataDriveProfiles: inputProfiles_Drive  # inputProfiles_Drive_RUNLABEL_MiD17.csv
         inputDataPlugProfiles: inputProfiles_Plug  # inputProfiles_Plug_RUNLABEL_MiD17.csv
-        vencoPyOutput: vencoPyOutput
+        output: vencopy
         flexPlotName: flexProfileComparison
     MiD08:
         householdsDataRaw: MiD2008_PUF_Haushalte.dta
@@ -44,16 +44,16 @@ files:
         purposesProcessed: inputProfiles_Purpose  # inputProfiles_Purpose_RUNLABEL_MiD08.csv
         inputDataDriveProfiles: inputProfiles_Drive  # inputProfiles_Drive_RUNLABEL_MiD08.csv
         inputDataPlugProfiles: inputProfiles_Plug  # inputProfiles_Plug_RUNLABEL_MiD08.csv
-        vencoPyOutput: vencoPyOutput
+        output: vencopy
         flexPlotName: flexProfileComparison
-    vencoPyOutput: vencoPyOutput
+    output: output
     aggPlotName: mobilityComparison
     flexPlotName: flexProfileComparison
     outputConfig: outputConfigREMix.yaml
 
 
 labels:
-    runLabel: masterBranch
-    technologyLabel:
-    outputFileName: VencoPy_output
+    runLabel: beta
+    technologyLabel: BEV
+    outputFileName: vencopy
     strAdd:

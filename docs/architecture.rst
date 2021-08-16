@@ -10,8 +10,11 @@ Architecture documentation
 General structure of the framework
 ---------------------------------------------------
 
-The figure below shows the detailed VencoPy components in a developer diagram. The four components - implemented as Python classes - DataParser, TripDiaryBuilder, GridModeler and FlexEstimator can be clearly distinguished. A fifth component, Evaluator, used to create the plots for this work is not shown in Figure 1 as it is not needed to calculate results from VencoPy
-A brief description of the classes is presented below. For a more detailed algebraic description of the tool please refer to the publications section.
+The figure below shows the detailed VencoPy components in a developer diagram. The four components - implemented as 
+Python classes - DataParser, TripDiaryBuilder, GridModeler and FlexEstimator can be clearly distinguished. A fifth 
+component, Evaluator, used to create the plots for this work is not shown in the figure as it is not needed to calculate 
+results from VencoPy. A brief description of the classes is presented below. For a more detailed algebraic description 
+of the tool please refer to the :ref:`publications` section.
 
 
 .. image:: figures/vencopy_classes.png
@@ -107,7 +110,7 @@ Quality values
 ---------------------------------------------------
 
 .. list-table:: Quality values
-   :widths: 50, 50
+   :widths: 35, 65
    :header-rows: 1
 
    * - Value priority
@@ -129,17 +132,17 @@ Organizational information
 ---------------------------------------------------
 
 .. list-table:: requirements
-   :widths: 50, 50
+   :widths: 35, 65
    :header-rows: 1
 
    * - Requirement
      - Context
    * - Software Engineering Team (SET)
-     - Niklas Wulff, Benjamin Fuchs
+     - Niklas Wulff, Fabia Miorelli, Benjamin Fuchs
    * - Stakeholders
-     - Hans Christian Gils, Department of energy system analysis at Institute of Networked Energy Systems, DLR
+     - Hans Christian Gils, Department of Energy Systems Analysis at Institute of Networked Energy Systems, DLR
    * - Timeline
-     - Alpha release in Q3 2020, Beta release in Q2 2021
+     - Alpha release in Q4 2020, Beta release in Q3 2021, for further releases planned, see :ref:`releaseTimeline`
    * - Open source ready
      - Features, dependencies and components which are contraindicative or at odds with an open source publication should not be used
    * - Development tools

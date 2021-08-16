@@ -32,7 +32,7 @@ setup(
                       'sphinx >= 2.3.1',
                       'openpyxl >= 3.0.3',
                       'sphinx_rtd_theme >= 0.5.2',
-                      'jupyterlab >= 3.1.0',
+                      # 'jupyterlab >= 3.1.0',
                       'Click >= 8.0.1',
                       'pyyaml >= 5.1.2'],
     entry_points={
