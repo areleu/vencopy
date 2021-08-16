@@ -10,9 +10,12 @@
 # This config holds all relative paths and filenames for VencoPy
 
 pathRelative:
-    input: ./inputData/
-    plots: ./output/
-    dataOutput: ./output/
+    plots: ./output/evaluator/
+    parseOutput: ./output/dataParser/
+    diaryOutput: ./output/tripDiaryBuilder/
+    gridOutput: ./output/gridModeler/
+    flexOutput: ./output/flexEstimator/
+    evalOutput: ./output/evalutor/
     scripts: ./scripts/
     config: ./config/
 

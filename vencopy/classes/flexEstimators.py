@@ -61,7 +61,7 @@ class FlexEstimator:
                                                                       dropIdxLevel='tripWeight',
                                                                       nHours=self.globalConfig['numberOfHours'])
         self.scalarsProc = self.procScalars(self.driveProfilesIn, self.plugProfilesIn,
-                                       self.driveProfiles, self.plugProfiles)
+                                            self.driveProfiles, self.plugProfiles)
 
         #  Future release: with so many values to be initialized, a composition approach with a dataclass based
         #  encapsulation might be a good idea. This would also make it easy to communicate the data to the outside of
@@ -154,10 +154,10 @@ class FlexEstimator:
         """
 
         inputRaw = self.readInputCSV(filePath)
-        #inputData = self.booleanMapping(inputRaw)
+        # inputData = self.booleanMapping(inputRaw)
         return inputRaw
 
-    def readVencoInput(self, datasetID: str) -> pd.DataFrame:
+    def readVencoInput(self, datasetID: str) -> tuple:
         """
         Initializing action for VencoPy-specific config-file, path dictionary and data read-in. The config file has
         to be a dictionary in a .yaml file containing three categories: pathRelative, pathAbsolute and files. Each
@@ -172,11 +172,11 @@ class FlexEstimator:
         print('Reading Venco input scalars, drive profiles and boolean plug profiles')
 
         #scalars = self.readInputScalars(self.flexConfig['inputDataScalars'])
-        driveProfiles_raw = self.readInputCSV(Path(self.globalConfig['pathRelative']['input']) /
+        driveProfiles_raw = self.readInputCSV(Path(self.globalConfig['pathRelative']['diaryOutput']) /
                                               createFileString(globalConfig=self.globalConfig,
                                                                fileKey='inputDataDriveProfiles',
                                                                datasetID=datasetID))
-        plugProfiles_raw = self.readInputBoolean(Path(self.globalConfig['pathRelative']['input']) /
+        plugProfiles_raw = self.readInputBoolean(Path(self.globalConfig['pathRelative']['gridOutput']) /
                                                  createFileString(globalConfig=self.globalConfig,
                                                                   fileKey='inputDataPlugProfiles',
                                                                   datasetID=datasetID))
@@ -426,8 +426,7 @@ class FlexEstimator:
         return driveProfilesFuelAux
 
     def calcChargeMinProfiles(self, chargeProfiles: pd.DataFrame, consumptionProfiles: pd.DataFrame,
-                              driveProfilesFuelAux: pd.DataFrame, flexConfig,
-                              nIter: int = 3) -> pd.DataFrame:
+                              driveProfilesFuelAux: pd.DataFrame, nIter: int = 3) -> pd.DataFrame:
         """
         Calculates minimum SoC profiles assuming that the hourly mileage has to exactly be fulfilled but no battery charge
         is kept inspite of fulfilling the mobility demand. It represents the minimum charge that a vehicle battery has to
@@ -438,7 +437,6 @@ class FlexEstimator:
         :param consumptionProfiles: Profiles giving consumed electricity for each trip in each hour assuming specified
             consumption.
         :param driveProfilesFuelAux: Auxilliary fuel demand for fulfilling trips if purely electric driving doesn't suffice.
-        :param flexConfig: YAML config which holds all relative paths and filenames for flexEstimators.py
         :param scalarsProc: Number of profiles and number of hours of each profile.
         :param nIter: Gives the number of iterations to fulfill the boundary condition of the SoC equalling in the first
             and in the last hour of the profile.

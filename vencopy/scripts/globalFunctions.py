@@ -83,11 +83,11 @@ def writeProfilesToCSV(profileDictOut, globalConfig: dict, singleFile=True, data
 
     if singleFile:
         dataOut = pd.DataFrame(profileDictOut)
-        dataOut.to_csv(pathlib.Path(globalConfig['pathRelative']['dataOutput']) /
+        dataOut.to_csv(pathlib.Path(globalConfig['pathRelative']['flexOutput']) /
                        createFileString(globalConfig=globalConfig, fileKey='vencoPyOutput',
                                         manualLabel=globalConfig['labels']['technologyLabel'], datasetID=datasetID),
                        header=True)
     else:
         for iName, iProf in profileDictOut.items():
-            iProf.to_csv(pathlib.Path(globalConfig['pathRelative']['dataOutput']) /
+            iProf.to_csv(pathlib.Path(globalConfig['pathRelative']['flexOutput']) /
                          pathlib.Path(r'vencoPyOutput_' + iName + datasetID + '.csv'), header=True)

@@ -85,7 +85,7 @@ class DataParser:
         availableDatasetIDs = parseConfig['dataVariables']['datasetID']
         assert datasetID in availableDatasetIDs, \
             f'Defined datasetID {datasetID} not specified under dataVariables in parseConfig. Specified datasetIDs are ' \
-                f'{availableDatasetIDs}'
+            f'{availableDatasetIDs}'
         return datasetID
 
     def compileVariableList(self) -> list:
@@ -435,7 +435,7 @@ class DataParser:
                         pd.to_timedelta(data.loc[:, colMin], unit='minute')
         # return data
 
-    def composeStartAndEndTimestamps(self) -> np.datetime64:
+    def composeStartAndEndTimestamps(self):
         """
         :return: Returns start and end time of a trip
         """
@@ -446,7 +446,7 @@ class DataParser:
                               colName='timestampEnd')
         self.updateEndTimestamp()
 
-    def updateEndTimestamp(self) -> np.datetime64:
+    def updateEndTimestamp(self):
         """
         :return:
         """

@@ -67,7 +67,7 @@ class Evaluator:
         ret = pd.Series(dtype=object)
         for iFileKey in fileKeys:
             for iDat in datasets:
-                dataIn = pd.read_csv(pathlib.Path(self.globalConfig['pathRelative']['input']) /
+                dataIn = pd.read_csv(pathlib.Path(self.globalConfig['pathRelative']['diaryOutput']) /
                                      createFileString(globalConfig=self.globalConfig, fileKey=iFileKey,
                                                       datasetID=iDat), dtype={'hhPersonID': int},
                                      # index_col=['hhPersonID', 'tripStartWeekday'])
@@ -269,7 +269,7 @@ class Evaluator:
         if self.evaluatorConfig['plotConfig']['save']:
             fileName = createFileString(globalConfig=self.globalConfig, fileKey='aggPlotName', manualLabel=self.globalConfig['labels']['runLabel'],
                                         filetypeStr='svg')
-            fig.savefig(Path(self.globalConfig['pathRelative']['plots']) / fileName, bbox_inches='tight')
+            fig.savefig(Path(self.globalConfig['pathRelative']['evalOutput']) / fileName, bbox_inches='tight')
 
     def linePlot(self, profileDict, pathOutput, flexEstimator, show=True, write=True, ylabel='Normalized profiles',
                  ylim=None, filename=''):
@@ -338,14 +338,14 @@ class Evaluator:
             for iDict, iYLabel, iYLim, iName in zip(profileDictList, ylabel, ylim, filenames):
                 writeProfilesToCSV(profileDictOut=iDict, globalConfig=self.globalConfig, singleFile=False,
                                    datasetID=flexEstimator.datasetID)
-                self.linePlot(iDict, pathOutput=Path(self.globalConfig['pathRelative']['plots']),
+                self.linePlot(iDict, pathOutput=Path(self.globalConfig['pathRelative']['evalOutput']),
                               flexEstimator=flexEstimator, show=show, write=write, ylabel=iYLabel, ylim=iYLim,
                               filename=iName)
         else:
             for iDict, iYLabel, iName in zip(profileDictList, ylabel, filenames):
                 writeProfilesToCSV(profileDictOut=iDict, globalConfig=self.globalConfig, singleFile=False,
                                    datasetID=flexEstimator.datasetID)
-                self.linePlot(iDict, pathOutput=Path(self.globalConfig['pathRelative']['plots']),
+                self.linePlot(iDict, pathOutput=Path(self.globalConfig['pathRelative']['evalOutput']),
                               flexEstimator=flexEstimator, show=show, write=write, ylabel=iYLabel,
                               filename=iName)
 
@@ -406,10 +406,10 @@ class Evaluator:
                        ]
 
         profileDictList = self.compileDictList(compareTo=compareTo, profileNameList=profileList)
-        SOCDataWeek = { 'MiD08_SOCmin': self.SOCMinVar,
-                        'MiD08_SOCmax': self.SOCMaxVar,
-                        'MiD17_SOCmin': compareTo.SOCMinVar,
-                        'MiD17_SOCmax': compareTo.SOCMaxVar }
+        SOCDataWeek = {'MiD08_SOCmin': self.SOCMinVar,
+                       'MiD08_SOCmax': self.SOCMaxVar,
+                       'MiD17_SOCmin': compareTo.SOCMinVar,
+                       'MiD17_SOCmax': compareTo.SOCMaxVar}
 
         profileDictList.append(SOCDataWeek)
 
@@ -440,8 +440,7 @@ class Evaluator:
                               # 1, 1, 1
                               # 1, 1, 1
                               # 1
-                              50
-                                ])
+                              50])
 
     def compileDictList(self, compareTo, profileNameList):
         """
@@ -477,7 +476,7 @@ class Evaluator:
 
 
 if __name__ == '__main__':
-    from classes.dataParsers import DataParser
+    from vencopy.classes.dataParsers import DataParser
     pathGlobalConfig = Path.cwd().parent / 'config' / 'globalConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
     with open(pathGlobalConfig) as ipf:
         globalConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
@@ -497,11 +496,9 @@ if __name__ == '__main__':
     parseDataAll['MiD17'] = DataParser(datasetID='MiD17', parseConfig=parseConfig, globalConfig=globalConfig,
                           localPathConfig=localPathConfig, loadEncrypted=False)
 
-    vpEval = Evaluator(globalConfig=globalConfig, evaluatorConfig=evaluatorConfig, label='base', parseData=parseDataAll)
+    vpEval = Evaluator(globalConfig=globalConfig, evaluatorConfig=evaluatorConfig, parseData=parseDataAll)
     vpEval.hourlyAggregates = vpEval.calcVariableSpecAggregates(by=['tripStartWeekday'])
     vpEval.plotAggregates()
 
     # vpEval.data = mergeVariables(data=vpEval.inputData['MiD17'].reset_index(),
     #                              variableData=p.data, variables=['tripWeight'])
-
-    print('this is the end')

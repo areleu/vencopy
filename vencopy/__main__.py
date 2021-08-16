@@ -44,8 +44,12 @@ def setupFolders(src: pathlib.Path, trg: pathlib.Path, tutorials: bool):
     :param tutorials: Boolean, if true (default) tutorials are being copied from package source to user folder
     :return: None
     """
-    os.mkdir(trg / 'inputData')
     os.mkdir(trg / 'output')
+    os.mkdir(trg / 'output' / 'dataParser')
+    os.mkdir(trg / 'output' / 'tripDiaryBuilder')
+    os.mkdir(trg / 'output' / 'gridModeler')
+    os.mkdir(trg / 'output' / 'flexEstimator')
+    os.mkdir(trg / 'output' / 'evaluator')
     shutil.copy(src=src / 'run.py', dst=trg)
     shutil.copytree(src=src / 'config', dst=trg / 'config')
     if tutorials:

@@ -31,11 +31,11 @@ class GridModeler:
 
         self.inputFileName = createFileString(globalConfig=globalConfig, fileKey='purposesProcessed',
                                               datasetID=datasetID)
-        self.inputFilePath = Path(globalConfig['pathRelative']['input']) / self.inputFileName
+        self.inputFilePath = Path(globalConfig['pathRelative']['diaryOutput']) / self.inputFileName
         self.gridDistributions = gridConfig['chargingInfrastructureMappings']
         self.outputFileName = createFileString(globalConfig=globalConfig, fileKey='inputDataPlugProfiles',
                                                datasetID=datasetID)
-        self.outputFilePath = Path(globalConfig['pathRelative']['input']) / self.outputFileName
+        self.outputFilePath = Path(globalConfig['pathRelative']['gridOutput']) / self.outputFileName
         self.purposeData = pd.read_csv(self.inputFilePath, keep_default_na=False)
         self.chargeAvailability = None
 

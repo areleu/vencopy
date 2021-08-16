@@ -307,11 +307,11 @@ class TripDiaryBuilder:
         return tripDict
 
     def writeOut(self, globalConfig:dict, dataDrive: pd.DataFrame, dataPurpose: pd.DataFrame, datasetID: str = 'MiD17'):
-        dataDrive.to_csv(Path(globalConfig['pathRelative']['input']) /
+        dataDrive.to_csv(Path(globalConfig['pathRelative']['diaryOutput']) /
                          createFileString(globalConfig=globalConfig, fileKey='inputDataDriveProfiles',
                                           datasetID=datasetID),
                          na_rep=0)
-        dataPurpose.to_csv(Path(globalConfig['pathRelative']['input']) /
+        dataPurpose.to_csv(Path(globalConfig['pathRelative']['diaryOutput']) /
                           createFileString(globalConfig=globalConfig, fileKey='purposesProcessed', datasetID=datasetID))
         print(f"Drive data and trip purposes written to files "
               f"{createFileString(globalConfig=globalConfig, fileKey='inputDataDriveProfiles', datasetID=datasetID)} "
