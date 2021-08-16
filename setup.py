@@ -17,7 +17,7 @@ long_description = (pathlib.Path(__file__).parent.resolve() / 'README.md').read_
 
 setup(
     name='vencopy',
-    version='0.0.15',
+    version='0.0.16',
     description='Vehicle Energy Consumption in Python: A tool to simulate load flexibility of electric vehicle fleets.',
     long_description=long_description,
     long_description_content_type='text/markdown',

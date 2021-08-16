@@ -298,7 +298,7 @@ class FlexEstimator:
         scaled with the specific consumption assumption.
         """
 
-        return driveProfiles * flexConfig['inputDataScalars']['Electric_consumption_NEFZ'] / float(100)
+        return driveProfiles * flexConfig['inputDataScalars']['Electric_consumption'] / float(100)
 
     def calcChargeProfiles(self, plugProfiles: pd.DataFrame, flexConfig) -> pd.DataFrame:
         '''
@@ -409,8 +409,8 @@ class FlexEstimator:
         # the hardcoding of the column names can cause a lot of problems for people later on if we do not ship
         # the date with the tool. I would recommend to move these column names to a config file similar to i18n
         # strategies
-        consumptionPower = flexConfig['inputDataScalars']['Electric_consumption_NEFZ']
-        consumptionFuel = flexConfig['inputDataScalars']['Fuel_consumption_NEFZ']
+        consumptionPower = flexConfig['inputDataScalars']['Electric_consumption']
+        consumptionFuel = flexConfig['inputDataScalars']['Fuel_consumption']
 
         # initialize data set for filling up later on
         driveProfilesFuelAux = chargeMaxProfiles.copy()
@@ -451,8 +451,8 @@ class FlexEstimator:
                     self.flexConfig['inputDataScalars']['Minimum_SOC']
         batCapMax = self.flexConfig['inputDataScalars']['Battery_capacity'] * \
                     self.flexConfig['inputDataScalars']['Maximum_SOC']
-        consElectric = self.flexConfig['inputDataScalars']['Electric_consumption_NEFZ']
-        consGasoline = self.flexConfig['inputDataScalars']['Fuel_consumption_NEFZ']
+        consElectric = self.flexConfig['inputDataScalars']['Electric_consumption']
+        consGasoline = self.flexConfig['inputDataScalars']['Fuel_consumption']
         nHours = self.scalarsProc['nHours']
         for idxIt in range(nIter):
             for iHour in range(nHours):
@@ -584,8 +584,8 @@ class FlexEstimator:
         :return: Returns electric demand from driving filtered and aggregated to one fleet.
         """
 
-        consumptionPower = self.flexConfig['inputDataScalars']['Electric_consumption_NEFZ']
-        consumptionFuel = self.flexConfig['inputDataScalars']['Fuel_consumption_NEFZ']
+        consumptionPower = self.flexConfig['inputDataScalars']['Electric_consumption']
+        consumptionFuel = self.flexConfig['inputDataScalars']['Fuel_consumption']
         indexCons = filterCons.loc[:, 'indexCons']
         indexDSM = filterCons.loc[:, 'indexDSM']
         nHours = self.scalarsProc['nHours']
@@ -871,13 +871,13 @@ class FlexEstimator:
         """
 
         if profType == 'electric':
-            consumptionElectricNEFZ = self.flexConfig['inputDataScalars']['Electric_consumption_NEFZ']
-            consumptionElectricArtemis = self.flexConfig['inputDataScalars']['Electric_consumption_Artemis']
-            corrFactor = consumptionElectricArtemis / consumptionElectricNEFZ
+            consumptionElectric = self.flexConfig['inputDataScalars']['Electric_consumption']
+            consumptionElectricCorr = self.flexConfig['inputDataScalars']['Electric_consumption_corr']
+            corrFactor = consumptionElectricCorr / consumptionElectric
         elif profType == 'fuel':
-            consumptionFuelNEFZ = self.flexConfig['inputDataScalars']['Fuel_consumption_NEFZ']
-            consumptionFuelArtemis = self.flexConfig['inputDataScalars']['Fuel_consumption_Artemis']
-            corrFactor = consumptionFuelArtemis / consumptionFuelNEFZ
+            consumptionFuel = self.flexConfig['inputDataScalars']['Fuel_consumption']
+            consumptionFuelCorr = self.flexConfig['inputDataScalars']['Fuel_consumption_corr']
+            corrFactor = consumptionFuelCorr / consumptionFuel
         else:
             raise Exception(f'Either parameter "{profType}" is not given or not assigned to either "electric" or '
                             f'"fuel".')

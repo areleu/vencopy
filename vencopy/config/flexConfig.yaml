@@ -12,10 +12,10 @@
 inputDataScalars:
     Minimum_daily_mileage: 0.0              #km
     Battery_capacity: 50.0                  #kWh
-    Electric_consumption_NEFZ: 20.0         #kWh/100km
-    Fuel_consumption_NEFZ: 1.0              #l/100km
-    Electric_consumption_Artemis: 20.0      #kWh/100km
-    Fuel_consumption_Artemis: 1.0           #l/100km
+    Electric_consumption: 20.0         #kWh/100km
+    Fuel_consumption: 1.0              #l/100km
+    Electric_consumption_corr: 20.0      #kWh/100km
+    Fuel_consumption_corr: 1.0           #l/100km
     Maximum_SOC: 0.97                       #%
     Minimum_SOC: 0.03                       #%
     Rated_power_of_charging_column: 11.0    #kW
