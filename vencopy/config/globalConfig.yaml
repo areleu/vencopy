@@ -15,7 +15,7 @@ pathRelative:
     diaryOutput: ./output/tripDiaryBuilder/
     gridOutput: ./output/gridModeler/
     flexOutput: ./output/flexEstimator/
-    evalOutput: ./output/evalutor/
+    evalOutput: ./output/evaluator/
     scripts: ./scripts/
     config: ./config/
 

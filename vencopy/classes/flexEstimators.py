@@ -54,17 +54,19 @@ class FlexEstimator:
         self.datasetID = datasetID
         self.driveProfilesIn, self.plugProfilesIn = self.readVencoInput(datasetID=datasetID)
         self.mergeDataToWeightsAndDays(ParseData)
-        self.weights = self.indexWeights(self.driveProfilesIn.loc[:, ['hhPersonID', 'tripStartWeekday', 'tripWeight']])
+        self.weights = self.indexWeights(weights=self.driveProfilesIn.loc[:, ['hhPersonID', 'tripStartWeekday', 'tripWeight']])
         # self.outputConfig = yaml.load(open(Path(self.globalConfig['pathRelative']['config']) /
         #                                    self.globalConfig['files']['outputConfig']), Loader=yaml.SafeLoader)
-        self.driveProfiles, self.plugProfiles = self.indexDriveAndPlugData(self.driveProfilesIn, self.plugProfilesIn,
-                                                                      dropIdxLevel='tripWeight',
-                                                                      nHours=self.globalConfig['numberOfHours'])
-        self.scalarsProc = self.procScalars(self.driveProfilesIn, self.plugProfilesIn,
-                                            self.driveProfiles, self.plugProfiles)
+        self.driveProfiles, self.plugProfiles = self.indexDriveAndPlugData(driveData=self.driveProfilesIn,
+                                                                           plugData=self.plugProfilesIn,
+                                                                           dropIdxLevel='tripWeight',
+                                                                           nHours=self.globalConfig['numberOfHours'])
+        self.scalarsProc = self.procScalars(driveProfiles_raw=self.driveProfilesIn,
+                                            plugProfiles_raw=self.plugProfilesIn, driveProfiles=self.driveProfiles,
+                                            plugProfiles=self.plugProfiles)
 
-        #  Future release: with so many values to be initialized, a composition approach with a dataclass based
-        #  encapsulation might be a good idea. This would also make it easy to communicate the data to the outside of
+        #  Future release: In a future release, a composition approach with a dataclass based
+        #  encapsulation will be pursued here. This will also make it easy to communicate the data to the outside of
         #  the class as the fields are then no longer directly in the main processing class.
 
         # Base profile attributes
@@ -128,7 +130,7 @@ class FlexEstimator:
         :param filePath: Relative file path to CSV file
         :return: Pandas dataframe with raw input from CSV file
         """
-        inputRaw = pd.read_csv(filePath, header=0)
+        inputRaw = pd.read_csv(filepath_or_buffer=filePath, header=0)
         inputData = inputRaw.loc[:, ~inputRaw.columns.str.match('Unnamed')]
         inputData = inputData.convert_dtypes()
         return inputData
@@ -153,7 +155,7 @@ class FlexEstimator:
         :return: Returns a dataframe with boolean values
         """
 
-        inputRaw = self.readInputCSV(filePath)
+        inputRaw = self.readInputCSV(filePath=filePath)
         # inputData = self.booleanMapping(inputRaw)
         return inputRaw
 
@@ -172,11 +174,11 @@ class FlexEstimator:
         print('Reading Venco input scalars, drive profiles and boolean plug profiles')
 
         #scalars = self.readInputScalars(self.flexConfig['inputDataScalars'])
-        driveProfiles_raw = self.readInputCSV(Path(self.globalConfig['pathRelative']['diaryOutput']) /
+        driveProfiles_raw = self.readInputCSV(filePath=Path(self.globalConfig['pathRelative']['diaryOutput']) /
                                               createFileString(globalConfig=self.globalConfig,
                                                                fileKey='inputDataDriveProfiles',
                                                                datasetID=datasetID))
-        plugProfiles_raw = self.readInputBoolean(Path(self.globalConfig['pathRelative']['gridOutput']) /
+        plugProfiles_raw = self.readInputBoolean(filePath=Path(self.globalConfig['pathRelative']['gridOutput']) /
                                                  createFileString(globalConfig=self.globalConfig,
                                                                   fileKey='inputDataPlugProfiles',
                                                                   datasetID=datasetID))
@@ -201,12 +203,12 @@ class FlexEstimator:
         noHoursPlug = len(plugProfiles.columns)
         noDriveProfilesIn = len(driveProfiles)
         noPlugProfilesIn = len(plugProfiles)
-        scalarsProc = {'noHoursDrive': noHoursDrive,
-                       'noHoursPlug': noHoursPlug,
-                       'noDriveProfilesIn': noDriveProfilesIn,
-                       'noPlugProfilesIn': noPlugProfilesIn}
+        scalarsProc = {'nHoursDrive': noHoursDrive,
+                       'nHoursPlug': noHoursPlug,
+                       'nDriveProfilesIn': noDriveProfilesIn,
+                       'nPlugProfilesIn': noPlugProfilesIn}
         if noHoursDrive == noHoursPlug:
-            scalarsProc['noHours'] = noHoursDrive
+            scalarsProc['nHours'] = noHoursDrive
         else:
             warnings.warn('Length of drive and plug input data differ! This will at the latest crash in calculating '
                           'profiles for SoC max')
@@ -248,7 +250,7 @@ class FlexEstimator:
         :return: Two indexed dataframes with index columns as given in argument indices separated from data columns
         """
 
-        indexCols = self.findIndexCols(data, nHours)
+        indexCols = self.findIndexCols(data=data, nHours=nHours)
         data = data.convert_dtypes()  # Reduce column data types if possible (specifically hhPersonID column to int)
         dataIndexed = data.set_index(list(indexCols))
 
@@ -267,8 +269,8 @@ class FlexEstimator:
         :param nHours: Integer specifying the number of values columns
         :return: Tuple of indexed drive and plug profiles as pandas DataFrames
         """
-        driveProfiles = self.indexProfile(driveData, nHours)
-        plugProfiles = self.indexProfile(plugData, nHours)
+        driveProfiles = self.indexProfile(data=driveData, nHours=nHours)
+        plugProfiles = self.indexProfile(data=plugData, nHours=nHours)
         return driveProfiles.droplevel(dropIdxLevel), plugProfiles.droplevel(dropIdxLevel)
 
     def mergeDataToWeightsAndDays(self, ParseData):
@@ -285,7 +287,7 @@ class FlexEstimator:
         self.plugProfilesIn = mergeVariables(data=self.plugProfilesIn, variableData=ParseData.data,
                                              variables=['tripStartWeekday', 'tripWeight'])
 
-    def calcDrainProfiles(self, driveProfiles: pd.DataFrame, flexConfig) -> pd.DataFrame:
+    def calcDrainProfiles(self, driveProfiles: pd.DataFrame, flexConfig: dict) -> pd.DataFrame:
         """
         Calculates electrical consumption profiles from drive profiles assuming specific consumption (in kWh/100 km)
         given in scalar input data file.
@@ -329,16 +331,17 @@ class FlexEstimator:
         """
 
         chargeMaxProfiles = chargeProfiles.copy()
-        batCapMin = self.flexConfig['inputDataScalars']['Battery_capacity'] * self.flexConfig['inputDataScalars']['Minimum_SOC']
-        batCapMax = self.flexConfig['inputDataScalars']['Battery_capacity'] * self.flexConfig['inputDataScalars']['Maximum_SOC']
-        nHours = self.scalarsProc['noHours']
+        batCapMin = self.flexConfig['inputDataScalars']['Battery_capacity'] * \
+                    self.flexConfig['inputDataScalars']['Minimum_SOC']
+        batCapMax = self.flexConfig['inputDataScalars']['Battery_capacity'] * \
+                    self.flexConfig['inputDataScalars']['Maximum_SOC']
+        nHours = self.scalarsProc['nHours']
         for idxIt in range(nIter):
             print(f'Starting with iteration {idxIt}')
             for iHour in range(nHours):
                 if iHour == 0:
                     chargeMaxProfiles[iHour] = chargeMaxProfiles[nHours - 1].where(
-                        chargeMaxProfiles[iHour] <= batCapMax,
-                        batCapMax)
+                        cond=chargeMaxProfiles[iHour] <= batCapMax, other=batCapMax)
                 else:
                     # Calculate and append column with new SoC Max value for comparison and cleaner code
                     chargeMaxProfiles['newCharge'] = chargeMaxProfiles[iHour - 1] + \
@@ -347,10 +350,10 @@ class FlexEstimator:
 
                     # Ensure that chargeMaxProfiles values are between batCapMin and batCapMax
                     chargeMaxProfiles[iHour] \
-                        = chargeMaxProfiles['newCharge'].where(chargeMaxProfiles['newCharge'] <= batCapMax,
+                        = chargeMaxProfiles['newCharge'].where(cond=chargeMaxProfiles['newCharge'] <= batCapMax,
                                                                other=batCapMax)
                     chargeMaxProfiles[iHour] \
-                        = chargeMaxProfiles[iHour].where(chargeMaxProfiles[iHour] >= batCapMin, other=batCapMin)
+                        = chargeMaxProfiles[iHour].where(cond=chargeMaxProfiles[iHour] >= batCapMin, other=batCapMin)
 
             devCrit = chargeMaxProfiles[nHours - 1].sum() - chargeMaxProfiles[0].sum()
             print(devCrit)
@@ -371,12 +374,12 @@ class FlexEstimator:
 
         chargeMaxProfiles = chargeMaxProfiles.copy()
         chargeProfilesUncontrolled = chargeMaxProfiles.copy()
-        nHours = scalarsProc['noHours']
+        nHours = scalarsProc['nHours']
 
         for iHour in range(nHours):
             if iHour != 0:
                 chargeProfilesUncontrolled[iHour] = (chargeMaxProfiles[iHour] - chargeMaxProfiles[iHour - 1]).where(
-                    chargeMaxProfiles[iHour] >= chargeMaxProfiles[iHour - 1], other=0)
+                    cond=chargeMaxProfiles[iHour] >= chargeMaxProfiles[iHour - 1], other=0)
 
         # set value of uncontrolled charging for first hour to average between hour 1 and hour 23
         # because in calcChargeMax iteration the difference is minimized.
@@ -411,7 +414,7 @@ class FlexEstimator:
 
         # initialize data set for filling up later on
         driveProfilesFuelAux = chargeMaxProfiles.copy()
-        nHours = scalarsProc['noHours']
+        nHours = scalarsProc['nHours']
 
         for iHour in range(nHours):
             if iHour != 0:
@@ -444,15 +447,17 @@ class FlexEstimator:
             format as chargeProfiles, consumptionProfiles and other input parameters.
         """
         chargeMinProfiles = chargeProfiles.copy()
-        batCapMin = self.flexConfig['inputDataScalars']['Battery_capacity'] * self.flexConfig['inputDataScalars']['Minimum_SOC']
-        batCapMax = self.flexConfig['inputDataScalars']['Battery_capacity'] * self.flexConfig['inputDataScalars']['Maximum_SOC']
+        batCapMin = self.flexConfig['inputDataScalars']['Battery_capacity'] * \
+                    self.flexConfig['inputDataScalars']['Minimum_SOC']
+        batCapMax = self.flexConfig['inputDataScalars']['Battery_capacity'] * \
+                    self.flexConfig['inputDataScalars']['Maximum_SOC']
         consElectric = self.flexConfig['inputDataScalars']['Electric_consumption_NEFZ']
         consGasoline = self.flexConfig['inputDataScalars']['Fuel_consumption_NEFZ']
-        nHours = self.scalarsProc['noHours']
+        nHours = self.scalarsProc['nHours']
         for idxIt in range(nIter):
             for iHour in range(nHours):
                 if iHour == nHours - 1:
-                    chargeMinProfiles[iHour] = chargeMinProfiles[0].where(batCapMin <= chargeMinProfiles[iHour],
+                    chargeMinProfiles[iHour] = chargeMinProfiles[0].where(cond=batCapMin <= chargeMinProfiles[iHour],
                                                                           other=batCapMin)
                 else:
                     # Calculate and append column with new SOC Max value for comparison and nicer code
@@ -463,14 +468,14 @@ class FlexEstimator:
 
                     # Ensure that chargeMinProfiles values are between batCapMin and batCapMax
                     chargeMinProfiles[iHour] \
-                        = chargeMinProfiles['newCharge'].where(chargeMinProfiles['newCharge'] >= batCapMin,
+                        = chargeMinProfiles['newCharge'].where(cond=chargeMinProfiles['newCharge'] >= batCapMin,
                                                                other=batCapMin)
                     chargeMinProfiles[iHour] \
-                        = chargeMinProfiles[iHour].where(chargeMinProfiles[iHour] <= batCapMax, other=batCapMax)
+                        = chargeMinProfiles[iHour].where(cond=chargeMinProfiles[iHour] <= batCapMax, other=batCapMax)
 
             devCrit = chargeMinProfiles[nHours - 1].sum() - chargeMinProfiles[0].sum()
             print(devCrit)
-        chargeMinProfiles.drop('newCharge', axis='columns', inplace=True)
+        chargeMinProfiles.drop(labels='newCharge', axis='columns', inplace=True)
         return chargeMinProfiles
 
     def baseProfileCalculation(self):
@@ -482,16 +487,22 @@ class FlexEstimator:
         :return: None
         """
 
-        self.drainProfiles = self.calcDrainProfiles(self.driveProfiles, self.flexConfig)
-        self.chargeProfiles = self.calcChargeProfiles(self.plugProfiles, self.flexConfig)
-        self.chargeMaxProfiles = self.calcChargeMaxProfiles(self.chargeProfiles, self.drainProfiles, nIter=3)
+        self.drainProfiles = self.calcDrainProfiles(driveProfiles=self.driveProfiles, flexConfig=self.flexConfig)
+        self.chargeProfiles = self.calcChargeProfiles(plugProfiles=self.plugProfiles, flexConfig=self.flexConfig)
+        self.chargeMaxProfiles = self.calcChargeMaxProfiles(chargeProfiles=self.chargeProfiles,
+                                                            consumptionProfiles=self.drainProfiles, nIter=3)
         # self.connectionType = self.assignConnectionType()
-        self.chargeProfilesUncontrolled = self.calcChargeProfilesUncontrolled(self.chargeMaxProfiles, self.scalarsProc)
-        self.auxFuelDemandProfiles = self.calcDriveProfilesFuelAux(self.chargeMaxProfiles,
-                                                                   self.chargeProfilesUncontrolled, self.driveProfiles,
-                                                                   self.flexConfig, self.scalarsProc)
-        self.chargeMinProfiles = self.calcChargeMinProfiles(self.chargeProfiles, self.drainProfiles,
-                                                       self.auxFuelDemandProfiles, self.scalarsProc)
+        self.chargeProfilesUncontrolled = self.calcChargeProfilesUncontrolled(chargeMaxProfiles=self.chargeMaxProfiles,
+                                                                              scalarsProc=self.scalarsProc)
+        self.auxFuelDemandProfiles = self.calcDriveProfilesFuelAux(chargeMaxProfiles=self.chargeMaxProfiles,
+                                                            chargeProfilesUncontrolled=self.chargeProfilesUncontrolled,
+                                                                   driveProfiles=self.driveProfiles,
+                                                                   flexConfig=self.flexConfig,
+                                                                   scalarsProc=self.scalarsProc)
+        self.chargeMinProfiles = self.calcChargeMinProfiles(chargeProfiles=self.chargeProfiles,
+                                                            consumptionProfiles=self.drainProfiles,
+                                                            driveProfilesFuelAux=self.auxFuelDemandProfiles)  # potentially specify nIter here
+
         print(f'Base profile calculation complete for dataset {self.datasetID}')
 
     def createRandNo(self, driveProfiles: pd.DataFrame, setSeed=1):
@@ -577,7 +588,7 @@ class FlexEstimator:
         consumptionFuel = self.flexConfig['inputDataScalars']['Fuel_consumption_NEFZ']
         indexCons = filterCons.loc[:, 'indexCons']
         indexDSM = filterCons.loc[:, 'indexDSM']
-        nHours = self.scalarsProc['noHours']
+        nHours = self.scalarsProc['nHours']
         electricPowerProfiles = consumptionProfiles.copy()
         for iHour in range(nHours):
             electricPowerProfiles[iHour] = (consumptionProfiles[iHour] - driveProfilesFuelAux[iHour] *
@@ -685,7 +696,6 @@ class FlexEstimator:
         """
 
         self.randNoPerProfile = self.createRandNo(driveProfiles=self.driveProfiles)
-
         self.profileSelectors = self.calcProfileSelectors(chargeProfiles=self.chargeProfiles,
                                                      consumptionProfiles=self.drainProfiles,
                                                      driveProfiles=self.driveProfiles,
@@ -693,30 +703,27 @@ class FlexEstimator:
                                                      randNos=self.randNoPerProfile,
                                                      fuelDriveTolerance=1, isBEV=True)
 
-
-
-
         # Additional fuel consumption is subtracted from the consumption
-        self.electricPowerProfiles = self.calcElectricPowerProfiles(self.drainProfiles, self.auxFuelDemandProfiles,
-                                                                    self.profileSelectors, filterIndex='indexDSM')
-
-
-
+        self.electricPowerProfiles = self.calcElectricPowerProfiles(consumptionProfiles=self.drainProfiles,
+                                                                    driveProfilesFuelAux=self.auxFuelDemandProfiles,
+                                                                    filterCons=self.profileSelectors, filterIndex='indexDSM')
 
         # Profile filtering for flow profiles
-        self.plugProfilesCons = self.filterConsProfiles(self.plugProfiles, self.profileSelectors, critCol='indexCons')
-        self.electricPowerProfilesCons = self.filterConsProfiles(self.electricPowerProfiles, self.profileSelectors,
-                                                                 critCol='indexCons')
-        self.chargeProfilesUncontrolledCons = self.filterConsProfiles(self.chargeProfilesUncontrolled,
-                                                                      self.profileSelectors, critCol='indexCons')
-        self.auxFuelDemandProfilesCons = self.filterConsProfiles(self.auxFuelDemandProfiles, self.profileSelectors,
-                                                                 critCol='indexCons')
+        self.plugProfilesCons = self.filterConsProfiles(profile=self.plugProfiles, filterCons=self.profileSelectors,
+                                                        critCol='indexCons')
+        self.electricPowerProfilesCons = self.filterConsProfiles(profile=self.electricPowerProfiles,
+                                                                 filterCons=self.profileSelectors, critCol='indexCons')
+        self.chargeProfilesUncontrolledCons = self.filterConsProfiles(profile=self.chargeProfilesUncontrolled,
+                                                                      filterCons=self.profileSelectors,
+                                                                      critCol='indexCons')
+        self.auxFuelDemandProfilesCons = self.filterConsProfiles(profile=self.auxFuelDemandProfiles,
+                                                                 filterCons=self.profileSelectors, critCol='indexCons')
 
         # Profile filtering for state profiles
-        self.profilesSOCMinCons = self.filterConsProfiles(self.chargeMinProfiles, self.profileSelectors,
-                                                          critCol='indexDSM')
-        self.profilesSOCMaxCons = self.filterConsProfiles(self.chargeMaxProfiles, self.profileSelectors,
-                                                          critCol='indexDSM')
+        self.profilesSOCMinCons = self.filterConsProfiles(profile=self.chargeMinProfiles,
+                                                          filterCons=self.profileSelectors, critCol='indexDSM')
+        self.profilesSOCMaxCons = self.filterConsProfiles(profile=self.chargeMaxProfiles,
+                                                          filterCons=self.profileSelectors, critCol='indexDSM')
 
     def aggregateProfilesMean(self, profilesIn: pd.DataFrame) -> pd.Series:
         """
@@ -732,7 +739,7 @@ class FlexEstimator:
         profilesOut = profilesIn.apply(sum, axis=0) / lenProfiles
         return profilesOut
 
-    def aggregateProfilesWeight(self, profilesIn: pd.DataFrame, weights: pd.DataFrame) -> pd.Series:
+    def aggregateProfilesWeight(self, profiles: pd.DataFrame, weights: pd.DataFrame) -> pd.Series:
         """
         Aggregation of profiles considering the specific weights given for the household person IDs. No rescaling of
         the weights is carried out so far. The function calculateWeightedAverage() is specified in globalFunctions.py
@@ -741,7 +748,7 @@ class FlexEstimator:
         :param weights: Returns a Dataframe with hourly values considering the weight of individual trip
         :return:
         """
-        profilesIn = profilesIn.loc[~profilesIn.apply(lambda x: x.isna(), axis=0).any(axis=1), :]
+        profilesIn = profiles.loc[~profiles.apply(lambda x: x.isna(), axis=0).any(axis=1), :]
         weights = weights.loc[profilesIn.index, :]  # Filtering weight data to equate lengths
         return profilesIn.apply(calculateWeightedAverage, weightCol=weights['tripWeight'])
 
@@ -766,7 +773,6 @@ class FlexEstimator:
             ret.loc[:, iVar] = dataSlice.apply(calculateWeightedAverage, weightCol=weightSlice)
         ret = ret.stack()
         ret.index.names = ['time', by]
-        # ret.index = ret.index.swaplevel(0, 1)
         return ret
 
     def aggregate(self):
@@ -787,10 +793,13 @@ class FlexEstimator:
         self.auxFuelDemandProfilesAgg = self.aggregateProfilesMean(self.auxFuelDemandProfilesCons)
 
         # Profile aggregation for flow profiles by averaging
-        self.plugProfilesWAgg = self.aggregateProfilesWeight(self.plugProfilesCons, self.weights)
-        self.electricPowerProfilesWAgg = self.aggregateProfilesWeight(self.electricPowerProfilesCons, self.weights)
-        self.chargeProfilesUncontrolledWAgg = self.aggregateProfilesWeight(self.chargeProfilesUncontrolledCons, self.weights)
-        self.auxFuelDemandProfilesWAgg = self.aggregateProfilesWeight(self.auxFuelDemandProfilesCons, self.weights)
+        self.plugProfilesWAgg = self.aggregateProfilesWeight(profiles=self.plugProfilesCons, weights=self.weights)
+        self.electricPowerProfilesWAgg = self.aggregateProfilesWeight(profiles=self.electricPowerProfilesCons,
+                                                                      weights=self.weights)
+        self.chargeProfilesUncontrolledWAgg = self.aggregateProfilesWeight(profiles=self.chargeProfilesUncontrolledCons,
+                                                                           weights=self.weights)
+        self.auxFuelDemandProfilesWAgg = self.aggregateProfilesWeight(profiles=self.auxFuelDemandProfilesCons,
+                                                                      weights=self.weights)
 
         # Define a partial method for variable specific weight-considering aggregation to make following lines shorter
         aggDiffWeekday = functools.partial(self.aggregateDiffVariable, by='tripStartWeekday', weights=self.weights,
@@ -803,7 +812,8 @@ class FlexEstimator:
         self.auxFuelDemandProfilesWAggVar = aggDiffWeekday(data=self.auxFuelDemandProfilesCons)
 
         # Profile aggregation for state profiles by selecting one profiles value for each hour
-        self.socMin, self.socMax = self.socProfileSelection(self.profilesSOCMinCons, self.profilesSOCMaxCons,
+        self.socMin, self.socMax = self.socProfileSelection(profilesMin=self.profilesSOCMinCons,
+                                                            profilesMax=self.profilesSOCMaxCons,
                                                             filter='singleValue', alpha=10)
 
         self.socMinVar, self.socMaxVar = self.socSelectionVar(dataMin=self.profilesSOCMinCons,
@@ -825,7 +835,7 @@ class FlexEstimator:
         values. E.g. if running for 24 hour profiles additionally differentiating weekdays, this yields 168 values per
         resulting profile.
         """
-        socSelectionPartial = functools.partial(self.socProfileSelection, filter=filter, alpha=alpha)
+        # socSelectionPartial = functools.partial(func=self.socProfileSelection, filter=filter, alpha=alpha)
         vars = set(dataMin.index.get_level_values(by))
         retMin = pd.DataFrame(index=self.hourVec, columns=vars)
         retMax = pd.DataFrame(index=self.hourVec, columns=vars)
@@ -834,14 +844,18 @@ class FlexEstimator:
         for iVar in vars:
             dataSliceMin = dataMin.loc[dataMin.loc[:, by] == iVar, self.hourVec]
             dataSliceMax = dataMax.loc[dataMax.loc[:, by] == iVar, self.hourVec]
-            retMin.loc[:, iVar], retMax.loc[:, iVar] = socSelectionPartial(profilesMin=dataSliceMin,
-                                                                           profilesMax=dataSliceMax)
+            retMin.loc[:, iVar], retMax.loc[:, iVar] = self.socProfileSelection(profilesMin=dataSliceMin,
+                                                                                profilesMax=dataSliceMax,
+                                                                                filter='singleValue',
+                                                                                alpha=10)
+
+            # retMin.loc[:, iVar], retMax.loc[:, iVar] = socSelectionPartial(profilesMin=dataSliceMin,
+            #                                                                profilesMax=dataSliceMax)
 
         retMin = retMin.stack()
         retMax = retMax.stack()
         retMin.index.names = ['time', by]
         retMax.index.names = ['time', by]
-        # ret.index = ret.index.swaplevel(0, 1)
         return retMin, retMax
 
     def correctProfiles(self, profile: pd.Series, profType) -> pd.Series:
@@ -877,20 +891,17 @@ class FlexEstimator:
         :return: None
         """
 
-        self.chargeProfilesUncontrolledCorr = self.correctProfiles(self.chargeProfilesUncontrolledAgg,
-                                                                   'electric')
-        self.electricPowerProfilesCorr = self.correctProfiles(self.electricPowerProfilesAgg, 'electric')
-        self.auxFuelDemandProfilesCorr = self.correctProfiles(self.auxFuelDemandProfilesAgg, 'fuel')
+        self.chargeProfilesUncontrolledCorr = self.correctProfiles(profile=self.chargeProfilesUncontrolledAgg,
+                                                                   profType='electric')
+        self.electricPowerProfilesCorr = self.correctProfiles(profile=self.electricPowerProfilesAgg,
+                                                              profType='electric')
+        self.auxFuelDemandProfilesCorr = self.correctProfiles(profile=self.auxFuelDemandProfilesAgg, profType='fuel')
 
     def normalize(self):
         """
         Normalization of soc profiles with regard to the battery capacity.
-
-        :return: None
         """
-
         self.socMinNorm, self.socMaxNorm = self.normalizeProfiles(self.socMin, self.socMax)
-
 
     def writeOut(self):
         """
@@ -925,10 +936,10 @@ class FlexEstimator:
 
 
 if __name__ == '__main__':
-    from classes.dataParsers import DataParser
-    from classes.evaluators import Evaluator
+    from vencopy.classes.dataParsers import DataParser
+    from vencopy.classes.evaluators import Evaluator
     datasetID = 'MiD17'
-    pathGlobalConfig = Path.cwd().parent / 'config' / 'globalConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
+    pathGlobalConfig = Path.cwd().parent / 'config' / 'globalConfig.yaml'  # pathLib syntax for windows, mac, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
     with open(pathGlobalConfig) as ipf:
         globalConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
     pathFlexConfig = Path.cwd().parent / 'config' / 'flexConfig.yaml'
@@ -945,14 +956,13 @@ if __name__ == '__main__':
         localPathConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
     os.chdir(localPathConfig['pathAbsolute']['vencoPyRoot'])
 
-    vpData = DataParser(parseConfig=parseConfig, globalConfig=globalConfig, localPathConfig=localPathConfig, loadEncrypted=False)
+    vpData = DataParser(parseConfig=parseConfig, globalConfig=globalConfig, localPathConfig=localPathConfig,
+                        loadEncrypted=False)
     vpFlexEst = FlexEstimator(flexConfig=flexConfig, globalConfig=globalConfig, evaluatorConfig=evaluatorConfig,
-                                ParseData=vpData, datasetID=datasetID)
+                              ParseData=vpData, datasetID=datasetID)
     vpFlexEst.run()
     vpEval = Evaluator(globalConfig=globalConfig, evaluatorConfig=evaluatorConfig,
                        parseData=pd.Series(data=vpData, index=[datasetID]))
     vpEval.plotProfiles(flexEstimator=vpFlexEst)
-
-
     print(f'Total absolute electricity charged in uncontrolled charging based on MiD08: '
           f'{vpFlexEst.chargeProfilesUncontrolled.sum().sum()} based on MiD17')
