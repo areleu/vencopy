@@ -18,6 +18,25 @@ from vencopy.scripts.globalFunctions import createFileString
 
 class TripDiaryBuilder:
     def __init__(self, tripConfig: dict, globalConfig: dict, ParseData, datasetID: str = 'MiD17', debug: bool=False):
+        """
+        Class to build diaries of trips and parking purposes ("purposes"). Currently a discretization of 1 hour is
+        used and tested. Some assumptions are taken in order to build the diaries:
+        1. The driven distance is allocated to all hours between start and end time of a trip depending on the time
+        share of the respective hour.
+        2. The purposes of a parking activity is always determined by the purpose of the previous trip. Purposes are
+        taken from the MiD B2 "Wege" (German for trips) data set variable 38 - 'zweck' (German for purpose) and the
+        additional purpose "DRIVING" is added.
+        3. If an hour comprises multiple purposes (e.g. driving and home), the purpose with the higher share is taken.
+        Potential ambiguities in the diaries are later corrected in the gridModel.
+
+        :param tripConfig: In beta release (0.1.0) an empty file
+        :param globalConfig: Config holding relative paths, run labels and filenames
+        :param ParseData: Class instance of ParseData storing MiD data
+        :param datasetID: Can be 'MiD17' or 'MiD08' depending on input data set
+        :param debug: Boolean argument. If True, only the first 2000 trips are converted to diaries. This parameter is
+        used in the beta since the performance of the current tripDiaryBuilder is quite low.
+        """
+
         self.tripConfig = tripConfig
         self.globalConfig = globalConfig
         self.parsedData = ParseData
@@ -34,14 +53,9 @@ class TripDiaryBuilder:
                       dataPurpose=self.tripPurposeDiary)
 
     def tripDuration(self, timestampStart: np.datetime64, timestampEnd: np.datetime64) -> np.datetime64:
-        """
-        :param timestampStart: start time of a trip
-        :param timestampEnd:  end time of a trip
-        :return: Returns trip duration
-        """
         return timestampEnd - timestampStart
 
-    def calcHourShareStart(self, timestampStart: np.datetime64, timestampEnd: np.datetime64, duration) -> (pd.Series,
+    def calcHourShareStart(self, timestampStart: pd.Series, timestampEnd: pd.Series, duration: pd.Series) -> (pd.Series,
                                                                                                            pd.Series):
         """
         :param timestampStart: start time of a trip
@@ -56,7 +70,7 @@ class TripDiaryBuilder:
                                               (60 - timestampStart.dt.minute) / (duration.dt.seconds / 60)))
         return share.copy(), isSameHourTrip
 
-    def calcHourShareEnd(self, timestampEnd: np.datetime64, duration, isSameHourTrip: pd.DataFrame) -> pd.Series:
+    def calcHourShareEnd(self, timestampEnd: pd.Series, duration: pd.Series, isSameHourTrip: pd.Series) -> pd.Series:
         """
         :param timestampEnd: end time of a trip
         :param duration: duration of a trip
@@ -66,8 +80,8 @@ class TripDiaryBuilder:
         share = timestampEnd.dt.minute / (duration.dt.seconds / 60)
         return share.where(~isSameHourTrip, 0)
 
-    def calcDistanceShares(self, data: pd.DataFrame, duration, timestampSt: np.datetime64,
-                           timestampEn: np.datetime64) -> tuple:
+    def calcDistanceShares(self, data: pd.DataFrame, duration: pd.Series, timestampSt: str,
+                           timestampEn: str) -> tuple:
         """
         :param data: list of strings declaring the datasetIDs to be read in
         :param duration: duration of a trip
@@ -82,11 +96,14 @@ class TripDiaryBuilder:
                                              isSameHourTrip=isSameHourTrip)
         return shareHourStart.copy(), shareHourEnd.copy()
 
-    def numberOfFullHours(self, timestampStart: np.datetime64, timestampEnd: np.datetime64) -> pd.DataFrame:
+    def numberOfFullHours(self, timestampStart: pd.Series, timestampEnd: pd.Series) -> pd.DataFrame:
         """
-        :param timestampStart:  start time of a trip
-        :param timestampEnd: end time of a trip
-        :return: Returns a data frame of number of unutilized hours of individual trip #need to confirm this
+        Calculates the number of full hours in each trip. E.g. a trip taking 1:42 has 1 full hour and a 30-minute trip
+        has 0 full hours.
+
+        :param timestampStart:  Start timestamps of trips
+        :param timestampEnd: End times of trips
+        :return: Returns a data frame of number of full hours of all trips
         """
         timedeltaTrip = timestampEnd - timestampStart
         numberOfHours = timedeltaTrip.apply(lambda x: x.components.hours)
@@ -96,24 +113,32 @@ class TripDiaryBuilder:
         numberOfHours = numberOfHours.where(hasFullHourAfterFirstHour, other=0)
         return numberOfHours.where(numberOfDays != -1, other=0)
 
-    def calcFullHourTripLength(self, duration, numberOfFullHours: Callable, tripLength: pd.DataFrame) -> pd.DataFrame:
+    def calcFullHourTripLength(self, duration: pd.Series, numberOfFullHours: pd.Series, tripLength: pd.Series) -> \
+            pd.Series:
         """
-        :param duration: duration of a trip
-        :param numberOfFullHours:
-        :param tripLength: data frame of individual trip length
-        :return: Returns a data frame of hourly distance covered by each trip
+        Calculates the share of the full trip hours. E.g. the fullHourTripLength of a trip starting at 1:45 and ending
+        at 4:30 is 120 minutes / 165 minutes ~ 0.73.
+
+        :param duration: Series holding durations of all trips
+        :param numberOfFullHours: Series holding the number of full hours of all trips
+        :param tripLength: Series of trip lengths
+        :return: Returns a Series of full hour trip lengths for all trips
         """
+
         fullHourTripLength = (numberOfFullHours / (duration.dt.seconds / 3600)) * tripLength
         fullHourTripLength.loc[duration == pd.Timedelta(0)] = 0  # set trip length to 0 that would otherwise be NaN
         return fullHourTripLength
 
-    def calcHourlyShares(self, data: pd.DataFrame, ts_st: np.datetime64, ts_en: np.datetime64) -> pd.DataFrame:
+    def calcHourlyShares(self, data: pd.DataFrame, ts_st: str, ts_en: str) -> pd.DataFrame:
         """
-        :param data: list of strings declaring the datasetIDs to be read in
-        :param ts_st: start time of a trip
-        :param ts_en: end time of a trip
+        Calculates the shares of first hour, the share of full hours and the full hour trip length.
+
+        :param data: Trip data
+        :param ts_st: String specifying the trip start column
+        :param ts_en: String specifying the trip end column
         :return: data frame consisting additional information regarding share of a trip, number of full hours and lenght of each trip
         """
+
         duration = self.tripDuration(data.loc[:, ts_st], data.loc[:, ts_en])
         data.loc[:, 'shareStartHour'], data.loc[:, 'shareEndHour'] = self.calcDistanceShares(data, duration, ts_st, ts_en)
         data.loc[:, 'noOfFullHours'] = self.numberOfFullHours(data.loc[:, ts_st], data.loc[:, ts_en])
@@ -122,6 +147,13 @@ class TripDiaryBuilder:
         return data
 
     def calculateConsistentHourlyShares(self, data: pd.DataFrame):
+        """
+        Wrapper around calcHourlyShares also filtering inconsistent trips.
+
+        :param data: Trip data
+        :return: Filtered trip data
+        """
+
         print('Calculating hourly shares')
         if not data._is_view:
             data = data.copy()  #FIXME: why is data._is_view False if we get a view
@@ -140,26 +172,42 @@ class TripDiaryBuilder:
         :param nHours: integer giving the number of columns that should be added to the dataframe
         :return: data frame with columns given and nHours additional columns appended with 0s
         """
-        emptyDf = pd.DataFrame(index=indexCol, columns=range(nHours))
-        return (emptyDf)
+        return pd.DataFrame(index=indexCol, columns=range(nHours))
 
     def fillDataframe(self, hourlyArray: pd.DataFrame, fillFunction) -> pd.DataFrame:
-        hourlyArray = hourlyArray.apply(fillFunction, axis=1)
-        return hourlyArray
+        return hourlyArray.apply(fillFunction, axis=1)
 
     def mergeTrips(self, tripData: pd.DataFrame) -> pd.DataFrame:
+        """
+        Merge multiple individual hourly trip distances into one diary consisting of multiple trips
+
+        :param tripData: Input trip data with hourly distances of all hourly trips
+        :return: Merged trip distance diaries
+        """
         dataDay = tripData.groupby(['hhPersonID']).sum()
         dataDay = dataDay.drop('tripID', axis=1)
         return dataDay
 
-    def initiateColRange(self, row):
+    def initiateColRange(self, row: pd.Series):
+        """
+        Returns a range object with start and end hour as limits
+
+        :param row: A trip observation
+        :return:
+        """
         if row['tripStartHour'] + 1 < row['tripEndHour']:
             return range(row['tripStartHour'] + 1, row['tripEndHour'])  # The hour of arrival (tripEndHour) will
             # not be indexed further below but is part of the range() object
         else:
             return None
 
-    def tripDistanceAllocation(self, globalConfig : dict):
+    def tripDistanceAllocation(self, globalConfig : dict) -> pd.DataFrame:
+        """
+        Wrapper function for the conversion of trip distance values (in a column) to hourly trip distance diaries.
+
+        :param globalConfig: Dictionary holding relative paths, filenames and run labels
+        :return: Trip distance diary as a pd.DataFrame
+        """
         print('Trip distance diary setup starting')
         self.formatDF = self.initiateHourDataframe(indexCol=self.tripDataClean.index, nHours=globalConfig['numberOfHours'])
         fillHourValues = FillHourValues(data=self.tripDataClean, rangeFunction=self.initiateColRange)
@@ -167,8 +215,8 @@ class TripDiaryBuilder:
         driveDataTrips.loc[:, ['hhPersonID', 'tripID']] = pd.DataFrame(self.tripDataClean.loc[:, ['hhPersonID',
                                                                                                   'tripID']])
         driveDataTrips = driveDataTrips.astype({'hhPersonID': int, 'tripID': int})
-        return self.mergeTrips(driveDataTrips)
         print('Finished trip distance diary setup')
+        return self.mergeTrips(driveDataTrips)
 
     def assignDriving(self, driveData: pd.DataFrame) -> pd.DataFrame:
         """
@@ -181,12 +229,13 @@ class TripDiaryBuilder:
         locationData = locationData.where(locationData == 0, other='DRIVING')
         return locationData
 
-    def determinePurposeStartHour(self, departure: np.datetime64, arrival: np.datetime64):
+    def determinePurposeStartHour(self, departure: np.datetime64, arrival: np.datetime64) -> int:
         """
+        Determines the start hour of a parking activity depending on previous trip end time and next trip start time
 
-        :param departure:  start time of a trip
-        :param arrival: end time of a trip
-        :return: Returns more specific start hour of a trip when departure hour and arrival hour of a trip are equal
+        :param departure: Start time of next trip after parking
+        :param arrival: End time of previous trip
+        :return: Returns start hour of a parking activity
         """
 
         if departure.hour == arrival.hour:
@@ -203,9 +252,13 @@ class TripDiaryBuilder:
 
     def fillDayPurposes(self, tripData: pd.DataFrame, purposeDataDays: pd.DataFrame) -> pd.DataFrame:  # FixMe: Ask Ben for performance improvements
         """
+        Main purpose diary builder function. Root of low performance of tripDiaryBuilder. Will be improved in future
+        releases.
+
         :param tripData: data frame holding all the information about individual trip
-        :param purposeDataDays:
-        :return: Returns a data frame of individual trip with it's hourly activity or location of trip
+        :param purposeDataDays: DataFrame with 24 (hour) columns holding 0s and 'DRIVING' for trip hours (for hours
+        where majority of time is driving)
+        :return: Returns a data frame of individual trip with it's hourly activity or parking purpose
         """
         hpID = str()
         maxWID = int()
@@ -291,9 +344,14 @@ class TripDiaryBuilder:
         return purposeDataDays
 
     def tripPurposeAllocation(self):
+        """
+        Wrapper function for trip purpose allocation. Falsely non-allocated parking purposes are replaced by "HOME".
+
+        :return: None
+        """
         print('Starting trip purpose diary setup')
         tripPurposesDriving = self.assignDriving(self.tripDistanceDiary)
-        self.tripPurposeDiary = self.fillDayPurposes(self.tripDataClean, tripPurposesDriving)
+        self.tripPurposeDiary = self.fillDayPurposes(tripData=self.tripDataClean, purposeDataDays=tripPurposesDriving)
         self.tripPurposeDiary.replace({'0.0': 'HOME'})  # Replace remaining non-allocated purposes with HOME
         print('Finished purpose replacements')
         print(f'There are {len(self.tripPurposeDiary)} daily trip diaries.')
@@ -308,6 +366,15 @@ class TripDiaryBuilder:
         return tripDict
 
     def writeOut(self, globalConfig:dict, dataDrive: pd.DataFrame, dataPurpose: pd.DataFrame, datasetID: str = 'MiD17'):
+        """
+        General writeout utility for tripDiaries
+
+        :param globalConfig: global config storing relative paths, filenames and run labels
+        :param dataDrive: Driving distance diary for each survey participant
+        :param dataPurpose: Parking purpose diary for each survey participant
+        :param datasetID: ID used for filenames
+        :return: None
+        """
         dataDrive.to_csv(Path(globalConfig['pathRelative']['diaryOutput']) /
                          createFileString(globalConfig=globalConfig, fileKey='inputDataDriveProfiles',
                                           datasetID=datasetID),
