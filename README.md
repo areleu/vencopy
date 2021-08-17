@@ -25,19 +25,68 @@ Installation
 Install using the environment management system conda, open the conda console navigate to your VencoPy folder and run the following commands
 
 ```python
-conda create -f requirementsPreRelease.yml
+conda create -f requirements.yml
 [confirm]
 ```
 
-An environment named "VencoPy_preRelease" will be created. Activate by entering
+An environment named "VencoPy_env" will be created. Activate by entering
 ```python
-conda activate VencoPy_preRelease 
+conda activate VencoPy_env
 ```
 
-In the same folder, run VencoPy by typing 
+Build your package locally (compared to from the package index PyPI) by navigating to the folder that you checked out 
+and typing
+
 ```python
-python venco_main.py
+pip install .
 ```
+
+Navigate to a parent directory where you want to create your VencoPy user folder in and type
+
+```python
+vencopy
+```
+
+You will be prompted for a userfolder name, type it and hit enter. Your VencoPy user folder will now be created. It
+will look like this
+
+.
++-- FOLDERNAME
+|   +-- config
+|   |   +-- evaluatorConfig.yaml
+|   |   +-- flexConfig.yaml
+|   |   +-- globalConfig.yaml
+|   |   +-- gridConfig.yaml
+|   |   +-- localPathConfig.yaml
+|   |   +-- parseConfig.yaml
+|   |   +-- tripConfig.yaml
+|   +-- output
+|   |   +-- dataParser
+|   |   +-- evaluator
+|   |   +-- flexEstimator
+|   |   +-- gridModeler
+|   |   +-- tripDiaryBuilder
+|   +-- tutorials
+|   |   +-- ...
+|   +-- run.py
+
+The configs in the config folder are the main interface between the user and the code. In order to learn more about 
+them, check out our tutorials. For this you won't need any additional data.
+
+To run VencoPy in full mode, you will need the data set Mobilität in Deutschland (German for mobility in Germany), you
+can request it here from the clearingboard transport: https://daten.clearingstelle-verkehr.de/order-form.html Currently, 
+VencoPy is only tested with the B2 data set.
+
+In your localPathConfig.yaml, please enter the path to your local MiD STATA folder, it will end on .../B2/STATA/. Now
+open your user folder in an IDE, configure your interpreter (environment) or type 
+
+```python
+python run.py
+``` 
+
+and enjoy the tool!
+
+
 
 Codestyle
 ---
@@ -47,8 +96,9 @@ Documentation
 ---
 Build docu from a conda bash with activated environment typing
 
-sphinx-build -b html ./source/ ./build/
+sphinx-build -b html ./docs/ ./build/
 
 Want to contribute?
 ---
-Email
+Great, welcome on the VP team! Please read our contribute section in the docu and reach out to Niklas 
+(niklas.wulff@dlr.de). 
