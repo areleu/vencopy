@@ -1,13 +1,13 @@
 #-*- coding:utf-8 -*-
 
-# __version__ = '0.0.9'
-# __maintainer__ = 'Niklas Wulff 2019-02-12'
+# __version__ = '0.1.0'
+# __maintainer__ = 'Niklas Wulff'
 # __contributors__ = 'Fabia Miorelli, Parth Butte'
-# __email__ = 'Niklas.Wulff@dlr.de'
+# __email__ = 'niklas.wulff@dlr.de'
 # __birthdate__ = '2019-02-12'
-# __status__ = 'dev'  # options are: dev, test, prod
+# __status__ = 'prod'  # options are: dev, test, prod
 
-# This config holds all relative paths and filenames for dataParsers.py
+# This config holds all relevant properties for the interface to MiD for dataParsers.py
 
 encryptionPW: 'PW'
 

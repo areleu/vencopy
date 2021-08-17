@@ -1,9 +1,9 @@
-__version__ = '0.0.9'
+__version__ = '0.1.0'
 __maintainer__ = 'Niklas Wulff 31.12.2019'
 __contributors__ = 'Fabia Miorelli, Parth Butte'
 __email__ = 'Niklas.Wulff@dlr.de'
 __birthdate__ = '31.12.2019'
-__status__ = 'dev'  # options are: dev, test, prod
+__status__ = 'prod'  # options are: dev, test, prod
 
 import pprint
 import pandas as pd
@@ -38,8 +38,7 @@ class DataParser:
         self.datasetID = self.checkDatasetID(datasetID, parseConfig)
         self.parseConfig = parseConfig
         self.globalConfig = globalConfig
-        self.rawDataPath = Path(localPathConfig['pathAbsolute'][self.datasetID]) / \
-                           globalConfig['files'][self.datasetID]['tripsDataRaw']
+        self.rawDataPath = Path(localPathConfig['pathAbsolute'][self.datasetID]) / globalConfig['files'][self.datasetID]['tripsDataRaw']
         self.subDict = {}
         self.rawData = None
         self.data = None

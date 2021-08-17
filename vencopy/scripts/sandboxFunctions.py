@@ -6,6 +6,8 @@ __birthdate__ = '31.12.2019'
 __status__ = 'dev'  # options are: dev, test, prod
 
 
+# THIS FILE IS A COLLECTION OF OLD OR UNUSED FUNCTIONS THAT ARE NOT TESTED OR USED
+
 import io
 import getpass
 import pandas as pd
@@ -56,18 +58,18 @@ def filterOutTripsBelongingToMultiModalDays(data):
     idsWFirstTrip = data.loc[data.loc[:, 'tripID'] == 1, 'hhPersonID']
     return data.loc[data.loc[:, 'hhPersonID'].isin(idsWFirstTrip), :]
 
+
 def replaceTripsBeforeFirstTrips(driveData, replacement:str):
     firstTripIdx = driveData.loc[~driveData.isnull()].index[0]
     driveData.loc[range(0, firstTripIdx)] = replacement
     return driveData
 
-def assignHome(driveData):
-    pass
 
 def assignPurpose(driveData, tripData):
     firstHour = tripData['tripStartHour']
     lastHour = tripData['tripEndHour']
     tripPurpose = tripData['tripPurpose']
+
 
 def initiateColRange(self, row):
     if row['tripStartHour'] + 1 < row['tripEndHour']:
@@ -75,6 +77,7 @@ def initiateColRange(self, row):
                     'tripEndHour'])  # The hour of arrival (tripEndHour) will not be indexed further below but is part of the range() object
     else:
         return None
+
 
 class FillTripPurposes:
     def __init__(self, tripData, mergedDayTrips, rangeFunction=initiateColRange):
@@ -93,21 +96,12 @@ class FillTripPurposes:
             row[self.fullHourCols[idx]] = self.fullHourRange[idx]
         return row
 
+
 def hoursToDatetime(tripData):
     tripData.loc[:, 'W_SZ_datetime'] = pd.to_datetime(tripData.loc[:, 'tripStartClock'])
     tripData.loc[:, 'W_AZ_datetime'] = pd.to_datetime(tripData.loc[:, 'tripEndClock'])
     return tripData
 
-
-# def writeOut(config, datasetID, dataDrive, dataPurpose):
-#     dataDrive.to_csv(Path(config['pathRelative']['input']) /
-#                      createFileString(config=config, fileKey='inputDataDriveProfiles', dataset=datasetID), na_rep=0)
-#     dataPurpose.to_csv(Path(config['pathRelative']['input']) /
-#                        createFileString(config=config, fileKey='purposesProcessed', dataset=datasetID))
-#     print(f"Drive data and trip purposes written to files "
-#           f"{createFileString(config=config, fileKey='inputDataDriveProfiles', dataset=datasetID)} and"
-#           f"{createFileString(config=config, fileKey='purposesProcessed', dataset=datasetID)}")
-#
 
 def readZipData(filePath):
     """
@@ -154,8 +148,6 @@ def returnBottomKeys(self, baseDict: dict, lst: list = []):
     return lst
 
 
-
-
 def writeAnnualOutputForREMix(profileDict, outputConfig, outputPath, noOfHoursOutput, technologyLabel, strAdd):
     """
     Output wrapper function to call cloneAndWriteProfile once for each output profile.
@@ -171,7 +163,6 @@ def writeAnnualOutputForREMix(profileDict, outputConfig, outputPath, noOfHoursOu
     for iName, iProf in profileDict.items():
         filename = technologyLabel + '_' + iName + strAdd
         cloneAndWriteProfile(iProf, outputConfig, outputPath, noOfHoursOutput, technologyLabel, filename)
-
 
 
 def cloneAndWriteProfile(profile, outputConfig, outputPath, noOfHoursOutput, technologyLabel, filename):
@@ -247,6 +238,7 @@ def createEmptyDataFrame(technologyLabel, numberOfHours, nodes):
     df.loc[s3, ''] = df.loc[s3, ''].apply(lambda x: "{}{}".format('t', x))
     return df
 
+
 def appendREMixProfiles(pre, names, post, pathFiles, pathOutput, outputPre, outputPost):
     """
     REMix specific append functionality to integrate results of three different VencoPy-runs into one file per profile.
@@ -290,6 +282,7 @@ def composeStringDict(pre, names, post):
         dict[nIdx] = listStr
     return dict
 
+
 def wavg(data, avg_name, weight_name):
     """ http://stackoverflow.com/questions/10951341/pandas-dataframe-aggregate-function-using-multiple-columns
     In rare instance, we may not have weights, so just return the mean. Customize this if your business case
@@ -302,10 +295,12 @@ def wavg(data, avg_name, weight_name):
     except ZeroDivisionError:
         return d.mean()
 
+
 def determinePurposeHourRange(self, departure, arrival):
     tripDuration = arrival - departure
     startHour = self.determinePurposeStartHour(departure, tripDuration)
     return range(startHour, self.endHour)
+
 
 def readInputScalars(self, filePath) -> pd.DataFrame:
     """
@@ -324,11 +319,13 @@ def readInputScalars(self, filePath) -> pd.DataFrame:
     scalarsOut = inputRaw.set_index('parameter')
     return scalarsOut
 
+
 def calcNTripsPerDay(self):
     """
     :return: Returns number of trips trips per household person per day
     """
     return self.data['hhPersonID'].value_counts().mean()
+
 
 def calcDailyTravelDistance(self):
     """
@@ -337,12 +334,14 @@ def calcDailyTravelDistance(self):
     dailyDistances = self.data.loc[:, ['hhPersonID', 'tripDistance']].groupby(by=['hhPersonID']).sum()
     return dailyDistances.mean()
 
+
 def calcDailyTravelTime(self):
     """
     :return: Returns daily travel time per household person
     """
     travelTime = self.data.loc[:, ['hhPersonID', 'travelTime']].groupby(by=['hhPersonID']).sum()
     return travelTime.mean()
+
 
 def calcAverageTripDistance(self):
     """

@@ -1,9 +1,10 @@
-__version__ = '0.0.9'
+__version__ = '0.1.0'
 __maintainer__ = 'Niklas Wulff 31.12.2019'
 __contributors__ = 'Fabia Miorelli, Parth Butte'
 __email__ = 'Niklas.Wulff@dlr.de'
 __birthdate__ = '31.12.2019'
-__status__ = 'dev'  # options are: dev, test, prod
+__status__ = 'prod'  # options are: dev, test, prod
+__license__ = 'BSD-3-Clause'
 
 
 import pandas as pd
@@ -15,22 +16,22 @@ import os
 from vencopy.scripts.globalFunctions import createFileString
 
 
-
 class TripDiaryBuilder:
-    def __init__(self, tripConfig: dict, globalConfig: dict, ParseData, datasetID: str = 'MiD17'):
+    def __init__(self, tripConfig: dict, globalConfig: dict, ParseData, datasetID: str = 'MiD17', debug: bool=False):
         self.tripConfig = tripConfig
         self.globalConfig = globalConfig
         self.parsedData = ParseData
         self.tripDataClean = None
         self.tripDistanceDiary = None
         self.tripPurposeDiary = None
-        #self.tripDataClean = self.calculateConsistentHourlyShares(data=ParseData.data)
-        # ONLY FOR DEBUGGING PURPOSES
-        self.tripDataClean = self.calculateConsistentHourlyShares(data=ParseData.data.loc[0:2000, :])
+        if debug:
+            self.tripDataClean = self.calculateConsistentHourlyShares(data=ParseData.data.loc[0:2000, :])
+        else:
+            self.tripDataClean = self.calculateConsistentHourlyShares(data=ParseData.data)
         self.tripDistanceDiary = self.tripDistanceAllocation(globalConfig)
         self.tripPurposeAllocation()
         self.writeOut(globalConfig=globalConfig, datasetID=datasetID, dataDrive=self.tripDistanceDiary,
-                 dataPurpose=self.tripPurposeDiary)
+                      dataPurpose=self.tripPurposeDiary)
 
     def tripDuration(self, timestampStart: np.datetime64, timestampEnd: np.datetime64) -> np.datetime64:
         """
@@ -345,9 +346,6 @@ if __name__ == '__main__':
     pathParseConfig = Path.cwd().parent / 'config' / 'parseConfig.yaml'
     with open(pathParseConfig) as ipf:
         parseConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
-    pathGlobalConfig = Path.cwd().parent / 'config' / 'globalConfig.yaml'
-    with open(pathGlobalConfig) as ipf:
-        globalConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
     pathTripConfig = Path.cwd().parent / 'config' / 'tripConfig.yaml'
     with open(pathTripConfig) as ipf:
         tripConfig = yaml.load(ipf, Loader=yaml.SafeLoader)

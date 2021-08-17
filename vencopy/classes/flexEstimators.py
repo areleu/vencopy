@@ -1,9 +1,9 @@
-__version__ = '0.0.9'
+__version__ = '0.1.0'
 __maintainer__ = 'Niklas Wulff'
 __contributors__ = 'Fabia Miorelli, Parth Butte'
 __email__ = 'Niklas.Wulff@dlr.de'
 __birthdate__ = '03.11.2019'
-__status__ = 'dev'  # options are: dev, test, prod
+__status__ = 'prod'  # options are: dev, test, prod
 __license__ = 'BSD-3-Clause'
 
 
@@ -47,7 +47,6 @@ class FlexEstimator:
         :param datasetID: String used for file name composition on input files
         """
 
-        #self.config = config
         self.globalConfig = globalConfig
         self.flexConfig = flexConfig
         self.evaluatorConfig = evaluatorConfig
@@ -55,9 +54,8 @@ class FlexEstimator:
         self.datasetID = datasetID
         self.driveProfilesIn, self.plugProfilesIn = self.readVencoInput(datasetID=datasetID)
         self.mergeDataToWeightsAndDays(ParseData)
-        self.weights = self.indexWeights(weights=self.driveProfilesIn.loc[:, ['hhPersonID', 'tripStartWeekday', 'tripWeight']])
-        # self.outputConfig = yaml.load(open(Path(self.globalConfig['pathRelative']['config']) /
-        #                                    self.globalConfig['files']['outputConfig']), Loader=yaml.SafeLoader)
+        self.weights = self.indexWeights(weights=self.driveProfilesIn.loc[:, ['hhPersonID', 'tripStartWeekday',
+                                                                              'tripWeight']])
         self.driveProfiles, self.plugProfiles = self.indexDriveAndPlugData(driveData=self.driveProfilesIn,
                                                                            plugData=self.plugProfilesIn,
                                                                            dropIdxLevel='tripWeight',
@@ -117,7 +115,7 @@ class FlexEstimator:
         self.socMinNorm = None
         self.socMaxNorm = None
 
-        # Attributes for writeout and plotting
+        # Attributes for write-out and plotting
         self.profileDictOut = {}
 
         print('Flex Estimator initialization complete')
@@ -940,7 +938,7 @@ if __name__ == '__main__':
     from vencopy.classes.dataParsers import DataParser
     from vencopy.classes.evaluators import Evaluator
     datasetID = 'MiD17'
-    pathGlobalConfig = Path.cwd().parent / 'config' / 'globalConfig.yaml'  # pathLib syntax for windows, mac, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
+    pathGlobalConfig = Path.cwd().parent / 'config' / 'globalConfig.yaml'
     with open(pathGlobalConfig) as ipf:
         globalConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
     pathFlexConfig = Path.cwd().parent / 'config' / 'flexConfig.yaml'
@@ -965,5 +963,5 @@ if __name__ == '__main__':
     vpEval = Evaluator(globalConfig=globalConfig, evaluatorConfig=evaluatorConfig,
                        parseData=pd.Series(data=vpData, index=[datasetID]))
     vpEval.plotProfiles(flexEstimator=vpFlexEst)
-    print(f'Total absolute electricity charged in uncontrolled charging based on MiD08: '
+    print(f'Total absolute electricity charged in uncontrolled charging: '
           f'{vpFlexEst.chargeProfilesUncontrolled.sum().sum()} based on MiD17')

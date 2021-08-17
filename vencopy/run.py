@@ -1,9 +1,9 @@
-__version__ = '0.0.9'
+__version__ = '0.1.0'
 __maintainer__ = 'Niklas Wulff'
 __contributors__ = 'Fabia Miorelli, Parth Butte'
-__email__ = 'Niklas.Wulff@dlr.de'
+__email__ = 'niklas.wulff@dlr.de'
 __birthdate__ = '23.10.2020'
-__status__ = 'dev'  # options are: dev, test, prod
+__status__ = 'prod'  # options are: dev, test, prod
 __license__ = 'BSD-3-Clause'
 
 
@@ -21,8 +21,8 @@ from vencopy.classes.evaluators import Evaluator
 if __name__ == '__main__':
     # Set dataset and config to analyze
     datasetID = 'MiD17'
-    # review: should the datasetID not be part of the config files?
-    pathGlobalConfig = pathlib.Path.cwd() / 'config' / 'globalConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
+    # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
+    pathGlobalConfig = pathlib.Path.cwd() / 'config' / 'globalConfig.yaml'
     with open(pathGlobalConfig) as ipf:
         globalConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
     pathLocalPathConfig = pathlib.Path.cwd() / 'config' / 'localPathConfig.yaml'
@@ -48,7 +48,7 @@ if __name__ == '__main__':
 
     # Trip distance and purpose diary compositions
     vpTripDiary = TripDiaryBuilder(datasetID=datasetID, tripConfig=tripConfig, globalConfig=globalConfig,
-                                   ParseData=vpData)
+                                   ParseData=vpData, debug=True)
 
     # Grid model applications
     vpGrid = GridModeler(gridConfig=gridConfig, globalConfig=globalConfig, datasetID=datasetID)
@@ -71,5 +71,3 @@ if __name__ == '__main__':
     vpFlex.writeOut()
 
     vpEval.plotProfiles(flexEstimator=vpFlex)
-
-
