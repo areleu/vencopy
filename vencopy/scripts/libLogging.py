@@ -6,6 +6,7 @@ __email__ = 'Benjamin.Fuchs@dlr.de'
 __birthdate__ = '26.07.2019'
 __status__ = 'dev'  # options are: dev, test, prod
 
+# CURRENTLY NOT USED IN VENCOPY
 
 import functools
 import time

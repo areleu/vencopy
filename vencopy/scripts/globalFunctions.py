@@ -1,18 +1,14 @@
-__version__ = '0.0.9'
-__maintainer__ = 'Niklas Wulff 31.12.2019'
+__version__ = '0.1.0'
+__maintainer__ = 'Niklas Wulff'
 __contributors__ = 'Fabia Miorelli, Parth Butte'
-__email__ = 'Niklas.Wulff@dlr.de'
+__email__ = 'niklas.wulff@dlr.de'
 __birthdate__ = '31.12.2019'
-__status__ = 'dev'  # options are: dev, test, prod
+__status__ = 'prod'  # options are: dev, test, prod
 __license__ = 'BSD-3-Clause'
 
 import pandas as pd
 import yaml
 import pathlib
-
-
-def setupFolder():
-    pass
 
 
 def createFileString(globalConfig: dict, fileKey: str, datasetID: str=None, manualLabel: str = '',
@@ -28,9 +24,7 @@ def createFileString(globalConfig: dict, fileKey: str, datasetID: str=None, manu
     :param filetypeStr: filetype to be written to hard disk
     :return: Full name of file to be written.
     """
-
     if datasetID is None:
-
         return f"{globalConfig['files'][fileKey]}_{globalConfig['labels']['runLabel']}_{manualLabel}.{filetypeStr}"
     return f"{globalConfig['files'][datasetID][fileKey]}_{globalConfig['labels']['runLabel']}_{manualLabel}_" \
            f"{datasetID}.{filetypeStr}"

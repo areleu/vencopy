@@ -1,9 +1,9 @@
-__version__ = '0.0.9'
+__version__ = '0.1.0'
 __maintainer__ = 'Niklas Wulff 31.12.2019'
 __contributors__ = 'Fabia Miorelli, Parth Butte'
 __email__ = 'Niklas.Wulff@dlr.de'
 __birthdate__ = '31.12.2019'
-__status__ = 'dev'  # options are: dev, test, prod
+__status__ = 'prod'  # options are: dev, test, prod
 
 import pprint
 import pandas as pd
@@ -15,7 +15,7 @@ from zipfile import ZipFile
 
 
 class DataParser:
-    def __init__(self, parseConfig: dict, globalConfig: dict, localPathConfig: dict, datasetID: str = 'MiD17',
+    def __init__(self, parseConfig: dict, globalConfig: dict, localPathConfig: dict, datasetID: str='MiD17',
                  loadEncrypted=True):
         """
         Basic class for parsing a mobility survey trip data set. Currently the both German travel surveys MiD 2008 and
@@ -48,8 +48,10 @@ class DataParser:
         self.updateFilterDict()
         print('Parsing properties set up')
         if loadEncrypted:
-            print(f"Starting to retrieve encrypted data file from {self.globalConfig['pathAbsolute']['encryptedZipfile']}")
-            self.loadEncryptedData(pathToZip=Path(self.globalConfig['pathAbsolute']['encryptedZipfile']) / self.globalConfig['files'][self.datasetID]['encryptedZipFileB2'],
+            print(f"Starting to retrieve encrypted data file from "
+                  f"{self.globalConfig['pathAbsolute']['encryptedZipfile']}")
+            self.loadEncryptedData(pathToZip=Path(self.globalConfig['pathAbsolute']['encryptedZipfile']) /
+                                             self.globalConfig['files'][self.datasetID]['encryptedZipFileB2'],
                                    pathInZip=globalConfig['files'][self.datasetID]['tripDataZipFileRaw'])
         else:
             print(f"Starting to retrieve local data file from {self.rawDataPath}")
@@ -84,8 +86,8 @@ class DataParser:
         """
         availableDatasetIDs = parseConfig['dataVariables']['datasetID']
         assert datasetID in availableDatasetIDs, \
-            f'Defined datasetID {datasetID} not specified under dataVariables in parseConfig. Specified datasetIDs are ' \
-            f'{availableDatasetIDs}'
+            f'Defined datasetID {datasetID} not specified under dataVariables in parseConfig. Specified datasetIDs ' \
+            f'are {availableDatasetIDs}'
         return datasetID
 
     def compileVariableList(self) -> list:
@@ -98,7 +100,8 @@ class DataParser:
         :return: List of variables
         """
         listIndex = self.parseConfig['dataVariables']['datasetID'].index(self.datasetID)
-        variables = [val[listIndex] if not val[listIndex] == 'NA' else 'NA' for key, val in self.parseConfig['dataVariables'].items()]
+        variables = [val[listIndex] if not val[listIndex] == 'NA' else 'NA' for key, val in
+                     self.parseConfig['dataVariables'].items()]
         variables.remove(self.datasetID)
         self.removeNA(variables)
         return variables
@@ -476,4 +479,3 @@ if __name__ == '__main__':
     p = DataParser(localPathConfig=localPathConfig, parseConfig=parseConfig, globalConfig=globalConfig,
                    loadEncrypted=False, datasetID=datasetID)
     print(p.data.head())
-    print('end')

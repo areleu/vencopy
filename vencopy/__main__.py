@@ -1,6 +1,7 @@
-__version__ = "0.0.9"
+__version__ = "0.1.0"
 __author__ = 'Niklas Wulff'
 __contributors__ = 'Fabia Miorelli, Benjamin Fuchs'
+__email__ = 'niklas.wulff@dlr.de'
 __credits__ = 'German Aerospace Center (DLR)'
 __license__ = 'BSD-3-Clause'
 

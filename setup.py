@@ -1,3 +1,9 @@
+__version__ = "0.1.0"
+__author__ = 'Niklas Wulff'
+__contributors__ = 'Benjamin Fuchs'
+__credits__ = 'German Aerospace Center (DLR)'
+__license__ = 'BSD-3-Clause'
+
 import os
 import pathlib
 from setuptools import setup, find_packages
@@ -14,10 +20,9 @@ def walkDataFiles(directory):
 dataFilePaths = walkDataFiles('./vencopy/config')
 dataFilePaths.extend(walkDataFiles('./vencopy/tutorials'))
 long_description = (pathlib.Path(__file__).parent.resolve() / 'README.md').read_text(encoding='utf-8')
-
 setup(
     name='vencopy',
-    version='0.0.16',
+    version='0.0.18',
     description='Vehicle Energy Consumption in Python: A tool to simulate load flexibility of electric vehicle fleets.',
     long_description=long_description,
     long_description_content_type='text/markdown',
@@ -28,11 +33,12 @@ setup(
     packages=['vencopy', 'vencopy.classes', 'vencopy.scripts'],
     package_data={'': dataFilePaths},
     install_requires=['pandas >= 1.1.1, <= 1.2.5',
+                      'ruamel',
                       'seaborn >= 0.9.0',
                       'sphinx >= 2.3.1',
                       'openpyxl >= 3.0.3',
                       'sphinx_rtd_theme >= 0.5.2',
-                      # 'jupyterlab >= 3.1.0',
+                      'jupyterlab >= 3.1.0',
                       'Click >= 8.0.1',
                       'pyyaml >= 5.1.2'],
     entry_points={
@@ -51,3 +57,4 @@ setup(
         'Programming Language :: Python :: 3.8',
         'Topic :: Scientific/Engineering'],
 )
+

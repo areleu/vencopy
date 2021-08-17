@@ -1,14 +1,15 @@
 #-*- coding:utf-8 -*-
 
-# __version__ = '0.0.9'
-# __maintainer__ = 'Niklas Wulff 2019-02-12'
+# __version__ = '0.1.0'
+# __maintainer__ = 'Niklas Wulff'
 # __contributors__ = 'Fabia Miorelli, Parth Butte'
 # __email__ = 'Niklas.Wulff@dlr.de'
 # __birthdate__ = '2019-02-12'
-# __status__ = 'dev'  # options are: dev, test, prod
+# __status__ = 'prod'  # options are: dev, test, prod
 
-# This config holds all relative paths and filenames for evaluators.py
+# This config holds all plotting properties for evaluators.py
 
+# Currently not used, implemented for cloning daily profiles to full year for application in ESMs
 postprocessing:
     hoursClone: 8760
 

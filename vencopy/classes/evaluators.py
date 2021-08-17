@@ -1,9 +1,9 @@
-__version__ = '0.0.9'
+__version__ = '0.1.0'
 __maintainer__ = 'Niklas Wulff'
 __contributors__ = 'Fabia Miorelli, Parth Butte'
 __email__ = 'Niklas.Wulff@dlr.de'
 __birthdate__ = '21.09.2020'
-__status__ = 'dev'  # options are: dev, test, prod
+__status__ = 'test'  # options are: dev, test, prod
 __license__ = 'BSD-3-Clause'
 
 import yaml
@@ -19,8 +19,7 @@ from vencopy.scripts.globalFunctions import createFileString, calculateWeightedA
 
 
 class Evaluator:
-    def __init__(self, globalConfig:dict, evaluatorConfig: dict, parseData: pd.Series = None,
-                 weightPlot=True):
+    def __init__(self, globalConfig:dict, evaluatorConfig: dict, parseData: pd.Series = None, weightPlot=True):
         """
         CURRENTLY IN SEMI-PROUDCTION MODE. Some interfaces may only apply to specific cases.
         Overall evaluation class for assessing vencopy mobility and charging profiles.
@@ -363,8 +362,6 @@ class Evaluator:
         :param filenames: List of filenames to write the plots to. Has to be of same length as profileDictList
         :return: None
         """
-        # self.linePlot(flexEstimator.profileDictOut, pathOutput=Path(flexEstimator.globalConfig['pathRelative']['plots']),
-        #               flexEstimator=flexEstimator, show=True, write=True, filename='allPlots' + flexEstimator.datasetID)
 
         if profileDictList is None:
             # Separately plot flow and state profiles
@@ -383,9 +380,6 @@ class Evaluator:
             yLabels = ['Average EV connection share', 'Average EV flow in kW', 'Average EV SOC in kWh']
             filenames = [flexEstimator.datasetID + '_connection', flexEstimator.datasetID + '_flows',
                                           flexEstimator.datasetID + '_state']
-            # yLimits = [1, 1, 20]
-        # self.separateLinePlots(profileDictList, show=True, write=True, flexEstimator=flexEstimator,
-        #                        ylabel=yLabels, filenames=filenames, ylim=yLimits)
         self.separateLinePlots(profileDictList, show=True, write=True, flexEstimator=flexEstimator,
                                ylabel=yLabels, filenames=filenames)
 
@@ -459,7 +453,7 @@ class Evaluator:
             ret.append(iDict)
         return ret
 
-    def compileProfileComparisonDict(keys: list, values: list):
+    def compileProfileComparisonDict(self, keys: list, values: list):
         return {iKey: iVal for iKey, iVal in zip(keys, values)}
 
     def compareUncontrolledCharging(self, pathToFile: str, sheetname: str):
@@ -492,9 +486,9 @@ if __name__ == '__main__':
     os.chdir(localPathConfig['pathAbsolute']['vencoPyRoot'])
     parseDataAll = pd.Series(dtype=object)
     parseDataAll['MiD08'] = DataParser(datasetID='MiD08', parseConfig=parseConfig, globalConfig=globalConfig,
-                          localPathConfig=localPathConfig, loadEncrypted=False)
+                                       localPathConfig=localPathConfig, loadEncrypted=False)
     parseDataAll['MiD17'] = DataParser(datasetID='MiD17', parseConfig=parseConfig, globalConfig=globalConfig,
-                          localPathConfig=localPathConfig, loadEncrypted=False)
+                                       localPathConfig=localPathConfig, loadEncrypted=False)
 
     vpEval = Evaluator(globalConfig=globalConfig, evaluatorConfig=evaluatorConfig, parseData=parseDataAll)
     vpEval.hourlyAggregates = vpEval.calcVariableSpecAggregates(by=['tripStartWeekday'])
