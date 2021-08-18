@@ -18,6 +18,10 @@
 /output/*
 !/output/.gitkeep
 
+# local analysis
+KiD_db_merge.py
+vencopy/output/*
+
 # old or irrelevant files and folders
 /administration
 /archive

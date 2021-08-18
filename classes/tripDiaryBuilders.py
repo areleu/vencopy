@@ -136,6 +136,7 @@ class TripDiaryBuilder:
                                            (tripDataWHourlyShares['shareEndHour'] == 0) &
                                            (tripDataWHourlyShares['noOfFullHours'] == 0)), :]
 
+
     def initiateHourDataframe(self, indexCol, nHours: int) -> pd.DataFrame:
         """
         Sets up an empty dataframe to be filled with hourly data.

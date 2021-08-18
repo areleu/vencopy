@@ -19,8 +19,8 @@ from classes.evaluators import Evaluator
 
 if __name__ == '__main__':
     # Set dataset and config to analyze
-    datasetID = 'KiD'
-    #datasetID = 'MiD17'
+    #datasetID = 'KiD'
+    datasetID = 'MiD17'
     # review: should the datasetID not be part of the config files?
     pathGlobalConfig = pathlib.Path.cwd() / 'config' / 'globalConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
     with open(pathGlobalConfig) as ipf:
