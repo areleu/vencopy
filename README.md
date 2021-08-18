@@ -1,5 +1,5 @@
 [![License: BSD 3-Clause](https://img.shields.io/badge/license-BSD%203--Clause-blue.svg)](https://github.com/TechSmith/hyde/blob/master/LICENSE.txt)
-
+[![Documentation Status](https://readthedocs.org/projects/vencopy/badge/?version=latest)](https://vencopy.readthedocs.io/en/latest/?badge=latest)
 
 
 # VencoPy README File
@@ -48,10 +48,9 @@ vencopy
 ```
 
 You will be prompted for a userfolder name, type it and hit enter. Your VencoPy user folder will now be created. It
-will look like this
+will look like this:
 
 
-::
 
     FOLDERNAME
     ├── config
@@ -79,7 +78,7 @@ can request it here from the clearingboard transport: https://daten.clearingstel
 VencoPy is only tested with the B2 data set.
 
 In your localPathConfig.yaml, please enter the path to your local MiD STATA folder, it will end on .../B2/STATA/. Now
-open your user folder in an IDE, configure your interpreter (environment) or type 
+open your user folder in an IDE, configure your interpreter (environment) or type: 
 
 ```python
 python run.py
@@ -91,15 +90,17 @@ and enjoy the tool!
 
 Codestyle
 ---
-We use PEP-8, with the exception of lowerCamelCase for method and variable names as well as UpperCamelCase for classes
+We use PEP-8, with the exception of lowerCamelCase for method and variable names as well as UpperCamelCase for classes.
 
 Documentation
 ---
-Build docu from a conda bash with activated environment typing
+To build the documentation from a conda bash with an activated environment type:
 
+```python
 sphinx-build -b html ./docs/ ./build/
+``` 
 
 Want to contribute?
 ---
-Great, welcome on the VP team! Please read our contribute section in the docu and reach out to Niklas 
+Great, welcome on the VP team! Please read our contribute section in the documentation and reach out to Niklas 
 (niklas.wulff@dlr.de). 
