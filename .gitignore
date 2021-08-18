@@ -16,5 +16,8 @@ make.bat
 # Git version conflict files
 *.py.orig
 
+# Output folders
+/output/*
+
 # files with local paths
 /config/localPathConfig.yaml
