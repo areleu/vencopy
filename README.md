@@ -25,7 +25,7 @@ Installation
 Install using the environment management system conda, open the conda console navigate to your VencoPy folder and run the following commands
 
 ```python
-conda create -f requirements.yml
+conda env create -f requirements.yml
 [confirm]
 ```
 
