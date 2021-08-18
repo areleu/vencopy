@@ -17,7 +17,11 @@ make.bat
 *.py.orig
 
 # Output folders
-/output/*
+/output/dataParser/*
+/output/evaluator/*
+/output/flexEstimator/*
+/output/gridModeler/*
+/output/tripDiaryBuilder/*
 
 # files with local paths
 /config/localPathConfig.yaml
