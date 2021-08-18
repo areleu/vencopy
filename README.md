@@ -50,25 +50,26 @@ vencopy
 You will be prompted for a userfolder name, type it and hit enter. Your VencoPy user folder will now be created. It
 will look like this
 
-.
-+-- FOLDERNAME
-|   +-- config
-|   |   +-- evaluatorConfig.yaml
-|   |   +-- flexConfig.yaml
-|   |   +-- globalConfig.yaml
-|   |   +-- gridConfig.yaml
-|   |   +-- localPathConfig.yaml
-|   |   +-- parseConfig.yaml
-|   |   +-- tripConfig.yaml
-|   +-- output
-|   |   +-- dataParser
-|   |   +-- evaluator
-|   |   +-- flexEstimator
-|   |   +-- gridModeler
-|   |   +-- tripDiaryBuilder
-|   +-- tutorials
-|   |   +-- ...
-|   +-- run.py
+
+::
+
+    FOLDERNAME
+    ├── config
+    │   ├── evaluatorConfig.yaml
+    │   ├── flexConfig.yaml
+    │   ├── globalConfig.yaml
+    │   ├── gridConfig.yaml
+    │   ├── localPathConfig.yaml
+    │   └── parseConfig.yaml
+    ├── output
+    │   ├── tripConfig.yamldataParser
+    │   ├── evaluator
+    │   ├── flexEstimator
+    │   ├── gridModeler
+    │   └── tripDiaryBuilder 
+    ├── tutorials          
+    │   └── ..
+    └── run.py
 
 The configs in the config folder are the main interface between the user and the code. In order to learn more about 
 them, check out our tutorials. For this you won't need any additional data.
