@@ -1,0 +1,19 @@
+#-*- coding:utf-8 -*-
+
+# __version__ = '0.1.0'
+# __maintainer__ = 'Niklas Wulff'
+# __contributors__ = 'Fabia Miorelli, Parth Butte'
+# __email__ = 'niklas.wulff@dlr.de'
+# __birthdate__ = '2019-02-12'
+# __status__ = 'prod'  # options are: dev, test, prod
+
+# This config holds all the local paths
+# During first configuration, fill in absolute links on your system. You need to specify at least the path to the
+# STATA folder of the B2 data set of MiD 2017. Optionally you can give the path to the respective folder for MiD 2008.
+# Your root path should already be automatically filled after installation.
+
+pathAbsolute:
+    MiD08: [OPTIONAL: PATH TO MID 2008]
+    MiD17: [PATH TO MID 2017]
+    vencoPyRoot: [USER FOLDER ROOT]
+
