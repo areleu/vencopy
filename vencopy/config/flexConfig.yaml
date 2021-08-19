@@ -1,25 +1,25 @@
 #-*- coding:utf-8 -*-
 
-# __version__ = '0.1.0'
-# __maintainer__ = 'Niklas Wulff'
+# __version__ = '0.0.9'
+# __maintainer__ = 'Niklas Wulff 2019-02-12'
 # __contributors__ = 'Fabia Miorelli, Parth Butte'
-# __email__ = 'niklas.wulff@dlr.de'
+# __email__ = 'Niklas.Wulff@dlr.de'
 # __birthdate__ = '2019-02-12'
-# __status__ = 'prod'  # options are: dev, test, prod
+# __status__ = 'dev'  # options are: dev, test, prod
 
-# This config holds all technical input assumptions and thresholds
+# This config holds all relative paths and filenames for flexEstimators.py
 
 inputDataScalars:
-    Minimum_daily_mileage: 0.0              # in km, cut-off mileage to exclude profiles
-    Battery_capacity: 50.0                  # in kWh, input assumption for battery capacity
-    Electric_consumption: 20.0              # in kWh/100km, input assumption for specific electric consumption
-    Fuel_consumption: 1.0                   # in l/100km, input assumption for specific fuel consumption for auxiliary fuel
-    Electric_consumption_corr: 20.0         # in kWh/100km, assumption for potential correction after aggregation
-    Fuel_consumption_corr: 1.0              # in l/100km, assumption for potential correction after aggregation
-    Maximum_SOC: 0.97                       # in %
-    Minimum_SOC: 0.03                       # in %
-    Rated_power_of_charging_column: 11.0    # kW, input assumption. In future releases this will be specified in gridConfig
-    Is_BEV?: 1                              # 1=BEV, 0=PHEV (not yet tested)
+    Minimum_daily_mileage: 0.0              #km
+    Battery_capacity: 50.0                  #kWh
+    Electric_consumption_NEFZ: 20.0         #kWh/100km
+    Fuel_consumption_NEFZ: 1.0              #l/100km
+    Electric_consumption_Artemis: 20.0      #kWh/100km
+    Fuel_consumption_Artemis: 1.0           #l/100km
+    Maximum_SOC: 0.97                       #%
+    Minimum_SOC: 0.03                       #%
+    Rated_power_of_charging_column: 11.0    #kW
+    Is_BEV?: 1
 
 
 
