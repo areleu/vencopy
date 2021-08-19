@@ -1,0 +1,110 @@
+#-*- encoding:utf-8 -*-
+# __version__ = '0.0.9'
+# __maintainer__ = 'Niklas Wulff 2019-02-12'
+# __contributors__ = 'Fabia Miorelli, Parth Butte'
+# __email__ = 'Niklas.Wulff@dlr.de'
+# __birthdate__ = '2019-02-12'
+# __status__ = 'dev'  # options are: dev, test, prod
+
+# This config holds all relative paths and filenames for gridModelers.py
+
+fastChargingThreshold: 0.8       # Battery threshold for fast charging
+
+
+chargingInfrastructureMappings:  # Grid model 1: Explicit mapping given for each location aka trip purpose
+    'DRIVING': False
+    'HOME': True
+    'WORK': False
+    'SCHOOL': False
+    'SHOPPING': False
+    'LEISURE': False
+    'OTHER': False
+    'NA': False
+
+gridAvailabilityProbability:  # Grid model 2: Probabilities given for each location aka trip purpose and capacity
+    'DRIVING':
+        1: 0
+    'HOME':
+        1: 11
+#        0.7: 3.6
+    'WORK':
+        1: 11
+#        0.5: 11
+    'SCHOOL':
+        1: 0
+#        0.5: 11
+    'SHOPPING':
+        1: 0
+#        0.5: 11
+    'LEISURE':
+        1: 0
+#        0.5: 11
+    'OTHER':
+        1: 0
+#        0.5: 11
+
+gridAvailabilityDistribution:  # Grid model 3: Probabilities given for each location aka trip purpose and capacity
+    'DRIVING':
+        0: 1
+        #0.005: 75
+        #0.005: 150
+    'HOME':
+        3.6: 0.5
+        11: 0.25           #0.25 (0.75 - 0.50) probability of finding a charging station
+        22: 0.05        #0.05 (0.80 - 0.75) probability of finding a charging station
+        0: 0.2          #0.2 (1- 0.80) probability of finding a charging station
+    'WORK':
+        11 : 0.5
+        22 : 0.35
+        0 : 0.15
+    'SCHOOL':
+        11 : 0.35
+        22 : 0.20
+        0 : 0.45
+    'SHOPPING':
+        11: 0.35
+        22: 0.20
+        0: 0.45
+    'LEISURE':
+        11: 0.35
+        22: 0.20
+        0: 0.45
+    'OTHER':
+        11 : 0.20
+        22 : 0.10
+        0 : 0.70
+    '0.0':
+        0 : 1
+
+gridAvailabilityFastCharging:  # Grid model 3: Probabilities given for each location aka trip purpose and capacity
+    'DRIVING':
+        1: 75
+        #0.005: 75
+        #0.005: 150
+    'HOME':
+        0.50: 3.6
+        0.25: 11        #0.25 (0.75 - 0.50) probability of finding a charging station
+        0.05: 22        #0.05 (0.80 - 0.75) probability of finding a charging station
+        0.20: 0            #0.2 (1- 0.80) probability of finding a charging station
+    'WORK':
+        0.50: 75
+        0.30: 50
+        0.20: 0
+    'SCHOOL':
+        0.35: 11
+        0.20: 22
+        0.45: 0
+    'SHOPPING':
+        0.35: 11
+        0.20: 22
+        0.45: 0
+    'LEISURE':
+        0.45: 75
+        0.20: 50
+        0.35: 0
+    'OTHER':
+        0.20: 11
+        0.10: 22
+        0.70: 0
+    '0':
+        1: 0
