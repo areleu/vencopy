@@ -75,6 +75,7 @@ class FlexEstimator:
         self.chargeProfilesUncontrolled = None
         self.auxFuelDemandProfiles = None
         self.chargeMinProfiles = None
+        # self.connectionType = None
 
         # Filtering attributes
         self.randNoPerProfile = None

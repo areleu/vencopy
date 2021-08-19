@@ -378,6 +378,7 @@ class Evaluator:
             profileDictStateAbs = dict(socMax=flexEstimator.socMaxVar, socMin=flexEstimator.socMinVar)
 
             profileDictList = [profileDictConnectionShare, profileDictFlowsAbs, profileDictStateAbs]
+
             yLabels = ['Average EV connection share', 'Average EV flow in kW', 'Average EV SOC in kWh']
             filenames = [flexEstimator.datasetID + '_connection', flexEstimator.datasetID + '_flows',
                                           flexEstimator.datasetID + '_state']

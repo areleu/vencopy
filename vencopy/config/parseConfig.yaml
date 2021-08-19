@@ -11,7 +11,6 @@
 
 encryptionPW: 'PW'
 
-
 dataVariables:
     datasetID: ['MiD08', 'MiD17']
     isMIVDriver: ['pkw_f','W_VM_G']
@@ -74,7 +73,6 @@ filterDicts:
         greaterThan:
         smallerThan:
             tripDistance: [1000]
-
     MiD17:
         include:
             isMIVDriver: [1]
@@ -88,9 +86,6 @@ filterDicts:
         greaterThan:
         smallerThan:
             tripDistance: [1000]
-
-#    tripData = tripData.loc[(tripData['tripStartClock'] <= tripData['tripEndClock']) |
-#    (tripData['tripEndNextDay'] == 1), :]  # departure must be before arrival or the trip must end the following day
 
 midReplacements:
     tripStartWeekday:
