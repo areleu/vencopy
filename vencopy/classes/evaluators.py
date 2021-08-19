@@ -69,9 +69,9 @@ class Evaluator:
             for iDat in datasets:
                 dataIn = pd.read_csv(pathlib.Path(self.globalConfig['pathRelative']['diaryOutput']) /
                                      createFileString(globalConfig=self.globalConfig, fileKey=iFileKey,
-                                                      datasetID=iDat), dtype={'hhPersonID': int},
-                                     # index_col=['hhPersonID', 'tripStartWeekday'])
-                                     index_col=['hhPersonID'])
+                                                      datasetID=iDat), dtype={'genericID': int},
+                                     # index_col=['genericID', 'tripStartWeekday'])
+                                     index_col=['genericID'])
                 ret[iDat] = dataIn
         return ret
 
@@ -97,9 +97,9 @@ class Evaluator:
         ret = pd.Series(dtype=object)
         for iDat in datasetIDs:
             weightData = mergeDataToWeightsAndDays(self.inputData[iDat], self.parseData[iDat])
-            weights = weightData.loc[:, ['hhPersonID', 'tripStartWeekday', 'tripWeight']]
+            weights = weightData.loc[:, ['genericID', 'tripStartWeekday', 'tripWeight']]
             weights = weights.convert_dtypes()
-            ret[iDat] = weights.set_index(['hhPersonID'], drop=True)
+            ret[iDat] = weights.set_index(['genericID'], drop=True)
         return ret
 
     def calculateMobilityQuota(self, dataset: str) -> None:
@@ -124,7 +124,7 @@ class Evaluator:
         """
 
         for iDat in self.datasetIDs:
-            self.data[iDat] = self.inputData[iDat].set_index(['hhPersonID', 'tripStartWeekday'], drop=True)
+            self.data[iDat] = self.inputData[iDat].set_index(['genericID', 'tripStartWeekday'], drop=True)
             self.data[iDat].dropna(inplace=True)
 
     # Maybe not needed at all?
@@ -137,7 +137,7 @@ class Evaluator:
 
         ret = {}
         for idx, iDat in self.inputData.items():
-            iDatRaw = iDat.drop(columns=['hhPersonID']).set_index('tripStartWeekday',
+            iDatRaw = iDat.drop(columns=['genericID']).set_index('tripStartWeekday',
                                                                               append=True).stack()  # 'tripWeight', 'tripScaleFactor'
             iDat = iDatRaw.reset_index([1, 2])
             iDat.columns = ['Day', 'Hour', 'Value']

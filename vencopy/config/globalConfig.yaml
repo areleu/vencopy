@@ -51,6 +51,18 @@ files:
         output: vencopy
         flexPlotName: flexProfileComparison
     output: output
+    KiD:
+        householdsDataRaw:
+        personDataRaw:
+        tripsDataRaw: KiD2010_merged.dta
+        tripsProcessedOld:
+        purposesProcessedOld:
+        purposesProcessed:
+        inputDataDriveProfiles:
+        inputDataPlugProfiles:
+        vencoPyOutput:
+        flexPlotName:
+    vencoPyOutput: vencoPyOutput
     aggPlotName: mobilityComparison
     flexPlotName: flexProfileComparison
 

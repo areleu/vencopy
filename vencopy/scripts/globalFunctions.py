@@ -40,11 +40,11 @@ def mergeVariables(data, variableData, variables):
     :return: The merged data
     """
 
-    variableDataUnique = variableData.loc[~variableData['hhPersonID'].duplicated(), :]
-    variables.append('hhPersonID')
-    variableDataMerge = variableDataUnique.loc[:, variables].set_index('hhPersonID')
-    if 'hhPersonID' not in data.index.names:
-        data.set_index('hhPersonID', inplace=True, drop=True)
+    variableDataUnique = variableData.loc[~variableData['genericID'].duplicated(), :]
+    variables.append('genericID')
+    variableDataMerge = variableDataUnique.loc[:, variables].set_index('genericID')
+    if 'genericID' not in data.index.names:
+        data.set_index('genericID', inplace=True, drop=True)
     mergedData = pd.concat([variableDataMerge, data], axis=1, join='inner')
     mergedData.reset_index(inplace=True)
     return mergedData

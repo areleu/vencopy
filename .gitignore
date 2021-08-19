@@ -17,7 +17,7 @@ make.bat
 *.py.orig
 
 # Output folders
-/output/*
+/vencopy/output/*
 
 # files with local paths
 /config/localPathConfig.yaml
