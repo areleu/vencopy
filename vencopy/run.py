@@ -45,10 +45,25 @@ if __name__ == '__main__':
         flexConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
 
 
-    vpData = DataParser(datasetID=datasetID, parseConfig=parseConfig, globalConfig=globalConfig, localPathConfig=localPathConfig, loadEncrypted=False)
+vpData = DataParser(datasetID=datasetID, parseConfig=parseConfig, globalConfig=globalConfig, localPathConfig=localPathConfig, loadEncrypted=False)
+# Trip distance and purpose diary compositions
+vpTripDiary = TripDiaryBuilder(datasetID=datasetID, tripConfig=tripConfig, globalConfig=globalConfig, ParseData=vpData,
+                               debug=True)
 
-    # Trip distance and purpose diary compositions
-    vpTripDiary = TripDiaryBuilder(datasetID=datasetID, tripConfig=tripConfig, globalConfig=globalConfig, ParseData=vpData, debug=True)
+# Grid model applications
+vpGrid = GridModeler(gridConfig=gridConfig, globalConfig=globalConfig, datasetID=datasetID)
+vpGrid.assignSimpleGridViaPurposes()
+# fastChargingHHID = vpGrid.fastChargingList()
+# vpGrid.assignGridViaProbabilities(model='distribution', fastChargingHHID=fastChargingHHID)
+vpGrid.writeOutGridAvailability()
+# vpGrid.stackPlot()
+# review: Is this still valid code or left overs? I ignored this code for now.
+#  Maybe we should schedule a cleanup.
+# Evaluate drive and trip purpose profiles
+vpEval = Evaluator(globalConfig=globalConfig, evaluatorConfig=evaluatorConfig,
+                   parseData=pd.Series(data=vpData, index=[datasetID]))
+vpEval.hourlyAggregates = vpEval.calcVariableSpecAggregates(by=['tripStartWeekday'])
+vpEval.plotAggregates()
 
     # Grid model applications
     vpGrid = GridModeler(gridConfig=gridConfig, globalConfig=globalConfig, datasetID=datasetID)
