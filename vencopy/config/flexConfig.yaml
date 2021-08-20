@@ -47,4 +47,6 @@ inputDataScalars:
         Rated_power_of_charging_column: 11.0    #kW
         Is_BEV?: 1
 
-
+plugFuncParams:
+    param1: 1
+    param2: 2

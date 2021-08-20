@@ -62,6 +62,8 @@ class FlexEstimator:
                                                                       nHours=self.globalConfig['numberOfHours'])
         self.scalarsProc = self.procScalars(self.driveProfilesIn, self.plugProfilesIn,
                                        self.driveProfiles, self.plugProfiles)
+        self.plugProbFunc = self.initPlugFunc(flexConfig['plugFuncParams'])
+
 
         #  Future release: In a future release, a composition approach with a dataclass based
         #  encapsulation will be pursued here. This will also make it easy to communicate the data to the outside of
@@ -285,6 +287,15 @@ class FlexEstimator:
         self.plugProfilesIn = mergeVariables(data=self.plugProfilesIn, variableData=ParseData.data,
                                              variables=['tripStartWeekday', 'tripWeight'])
 
+    def initPlugFunc(self, params: dict):
+        """
+        Initialization of plugging probability function as defined by the parameters in flexConfig
+
+        :param params: Function parameters
+        :return: Function object Plug probability (SOC)
+        """
+        pass
+
     def calcDrainProfiles(self, driveProfiles: pd.DataFrame, flexConfig: dict) -> pd.DataFrame:
         """
         Calculates electrical consumption profiles from drive profiles assuming specific consumption (in kWh/100 km)
@@ -329,6 +340,7 @@ class FlexEstimator:
         """
 
         chargeMaxProfiles = chargeProfiles.copy()
+        discretePlugChoice = chargeProfiles.copy()
         batCapMin = self.flexConfig['inputDataScalars'][self.datasetID]['Battery_capacity'] * self.flexConfig['inputDataScalars'][self.datasetID]['Minimum_SOC']
         batCapMax = self.flexConfig['inputDataScalars'][self.datasetID]['Battery_capacity'] * self.flexConfig['inputDataScalars'][self.datasetID]['Maximum_SOC']
         nHours = self.scalarsProc['nHours']
