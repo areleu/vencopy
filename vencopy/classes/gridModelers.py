@@ -48,6 +48,7 @@ class GridModeler:
         self.outputFilePath = Path(globalConfig['pathRelative']['input']) / self.outputFileName
         self.purposeData = pd.read_csv(self.inputFilePath, keep_default_na=False)
         self.driveData = pd.read_csv(self.inputDriveProfilesPath, keep_default_na=False)
+        self.transactionHourStart = None
         self.chargeAvailability = None
 
 

@@ -77,7 +77,8 @@ vpEval.hourlyAggregates = vpEval.calcVariableSpecAggregates(by=['tripStartWeekda
 vpEval.plotAggregates()
 
 # Estimate charging flexibility based on driving profiles and charge connection
-vpFlex = FlexEstimator(flexConfig=flexConfig, globalConfig=globalConfig, evaluatorConfig=evaluatorConfig, datasetID=datasetID, ParseData=vpData)
+vpFlex = FlexEstimator(flexConfig=flexConfig, globalConfig=globalConfig, evaluatorConfig=evaluatorConfig,
+                       datasetID=datasetID, ParseData=vpData, transactionHourStart=vpGrid.transactionHourStart)
 vpFlex.baseProfileCalculation()
 vpFlex.filter()
 vpFlex.aggregate()
