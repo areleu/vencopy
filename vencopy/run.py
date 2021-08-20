@@ -65,26 +65,26 @@ vpEval = Evaluator(globalConfig=globalConfig, evaluatorConfig=evaluatorConfig,
 vpEval.hourlyAggregates = vpEval.calcVariableSpecAggregates(by=['tripStartWeekday'])
 vpEval.plotAggregates()
 
-    # Grid model applications
-    vpGrid = GridModeler(gridConfig=gridConfig, globalConfig=globalConfig, datasetID=datasetID)
-    vpGrid.assignSimpleGridViaPurposes()
-    vpGrid.writeOutGridAvailability()
+# Grid model applications
+vpGrid = GridModeler(gridConfig=gridConfig, globalConfig=globalConfig, datasetID=datasetID)
+vpGrid.assignSimpleGridViaPurposes()
+vpGrid.writeOutGridAvailability()
 
-    # Evaluate drive and trip purpose profiles
-    vpEval = Evaluator(globalConfig=globalConfig, evaluatorConfig=evaluatorConfig,
-                       parseData=pd.Series(data=vpData, index=[datasetID]))
-    vpEval.hourlyAggregates = vpEval.calcVariableSpecAggregates(by=['tripStartWeekday'])
-    vpEval.plotAggregates()
+# Evaluate drive and trip purpose profiles
+vpEval = Evaluator(globalConfig=globalConfig, evaluatorConfig=evaluatorConfig,
+                   parseData=pd.Series(data=vpData, index=[datasetID]))
+vpEval.hourlyAggregates = vpEval.calcVariableSpecAggregates(by=['tripStartWeekday'])
+vpEval.plotAggregates()
 
-    # Estimate charging flexibility based on driving profiles and charge connection
-    vpFlex = FlexEstimator(flexConfig=flexConfig, globalConfig=globalConfig, evaluatorConfig=evaluatorConfig, datasetID=datasetID, ParseData=vpData)
-    vpFlex.baseProfileCalculation()
-    vpFlex.filter()
-    vpFlex.aggregate()
-    vpFlex.correct()
-    vpFlex.normalize()
-    vpFlex.writeOut()
+# Estimate charging flexibility based on driving profiles and charge connection
+vpFlex = FlexEstimator(flexConfig=flexConfig, globalConfig=globalConfig, evaluatorConfig=evaluatorConfig, datasetID=datasetID, ParseData=vpData)
+vpFlex.baseProfileCalculation()
+vpFlex.filter()
+vpFlex.aggregate()
+vpFlex.correct()
+vpFlex.normalize()
+vpFlex.writeOut()
 
-    vpEval.plotProfiles(flexEstimator=vpFlex)
+vpEval.plotProfiles(flexEstimator=vpFlex)
 
 
