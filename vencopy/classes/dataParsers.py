@@ -523,8 +523,8 @@ class ParseMID(DataParser):
     pass
 
 if __name__ == '__main__':
-    datasetID = 'MiD17' #options are MiD08, MiD17, KiD
-    #datasetID = 'KiD'
+    #datasetID = 'MiD17' #options are MiD08, MiD17, KiD
+    datasetID = 'KiD'
 
     pathLocalPathConfig = Path.cwd().parent / 'config' / 'localPathConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
     with open(pathLocalPathConfig) as ipf:

@@ -341,7 +341,9 @@ class GridModeler:
 
 
 if __name__ == '__main__':
-    datasetID = 'MiD17'
+    # datasetID = 'MiD17'
+    datasetID = 'KiD'
+
     pathGlobalConfig = Path.cwd().parent / 'config' / 'globalConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
     with open(pathGlobalConfig) as ipf:
         globalConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
@@ -357,10 +359,10 @@ if __name__ == '__main__':
     os.chdir(localPathConfig['pathAbsolute']['vencoPyRoot'])
     vpg = GridModeler(gridConfig=gridConfig, globalConfig=globalConfig, flexConfig=flexConfig, datasetID=datasetID)
     # fastChargingHHID = vpg.fastChargingList()
-    # vpg.assignSimpleGridViaPurposes()
-    vpg.assignGridViaProbabilities(model='distribution')
+    vpg.assignSimpleGridViaPurposes()
+    # vpg.assignGridViaProbabilities(model='distribution')
     vpg.writeOutGridAvailability()
-    vpg.stackPlot()
+    # vpg.stackPlot()
 
     # print('Data Analysis Started')
     # objs = [GridModeler(gridConfig=gridConfig, globalConfig=globalConfig) for i in range(8)]

@@ -415,8 +415,8 @@ class FillHourValues:
 
 
 if __name__ == '__main__':
-    datasetID = 'MiD17' #options are MiD08, MiD17, KiD
-    # datasetID = 'KiD'
+    #datasetID = 'MiD17' #options are MiD08, MiD17, KiD
+    datasetID = 'KiD'
     from vencopy.classes.dataParsers import DataParser
     pathGlobalConfig = Path.cwd().parent / 'config' / 'globalConfig.yaml'
     with open(pathGlobalConfig) as ipf:
