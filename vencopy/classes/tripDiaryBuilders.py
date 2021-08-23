@@ -48,7 +48,7 @@ class TripDiaryBuilder:
             self.tripDataClean = self.calculateConsistentHourlyShares(data=ParseData.data.loc[0:2000, :])
         else:
             self.tripDataClean = self.calculateConsistentHourlyShares(data=ParseData.data)
-        self.tripDistanceDiary = self.tripDistanceAllocation(globalConfig)
+        self.tripDistanceDiary = self.tripDistanceAllocation(globalConfig=globalConfig)
         self.tripPurposeAllocation()
         self.writeOut(globalConfig=globalConfig, datasetID=datasetID, dataDrive=self.tripDistanceDiary,
                       dataPurpose=self.tripPurposeDiary)
@@ -386,8 +386,7 @@ class TripDiaryBuilder:
         """
         dataDrive.to_csv(Path(globalConfig['pathRelative']['diaryOutput']) /
                          createFileString(globalConfig=globalConfig, fileKey='inputDataDriveProfiles',
-                                          datasetID=datasetID),
-                         na_rep=0)
+                                          datasetID=datasetID), na_rep='0')
         dataPurpose.to_csv(Path(globalConfig['pathRelative']['diaryOutput']) /
                            createFileString(globalConfig=globalConfig, fileKey='purposesProcessed',
                                             datasetID=datasetID))
@@ -416,8 +415,8 @@ class FillHourValues:
 
 
 if __name__ == '__main__':
-    # datasetID = 'MiD17' #options are MiD08, MiD17, KiD
-    datasetID = 'KiD'
+    datasetID = 'MiD17' #options are MiD08, MiD17, KiD
+    # datasetID = 'KiD'
     from vencopy.classes.dataParsers import DataParser
     pathGlobalConfig = Path.cwd().parent / 'config' / 'globalConfig.yaml'
     with open(pathGlobalConfig) as ipf:
@@ -434,4 +433,5 @@ if __name__ == '__main__':
     os.chdir(localPathConfig['pathAbsolute']['vencoPyRoot'])
     vpData = DataParser(parseConfig=parseConfig, globalConfig=globalConfig, localPathConfig=localPathConfig,
                         loadEncrypted=False, datasetID=datasetID)
-    vpDiary = TripDiaryBuilder(tripConfig=tripConfig, globalConfig=globalConfig, ParseData=vpData, datasetID=datasetID)
+    vpDiary = TripDiaryBuilder(tripConfig=tripConfig, globalConfig=globalConfig,
+                               ParseData=vpData, datasetID=datasetID, debug=True)

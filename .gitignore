@@ -20,4 +20,8 @@ make.bat
 /vencopy/output/*
 
 # files with local paths
-/config/localPathConfig.yaml
+vencopy/config/localPathConfig.yaml
+
+# Fabia
+/.vscode/
+/docs/_build/

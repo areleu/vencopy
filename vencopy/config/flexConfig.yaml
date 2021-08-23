@@ -10,7 +10,6 @@
 # This config holds all technical input assumptions and thresholds
 
 inputDataScalars:
-
     MiD17:
         Minimum_daily_mileage: 0.0              # in km, cut-off mileage to exclude profiles
         Battery_capacity: 50.0                  # in kWh, input assumption for battery capacity
@@ -22,7 +21,6 @@ inputDataScalars:
         Minimum_SOC: 0.03                       # in %
         Rated_power_of_charging_column: 11.0    # kW, input assumption. In future releases this will be specified in gridConfig
         Is_BEV?: 1                              # 1=BEV, 0=PHEV (not yet tested)
-
     KiD: # differentiate between light commercial vehicle (LCV), medium-duty truck (MDT), and heavy-duty truck (HDT).
         Minimum_daily_mileage: 0.0              #km
         Battery_capacity: 500.0                 #kWh
@@ -34,7 +32,6 @@ inputDataScalars:
         Minimum_SOC: 0.03                       #%
         Rated_power_of_charging_column: 11.0    #kW
         Is_BEV?: 1
-
     MiD08:
         Minimum_daily_mileage: 0.0              #km
         Battery_capacity: 50.0                  #kWh

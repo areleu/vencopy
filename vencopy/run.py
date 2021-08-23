@@ -51,7 +51,7 @@ vpTripDiary = TripDiaryBuilder(datasetID=datasetID, tripConfig=tripConfig, globa
                                debug=True)
 
 # Grid model applications
-vpGrid = GridModeler(gridConfig=gridConfig, globalConfig=globalConfig, datasetID=datasetID)
+vpGrid = GridModeler(gridConfig=gridConfig, globalConfig=globalConfig, flexConfig=flexConfig,  datasetID=datasetID)
 vpGrid.assignSimpleGridViaPurposes()
 # fastChargingHHID = vpGrid.fastChargingList()
 # vpGrid.assignGridViaProbabilities(model='distribution', fastChargingHHID=fastChargingHHID)
@@ -66,7 +66,7 @@ vpEval.hourlyAggregates = vpEval.calcVariableSpecAggregates(by=['tripStartWeekda
 vpEval.plotAggregates()
 
 # Grid model applications
-vpGrid = GridModeler(gridConfig=gridConfig, globalConfig=globalConfig, datasetID=datasetID)
+vpGrid = GridModeler(gridConfig=gridConfig, globalConfig=globalConfig, flexConfig=flexConfig, datasetID=datasetID)
 vpGrid.assignSimpleGridViaPurposes()
 vpGrid.writeOutGridAvailability()
 

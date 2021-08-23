@@ -932,7 +932,8 @@ class FlexEstimator:
 if __name__ == '__main__':
     from vencopy.classes.dataParsers import DataParser
     from vencopy.classes.evaluators import Evaluator
-    datasetID = 'KiD'
+    # datasetID = 'KiD'
+    datasetID = 'MiD17'
     pathGlobalConfig = Path.cwd().parent / 'config' / 'globalConfig.yaml'
     with open(pathGlobalConfig) as ipf:
         globalConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
