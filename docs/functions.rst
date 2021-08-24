@@ -13,35 +13,35 @@ This part of the documentation holds the function definitions of VencoPy from th
 ´run.py´ and the library files.
 
 
-.. automodule:: run
+.. automodule:: vencopy.run
     :members:
 
-.. automodule:: classes.dataParsers
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-.. automodule:: classes.tripDiaryBuilders
+.. automodule:: vencopy.classes.dataParsers
     :members:
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: classes.gridModelers
+.. automodule:: vencopy.classes.tripDiaryBuilders
     :members:
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: classes.flexEstimators
+.. automodule:: vencopy.classes.gridModelers
     :members:
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: scripts.globalFunctions
+.. automodule:: vencopy.classes.flexEstimators
     :members:
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: scripts.libLogging
+.. automodule:: vencopy.scripts.globalFunctions
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: vencopy.scripts.libLogging
     :members:
     :undoc-members:
     :show-inheritance:

@@ -73,9 +73,9 @@ def writeProfilesToCSV(profileDictOut, globalConfig: dict, singleFile=True, data
 
     :param outputFolder: path to output folder
     :param profileDictOut: Dictionary with profile names in keys and profiles as pd.Series containing a VencoPy
-    profile each to be written in value
+           profile each to be written in value
     :param singleFile: If True, all profiles will be appended and written to one .csv file. If False, five files are
-    written
+           written
     :param strAdd: String addition for filenames
     :return: None
     """

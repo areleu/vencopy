@@ -14,8 +14,7 @@ if __package__ is None or __package__ == '':
     from os import path
     sys.path.append(path.dirname(path.dirname(__file__)))
 
-import yaml
-from pathlib import Path
+
 import pandas as pd
 from vencopy.classes.dataParsers import DataParser
 from vencopy.classes.tripDiaryBuilders import TripDiaryBuilder
@@ -71,5 +70,3 @@ if __name__ == '__main__':
     vpFlex.writeOut()
 
     vpEval.plotProfiles(flexEstimator=vpFlex)
-
-

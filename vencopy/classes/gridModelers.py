@@ -271,7 +271,7 @@ class GridModeler:
     def stackPlot(self):
         '''
         :return: Plots charging station assigned to each trip and EV's parking area/trip purposes during a time span of
-        24 hours
+                 24 hours
         '''
         keys = []
         for key, value in self.gridDistribution.items():

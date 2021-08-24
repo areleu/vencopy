@@ -66,7 +66,8 @@ class TripDiaryBuilder:
         :param timestampEnd:  end time of a trip
         :param duration: duration of a trip
         :return: Returns a data frame of share of individual trip for trips completed in an hour and more w.r.t start
-        time of the trip
+                 time of the trip
+
         """
         isSameHourTrip = timestampStart.dt.hour == timestampEnd.dt.hour
         shareSameHour = (timestampEnd.dt.minute - timestampStart.dt.minute) / (duration.dt.seconds / 60)
@@ -80,8 +81,9 @@ class TripDiaryBuilder:
         :param timestampEnd: end time of a trip
         :param duration: duration of a trip
         :param isSameHourTrip: data frame containing same start time of various trips
-        :return: Returns a data frame of share of individual trip for trips completed in an hour and more w.r.t end
-        time of the trip
+        :return: Returns a data frame of share of individual trip for trips completed in an hour and more w.r.t end time
+                 of the trip
+
         """
         share = timestampEnd.dt.minute / (duration.dt.seconds / 60)
         return share.where(~isSameHourTrip, 0)
@@ -143,7 +145,7 @@ class TripDiaryBuilder:
         :param ts_st: String specifying the trip start column
         :param ts_en: String specifying the trip end column
         :return: data frame consisting additional information regarding share of a trip, number of full hours and
-        lenght of each trip
+                 lenght of each trip
         """
 
         duration = self.tripDuration(data.loc[:, ts_st], data.loc[:, ts_en])
@@ -268,7 +270,7 @@ class TripDiaryBuilder:
 
         :param tripData: data frame holding all the information about individual trip
         :param purposeDataDays: DataFrame with 24 (hour) columns holding 0s and 'DRIVING' for trip hours (for hours
-        where majority of time is driving)
+               where majority of time is driving)
         :return: Returns a data frame of individual trip with it's hourly activity or parking purpose
         """
         hpID = str()
