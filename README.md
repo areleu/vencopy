@@ -1,6 +1,6 @@
 [![License: BSD 3-Clause](https://img.shields.io/badge/license-BSD%203--Clause-blue.svg)](https://github.com/TechSmith/hyde/blob/master/LICENSE.txt)
 [![Documentation Status](https://readthedocs.org/projects/vencopy/badge/?version=latest)](https://vencopy.readthedocs.io/en/latest/?badge=latest)
-
+[![PyPI version](https://badge.fury.io/py/vencopy.svg)](https://badge.fury.io/py/vencopy)
 
 # VencoPy README File
 - Authors: Niklas Wulff, Fabia Miorelli
