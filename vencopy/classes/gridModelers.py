@@ -8,12 +8,16 @@ __license__ = 'BSD-3-Clause'
 
 
 #----- imports & packages ------
+if __package__ is None or __package__ == '':
+    import sys
+    from os import path
+    sys.path.append(path.dirname(path.dirname(path.dirname(__file__))))
+
 from pathlib import Path
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import yaml
-import os
 from vencopy.scripts.globalFunctions import createFileString
 
 
@@ -33,10 +37,10 @@ class GridModeler:
 
         self.inputFileName = createFileString(globalConfig=globalConfig, fileKey='purposesProcessed',
                                               datasetID=datasetID)
-        self.inputFilePath = Path(globalConfig['pathRelative']['diaryOutput']) / self.inputFileName
+        self.inputFilePath = Path(__file__).parent / globalConfig['pathRelative']['diaryOutput'] / self.inputFileName
         self.inputDriveProfilesName = createFileString(globalConfig=globalConfig, fileKey='inputDataDriveProfiles',
                                                       datasetID=datasetID)
-        self.inputDriveProfilesPath = Path(globalConfig['pathRelative']['diaryOutput']) / self.inputDriveProfilesName
+        self.inputDriveProfilesPath = Path(__file__).parent / globalConfig['pathRelative']['diaryOutput'] / self.inputDriveProfilesName
         self.scalarsPath = flexConfig['inputDataScalars'][datasetID]
         self.gridMappings = gridConfig['chargingInfrastructureMappings']
         self.gridProbability = gridConfig['gridAvailabilityProbability']
@@ -45,7 +49,7 @@ class GridModeler:
         self.gridFastChargingThreshold = gridConfig['fastChargingThreshold']
         self.outputFileName = createFileString(globalConfig=globalConfig, fileKey='inputDataPlugProfiles',
                                                datasetID=datasetID)
-        self.outputFilePath = Path(globalConfig['pathRelative']['gridOutput']) / self.outputFileName
+        self.outputFilePath = Path(__file__).parent / globalConfig['pathRelative']['gridOutput'] / self.outputFileName
         self.purposeData = pd.read_csv(self.inputFilePath, keep_default_na=False)
         self.driveData = pd.read_csv(self.inputDriveProfilesPath, keep_default_na=False)
         self.chargeAvailability = None
@@ -341,22 +345,21 @@ class GridModeler:
 
 
 if __name__ == '__main__':
-    # datasetID = 'MiD17'
-    datasetID = 'KiD'
+    datasetID = 'MiD17'
+    # datasetID = 'KiD'
 
-    pathGlobalConfig = Path.cwd().parent / 'config' / 'globalConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
+    pathGlobalConfig = Path(__file__).parent.parent / 'config' / 'globalConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
     with open(pathGlobalConfig) as ipf:
         globalConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
-    pathGridConfig = Path.cwd().parent / 'config' / 'gridConfig.yaml'
+    pathGridConfig = Path(__file__).parent.parent /  'config' / 'gridConfig.yaml'
     with open(pathGridConfig) as ipf:
         gridConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
-    pathFlexConfig = Path.cwd().parent / 'config' / 'flexConfig.yaml'
+    pathFlexConfig = Path(__file__).parent.parent /  'config' / 'flexConfig.yaml'
     with open(pathFlexConfig) as ipf:
         flexConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
-    pathLocalPathConfig = Path.cwd().parent / 'config' / 'localPathConfig.yaml'
+    pathLocalPathConfig = Path(__file__).parent.parent /  'config' / 'localPathConfig.yaml'
     with open(pathLocalPathConfig) as ipf:
         localPathConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
-    os.chdir(localPathConfig['pathAbsolute']['vencoPyRoot'])
     vpg = GridModeler(gridConfig=gridConfig, globalConfig=globalConfig, flexConfig=flexConfig, datasetID=datasetID)
     # fastChargingHHID = vpg.fastChargingList()
     vpg.assignSimpleGridViaPurposes()

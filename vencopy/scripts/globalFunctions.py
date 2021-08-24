@@ -8,7 +8,7 @@ __license__ = 'BSD-3-Clause'
 
 import pandas as pd
 import yaml
-import pathlib
+from pathlib import Path
 
 
 def createFileString(globalConfig: dict, fileKey: str, datasetID: str=None, manualLabel: str = '',
@@ -73,11 +73,11 @@ def writeProfilesToCSV(profileDictOut, globalConfig: dict, singleFile=True, data
 
     if singleFile:
         dataOut = pd.DataFrame(profileDictOut)
-        dataOut.to_csv(pathlib.Path(globalConfig['pathRelative']['flexOutput']) /
+        dataOut.to_csv(Path(__file__).parent / globalConfig['pathRelative']['flexOutput'] /
                        createFileString(globalConfig=globalConfig, fileKey='output',
                                         manualLabel=globalConfig['labels']['technologyLabel'], datasetID=datasetID),
                        header=True)
     else:
         for iName, iProf in profileDictOut.items():
-            iProf.to_csv(pathlib.Path(globalConfig['pathRelative']['flexOutput']) /
-                         pathlib.Path(f'vencopy_{iName}_{datasetID}.csv'), header=True)
+            iProf.to_csv(Path(__file__).parent / globalConfig['pathRelative']['flexOutput'] /
+                         Path(f'vencopy_{iName}_{datasetID}.csv'), header=True)

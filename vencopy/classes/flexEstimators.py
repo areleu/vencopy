@@ -8,10 +8,14 @@ __license__ = 'BSD-3-Clause'
 
 
 #----- imports & packages ------
+if __package__ is None or __package__ == '':
+    import sys
+    from os import path
+    sys.path.append(path.dirname(path.dirname(path.dirname(__file__))))
+
 from pathlib import Path
 import functools
 import warnings
-import os
 import yaml
 import pandas as pd
 import numpy as np
@@ -172,11 +176,11 @@ class FlexEstimator:
         """
         print('Reading Venco input scalars, drive profiles and boolean plug profiles')
 
-        driveProfiles_raw = self.readInputCSV(filePath=Path(self.globalConfig['pathRelative']['diaryOutput']) /
+        driveProfiles_raw = self.readInputCSV(filePath=Path(__file__).parent / self.globalConfig['pathRelative']['diaryOutput'] /
                                               createFileString(globalConfig=self.globalConfig,
                                                                fileKey='inputDataDriveProfiles',
                                                                datasetID=datasetID))
-        plugProfiles_raw = self.readInputBoolean(filePath=Path(self.globalConfig['pathRelative']['gridOutput']) /
+        plugProfiles_raw = self.readInputBoolean(filePath=Path(__file__).parent / self.globalConfig['pathRelative']['gridOutput'] /
                                                  createFileString(globalConfig=self.globalConfig,
                                                                   fileKey='inputDataPlugProfiles',
                                                                   datasetID=datasetID))
@@ -932,25 +936,23 @@ class FlexEstimator:
 if __name__ == '__main__':
     from vencopy.classes.dataParsers import DataParser
     from vencopy.classes.evaluators import Evaluator
-    datasetID = 'KiD'
-    # datasetID = 'MiD17'
-    pathGlobalConfig = Path.cwd().parent / 'config' / 'globalConfig.yaml'
+    #datasetID = 'KiD'
+    datasetID = 'MiD17'
+    pathGlobalConfig = Path(__file__).parent.parent /  'config' / 'globalConfig.yaml'
     with open(pathGlobalConfig) as ipf:
         globalConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
-    pathFlexConfig = Path.cwd().parent / 'config' / 'flexConfig.yaml'
+    pathFlexConfig = Path(__file__).parent.parent / 'config' / 'flexConfig.yaml'
     with open(pathFlexConfig) as ipf:
         flexConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
-    pathParseConfig = Path.cwd().parent / 'config' / 'parseConfig.yaml'
+    pathParseConfig = Path(__file__).parent.parent / 'config' / 'parseConfig.yaml'
     with open(pathParseConfig) as ipf:
         parseConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
-    pathEvaluatorConfig = Path.cwd().parent / 'config' / 'evaluatorConfig.yaml'
+    pathEvaluatorConfig = Path(__file__).parent.parent / 'config' / 'evaluatorConfig.yaml'
     with open(pathEvaluatorConfig) as ipf:
         evaluatorConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
-    pathLocalPathConfig = Path.cwd().parent / 'config' / 'localPathConfig.yaml'
+    pathLocalPathConfig = Path(__file__).parent.parent / 'config' / 'localPathConfig.yaml'
     with open(pathLocalPathConfig) as ipf:
         localPathConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
-    os.chdir(localPathConfig['pathAbsolute']['vencoPyRoot'])
-
     vpData = DataParser(parseConfig=parseConfig, globalConfig=globalConfig, localPathConfig=localPathConfig,
                         datasetID=datasetID, loadEncrypted=False)
     vpFlexEst = FlexEstimator(flexConfig=flexConfig, globalConfig=globalConfig, evaluatorConfig=evaluatorConfig,

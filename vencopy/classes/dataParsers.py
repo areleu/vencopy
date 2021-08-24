@@ -1,4 +1,4 @@
-__version__ = '0.0.9'
+__version__ = '0.1.0'
 __maintainer__ = 'Niklas Wulff 31.12.2019'
 __contributors__ = 'Fabia Miorelli, Parth Butte'
 __email__ = 'Niklas.Wulff@dlr.de'
@@ -523,16 +523,16 @@ class ParseMID(DataParser):
     pass
 
 if __name__ == '__main__':
-    #datasetID = 'MiD17' #options are MiD08, MiD17, KiD
-    datasetID = 'KiD'
+    datasetID = 'MiD17' #options are MiD08, MiD17, KiD
+    #datasetID = 'KiD'
 
-    pathLocalPathConfig = Path.cwd().parent / 'config' / 'localPathConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
+    pathLocalPathConfig = Path(__file__).parent.parent / 'config' / 'localPathConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
     with open(pathLocalPathConfig) as ipf:
         localPathConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
-    pathParseConfig = Path.cwd().parent / 'config' / 'parseConfig.yaml'
+    pathParseConfig =  Path(__file__).parent.parent / 'config' / 'parseConfig.yaml'
     with open(pathParseConfig) as ipf:
         parseConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
-    pathGlobalConfig = Path.cwd().parent / 'config' / 'globalConfig.yaml'
+    pathGlobalConfig =  Path(__file__).parent.parent / 'config' / 'globalConfig.yaml'
     with open(pathGlobalConfig) as ipf:
         globalConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
     vpData = DataParser(localPathConfig=localPathConfig, parseConfig=parseConfig, globalConfig=globalConfig,

@@ -6,13 +6,16 @@ __birthdate__ = '31.12.2019'
 __status__ = 'prod'  # options are: dev, test, prod
 __license__ = 'BSD-3-Clause'
 
+if __package__ is None or __package__ == '':
+    import sys
+    from os import path
+    sys.path.append(path.dirname(path.dirname(path.dirname(__file__))))
 
 import pandas as pd
 import numpy as np
 from typing import Callable
 from pathlib import Path
 import yaml
-import os
 from vencopy.scripts.globalFunctions import createFileString
 
 
@@ -384,10 +387,10 @@ class TripDiaryBuilder:
         :param datasetID: ID used for filenames
         :return: None
         """
-        dataDrive.to_csv(Path(globalConfig['pathRelative']['diaryOutput']) /
+        dataDrive.to_csv(Path(__file__).parent / globalConfig['pathRelative']['diaryOutput'] /
                          createFileString(globalConfig=globalConfig, fileKey='inputDataDriveProfiles',
                                           datasetID=datasetID), na_rep='0')
-        dataPurpose.to_csv(Path(globalConfig['pathRelative']['diaryOutput']) /
+        dataPurpose.to_csv(Path(__file__).parent / globalConfig['pathRelative']['diaryOutput'] /
                            createFileString(globalConfig=globalConfig, fileKey='purposesProcessed',
                                             datasetID=datasetID))
         print(f"Drive data and trip purposes written to files "
@@ -415,22 +418,22 @@ class FillHourValues:
 
 
 if __name__ == '__main__':
-    #datasetID = 'MiD17' #options are MiD08, MiD17, KiD
-    datasetID = 'KiD'
-    from vencopy.classes.dataParsers import DataParser
-    pathGlobalConfig = Path.cwd().parent / 'config' / 'globalConfig.yaml'
+    datasetID = 'MiD17' #options are MiD08, MiD17, KiD
+    # datasetID = 'KiD'
+
+    from vencopy.classes.dataParsers import DataParser 
+    pathGlobalConfig =  Path(__file__).parent.parent / 'config' / 'globalConfig.yaml'
     with open(pathGlobalConfig) as ipf:
         globalConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
-    pathParseConfig = Path.cwd().parent / 'config' / 'parseConfig.yaml'
+    pathParseConfig =  Path(__file__).parent.parent / 'config' / 'parseConfig.yaml'
     with open(pathParseConfig) as ipf:
         parseConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
-    pathTripConfig = Path.cwd().parent / 'config' / 'tripConfig.yaml'
+    pathTripConfig = Path(__file__).parent.parent / 'config' / 'tripConfig.yaml'
     with open(pathTripConfig) as ipf:
         tripConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
-    pathLocalPathConfig = Path.cwd().parent / 'config' / 'localPathConfig.yaml'
+    pathLocalPathConfig = Path(__file__).parent.parent / 'config' / 'localPathConfig.yaml'
     with open(pathLocalPathConfig) as ipf:
         localPathConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
-    os.chdir(localPathConfig['pathAbsolute']['vencoPyRoot'])
     vpData = DataParser(parseConfig=parseConfig, globalConfig=globalConfig, localPathConfig=localPathConfig,
                         loadEncrypted=False, datasetID=datasetID)
     vpDiary = TripDiaryBuilder(tripConfig=tripConfig, globalConfig=globalConfig,

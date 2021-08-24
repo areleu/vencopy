@@ -67,7 +67,7 @@ class Evaluator:
         ret = pd.Series(dtype=object)
         for iFileKey in fileKeys:
             for iDat in datasets:
-                dataIn = pd.read_csv(pathlib.Path(self.globalConfig['pathRelative']['diaryOutput']) /
+                dataIn = pd.read_csv(Path(__file__).parent / (self.globalConfig['pathRelative']['diaryOutput']) /
                                      createFileString(globalConfig=self.globalConfig, fileKey=iFileKey,
                                                       datasetID=iDat), dtype={'genericID': int},
                                      # index_col=['genericID', 'tripStartWeekday'])
@@ -269,7 +269,7 @@ class Evaluator:
         if self.evaluatorConfig['plotConfig']['save']:
             fileName = createFileString(globalConfig=self.globalConfig, fileKey='aggPlotName', manualLabel=self.globalConfig['labels']['runLabel'],
                                         filetypeStr='svg')
-            fig.savefig(Path(self.globalConfig['pathRelative']['evalOutput']) / fileName, bbox_inches='tight')
+            fig.savefig(Path(__file__).parent / self.globalConfig['pathRelative']['evalOutput'] / fileName, bbox_inches='tight')
 
     def linePlot(self, profileDict, pathOutput, flexEstimator, show=True, write=True, ylabel='Normalized profiles',
                  ylim=None, filename=''):
@@ -338,14 +338,14 @@ class Evaluator:
             for iDict, iYLabel, iYLim, iName in zip(profileDictList, ylabel, ylim, filenames):
                 writeProfilesToCSV(profileDictOut=iDict, globalConfig=self.globalConfig, singleFile=False,
                                    datasetID=flexEstimator.datasetID)
-                self.linePlot(iDict, pathOutput=Path(self.globalConfig['pathRelative']['evalOutput']),
+                self.linePlot(iDict, pathOutput=Path(__file__).parent / self.globalConfig['pathRelative']['evalOutput'],
                               flexEstimator=flexEstimator, show=show, write=write, ylabel=iYLabel, ylim=iYLim,
                               filename=iName)
         else:
             for iDict, iYLabel, iName in zip(profileDictList, ylabel, filenames):
                 writeProfilesToCSV(profileDictOut=iDict, globalConfig=self.globalConfig, singleFile=False,
                                    datasetID=flexEstimator.datasetID)
-                self.linePlot(iDict, pathOutput=Path(self.globalConfig['pathRelative']['evalOutput']),
+                self.linePlot(iDict, pathOutput=Path(__file__).parent / self.globalConfig['pathRelative']['evalOutput'],
                               flexEstimator=flexEstimator, show=show, write=write, ylabel=iYLabel,
                               filename=iName)
 
@@ -508,16 +508,16 @@ class chargingTransactionEvaluator:
 
 if __name__ == '__main__':
     from vencopy.classes.dataParsers import DataParser
-    pathGlobalConfig = Path.cwd().parent / 'config' / 'globalConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
+    pathGlobalConfig = Path(__file__).parent.parent / 'config' / 'globalConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
     with open(pathGlobalConfig) as ipf:
         globalConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
-    pathParseConfig = Path.cwd().parent / 'config' / 'parseConfig.yaml'
+    pathParseConfig = Path(__file__).parent.parent / 'config' / 'parseConfig.yaml'
     with open(pathParseConfig) as ipf:
         parseConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
-    pathEvaluatorConfig = Path.cwd().parent / 'config' / 'evaluatorConfig.yaml'
+    pathEvaluatorConfig = Path(__file__).parent.parent / 'config' / 'evaluatorConfig.yaml'
     with open(pathEvaluatorConfig) as ipf:
         evaluatorConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
-    pathLocalPathConfig = Path.cwd().parent / 'config' / 'localPathConfig.yaml'
+    pathLocalPathConfig = Path(__file__).parent.parent / 'config' / 'localPathConfig.yaml'
     with open(pathLocalPathConfig) as ipf:
         localPathConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
     os.chdir(localPathConfig['pathAbsolute']['vencoPyRoot'])
