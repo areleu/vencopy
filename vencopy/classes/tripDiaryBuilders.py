@@ -20,7 +20,7 @@ from vencopy.scripts.globalFunctions import createFileString
 
 
 class TripDiaryBuilder:
-    def __init__(self, tripConfig: dict, globalConfig: dict, ParseData, datasetID: str = 'MiD17', debug: bool=False):
+    def __init__(self, configDict: dict, ParseData, datasetID: str = 'MiD17', debug: bool=False):
         """
         Class to build diaries of trips and parking purposes ("purposes"). Currently a discretization of 1 hour is
         used and tested. Some assumptions are taken in order to build the diaries:
@@ -40,8 +40,8 @@ class TripDiaryBuilder:
         used in the beta since the performance of the current tripDiaryBuilder is quite low.
         """
 
-        self.tripConfig = tripConfig
-        self.globalConfig = globalConfig
+        self.tripConfig = configDict['tripConfig']
+        self.globalConfig = configDict['globalConfig']
         self.datasetID = datasetID
         self.parsedData = ParseData
         self.tripDataClean = None
@@ -51,9 +51,9 @@ class TripDiaryBuilder:
             self.tripDataClean = self.calculateConsistentHourlyShares(data=ParseData.data.loc[0:2000, :])
         else:
             self.tripDataClean = self.calculateConsistentHourlyShares(data=ParseData.data)
-        self.tripDistanceDiary = self.tripDistanceAllocation(globalConfig=globalConfig)
+        self.tripDistanceDiary = self.tripDistanceAllocation(globalConfig=self.globalConfig)
         self.tripPurposeAllocation()
-        self.writeOut(globalConfig=globalConfig, datasetID=datasetID, dataDrive=self.tripDistanceDiary,
+        self.writeOut(globalConfig=self.globalConfig, datasetID=datasetID, dataDrive=self.tripDistanceDiary,
                       dataPurpose=self.tripPurposeDiary)
 
     def tripDuration(self, timestampStart: np.datetime64, timestampEnd: np.datetime64) -> np.datetime64:
@@ -421,20 +421,10 @@ if __name__ == '__main__':
     datasetID = 'MiD17' #options are MiD08, MiD17, KiD
     # datasetID = 'KiD'
 
-    from vencopy.classes.dataParsers import DataParser 
-    pathGlobalConfig =  Path(__file__).parent.parent / 'config' / 'globalConfig.yaml'
-    with open(pathGlobalConfig) as ipf:
-        globalConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
-    pathParseConfig =  Path(__file__).parent.parent / 'config' / 'parseConfig.yaml'
-    with open(pathParseConfig) as ipf:
-        parseConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
-    pathTripConfig = Path(__file__).parent.parent / 'config' / 'tripConfig.yaml'
-    with open(pathTripConfig) as ipf:
-        tripConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
-    pathLocalPathConfig = Path(__file__).parent.parent / 'config' / 'localPathConfig.yaml'
-    with open(pathLocalPathConfig) as ipf:
-        localPathConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
-    vpData = DataParser(parseConfig=parseConfig, globalConfig=globalConfig, localPathConfig=localPathConfig,
-                        loadEncrypted=False, datasetID=datasetID)
-    vpDiary = TripDiaryBuilder(tripConfig=tripConfig, globalConfig=globalConfig,
-                               ParseData=vpData, datasetID=datasetID, debug=True)
+    from vencopy.classes.dataParsers import DataParser
+    from vencopy.scripts.globalFunctions import loadConfigDict
+
+    configNames = ('globalConfig', 'localPathConfig', 'parseConfig', 'tripConfig', 'gridConfig', 'flexConfig', 'evaluatorConfig')
+    configDict = loadConfigDict(configNames)
+    vpData = DataParser(configDict=configDict, loadEncrypted=False, datasetID=datasetID)
+    vpDiary = TripDiaryBuilder(configDict=configDict, ParseData=vpData, datasetID=datasetID, debug=True)

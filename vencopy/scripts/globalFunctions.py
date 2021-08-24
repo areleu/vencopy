@@ -10,6 +10,15 @@ import pandas as pd
 import yaml
 from pathlib import Path
 
+def loadConfigDict(configNames: tuple):
+    # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
+    basePath = Path(__file__).parent.parent / 'config'
+    configDict = {}
+    for configName in configNames:
+        filePath = (basePath / configName).with_suffix('.yaml')
+        with open(filePath) as ipf:
+            configDict[configName] = yaml.load(ipf, Loader=yaml.SafeLoader)
+    return configDict
 
 def createFileString(globalConfig: dict, fileKey: str, datasetID: str=None, manualLabel: str = '',
                      filetypeStr: str = 'csv'):

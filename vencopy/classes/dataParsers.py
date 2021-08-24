@@ -15,8 +15,7 @@ from zipfile import ZipFile
 
 
 class DataParser:
-    def __init__(self, parseConfig: dict, globalConfig: dict, localPathConfig: dict, datasetID: str,
-                 loadEncrypted=True):
+    def __init__(self, configDict: dict, datasetID: str, loadEncrypted=True):
         """
         Basic class for parsing a mobility survey trip data set. Currently the both German travel surveys MiD 2008 and
         MiD 2017 are pre-configured and one of the two can be given (default: MiD 2017).
@@ -35,10 +34,11 @@ class DataParser:
         :param datasetID: Currently, MiD08 and MiD17 are implemented as travel survey data sets
         :param loadEncrypted: If True, load an encrypted ZIP file as specified in parseConfig
         """
-        self.datasetID = self.checkDatasetID(datasetID, parseConfig)
-        self.parseConfig = parseConfig
-        self.globalConfig = globalConfig
-        self.rawDataPath = Path(localPathConfig['pathAbsolute'][self.datasetID]) / globalConfig['files'][self.datasetID]['tripsDataRaw']
+        self.parseConfig = configDict['parseConfig']
+        self.globalConfig = configDict['globalConfig']
+        self.localPathConfig = configDict['localPathConfig']
+        self.datasetID = self.checkDatasetID(datasetID, self.parseConfig)
+        self.rawDataPath = Path(self.localPathConfig['pathAbsolute'][self.datasetID]) / self.globalConfig['files'][self.datasetID]['tripsDataRaw']
         self.subDict = {}
         self.rawData = None
         self.data = None
@@ -52,7 +52,7 @@ class DataParser:
                   f"{self.globalConfig['pathAbsolute']['encryptedZipfile']}")
             self.loadEncryptedData(pathToZip=Path(self.globalConfig['pathAbsolute']['encryptedZipfile']) /
                                              self.globalConfig['files'][self.datasetID]['encryptedZipFileB2'],
-                                   pathInZip=globalConfig['files'][self.datasetID]['tripDataZipFileRaw'])
+                                   pathInZip=self.globalConfig['files'][self.datasetID]['tripDataZipFileRaw'])
         else:
             print(f"Starting to retrieve local data file from {self.rawDataPath}")
             self.loadData()
@@ -523,17 +523,10 @@ class ParseMID(DataParser):
     pass
 
 if __name__ == '__main__':
-    datasetID = 'MiD17' #options are MiD08, MiD17, KiD
-    #datasetID = 'KiD'
+    from vencopy.scripts.globalFunctions import loadConfigDict
+    configNames = ('globalConfig', 'localPathConfig', 'parseConfig', 'tripConfig', 'gridConfig', 'flexConfig', 'evaluatorConfig')
+    configDict = loadConfigDict(configNames)
 
-    pathLocalPathConfig = Path(__file__).parent.parent / 'config' / 'localPathConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
-    with open(pathLocalPathConfig) as ipf:
-        localPathConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
-    pathParseConfig =  Path(__file__).parent.parent / 'config' / 'parseConfig.yaml'
-    with open(pathParseConfig) as ipf:
-        parseConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
-    pathGlobalConfig =  Path(__file__).parent.parent / 'config' / 'globalConfig.yaml'
-    with open(pathGlobalConfig) as ipf:
-        globalConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
-    vpData = DataParser(localPathConfig=localPathConfig, parseConfig=parseConfig, globalConfig=globalConfig,
-                        loadEncrypted=False, datasetID=datasetID)
+    #datasetID = 'MiD17' #options are MiD08, MiD17, KiD
+    datasetID = 'KiD'
+    vpData = DataParser(configDict=configDict, loadEncrypted=False, datasetID=datasetID)

@@ -20,7 +20,7 @@ from vencopy.scripts.globalFunctions import createFileString, calculateWeightedA
 
 
 class Evaluator:
-    def __init__(self, globalConfig:dict, evaluatorConfig: dict, parseData: pd.Series = None, weightPlot=True):
+    def __init__(self, configDict: dict, parseData: pd.Series = None, weightPlot=True):
         """
         CURRENTLY IN SEMI-PROUDCTION MODE. Some interfaces may only apply to specific cases.
         Overall evaluation class for assessing vencopy mobility and charging profiles.
@@ -33,13 +33,13 @@ class Evaluator:
         :param weightPlot: If True, profiles are weighted for plotting
         """
 
-        self.globalConfig = globalConfig
-        self.evaluatorConfig = evaluatorConfig
+        self.globalConfig = configDict['globalConfig']
+        self.evaluatorConfig = configDict['evaluatorConfig']
         self.weightPlot = weightPlot
         self.normPlotting = True
         self.dailyMileageGermany2008 = 3.080e9  # pkm/d
         self.dailyMileageGermany2017 = 3.214e9  # pkm/d
-        self.hourVec = [str(i) for i in range(0, globalConfig['numberOfHours'])]
+        self.hourVec = [str(i) for i in range(0, self.globalConfig['numberOfHours'])]
         if parseData is not None:
             self.datasetIDs = list(parseData.index)
             self.parseData = parseData
@@ -508,26 +508,15 @@ class chargingTransactionEvaluator:
 
 if __name__ == '__main__':
     from vencopy.classes.dataParsers import DataParser
-    pathGlobalConfig = Path(__file__).parent.parent / 'config' / 'globalConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
-    with open(pathGlobalConfig) as ipf:
-        globalConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
-    pathParseConfig = Path(__file__).parent.parent / 'config' / 'parseConfig.yaml'
-    with open(pathParseConfig) as ipf:
-        parseConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
-    pathEvaluatorConfig = Path(__file__).parent.parent / 'config' / 'evaluatorConfig.yaml'
-    with open(pathEvaluatorConfig) as ipf:
-        evaluatorConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
-    pathLocalPathConfig = Path(__file__).parent.parent / 'config' / 'localPathConfig.yaml'
-    with open(pathLocalPathConfig) as ipf:
-        localPathConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
-    os.chdir(localPathConfig['pathAbsolute']['vencoPyRoot'])
-    parseDataAll = pd.Series(dtype=object)
-    parseDataAll['MiD08'] = DataParser(datasetID='MiD08', parseConfig=parseConfig, globalConfig=globalConfig,
-                                       localPathConfig=localPathConfig, loadEncrypted=False)
-    parseDataAll['MiD17'] = DataParser(datasetID='MiD17', parseConfig=parseConfig, globalConfig=globalConfig,
-                                       localPathConfig=localPathConfig, loadEncrypted=False)
+    from vencopy.scripts.globalFunctions import loadConfigDict
+    configNames = ('globalConfig', 'localPathConfig', 'parseConfig', 'tripConfig', 'gridConfig', 'flexConfig', 'evaluatorConfig')
+    configDict = loadConfigDict(configNames)
 
-    vpEval = Evaluator(globalConfig=globalConfig, evaluatorConfig=evaluatorConfig, parseData=parseDataAll)
+    parseDataAll = pd.Series(dtype=object)
+    #parseDataAll['MiD08'] = DataParser(datasetID='MiD08', configDict=configDict, loadEncrypted=False)
+    parseDataAll['MiD17'] = DataParser(datasetID='MiD17', configDict=configDict, loadEncrypted=False)
+
+    vpEval = Evaluator(configDict=configDict, parseData=parseDataAll)
     vpEval.hourlyAggregates = vpEval.calcVariableSpecAggregates(by=['tripStartWeekday'])
     vpEval.plotAggregates()
 

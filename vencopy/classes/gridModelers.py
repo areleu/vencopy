@@ -22,7 +22,7 @@ from vencopy.scripts.globalFunctions import createFileString
 
 
 class GridModeler:
-    def __init__(self, gridConfig: dict, globalConfig: dict, flexConfig: dict, datasetID: str):
+    def __init__(self, configDict: dict, datasetID: str):
         """
         Class for modeling individual vehicle connection options dependent on parking purposes. Configurations on
         charging station availabilities can be parametrized in gridConfig. globalConfig and datasetID are needed for
@@ -35,21 +35,24 @@ class GridModeler:
         :param datasetID: String, used for referencing the purpose input file
         """
 
-        self.inputFileName = createFileString(globalConfig=globalConfig, fileKey='purposesProcessed',
+        self.globalConfig = configDict['globalConfig']
+        self.gridConfig = configDict['gridConfig']
+        self.flexConfig = configDict['flexConfig']
+        self.inputFileName = createFileString(globalConfig=self.globalConfig, fileKey='purposesProcessed',
                                               datasetID=datasetID)
-        self.inputFilePath = Path(__file__).parent / globalConfig['pathRelative']['diaryOutput'] / self.inputFileName
-        self.inputDriveProfilesName = createFileString(globalConfig=globalConfig, fileKey='inputDataDriveProfiles',
+        self.inputFilePath = Path(__file__).parent / self.globalConfig['pathRelative']['diaryOutput'] / self.inputFileName
+        self.inputDriveProfilesName = createFileString(globalConfig=self.globalConfig, fileKey='inputDataDriveProfiles',
                                                       datasetID=datasetID)
-        self.inputDriveProfilesPath = Path(__file__).parent / globalConfig['pathRelative']['diaryOutput'] / self.inputDriveProfilesName
-        self.scalarsPath = flexConfig['inputDataScalars'][datasetID]
-        self.gridMappings = gridConfig['chargingInfrastructureMappings']
-        self.gridProbability = gridConfig['gridAvailabilityProbability']
-        self.gridDistribution = gridConfig['gridAvailabilityDistribution']
-        self.gridFastCharging = gridConfig['gridAvailabilityFastCharging']
-        self.gridFastChargingThreshold = gridConfig['fastChargingThreshold']
-        self.outputFileName = createFileString(globalConfig=globalConfig, fileKey='inputDataPlugProfiles',
+        self.inputDriveProfilesPath = Path(__file__).parent / self.globalConfig['pathRelative']['diaryOutput'] / self.inputDriveProfilesName
+        self.scalarsPath = self.flexConfig['inputDataScalars'][datasetID]
+        self.gridMappings = self.gridConfig['chargingInfrastructureMappings']
+        self.gridProbability = self.gridConfig['gridAvailabilityProbability']
+        self.gridDistribution = self.gridConfig['gridAvailabilityDistribution']
+        self.gridFastCharging = self.gridConfig['gridAvailabilityFastCharging']
+        self.gridFastChargingThreshold = self.gridConfig['fastChargingThreshold']
+        self.outputFileName = createFileString(globalConfig=self.globalConfig, fileKey='inputDataPlugProfiles',
                                                datasetID=datasetID)
-        self.outputFilePath = Path(__file__).parent / globalConfig['pathRelative']['gridOutput'] / self.outputFileName
+        self.outputFilePath = Path(__file__).parent / self.globalConfig['pathRelative']['gridOutput'] / self.outputFileName
         self.purposeData = pd.read_csv(self.inputFilePath, keep_default_na=False)
         self.driveData = pd.read_csv(self.inputDriveProfilesPath, keep_default_na=False)
         self.chargeAvailability = None
@@ -345,22 +348,13 @@ class GridModeler:
 
 
 if __name__ == '__main__':
+    from vencopy.scripts.globalFunctions import loadConfigDict
     datasetID = 'MiD17'
     # datasetID = 'KiD'
 
-    pathGlobalConfig = Path(__file__).parent.parent / 'config' / 'globalConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
-    with open(pathGlobalConfig) as ipf:
-        globalConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
-    pathGridConfig = Path(__file__).parent.parent /  'config' / 'gridConfig.yaml'
-    with open(pathGridConfig) as ipf:
-        gridConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
-    pathFlexConfig = Path(__file__).parent.parent /  'config' / 'flexConfig.yaml'
-    with open(pathFlexConfig) as ipf:
-        flexConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
-    pathLocalPathConfig = Path(__file__).parent.parent /  'config' / 'localPathConfig.yaml'
-    with open(pathLocalPathConfig) as ipf:
-        localPathConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
-    vpg = GridModeler(gridConfig=gridConfig, globalConfig=globalConfig, flexConfig=flexConfig, datasetID=datasetID)
+    configNames = ('globalConfig', 'localPathConfig', 'parseConfig', 'tripConfig', 'gridConfig', 'flexConfig', 'evaluatorConfig')
+    configDict = loadConfigDict(configNames)
+    vpg = GridModeler(configDict=configDict, datasetID=datasetID)
     # fastChargingHHID = vpg.fastChargingList()
     vpg.assignSimpleGridViaPurposes()
     # vpg.assignGridViaProbabilities(model='distribution')

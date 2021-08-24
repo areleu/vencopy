@@ -26,7 +26,7 @@ from vencopy.scripts.globalFunctions import createFileString, mergeVariables, ca
 
 
 class FlexEstimator:
-    def __init__(self, globalConfig: dict, flexConfig : dict, evaluatorConfig: dict, ParseData,
+    def __init__(self, configDict: dict, ParseData,
                  datasetID: str):
         """
         Class to estimate uncontrolled charging, electricity drain, grid connection, auxiliary fuel, SOC min and
@@ -51,9 +51,9 @@ class FlexEstimator:
         :param datasetID: String used for file name composition on input files
         """
 
-        self.globalConfig = globalConfig
-        self.flexConfig = flexConfig
-        self.evaluatorConfig = evaluatorConfig
+        self.globalConfig = configDict['globalConfig']
+        self.flexConfig = configDict['flexConfig']
+        self.evaluatorConfig = configDict['evaluatorConfig']
         self.hourVec = range(self.globalConfig['numberOfHours'])
         self.datasetID = datasetID
         self.driveProfilesIn, self.plugProfilesIn = self.readVencoInput(datasetID=datasetID)
@@ -936,30 +936,15 @@ class FlexEstimator:
 if __name__ == '__main__':
     from vencopy.classes.dataParsers import DataParser
     from vencopy.classes.evaluators import Evaluator
-    #datasetID = 'KiD'
+    from vencopy.scripts.globalFunctions import loadConfigDict
     datasetID = 'MiD17'
-    pathGlobalConfig = Path(__file__).parent.parent /  'config' / 'globalConfig.yaml'
-    with open(pathGlobalConfig) as ipf:
-        globalConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
-    pathFlexConfig = Path(__file__).parent.parent / 'config' / 'flexConfig.yaml'
-    with open(pathFlexConfig) as ipf:
-        flexConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
-    pathParseConfig = Path(__file__).parent.parent / 'config' / 'parseConfig.yaml'
-    with open(pathParseConfig) as ipf:
-        parseConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
-    pathEvaluatorConfig = Path(__file__).parent.parent / 'config' / 'evaluatorConfig.yaml'
-    with open(pathEvaluatorConfig) as ipf:
-        evaluatorConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
-    pathLocalPathConfig = Path(__file__).parent.parent / 'config' / 'localPathConfig.yaml'
-    with open(pathLocalPathConfig) as ipf:
-        localPathConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
-    vpData = DataParser(parseConfig=parseConfig, globalConfig=globalConfig, localPathConfig=localPathConfig,
-                        datasetID=datasetID, loadEncrypted=False)
-    vpFlexEst = FlexEstimator(flexConfig=flexConfig, globalConfig=globalConfig, evaluatorConfig=evaluatorConfig,
-                              ParseData=vpData, datasetID=datasetID)
+    # datasetID = 'KiD'
+    configNames = ('globalConfig', 'localPathConfig', 'parseConfig', 'tripConfig', 'gridConfig', 'flexConfig', 'evaluatorConfig')
+    configDict = loadConfigDict(configNames)
+    vpData = DataParser(configDict=configDict, datasetID=datasetID, loadEncrypted=False)
+    vpFlexEst = FlexEstimator(configDict=configDict, ParseData=vpData, datasetID=datasetID)
     vpFlexEst.run()
-    vpEval = Evaluator(globalConfig=globalConfig, evaluatorConfig=evaluatorConfig,
-                       parseData=pd.Series(data=vpData, index=[datasetID]))
+    vpEval = Evaluator(configDict=configDict, parseData=pd.Series(data=vpData, index=[datasetID]))
     vpEval.plotProfiles(flexEstimator=vpFlexEst)
     print(f'Total absolute electricity charged in uncontrolled charging: '
           f'{vpFlexEst.chargeProfilesUncontrolled.sum().sum()} based on MiD17')
