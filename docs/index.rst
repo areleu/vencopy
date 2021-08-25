@@ -7,31 +7,46 @@ Welcome to VencoPy's documentation!
 ===================================
 
 
-Indices and tables
-------------------
+.. include:: ../README.md
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+.. toctree::
+   :caption: Getting Started
+   :hidden:
+   :maxdepth: 1
 
+   gettingstarted/intro
+   gettingstarted/installation
+   gettingstarted/start
+
+.. toctree::
+   :caption: Software
+   :hidden:
+   :maxdepth: 1
+
+   software/codestyle
+   software/architecture
+   software/functions
+   software/filtering
+   software/outputProfileSpecification
 
 
 
 .. toctree::
-    :maxdepth: 2
-    :caption: Documentation Overview
+   :caption: Contribution
+   :hidden:
+   :maxdepth: 1
+
+   contribution/publications
+   contribution/releaseTimeline
+   contribution/howToContribute
+
+
+ 
     
-    intro
-    installation
-    start
-    codestyle
-    architecture
-    functions
-    filtering
-    outputProfileSpecification
-    releaseTimeline
-    publications
-    howToContribute
+    
+    
+    
+    
 
 
 

@@ -1,11 +1,12 @@
-[![License: BSD 3-Clause](https://img.shields.io/badge/license-BSD%203--Clause-blue.svg)](https://github.com/TechSmith/hyde/blob/master/LICENSE.txt)
-[![Documentation Status](https://readthedocs.org/projects/vencopy/badge/?version=latest)](https://vencopy.readthedocs.io/en/latest/?badge=latest)
+# Welcome to VencoPy!
 
-
-# VencoPy README File
 - Authors: Niklas Wulff, Fabia Miorelli
 - Contact: niklas.wulff@dlr.de
 - Version: 0.1.0
+
+[![License: BSD 3-Clause](https://img.shields.io/badge/license-BSD%203--Clause-blue.svg)](https://github.com/TechSmith/hyde/blob/master/LICENSE.txt)
+[![Documentation Status](https://readthedocs.org/projects/vencopy/badge/?version=latest)](https://vencopy.readthedocs.io/en/latest/?badge=latest)
+
 
 Contents
 ========
@@ -19,6 +20,7 @@ Contents
 Description
 ---
 A data processing tool offering hourly demand and flexibility profiles for future electric vehicle fleets in an aggregated manner.
+
 
 Installation
 ---
@@ -102,5 +104,4 @@ sphinx-build -b html ./docs/ ./build/
 
 Want to contribute?
 ---
-Great, welcome on the VP team! Please read our contribute section in the documentation and reach out to Niklas 
-(niklas.wulff@dlr.de). 
+Great, welcome on the VP team! Please read our contribute section in the documentation and reach out to Niklas(niklas.wulff@dlr.de). 

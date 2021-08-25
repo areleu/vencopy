@@ -8,6 +8,11 @@
 Functions
 ===================================
 
+You can search for the different modules and funtions below:
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
 
 This part of the documentation holds the function definitions of VencoPy from the main run file
 ´run.py´ and the library files.
