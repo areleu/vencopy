@@ -527,6 +527,6 @@ if __name__ == '__main__':
     configNames = ('globalConfig', 'localPathConfig', 'parseConfig', 'tripConfig', 'gridConfig', 'flexConfig', 'evaluatorConfig')
     configDict = loadConfigDict(configNames)
 
-    #datasetID = 'MiD17' #options are MiD08, MiD17, KiD
-    datasetID = 'KiD'
+    datasetID = 'MiD17' #options are MiD08, MiD17, KiD
+    #datasetID = 'KiD'
     vpData = DataParser(configDict=configDict, loadEncrypted=False, datasetID=datasetID)

@@ -34,7 +34,7 @@ if __name__ == '__main__':
 
     vpData = DataParser(datasetID=datasetID, configDict=configDict, loadEncrypted=False)
     # Trip distance and purpose diary compositions
-    # vpTripDiary = TripDiaryBuilder(datasetID=datasetID,configDict=configDict, ParseData=vpData, debug=True)
+    vpTripDiary = TripDiaryBuilder(datasetID=datasetID,configDict=configDict, ParseData=vpData, debug=True)
 
     # Grid model applications
     vpGrid = GridModeler(configDict=configDict, datasetID=datasetID)

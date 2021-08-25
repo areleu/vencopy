@@ -1,78 +1,58 @@
-import os, sys
+import sys
+import os
+from os import path
 import pandas as pd
-import numpy as np
-import yaml
+from pathlib import Path
 import pathlib
 from ruamel.yaml import YAML
+
+sys.path.append(path.dirname(path.dirname(path.dirname(path.dirname(__file__)))))
 
 from vencopy.classes.dataParsers import DataParser
 from vencopy.classes.tripDiaryBuilders import TripDiaryBuilder
 from vencopy.classes.gridModelers import GridModeler
 from vencopy.classes.flexEstimators import FlexEstimator
 from vencopy.classes.evaluators import Evaluator
+from vencopy.scripts.globalFunctions import loadConfigDict
 
 print("Current working directory: {0}".format(os.getcwd()))
 
-pathGlobalConfig = pathlib.Path.cwd().parent.parent / 'config' / 'globalConfig.yaml'
-with open(pathGlobalConfig) as ipf:
-    globalConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
-pathLocalPathConfig = pathlib.Path.cwd().parent.parent / 'config' / 'localPathConfig.yaml'
-with open(pathLocalPathConfig) as ipf:
-    localPathConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
-pathParseConfig = pathlib.Path.cwd().parent.parent / 'config' / 'parseConfig.yaml'
-with open(pathParseConfig) as ipf:
-    parseConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
-pathTripConfig = pathlib.Path.cwd().parent.parent / 'config' / 'tripConfig.yaml'
-with open(pathTripConfig) as ipf:
-    tripConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
-pathGridConfig = pathlib.Path.cwd().parent.parent / 'config' / 'gridConfig.yaml'
-with open(pathGridConfig) as ipf:
-    gridConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
-pathEvaluatorConfig = pathlib.Path.cwd().parent.parent / 'config' / 'evaluatorConfig.yaml'
-with open(pathEvaluatorConfig) as ipf:
-    evaluatorConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
-pathFlexConfig = pathlib.Path.cwd().parent.parent / 'config' / 'flexConfig.yaml'
-with open(pathFlexConfig) as ipf:
-    flexConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
+
+configNames = ('globalConfig', 'localPathConfig', 'parseConfig', 'tripConfig', 'gridConfig', 'flexConfig', 'evaluatorConfig')
+configDict = loadConfigDict(configNames)
 
 # Adapt relative paths in config for tutorials
-globalConfig['pathRelative']['plots'] = pathlib.Path.cwd().parent.parent / globalConfig['pathRelative']['plots']
-globalConfig['pathRelative']['parseOutput'] = pathlib.Path.cwd().parent.parent / globalConfig['pathRelative'][
-    'parseOutput']
-globalConfig['pathRelative']['diaryOutput'] = pathlib.Path.cwd().parent.parent / globalConfig['pathRelative'][
-    'diaryOutput']
-globalConfig['pathRelative']['gridOutput'] = pathlib.Path.cwd().parent.parent / globalConfig['pathRelative'][
-    'gridOutput']
-globalConfig['pathRelative']['flexOutput'] = pathlib.Path.cwd().parent.parent / globalConfig['pathRelative'][
-    'flexOutput']
-globalConfig['pathRelative']['evalOutput'] = pathlib.Path.cwd().parent.parent / globalConfig['pathRelative'][
-    'evalOutput']
+configDict['globalConfig']['pathRelative']['plots'] = Path(__file__).parent.parent / configDict['globalConfig']['pathRelative']['plots']
+configDict['globalConfig']['pathRelative']['parseOutput'] = Path(__file__).parent.parent / configDict['globalConfig']['pathRelative']['parseOutput']
+configDict['globalConfig']['pathRelative']['diaryOutput'] = Path(__file__).parent.parent / configDict['globalConfig']['pathRelative']['diaryOutput']
+configDict['globalConfig']['pathRelative']['gridOutput'] = Path(__file__).parent.parent / configDict['globalConfig']['pathRelative']['gridOutput']
+configDict['globalConfig']['pathRelative']['flexOutput'] = Path(__file__).parent.parent / configDict['globalConfig']['pathRelative']['flexOutput']
+configDict['globalConfig']['pathRelative']['evalOutput'] = Path(__file__).parent.parent / configDict['globalConfig']['pathRelative']['evalOutput']
 
 # Set reference dataset
 datasetID = 'MiD17'
 
 # Modify the localPathConfig file to point to the .csv file in the sampling folder in the tutorials directory where the dataset for the tutorials lies.
-localPathConfig['pathAbsolute'][datasetID] = pathlib.Path.cwd().parent / 'data_sampling'
-
-# Assign to vencoPyRoot the folder in which you cloned your repository
-localPathConfig['pathAbsolute']['vencoPyRoot'] = pathlib.Path.cwd().parent.parent
+configDict['localPathConfig']['pathAbsolute'][datasetID] = pathlib.Path.cwd().parent / 'data_sampling'
 
 # Similarly we modify the datasetID in the global config file
-globalConfig['files'][datasetID]['tripsDataRaw'] = datasetID + '.csv'
+configDict['globalConfig']['files'][datasetID]['tripsDataRaw'] = datasetID + '.csv'
 
 # We also modify the parseConfig by removing some of the columns that are normally parsed from the MiD, which are not available in our semplified test dataframe
-del parseConfig['dataVariables']['hhID']
-del parseConfig['dataVariables']['personID']
+del configDict['parseConfig']['dataVariables']['hhID']
+del configDict['parseConfig']['dataVariables']['personID']
+
+
 
 # Run the first two classes to generate data
-vpData = DataParser(datasetID=datasetID, parseConfig=parseConfig, globalConfig=globalConfig, localPathConfig=localPathConfig, loadEncrypted=False)
-vpTripDiary = TripDiaryBuilder(datasetID=datasetID, tripConfig=tripConfig, globalConfig=globalConfig, ParseData=vpData)
+vpData = DataParser(datasetID=datasetID, configDict=configDict, loadEncrypted=False)
+vpTripDiary = TripDiaryBuilder(datasetID=datasetID, configDict=configDict, ParseData=vpData, debug=True)
 
-vpGrid = GridModeler(gridConfig=gridConfig, globalConfig=globalConfig, datasetID=datasetID)
+vpGrid = GridModeler(datasetID=datasetID, configDict=configDict)
 vpGrid.assignSimpleGridViaPurposes()
 vpGrid.writeOutGridAvailability()
 
-vpFlex = FlexEstimator(flexConfig=flexConfig, globalConfig=globalConfig, evaluatorConfig=evaluatorConfig, datasetID=datasetID, ParseData=vpData)
+vpFlex = FlexEstimator(configDict=configDict, datasetID=datasetID, ParseData=vpData)
 vpFlex.baseProfileCalculation()
 vpFlex.filter()
 vpFlex.aggregate()
@@ -80,5 +60,14 @@ vpFlex.correct()
 vpFlex.normalize()
 vpFlex.writeOut()
 
-vpEval = Evaluator(globalConfig=globalConfig, evaluatorConfig=evaluatorConfig, parseData=pd.Series(data=vpData, index=[datasetID]))
+vpEval = Evaluator(configDict=configDict, parseData=pd.Series(data=vpData, index=[datasetID]))
+vpEval.plotProfiles(flexEstimator=vpFlex)
+
+configDict['gridConfig']['chargingInfrastructureMappings']['HOME'] = False
+configDict['gridConfig']['chargingInfrastructureMappings']['WORK'] = True
+
+vpGrid = GridModeler(datasetID=datasetID, configDict=configDict)
+vpGrid.assignSimpleGridViaPurposes()
+vpGrid.writeOutGridAvailability()
+
 vpEval.plotProfiles(flexEstimator=vpFlex)

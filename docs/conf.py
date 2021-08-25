@@ -39,7 +39,9 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx_rtd_theme',
               'sphinx.ext.napoleon',
               'sphinx.ext.autosectionlabel',
-              'myst_parser']
+              'rst2pdf.pdfbuilder']
+
+pdf_documents = [('index','vencopy','vencopypdf','Fabia'),] 
 
 source_suffix = {
     '.rst': 'restructuredtext',
