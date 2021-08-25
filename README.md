@@ -1,4 +1,5 @@
 # Welcome to VencoPy!
+[![PyPI version](https://badge.fury.io/py/vencopy.svg)](https://badge.fury.io/py/vencopy)
 
 - Authors: Niklas Wulff, Fabia Miorelli
 - Contact: niklas.wulff@dlr.de
@@ -96,6 +97,7 @@ We use PEP-8, with the exception of lowerCamelCase for method and variable names
 
 Documentation
 ---
+The documentation can be found here: https://vencopy.readthedocs.io/en/latest/index.html
 To build the documentation from a conda bash with an activated environment type:
 
 ```python
