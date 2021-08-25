@@ -51,25 +51,11 @@ vpTripDiary = TripDiaryBuilder(datasetID=datasetID, tripConfig=tripConfig, globa
                                debug=True)
 
 # Grid model applications
-vpGrid = GridModeler(gridConfig=gridConfig, globalConfig=globalConfig, datasetID=datasetID)
-vpGrid.assignSimpleGridViaPurposes()
-# fastChargingHHID = vpGrid.fastChargingList()
-# vpGrid.assignGridViaProbabilities(model='distribution', fastChargingHHID=fastChargingHHID)
-vpGrid.writeOutGridAvailability()
-# vpGrid.stackPlot()
+vpGrid = GridModeler(gridConfig=gridConfig, flexConfig=flexConfig, globalConfig=globalConfig, datasetID=datasetID)
+vpGrid.profileCalulation()
+
 # review: Is this still valid code or left overs? I ignored this code for now.
 #  Maybe we should schedule a cleanup.
-# Evaluate drive and trip purpose profiles
-vpEval = Evaluator(globalConfig=globalConfig, evaluatorConfig=evaluatorConfig,
-                   parseData=pd.Series(data=vpData, index=[datasetID]))
-vpEval.hourlyAggregates = vpEval.calcVariableSpecAggregates(by=['tripStartWeekday'])
-vpEval.plotAggregates()
-
-# Grid model applications
-vpGrid = GridModeler(gridConfig=gridConfig, globalConfig=globalConfig, datasetID=datasetID)
-vpGrid.assignSimpleGridViaPurposes()
-vpGrid.writeOutGridAvailability()
-
 # Evaluate drive and trip purpose profiles
 vpEval = Evaluator(globalConfig=globalConfig, evaluatorConfig=evaluatorConfig,
                    parseData=pd.Series(data=vpData, index=[datasetID]))
