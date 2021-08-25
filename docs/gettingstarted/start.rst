@@ -7,7 +7,7 @@
 Getting Started and Tutorials
 ===================================
 
-Tutorials Overview
+Tutorials overview
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
@@ -24,7 +24,7 @@ Tutorial 3: The GridModeler class
 Tutorial 4: The FlexEstimator class
 
 
-Tutorials Setup
+Tutorials setup
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Setting up the Python environment for JupyterLab
 

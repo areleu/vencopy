@@ -14,6 +14,9 @@ Requirements and boundary conditions
 VencoPy runs on Unix and Windows-based operating systems. It requires an installed version of python and the package, dependency and environment management tool conda as well as access to the internet for setting up the environment (downloading the required packages). VencoPy is consistent with the software application class 1 of the DLR software categorization. Versioning is based on 
 major, minor and fix (X.Y.Z) changes versioning system via git-labels.
 
+Installation
+-------------------------------------
+
 This part of the documentation holds a step-by-step installation guide for VencoPy. 
 
 1.  Navigate to a folder to which you want to clone VencoPy. Clone the repository to your local machine using ::

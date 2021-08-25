@@ -3,7 +3,7 @@
 .. _filtering:
 
 
-Filtering functionalities
+Filtering Functionalities
 ===================================
 
 
