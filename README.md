@@ -3,7 +3,7 @@
 
 ![PyPI](https://img.shields.io/pypi/v/vencopy)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/vencopy)
-![Documentation Status](https://readthedocs.org/projects/vencopy/badge/?version=latest)(https://vencopy.readthedocs.io/en/latest/?badge=latest)
+![Documentation Status](https://readthedocs.org/projects/vencopy/badge/?version=latest)
 ![PyPI - License](https://img.shields.io/pypi/l/vencopy)
 
 - Authors: Niklas Wulff, Fabia Miorelli
