@@ -34,28 +34,17 @@ if __name__ == '__main__':
 
     vpData = DataParser(datasetID=datasetID, configDict=configDict, loadEncrypted=False)
     # Trip distance and purpose diary compositions
-    vpTripDiary = TripDiaryBuilder(datasetID=datasetID,configDict=configDict, ParseData=vpData, debug=True)
+    # vpTripDiary = TripDiaryBuilder(datasetID=datasetID,configDict=configDict, ParseData=vpData, debug=True)
 
     # Grid model applications
     vpGrid = GridModeler(configDict=configDict, datasetID=datasetID)
     vpGrid.assignSimpleGridViaPurposes()
-    # fastChargingHHID = vpGrid.fastChargingList()
+    # fastChargingHHID = vpGrid.getFastChargingList()
     # vpGrid.assignGridViaProbabilities(model='distribution', fastChargingHHID=fastChargingHHID)
     vpGrid.writeOutGridAvailability()
     # vpGrid.stackPlot()
-    # review: Is this still valid code or left overs? I ignored this code for now.
-    #  Maybe we should schedule a cleanup.
-    # Evaluate drive and trip purpose profiles
-    vpEval = Evaluator(configDict=configDict, parseData=pd.Series(data=vpData, index=[datasetID]))
-    vpEval.hourlyAggregates = vpEval.calcVariableSpecAggregates(by=['tripStartWeekday'])
-    vpEval.plotAggregates()
 
-    # Grid model applications
-    vpGrid = GridModeler(configDict=configDict, datasetID=datasetID)
-    vpGrid.assignSimpleGridViaPurposes()
-    vpGrid.writeOutGridAvailability()
-
-    # Evaluate drive and trip purpose profiles
+    # Evaluate drive and trip purpose profile
     vpEval = Evaluator(configDict=configDict, parseData=pd.Series(data=vpData, index=[datasetID]))
     vpEval.hourlyAggregates = vpEval.calcVariableSpecAggregates(by=['tripStartWeekday'])
     vpEval.plotAggregates()

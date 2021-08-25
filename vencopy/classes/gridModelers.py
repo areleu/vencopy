@@ -71,42 +71,35 @@ class GridModeler:
         self.chargeAvailability = (~(self.chargeAvailability != True))
         print('Grid connection assignment complete')
 
-    # def fastChargingList(self):
-    #     '''
-    #     Returns a list of household trips having consumption greater than 80% (40 kWh) of battery capacity (50 kWh)
-    #     '''
-    #     self.scalars = pd.read_excel(self.scalarsPath, header=5, usecols='A:C', skiprows=0, engine='openpyxl')
-    #     scalarsOut = self.scalars.set_index('parameter')
-    #     driveProfiles = self.driveData.set_index(['genericID'])
-    #     driveProfiles = driveProfiles.loc[:].sum(axis=1)
-    #     driveProfiles = driveProfiles * (scalarsOut.loc['Electric_consumption', 'value'] / 100)
-    #     driveProfiles = np.where(driveProfiles > (self.gridFastChargingThreshold * (scalarsOut.loc['Battery_capacity', 'value'])), driveProfiles, 0)
-    #     driveProfiles = pd.DataFrame(driveProfiles)
-    #     driveProfiles.set_index(self.driveData['genericID'], inplace=True)
-    #     driveProfiles = driveProfiles.replace(0, np.nan)
-    #     driveProfiles = driveProfiles.dropna(how='all', axis=0)
-    #     driveProfiles.reset_index(inplace=True)
-    #     drive = pd.Series(driveProfiles['genericID'])
-    #     fastChargingHHID = []
-    #     for i, item in drive.items():
-    #         fastChargingHHID.append(item)
-    #     return fastChargingHHID
+    def getFastChargingList(self):
+        '''
+        Returns a list of household trips having consumption greater than 80% (40 kWh) of battery capacity (50 kWh)
+        '''
+        driveProfiles = self.driveData.set_index(['genericID'])
+        driveProfiles = driveProfiles.loc[:].sum(axis=1)
+        driveProfiles = driveProfiles * self.scalarsPath['Electric_consumption_corr'] / 100
+        driveProfiles = np.where(driveProfiles > (self.gridFastChargingThreshold * (self.scalarsPath['Battery_capacity'])), driveProfiles, 0)
+        driveProfiles = pd.DataFrame(driveProfiles)
+        driveProfiles.set_index(self.driveData['genericID'], inplace=True)
+        driveProfiles = driveProfiles.replace(0, np.nan)
+        driveProfiles = driveProfiles.dropna(how='all', axis=0)
+        driveProfiles.reset_index(inplace=True)
+        drive = pd.Series(driveProfiles['genericID'])
+        fastChargingHHID = []
+        for i, item in drive.items():
+            fastChargingHHID.append(item)
+        return fastChargingHHID
 
-    def assignGridViaProbabilities(self, model: str):
+    def assignGridViaProbabilities(self, model: str, fastChargingHHID):
         '''
         :param model: Input for assigning probability according to models presented in gridConfig
         :param fastChargingHHID: List of household trips for fast charging
         :return: Returns a dataFrame holding charging capacity for each trip assigned with probability distribution
         '''
-        # keys = list(self.gridDistribution['HOME'])
-        # keys[0]+0.1
-        # keys[2]-0.1
-        # d1 = self.gridDistribution['HOME'][0.9]-0.1
-        # self.gridDistribution['HOME'].update(d1)
         self.chargeAvailability = self.purposeData.copy()
         self.chargeAvailability.set_index(['genericID'], inplace=True)
         print('Starting with charge connection replacement ')
-        # print('There are ' + str(len(fastChargingHHID)) + ' trips having consumption greater than ' + str(self.gridFastChargingThreshold) + '% of battery capacity')
+        print('There are ' + str(len(fastChargingHHID)) + ' trips having consumption greater than ' + str(self.gridFastChargingThreshold) + '% of battery capacity')
         np.random.seed(42)
         for hhPersonID, row in self.chargeAvailability.iterrows():
             activity = row.copy(deep=True)
@@ -231,7 +224,6 @@ class GridModeler:
 
         for dictIndex, rangeValue in range_dict.items():
             if rangeValue['min_range'] <= rnd <= rangeValue['max_range']:
-                global power
                 power = keys[dictIndex]
                 break
         return power
@@ -263,9 +255,13 @@ class GridModeler:
                 break
         return power
 
-
-
     def writeOutGridAvailability(self):
+        """
+        Function to write out the boolean charging station availability for each vehicle in each hour to the output
+        file path.
+
+        :return: None
+        """
         self.chargeAvailability.to_csv(self.outputFilePath)
 
     def stackPlot(self):
@@ -278,14 +274,7 @@ class GridModeler:
             for nestedKey, nestedValue in value.items():
                 keys.append(nestedKey)
         capacityList = keys
-        # capacityList.remove(1)
         capacityList = list(set(capacityList))
-        # capacityNormalCharging = list(self.gridDistribution(self.gridDistribution.values()))
-        # uniqueNormalChargingList = list(set(val for dic in capacityNormalCharging for val in dic.values()))
-        # capacityFastCharging = list(self.gridFastCharging.values())
-        # uniquefastChargingList = list(set(val for dic in capacityFastCharging for val in dic.values()))
-        # capacityList = list(set(uniqueNormalChargingList + uniquefastChargingList))
-        # capacityList = list(set(capacityNormalCharging + capacityFastCharging))
         capacityList.sort()
         capacity = self.chargeAvailability.transpose()
 
@@ -335,18 +324,6 @@ class GridModeler:
         plt.legend(purposeList, loc='upper center', ncol=len(purposeList))
         plt.show()
 
-
-    def writeOutGridAvailability(self):
-        """
-        Function to write out the boolean charging station availability for each vehicle in each hour to the output
-        file path.
-
-        :return: None
-        """
-
-        self.chargeAvailability.to_csv(self.outputFilePath)
-
-
 if __name__ == '__main__':
     from vencopy.scripts.globalFunctions import loadConfigDict
     datasetID = 'MiD17'
@@ -355,9 +332,9 @@ if __name__ == '__main__':
     configNames = ('globalConfig', 'localPathConfig', 'parseConfig', 'tripConfig', 'gridConfig', 'flexConfig', 'evaluatorConfig')
     configDict = loadConfigDict(configNames)
     vpg = GridModeler(configDict=configDict, datasetID=datasetID)
-    # fastChargingHHID = vpg.fastChargingList()
+    # fastChargingHHID = vpg.getFastChargingList()
     vpg.assignSimpleGridViaPurposes()
-    # vpg.assignGridViaProbabilities(model='distribution')
+    # vpg.assignGridViaProbabilities(model='distribution', fastChargingHHID=fastChargingHHID)
     vpg.writeOutGridAvailability()
     # vpg.stackPlot()
 
