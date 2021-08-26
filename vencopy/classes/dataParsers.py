@@ -5,12 +5,19 @@ __email__ = 'Niklas.Wulff@dlr.de'
 __birthdate__ = '31.12.2019'
 __status__ = 'dev'  # options are: dev, test, prod
 
+
+#----- imports & packages ------
+if __package__ is None or __package__ == '':
+    import sys
+    from os import path
+    sys.path.append(path.dirname(path.dirname(path.dirname(__file__))))
+
+
 import pprint
 import pandas as pd
 import numpy as np
 import warnings
 from pathlib import Path
-import yaml
 from zipfile import ZipFile
 
 
@@ -517,7 +524,12 @@ class DataParser:
         print('Finished harmonization of ID variables')
 
 
-class ParseMID(DataParser):
+class ParseMiD(DataParser):
+    # Inherited data class to differentiate between abstract interfaces such as vencopy internal
+    # variable namings and data set specific functions such as filters etc. Currently not used (06/14/2021)
+    pass
+
+class ParseKiD(DataParser):
     # Inherited data class to differentiate between abstract interfaces such as vencopy internal
     # variable namings and data set specific functions such as filters etc. Currently not used (06/14/2021)
     pass

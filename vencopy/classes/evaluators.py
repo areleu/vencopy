@@ -6,16 +6,13 @@ __birthdate__ = '21.09.2020'
 __status__ = 'test'  # options are: dev, test, prod
 __license__ = 'BSD-3-Clause'
 
-import yaml
-import os
-import pathlib
+
 import pandas as pd
 import seaborn as sns
-import numpy as np
 from pathlib import Path
 import matplotlib.pyplot as plt
 from vencopy.scripts.globalFunctions import createFileString, calculateWeightedAverage, mergeDataToWeightsAndDays, \
-    writeProfilesToCSV
+     writeProfilesToCSV
 # from classes.flexEstimators import FlexEstimator
 
 

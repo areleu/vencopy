@@ -13,9 +13,7 @@ if __package__ is None or __package__ == '':
 
 import pandas as pd
 import numpy as np
-from typing import Callable
 from pathlib import Path
-import yaml
 from vencopy.scripts.globalFunctions import createFileString
 
 
