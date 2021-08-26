@@ -30,8 +30,7 @@ class TripDiaryBuilder:
         3. If an hour comprises multiple purposes (e.g. driving and home), the purpose with the higher share is taken.
         Potential ambiguities in the diaries are later corrected in the gridModel.
 
-        :param tripConfig: In beta release (0.1.0) an empty file
-        :param globalConfig: Config holding relative paths, run labels and filenames
+        :param configDict: A dictionary containing multiple yaml config files
         :param ParseData: Class instance of ParseData storing MiD data
         :param datasetID: Can be 'MiD17' or 'MiD08' depending on input data set
         :param debug: Boolean argument. If True, only the first 2000 trips are converted to diaries. This parameter is

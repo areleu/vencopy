@@ -27,10 +27,7 @@ class GridModeler:
         charging station availabilities can be parametrized in gridConfig. globalConfig and datasetID are needed for
         reading the input files.
 
-        :param gridConfig: Dictionary containing a key chargingInfrastructureMapping with a sub-dictionary mapping the
-        relevant parking purposes to grid availability (true/false). The gridConfig will contain dictionaries with
-        probabilistic grid availabilities per parking purpose and rated charging power.
-        :param globalConfig: Dictionary with relative paths and filenames. Used for referencing the purpose input file
+        :param configDict: A dictionary containing multiple yaml config files
         :param datasetID: String, used for referencing the purpose input file
         """
 

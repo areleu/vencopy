@@ -12,6 +12,12 @@ from pathlib import Path
 
 def loadConfigDict(configNames: tuple):
     # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
+    """
+    Generic function to load and open yaml config files
+
+    :param configNames: Tuple containing names of config files to be loaded
+    :return: Dictionary with opened yaml config files
+    """
     basePath = Path(__file__).parent.parent / 'config'
     configDict = {}
     for configName in configNames:

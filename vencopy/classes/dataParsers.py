@@ -22,7 +22,7 @@ from zipfile import ZipFile
 
 
 class DataParser:
-    def __init__(self, configDict: dict, datasetID: str, loadEncrypted=True):
+    def __init__(self, configDict: dict, datasetID: str, loadEncrypted=False):
         """
         Basic class for parsing a mobility survey trip data set. Currently the both German travel surveys MiD 2008 and
         MiD 2017 are pre-configured and one of the two can be given (default: MiD 2017).
@@ -35,9 +35,7 @@ class DataParser:
         parseConfig. For some columns, raw data is transferred to human readable strings and respective columns are
         added. Pandas timestamp columns are synthesized from the given trip start and trip end time information.
 
-        :param parseConfig: A yaml config file holding a dictionary with the keys 'pathRelative'
-        :param globalConfig: A yaml config file holding mainly filenames and file labels
-        :param localPathConfig: A config that is not synchronized holding local paths
+        :param configDict: A dictionary containing multiple yaml config files
         :param datasetID: Currently, MiD08 and MiD17 are implemented as travel survey data sets
         :param loadEncrypted: If True, load an encrypted ZIP file as specified in parseConfig
         """
@@ -531,14 +529,89 @@ class ParseMiD(DataParser):
 
 class ParseKiD(DataParser):
     # Inherited data class to differentiate between abstract interfaces such as vencopy internal
-    # variable namings and data set specific functions such as filters etc. Currently not used (06/14/2021)
-    pass
+    # variable namings and data set specific functions such as filters etc.
+    def __init__(self, configDict: dict, datasetID: str):
+        super().__init__(configDict, datasetID)
+
+
+    def loadData(self):
+        rawDataPathTrips = Path(configDict['localPathConfig']['pathAbsolute'][self.datasetID]) / configDict['globalConfig']['files'][self.datasetID]['tripsDataRaw']
+        rawDataPathVehicles = Path(configDict['localPathConfig']['pathAbsolute'][self.datasetID]) / configDict['globalConfig']['files'][self.datasetID]['vehiclesDataRaw']
+        rawDataTrips = pd.read_stata(rawDataPathTrips, convert_categoricals=False, convert_dates=False,
+                                     preserve_dtypes=False)
+        rawDataVehicles = pd.read_stata(rawDataPathVehicles, convert_categoricals=False, convert_dates=False,
+                                        preserve_dtypes=False)
+        rawDataVehicles.set_index('k00', inplace=True)
+        rawData = rawDataTrips.join(rawDataVehicles, on='k00')
+        self.rawData = rawData
+        print(f'Finished loading {len(self.rawData)} rows of raw data of type .dta')
+
+
+    def addStrColumns(self, weekday=True, purpose=True):
+        """
+        Adds string columns for either weekday or purpose.
+
+        :param weekday: Boolean identifier if weekday string info should be added in a separate column
+        :param purpose: Boolean identifier if purpose string info should be added in a separate column
+        :return: None
+        """
+
+        # from tripStartDate retrieve tripStartWeekday, tripStartWeek, tripStartYear, tripStartMonth, tripStartDay
+        # from tripStartClock retrieve tripStartHour, tripStartMinute
+        # from tripEndClock retrieve tripEndHour, tripEndMinute
+        self.data['tripStartDate'] = pd.to_datetime(self.data['tripStartDate'], format='%d.%m.%Y')
+        self.data['tripStartYear'] = self.data['tripStartDate'].dt.year
+        self.data['tripStartMonth'] = self.data['tripStartDate'].dt.month
+        self.data['tripStartDay'] = self.data['tripStartDate'].dt.day
+        self.data['tripStartWeekday'] = self.data['tripStartDate'].dt.weekday
+        self.data['tripStartWeek'] = self.data['tripStartDate'].dt.isocalendar().week
+        self.data['tripStartHour'] = pd.to_datetime(self.data['tripStartClock'], format='%H:%M').dt.hour
+        self.data['tripStartMinute'] = pd.to_datetime(self.data['tripStartClock'], format='%H:%M').dt.minute
+        self.data['tripEndHour'] = pd.to_datetime(self.data['tripEndClock'], format='%H:%M').dt.hour
+        self.data['tripEndMinute'] = pd.to_datetime(self.data['tripEndClock'], format='%H:%M').dt.minute
+
+
+        if weekday:
+            self.addStrColumnFromVariable(colName='weekdayStr', varName='tripStartWeekday')
+        if purpose:
+            self.addStrColumnFromVariable(colName='purposeStr', varName='tripPurpose')
+
+    def convertTypes(self):
+        """
+        Convert raw column types to predefined python types as specified in parseConfig['inputDTypes'][datasetID].
+        This is mainly done for performance reasons. But also in order to avoid index values that are of type int
+        to be cast to float. The function operates only on self.data and writes back changes to self.data
+
+        :return: None
+        """
+
+        # Filter for dataset specific columns
+        conversionDict = self.parseConfig['inputDTypes'][self.datasetID]
+        keys = {iCol for iCol in conversionDict.keys() if iCol in self.data.columns}
+        self.subDict = {key: conversionDict[key] for key in conversionDict.keys() & keys}
+        # German df has commas instead of dots in floats
+        for i, x in enumerate(list(self.data.tripDistance)):
+            self.data.at[i, 'tripDistance'] = x.replace(',', '.')
+        for i, x in enumerate(list(self.data.tripWeight)):
+            self.data.at[i, 'tripWeight'] = x.replace(',', '.')
+        self.data = self.data.astype(self.subDict)
+
+    def updateEndTimestamp(self):
+        """
+        :return:
+        """
+        self.data['tripEndNextDay'] = np.where(self.data['timestampEnd'].dt.day > self.data['timestampStart'].dt.day, 1, 0)
+        endsFollowingDay = self.data['tripEndNextDay'] == 1
+        self.data.loc[endsFollowingDay, 'timestampEnd'] = self.data.loc[endsFollowingDay,
+                                                                            'timestampEnd'] + pd.offsets.Day(1)
+
 
 if __name__ == '__main__':
     from vencopy.scripts.globalFunctions import loadConfigDict
     configNames = ('globalConfig', 'localPathConfig', 'parseConfig', 'tripConfig', 'gridConfig', 'flexConfig', 'evaluatorConfig')
     configDict = loadConfigDict(configNames)
 
-    datasetID = 'MiD17' #options are MiD08, MiD17, KiD
-    #datasetID = 'KiD'
-    vpData = DataParser(configDict=configDict, loadEncrypted=False, datasetID=datasetID)
+    #datasetID = 'MiD17' #options are MiD08, MiD17, KiD
+    datasetID = 'KiD'
+    vpData = ParseKiD(configDict=configDict, datasetID=datasetID)
+    #vpData = DataParser(configDict=configDict, loadEncrypted=False, datasetID=datasetID)

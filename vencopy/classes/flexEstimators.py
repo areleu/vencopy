@@ -43,9 +43,7 @@ class FlexEstimator:
         self.normalize()
         self.writeOut()
 
-        :param globalConfig: Dictionary used for relative paths, filenames and runlabels
-        :param flexConfig: So far not used
-        :param evaluatorConfig: DEPRECATED, may be cleared soon
+        :param configDict: A dictionary containing multiple yaml config files
         :param ParseData: Class instance of type DataParser
         :param datasetID: String used for file name composition on input files
         """

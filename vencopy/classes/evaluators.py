@@ -22,9 +22,7 @@ class Evaluator:
         CURRENTLY IN SEMI-PROUDCTION MODE. Some interfaces may only apply to specific cases.
         Overall evaluation class for assessing vencopy mobility and charging profiles.
 
-        :param globalConfig: global config instances for paths
-        :param evaluatorConfig: evaluator config mainly for plot properties
-        :param label: String for saving plots to hard disk
+        :param configDict: A dictionary containing multiple yaml config files
         :param parseData: Series with instances of VencoPy class ParseData and keys specifying the name of the
             respective class
         :param weightPlot: If True, profiles are weighted for plotting

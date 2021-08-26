@@ -52,9 +52,9 @@ files:
         flexPlotName: flexProfileComparison
     output: output
     KiD:
-        householdsDataRaw:
-        personDataRaw:
-        tripsDataRaw: KiD2010_merged.dta
+        tripsDataRaw: KiD2010-Fahrten-Datei-puf.dta
+        vehiclesDataRaw: KiD2010-Fahrzeug-Datei-puf.dta
+        # tripsDataRaw: KiD2010_merged.dta
         tripsProcessedOld:
         purposesProcessedOld:
         purposesProcessed:
