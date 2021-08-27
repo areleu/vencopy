@@ -222,21 +222,10 @@ class DataParser:
         """
 
         # Filter for dataset specific columns
-        if self.datasetID == 'KiD':
-            conversionDict = self.parseConfig['inputDTypes'][self.datasetID]
-            keys = {iCol for iCol in conversionDict.keys() if iCol in self.data.columns}
-            self.subDict = {key: conversionDict[key] for key in conversionDict.keys() & keys}
-            # German df has commas instead of dots in floats
-            for i, x in enumerate(list(self.data.tripDistance)):
-                self.data.at[i, 'tripDistance'] = x.replace(',', '.')
-            for i, x in enumerate(list(self.data.tripWeight)):
-                self.data.at[i, 'tripWeight'] = x.replace(',', '.')
-            self.data = self.data.astype(self.subDict)
-        else:
-            conversionDict = self.parseConfig['inputDTypes'][self.datasetID]
-            keys = {iCol for iCol in conversionDict.keys() if iCol in self.data.columns}
-            self.subDict = {key: conversionDict[key] for key in conversionDict.keys() & keys}
-            self.data = self.data.astype(self.subDict)
+        conversionDict = self.parseConfig['inputDTypes'][self.datasetID]
+        keys = {iCol for iCol in conversionDict.keys() if iCol in self.data.columns}
+        self.subDict = {key: conversionDict[key] for key in conversionDict.keys() & keys}
+        self.data = self.data.astype(self.subDict)
 
 
     def returnDictBottomValues(self, baseDict: dict, lst: list = []) -> list:
@@ -430,33 +419,10 @@ class DataParser:
         :return: None
         """
 
-        if self.datasetID == 'MiD17' or self.datasetID == 'MiD08':
-            if weekday:
-                self.addStrColumnFromVariable(colName='weekdayStr', varName='tripStartWeekday')
-            if purpose:
-                self.addStrColumnFromVariable(colName='purposeStr', varName='tripPurpose')
-
-        if self.datasetID == 'KiD':
-            # from tripStartDate retrieve tripStartWeekday, tripStartWeek, tripStartYear, tripStartMonth, tripStartDay
-            # from tripStartClock retrieve tripStartHour, tripStartMinute
-            # from tripEndClock retrieve tripEndHour, tripEndMinute
-            self.data['tripStartDate'] = pd.to_datetime(self.data['tripStartDate'], format='%d.%m.%Y')
-            self.data['tripStartYear'] = self.data['tripStartDate'].dt.year
-            self.data['tripStartMonth'] = self.data['tripStartDate'].dt.month
-            self.data['tripStartDay'] = self.data['tripStartDate'].dt.day
-            self.data['tripStartWeekday'] = self.data['tripStartDate'].dt.weekday
-            self.data['tripStartWeek'] = self.data['tripStartDate'].dt.isocalendar().week
-            self.data['tripStartHour'] = pd.to_datetime(self.data['tripStartClock'], format='%H:%M').dt.hour
-            self.data['tripStartMinute'] = pd.to_datetime(self.data['tripStartClock'], format='%H:%M').dt.minute
-            self.data['tripEndHour'] = pd.to_datetime(self.data['tripEndClock'], format='%H:%M').dt.hour
-            self.data['tripEndMinute'] = pd.to_datetime(self.data['tripEndClock'], format='%H:%M').dt.minute
-
-
-            if weekday:
-                self.addStrColumnFromVariable(colName='weekdayStr', varName='tripStartWeekday')
-            if purpose:
-                self.addStrColumnFromVariable(colName='purposeStr', varName='tripPurpose')
-
+        if weekday:
+            self.addStrColumnFromVariable(colName='weekdayStr', varName='tripStartWeekday')
+        if purpose:
+            self.addStrColumnFromVariable(colName='purposeStr', varName='tripPurpose')
 
 
     def composeTimestamp(self, data: pd.DataFrame = None,
@@ -497,15 +463,9 @@ class DataParser:
         """
         :return:
         """
-        if self.datasetID == 'MiD17' or self.datasetID == 'MiD08':
-            endsFollowingDay = self.data['tripEndNextDay'] == 1
-            self.data.loc[endsFollowingDay, 'timestampEnd'] = self.data.loc[endsFollowingDay,
-                                                                        'timestampEnd'] + pd.offsets.Day(1)
-        if self.datasetID == 'KiD':
-            self.data['tripEndNextDay'] = np.where(self.data['timestampEnd'].dt.day > self.data['timestampStart'].dt.day, 1, 0)
-            endsFollowingDay = self.data['tripEndNextDay'] == 1
-            self.data.loc[endsFollowingDay, 'timestampEnd'] = self.data.loc[endsFollowingDay,
-                                                                            'timestampEnd'] + pd.offsets.Day(1)
+        endsFollowingDay = self.data['tripEndNextDay'] == 1
+        self.data.loc[endsFollowingDay, 'timestampEnd'] = self.data.loc[endsFollowingDay,
+                                                                    'timestampEnd'] + pd.offsets.Day(1)
 
 
     def updateEndTimestamps(self) -> np.datetime64:
@@ -569,8 +529,6 @@ class ParseKiD(DataParser):
         self.data['tripStartMinute'] = pd.to_datetime(self.data['tripStartClock'], format='%H:%M').dt.minute
         self.data['tripEndHour'] = pd.to_datetime(self.data['tripEndClock'], format='%H:%M').dt.hour
         self.data['tripEndMinute'] = pd.to_datetime(self.data['tripEndClock'], format='%H:%M').dt.minute
-
-
         if weekday:
             self.addStrColumnFromVariable(colName='weekdayStr', varName='tripStartWeekday')
         if purpose:
