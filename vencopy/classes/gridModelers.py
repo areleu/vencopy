@@ -94,6 +94,24 @@ class GridModeler:
         :param fastChargingHHID: List of household trips for fast charging
         :return: Returns a dataFrame holding charging capacity for each trip assigned with probability distribution
         '''
+
+        # dict = {}
+        #
+        # if lossFactor == True:
+        #     for key, value in self.gridDistribution.items():
+        #         for nestedKey, nestedValue in value.items():
+        #             nestedKey = nestedKey * 0.67
+        #             if nestedKey == 0.0:
+        #                 nestedKey = int(nestedKey)
+        #             else:
+        #                 nestedKey
+        #             value2 = {nestedKey: nestedValue}
+        #             # dict[key] = value2
+        #             dict[key].update(value2)
+        #         print(dict)
+
+
+
         self.chargeAvailability = self.purposeData.copy()
         self.chargeAvailability.set_index(['genericID'], inplace=True)
         print('Starting with charge connection replacement ')
@@ -129,7 +147,7 @@ class GridModeler:
                     if model == 'probability':
                         row[iHour] = self.getRandomNumberForModel1(activity[iHour])
                     elif model == 'distribution':
-                        row[iHour] = self.getRandomNumberForModel2(activity[iHour])
+                        row[iHour] = self.getRandomNumberForModel2(activity[iHour], loadFactor=True)
                         # print(f'Power: {row[iHour]}, Activity: {activity[iHour]},householdPersonID: {hhPersonID}')
                 elif iHour > 0:
                     if activity[iHour] == activity[iHour - 1]:
@@ -141,7 +159,7 @@ class GridModeler:
                     elif model == 'probability':
                         row[iHour] = self.getRandomNumberForModel1(activity[iHour])
                     elif model == 'distribution':
-                        row[iHour] = self.getRandomNumberForModel2(activity[iHour])
+                        row[iHour] = self.getRandomNumberForModel2(activity[iHour], loadFactor=True)
                     # print(f'Power: {row[iHour]}, Activity: {activity[iHour]}, householdPersonID: {hhPersonID}')
             self.chargeAvailability.loc[hhPersonID] = row
         print('Grid connection assignment complete')
@@ -199,7 +217,7 @@ class GridModeler:
                 rnd = self.gridProbability['NA'][1]
         return rnd
 
-    def getRandomNumberForModel2(self, purpose):
+    def getRandomNumberForModel2(self, purpose, loadFactor: str):
         '''
         Assigns a random number between 0 and 1 for all the purposes, and allots a charging station according to the
         probability distribution
@@ -212,10 +230,15 @@ class GridModeler:
             rnd = np.random.random_sample()
 
         keys = list(self.gridDistribution[purpose].keys())
+        if loadFactor == True:
+            keys = [i * 0.67 for i in keys]
+        else:
+            keys
         range_dict = {}
         prob_min = 0
 
         for index, (key, value) in enumerate(self.gridDistribution[purpose].items()):
+            key = 0.67 * key
             prob_max = prob_min + value
             range_dict.update({index: {'min_range': prob_min, 'max_range': prob_max}})
             prob_min = prob_max
@@ -267,14 +290,16 @@ class GridModeler:
         :return: Plots charging station assigned to each trip and EV's parking area/trip purposes during a time span of
         24 hours
         '''
-        keys = []
-        for key, value in self.gridDistribution.items():
-            for nestedKey, nestedValue in value.items():
-                keys.append(nestedKey)
-        capacityList = keys
-        capacityList = list(set(capacityList))
-        capacityList.sort()
+        # keys = []
+        # for key, value in self.gridDistribution.items():
+        #     for nestedKey, nestedValue in value.items():
+        #         keys.append(nestedKey)
+        # capacityList = keys
+        # capacityList = list(set(capacityList))
+        # capacityList.sort()
+
         capacity = self.chargeAvailability.transpose()
+        capacityList = list(np.unique(capacity.loc[:, :].values))
 
         totalChargingStation = pd.DataFrame()
         for i in range(0, len(capacityList)):
