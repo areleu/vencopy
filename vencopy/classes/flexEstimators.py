@@ -356,9 +356,9 @@ class FlexEstimator:
                 if iHour == 0:
                     chargeMaxProfiles[iHour] = chargeMaxProfiles[nHours - 1].where(
                         cond=chargeMaxProfiles[iHour] <= batCapMax, other=batCapMax)
-                    socMaxProfiles[iHour] = chargeMaxProfiles[iHour] / batCap
+                    socMaxProfiles[iHour] = chargeMaxProfiles[iHour] / batCapMax
                 else:
-                    socMaxProfiles[iHour] = chargeMaxProfiles[iHour] / batCap
+                    socMaxProfiles[iHour] = chargeMaxProfiles[iHour] / batCapMax
                     # Calculate if an owner is connecting their car or not: connectionEvent (True/False) * connectionChoice (probability)
                     plugProbability[iHour] = self.transactionHourStart[iHour] * \
                                              socMaxProfiles[iHour].apply(self.plugProbFunc)
