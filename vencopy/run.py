@@ -33,6 +33,7 @@ if __name__ == '__main__':
     configDict = loadConfigDict(configNames)
 
     vpData = DataParser(datasetID=datasetID, configDict=configDict, loadEncrypted=False)
+    vpData.process()
     # Trip distance and purpose diary compositions
     vpTripDiary = TripDiaryBuilder(datasetID=datasetID,configDict=configDict, ParseData=vpData, debug=True)
 

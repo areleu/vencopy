@@ -940,6 +940,7 @@ if __name__ == '__main__':
     configNames = ('globalConfig', 'localPathConfig', 'parseConfig', 'tripConfig', 'gridConfig', 'flexConfig', 'evaluatorConfig')
     configDict = loadConfigDict(configNames)
     vpData = DataParser(configDict=configDict, datasetID=datasetID, loadEncrypted=False)
+    vpData.process()
     vpFlexEst = FlexEstimator(configDict=configDict, ParseData=vpData, datasetID=datasetID)
     vpFlexEst.run()
     vpEval = Evaluator(configDict=configDict, parseData=pd.Series(data=vpData, index=[datasetID]))

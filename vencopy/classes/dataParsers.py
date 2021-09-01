@@ -61,17 +61,7 @@ class DataParser:
         else:
             print(f"Starting to retrieve local data file from {self.rawDataPath}")
             self.loadData()
-        self.selectColumns()
-        self.harmonizeVariables()
-        self.convertTypes()
-        self.checkFilterDict()
-        self.filter()
-        self.filterConsistentHours()
-        self.addStrColumns()
-        self.composeStartAndEndTimestamps()
-        self.updateEndTimestamps()
-        self.harmonizeVariablesGenericIdNames()
-        print('Parsing completed')
+
 
     def updateFilterDict(self) -> None:
         """
@@ -481,6 +471,23 @@ class DataParser:
         self.data['genericID'] = self.data[str(self.parseConfig['IDVariablesNames'][self.datasetID])]
         print('Finished harmonization of ID variables')
 
+    def process(self):
+        """
+        Wrapper function for harmonising and filtering the dataset.
+        """
+        self.selectColumns()
+        self.harmonizeVariables()
+        self.convertTypes()
+        self.checkFilterDict()
+        self.filter()
+        self.filterConsistentHours()
+        self.addStrColumns()
+        self.composeStartAndEndTimestamps()
+        self.updateEndTimestamps()
+        self.harmonizeVariablesGenericIdNames()
+        print('Parsing completed')
+
+
 
 class ParseMiD(DataParser):
     # Inherited data class to differentiate between abstract interfaces such as vencopy internal
@@ -562,14 +569,33 @@ class ParseKiD(DataParser):
         endsFollowingDay = self.data['tripEndNextDay'] == 1
         self.data.loc[endsFollowingDay, 'timestampEnd'] = self.data.loc[endsFollowingDay,
                                                                             'timestampEnd'] + pd.offsets.Day(1)
+    def assignDates(self):
+        pass
 
+    def process(self):
+        """
+        Wrapper function for harmonising and filtering the dataset.
+        """
+        self.assignDates()
+        self.selectColumns()
+        self.harmonizeVariables()
+        self.convertTypes()
+        self.checkFilterDict()
+        self.filter()
+        self.filterConsistentHours()
+        self.addStrColumns()
+        self.composeStartAndEndTimestamps()
+        self.updateEndTimestamps()
+        self.harmonizeVariablesGenericIdNames()
+        print('Parsing completed')
 
 if __name__ == '__main__':
     from vencopy.scripts.globalFunctions import loadConfigDict
     configNames = ('globalConfig', 'localPathConfig', 'parseConfig', 'tripConfig', 'gridConfig', 'flexConfig', 'evaluatorConfig')
     configDict = loadConfigDict(configNames)
 
-    #datasetID = 'MiD17' #options are MiD08, MiD17, KiD
-    datasetID = 'KiD'
-    vpData = ParseKiD(configDict=configDict, datasetID=datasetID)
-    #vpData = DataParser(configDict=configDict, loadEncrypted=False, datasetID=datasetID)
+    datasetID = 'MiD17' #options are MiD08, MiD17, KiD
+    # datasetID = 'KiD'
+    #vpData = ParseKiD(configDict=configDict, datasetID=datasetID)
+    vpData = DataParser(configDict=configDict, loadEncrypted=False, datasetID=datasetID)
+    vpData.process()

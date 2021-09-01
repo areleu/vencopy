@@ -426,4 +426,5 @@ if __name__ == '__main__':
     configNames = ('globalConfig', 'localPathConfig', 'parseConfig', 'tripConfig', 'gridConfig', 'flexConfig', 'evaluatorConfig')
     configDict = loadConfigDict(configNames)
     vpData = DataParser(configDict=configDict, loadEncrypted=False, datasetID=datasetID)
+    vpData.process()
     vpDiary = TripDiaryBuilder(configDict=configDict, ParseData=vpData, datasetID=datasetID, debug=True)
