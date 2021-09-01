@@ -119,7 +119,6 @@ class GridModeler:
         np.random.seed(42)
         for hhPersonID, row in self.chargeAvailability.iterrows():
             activity = row.copy(deep=True)
-            activity
             # if None:
             # # if hhPersonID in fastChargingHHID:
             #     for iHour in range(0, len(row)):
@@ -349,8 +348,8 @@ class GridModeler:
 
     def getTransactionHourStart(self):
         print('Caculating number of transactions')
-        self.transactionHourStart = pd.read_csv(self.outputFilePath)
-        self.transactionHourStart.set_index('genericID', inplace=True)
+        self.transactionHourStart = self.chargeAvailability
+        # self.transactionHourStart.set_index('genericID', inplace=True)
         countStartHour = 0
         nHours = len(self.transactionHourStart.columns)
         for genericID, row in self.transactionHourStart.iterrows():
@@ -372,6 +371,7 @@ class GridModeler:
                         row[iHour] = False
             self.transactionHourStart.loc[genericID] = row
         print('There are ' +str(countStartHour)+ ' transactions')
+        self.transactionHourStart.columns = self.transactionHourStart.columns.astype(int)
         return self.transactionHourStart
 
     def writeOutTransactionStartHour(self, transactionHours):
@@ -386,7 +386,8 @@ class GridModeler:
     def profileCalulation(self):
         self.fastChargingHHID = self.fastChargingList()
         # self.simpleGrid = self.assignSimpleGridViaPurposes()
-        self.probabilityGrid = self.assignGridViaProbabilities(model='distribution', fastChargingHHID=self.fastChargingHHID)
+        self.probabilityGrid = self.assignGridViaProbabilities(model='distribution',
+                                                               fastChargingHHID=self.fastChargingHHID)
         self.writeoutPlugProfiles = self.writeOutGridAvailability()
         self.plotProfiles = self.stackPlot()
         self.transactionHourStart = self.getTransactionHourStart()

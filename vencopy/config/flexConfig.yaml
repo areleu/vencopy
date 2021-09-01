@@ -10,7 +10,6 @@
 # This config holds all technical input assumptions and thresholds
 
 inputDataScalars:
-
     MiD17:
         Minimum_daily_mileage: 0.0              # in km, cut-off mileage to exclude profiles
         Battery_capacity: 50.0                  # in kWh, input assumption for battery capacity
@@ -38,8 +37,8 @@ inputDataScalars:
     MiD08:
         Minimum_daily_mileage: 0.0              #km
         Battery_capacity: 50.0                  #kWh
-        Electric_consumption_: 20.0         #kWh/100km
-        Fuel_consumption_: 1.0              #l/100km
+        Electric_consumption: 20.0         #kWh/100km
+        Fuel_consumption: 1.0              #l/100km
         Electric_consumption_corr: 20.0      #kWh/100km
         Fuel_consumption_corr: 1.0           #l/100km
         Maximum_SOC: 0.97                       #%
@@ -47,6 +46,7 @@ inputDataScalars:
         Rated_power_of_charging_column: 11.0    #kW
         Is_BEV?: 1
 
-plugFuncParams:
-    mu: 1
-    sigma: 2
+plugFunction:
+# f(x) = 1 - 1 / (1 + exp(-k * (x - SOC))) with k being the slope at 50% probability and SOC being SOC at 50% probability
+    k: 15
+    SOC: 0.5

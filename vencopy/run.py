@@ -57,10 +57,10 @@ vpGrid.profileCalulation()
 # review: Is this still valid code or left overs? I ignored this code for now.
 #  Maybe we should schedule a cleanup.
 # Evaluate drive and trip purpose profiles
-vpEval = Evaluator(globalConfig=globalConfig, evaluatorConfig=evaluatorConfig,
-                   parseData=pd.Series(data=vpData, index=[datasetID]))
-vpEval.hourlyAggregates = vpEval.calcVariableSpecAggregates(by=['tripStartWeekday'])
-vpEval.plotAggregates()
+# vpEval = Evaluator(globalConfig=globalConfig, evaluatorConfig=evaluatorConfig,
+#                    parseData=pd.Series(data=vpData, index=[datasetID]))
+# vpEval.hourlyAggregates = vpEval.calcVariableSpecAggregates(by=['tripStartWeekday'])
+# vpEval.plotAggregates()
 
 # Estimate charging flexibility based on driving profiles and charge connection
 vpFlex = FlexEstimator(flexConfig=flexConfig, globalConfig=globalConfig, evaluatorConfig=evaluatorConfig,

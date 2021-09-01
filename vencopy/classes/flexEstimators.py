@@ -13,6 +13,7 @@ import functools
 import warnings
 import os
 import yaml
+import math
 import pandas as pd
 import numpy as np
 from random import seed, random
@@ -24,10 +25,10 @@ from vencopy.scripts.globalFunctions import createFileString, mergeVariables, ca
 
 
 class FlexEstimator:
-    # def __init__(self, globalConfig: dict, flexConfig : dict, evaluatorConfig: dict, ParseData,
-    #              # datasetID: str, transactionHourStart: pd.DataFrame):
-    def __init__(self, globalConfig: dict, flexConfig: dict, evaluatorConfig: dict, ParseData,
-                    datasetID: str):
+    def __init__(self, globalConfig: dict, flexConfig : dict, evaluatorConfig: dict, ParseData,
+                 datasetID: str, transactionHourStart: pd.DataFrame):
+    # def __init__(self, globalConfig: dict, flexConfig: dict, evaluatorConfig: dict, ParseData,
+    #                 datasetID: str):
         """
         Class to estimate uncontrolled charging, electricity drain, grid connection, auxiliary fuel, SOC min and
         SOC max profiles based on hourly driving and boolean grid connection profiles. Requires a .xlsx file specifying
@@ -66,8 +67,8 @@ class FlexEstimator:
                                                                       nHours=self.globalConfig['numberOfHours'])
         self.scalarsProc = self.procScalars(self.driveProfilesIn, self.plugProfilesIn,
                                        self.driveProfiles, self.plugProfiles)
-        # self.plugProbFunc = self.initPlugFunc(flexConfig['plugFuncParams'])
-        # self.transactionHourStart = transactionHourStart
+        self.plugProbFunc = self.initPlugFunc(flexConfig['plugFunction'])  # SOC dependend probability of connecting
+        self.transactionHourStart = transactionHourStart
 
         #  Future release: In a future release, a composition approach with a dataclass based
         #  encapsulation will be pursued here. This will also make it easy to communicate the data to the outside of
@@ -125,8 +126,6 @@ class FlexEstimator:
         self.profileDictOut = {}
 
         print('Flex Estimator initialization complete')
-
-
 
     def readInputCSV(self, filePath) -> pd.DataFrame:
         """
@@ -291,16 +290,14 @@ class FlexEstimator:
         self.plugProfilesIn = mergeVariables(data=self.plugProfilesIn, variableData=ParseData.data,
                                              variables=['tripStartWeekday', 'tripWeight'])
 
-    # def initPlugFunc(self, params: dict):
-    #     """
-    #     Initialization of plugging probability function as defined by the parameters in flexConfig
-    #
-    #     :param params: Function parameters
-    #     :return: Function object Plug probability (SOC)
-    #     """
-    #     func = NormalDist(mu=params['mu'],
-    #                       sigma=params['sigma']).inv_cdf()
-    #     return func
+    def initPlugFunc(self, params: dict):
+        """
+        Initialization of plugging probability function as defined by the parameters in flexConfig
+
+        :param params: Function parameters
+        :return: Function object Plug probability (SOC)
+        """
+        return lambda x: 1 - 1 / (1 + math.exp(-params['k'] * (x - params['SOC'])))
 
     def calcDrainProfiles(self, driveProfiles: pd.DataFrame, flexConfig: dict) -> pd.DataFrame:
         """
@@ -327,8 +324,8 @@ class FlexEstimator:
 
         return plugProfiles * flexConfig['inputDataScalars'][self.datasetID]['Rated_power_of_charging_column']
 
-    def calcChargeMaxProfiles(self, chargeProfiles: pd.DataFrame, consumptionProfiles: pd.DataFrame,
-                              nIter: int) -> pd.DataFrame:
+    def calcChargeMaxProfiles(self, chargeProfiles: pd.DataFrame, consumptionProfiles: pd.DataFrame, batCap: np.float,
+                              minSOC: np.float, maxSOC:np.float, nIter: int) -> pd.DataFrame:
         """
         Calculates all maximum SoC profiles under the assumption that batteries are always charged as soon as they
         are plugged to the grid. Values are assured to not fall below SoC_min * battery capacity or surpass
@@ -336,7 +333,7 @@ class FlexEstimator:
         the boundary condition of chargeMaxProfile(0) = chargeMaxProfile(len(profiles)). The number of iterations
         is given as parameter.
 
-        :param chargeProfiles: Indexed dataframe of charge profiles.
+        :param chargeProfiles: Indexed dataframe of maximum capacity for charging in each hour.
         :param consumptionProfiles: Indexed dataframe of consumptionProfiles.
         :param flexConfig: YAML config holds all relative paths and filenames for flexEstimators.py
         :param scalarsProc: DataFrame holding information about profile length and number of hours.
@@ -345,12 +342,13 @@ class FlexEstimator:
         containing single-profile SOC max values for each hour in each profile.
         """
 
-        chargeMaxProfiles = chargeProfiles.copy()
-        # discretePlugChoice = chargeProfiles.copy()
-        # plugProbability = chargeProfiles.copy()
-        # len = len(chargeProfiles)
-        batCapMin = self.flexConfig['inputDataScalars'][self.datasetID]['Battery_capacity'] * self.flexConfig['inputDataScalars'][self.datasetID]['Minimum_SOC']
-        batCapMax = self.flexConfig['inputDataScalars'][self.datasetID]['Battery_capacity'] * self.flexConfig['inputDataScalars'][self.datasetID]['Maximum_SOC']
+        chargeMaxProfiles = chargeProfiles.copy()  # absolute battery fill in kWh
+        socMaxProfiles = chargeProfiles.copy()  # relative to battery capacity between 0 and 1
+        plugProbability = chargeProfiles.copy()
+        discretePlugChoice = pd.DataFrame(data=True, index=chargeProfiles.index, columns=chargeProfiles.columns)
+        nProf = len(chargeProfiles)
+        batCapMin = batCap * minSOC  # absolute in kWh
+        batCapMax = batCap * maxSOC
         nHours = self.scalarsProc['nHours']
         for idxIt in range(nIter):
             print(f'Starting with iteration {idxIt}')
@@ -358,10 +356,21 @@ class FlexEstimator:
                 if iHour == 0:
                     chargeMaxProfiles[iHour] = chargeMaxProfiles[nHours - 1].where(
                         cond=chargeMaxProfiles[iHour] <= batCapMax, other=batCapMax)
+                    socMaxProfiles[iHour] = chargeMaxProfiles[iHour] / batCap
                 else:
+                    socMaxProfiles[iHour] = chargeMaxProfiles[iHour] / batCap
+                    # Calculate if an owner is connecting their car or not: connectionEvent (True/False) * connectionChoice (probability)
+                    plugProbability[iHour] = self.transactionHourStart[iHour] * \
+                                             socMaxProfiles[iHour].apply(self.plugProbFunc)
+
+                    # Set all hours from current to end to respective plug choice
+                    plugChoiceHour = plugProbability[iHour] >= np.random.random(nProf)
+                    discretePlugChoice.loc[plugChoiceHour, iHour:] = True
+                    discretePlugChoice.loc[self.transactionHourStart[iHour] & ~plugChoiceHour, iHour:] = False
+
                     # Calculate and append column with new SoC Max value for comparison and cleaner code
                     chargeMaxProfiles['newCharge'] = chargeMaxProfiles[iHour - 1] + \
-                                                     chargeProfiles[iHour] - \
+                                                     chargeProfiles[iHour] * discretePlugChoice[iHour].astype(int) - \
                                                      consumptionProfiles[iHour]
 
                     # Ensure that chargeMaxProfiles values are between batCapMin and batCapMax
@@ -373,37 +382,9 @@ class FlexEstimator:
 
             devCrit = chargeMaxProfiles[nHours - 1].sum() - chargeMaxProfiles[0].sum()
             print(devCrit)
+        self.chargeProfiles = chargeProfiles * discretePlugChoice.astype(int)
         chargeMaxProfiles.drop(labels='newCharge', axis='columns', inplace=True)
         return chargeMaxProfiles
-
-    # for idxIt in range(nIter):
-        #     print(f'Starting with iteration {idxIt}')
-        #     for iHour in range(nHours):
-        #         if iHour == 0:
-        #             chargeMaxProfiles[iHour] = chargeMaxProfiles[nHours - 1].where(
-        #                 cond=chargeMaxProfiles[iHour] <= batCapMax, other=batCapMax)
-        #         else:
-        #             plugProbability[iHour] = chargeMaxProfiles[iHour].apply(self.plugProbFunc) * self.transactionHourStart[iHour]
-        #             discretePlugChoice[iHour] = plugProbability[iHour] >= np.random.random(len)
-        #             # FIXME store chargeProfiles * discretePlugChoice in chargeProfiles
-        #
-        #             # Calculate and append column with new SoC Max value for comparison and cleaner code
-        #             chargeMaxProfiles['newCharge'] = chargeMaxProfiles[iHour - 1] + \
-        #                                              chargeProfiles[iHour] * discretePlugChoice[iHour] - \
-        #                                              consumptionProfiles[iHour]
-        #
-        #             # Ensure that chargeMaxProfiles values are between batCapMin and batCapMax
-        #             chargeMaxProfiles[iHour] \
-        #                 = chargeMaxProfiles['newCharge'].where(cond=chargeMaxProfiles['newCharge'] <= batCapMax,
-        #                                                        other=batCapMax)
-        #             chargeMaxProfiles[iHour] \
-        #                 = chargeMaxProfiles[iHour].where(cond=chargeMaxProfiles[iHour] >= batCapMin, other=batCapMin)
-        #
-        #
-        #     devCrit = chargeMaxProfiles[nHours - 1].sum() - chargeMaxProfiles[0].sum()
-        #     print(devCrit)
-        # chargeMaxProfiles.drop(labels='newCharge', axis='columns', inplace=True)
-        # return chargeMaxProfiles
 
     def calcChargeProfilesUncontrolled(self, chargeMaxProfiles: pd.DataFrame,
                                        scalarsProc: pd.DataFrame) -> pd.DataFrame:
@@ -533,7 +514,10 @@ class FlexEstimator:
         self.drainProfiles = self.calcDrainProfiles(driveProfiles=self.driveProfiles, flexConfig=self.flexConfig)
         self.chargeProfiles = self.calcChargeProfiles(plugProfiles=self.plugProfiles, flexConfig=self.flexConfig)
         self.chargeMaxProfiles = self.calcChargeMaxProfiles(chargeProfiles=self.chargeProfiles,
-                                                            consumptionProfiles=self.drainProfiles, nIter=3)
+                                                            consumptionProfiles=self.drainProfiles, nIter=3,
+                                        batCap=self.flexConfig['inputDataScalars'][self.datasetID]['Battery_capacity'],
+                                            minSOC=self.flexConfig['inputDataScalars'][self.datasetID]['Minimum_SOC'],
+                                            maxSOC=self.flexConfig['inputDataScalars'][self.datasetID]['Maximum_SOC'])
         # self.connectionType = self.assignConnectionType()
         self.chargeProfilesUncontrolled = self.calcChargeProfilesUncontrolled(chargeMaxProfiles=self.chargeMaxProfiles,
                                                                               scalarsProc=self.scalarsProc)
