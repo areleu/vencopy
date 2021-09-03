@@ -43,6 +43,7 @@ class GridModeler:
         self.gridDistribution = gridConfig['gridAvailabilityDistribution']
         self.gridFastCharging = gridConfig['gridAvailabilityFastCharging']
         self.gridFastChargingThreshold = gridConfig['fastChargingThreshold']
+        self.gridAveragePower = gridConfig['chargingColumnAveragePower']
         self.outputFileName = createFileString(globalConfig=globalConfig, fileKey='inputDataPlugProfiles',
                                                datasetID=datasetID)
         self.outputFileNameTransactionStartHour = createFileString(globalConfig=globalConfig, fileKey='transactionStartHour', datasetID=datasetID)
@@ -146,7 +147,9 @@ class GridModeler:
                     if model == 'probability':
                         row[iHour] = self.getRandomNumberForModel1(activity[iHour])
                     elif model == 'distribution':
-                        row[iHour] = self.getRandomNumberForModel2(activity[iHour], loadFactor=True)
+                        row[iHour] = self.getRandomNumberForModel2(activity[iHour])
+                    elif model == 'average charging power':
+                        row[iHour] = self.getRandomNumberForModel4(activity[iHour])
                         # print(f'Power: {row[iHour]}, Activity: {activity[iHour]},householdPersonID: {hhPersonID}')
                 elif iHour > 0:
                     if activity[iHour] == activity[iHour - 1]:
@@ -158,7 +161,9 @@ class GridModeler:
                     elif model == 'probability':
                         row[iHour] = self.getRandomNumberForModel1(activity[iHour])
                     elif model == 'distribution':
-                        row[iHour] = self.getRandomNumberForModel2(activity[iHour], loadFactor=True)
+                        row[iHour] = self.getRandomNumberForModel2(activity[iHour])
+                    elif model == 'average charging power':
+                        row[iHour] = self.getRandomNumberForModel4(activity[iHour])
                     # print(f'Power: {row[iHour]}, Activity: {activity[iHour]}, householdPersonID: {hhPersonID}')
             self.chargeAvailability.loc[hhPersonID] = row
         print('Grid connection assignment complete')
@@ -216,7 +221,7 @@ class GridModeler:
                 rnd = self.gridProbability['NA'][1]
         return rnd
 
-    def getRandomNumberForModel2(self, purpose, loadFactor: str):
+    def getRandomNumberForModel2(self, purpose):
         '''
         Assigns a random number between 0 and 1 for all the purposes, and allots a charging station according to the
         probability distribution
@@ -229,10 +234,6 @@ class GridModeler:
             rnd = np.random.random_sample()
 
         keys = list(self.gridDistribution[purpose].keys())
-        if loadFactor == True:
-            keys = [i * 0.67 for i in keys]
-        else:
-            keys
         range_dict = {}
         prob_min = 0
 
@@ -270,6 +271,34 @@ class GridModeler:
             prob_min = prob_max
 
         for dictIndex, rangeValue in range_dict_fast.items():
+            if rangeValue['min_range'] <= rnd <= rangeValue['max_range']:
+                power = keys[dictIndex]
+                break
+        return power
+
+    def getRandomNumberForModel4(self, purpose):
+        '''
+        Assigns a random number between 0 and 1 for all the purposes, and allots a charging station according to the
+        probability distribution
+        :param purpose: Purpose of each hour of a trip
+        :return: Returns a charging capacity for a purpose based on probability distribution model 2
+        '''
+        if purpose == 'DRIVING':
+            rnd = 0
+        else:
+            rnd = np.random.random_sample()
+
+        keys = list(self.gridAveragePower[purpose].keys())
+        range_dict = {}
+        prob_min = 0
+
+        for index, (key, value) in enumerate(self.gridAveragePower[purpose].items()):
+            key = 0.67 * key
+            prob_max = prob_min + value
+            range_dict.update({index: {'min_range': prob_min, 'max_range': prob_max}})
+            prob_min = prob_max
+
+        for dictIndex, rangeValue in range_dict.items():
             if rangeValue['min_range'] <= rnd <= rangeValue['max_range']:
                 power = keys[dictIndex]
                 break
@@ -386,8 +415,7 @@ class GridModeler:
     def profileCalulation(self):
         self.fastChargingHHID = self.fastChargingList()
         # self.simpleGrid = self.assignSimpleGridViaPurposes()
-        self.probabilityGrid = self.assignGridViaProbabilities(model='distribution',
-                                                               fastChargingHHID=self.fastChargingHHID)
+        self.probabilityGrid = self.assignGridViaProbabilities(model='average charging power', fastChargingHHID=self.fastChargingHHID)
         self.writeoutPlugProfiles = self.writeOutGridAvailability()
         self.plotProfiles = self.stackPlot()
         self.transactionHourStart = self.getTransactionHourStart()

@@ -26,7 +26,7 @@ from vencopy.scripts.globalFunctions import createFileString, mergeVariables, ca
 
 class FlexEstimator:
     def __init__(self, globalConfig: dict, flexConfig : dict, evaluatorConfig: dict, ParseData,
-                 datasetID: str, transactionHourStart: pd.DataFrame):
+                 datasetID: str):
     # def __init__(self, globalConfig: dict, flexConfig: dict, evaluatorConfig: dict, ParseData,
     #                 datasetID: str):
         """
@@ -68,7 +68,11 @@ class FlexEstimator:
         self.scalarsProc = self.procScalars(self.driveProfilesIn, self.plugProfilesIn,
                                        self.driveProfiles, self.plugProfiles)
         self.plugProbFunc = self.initPlugFunc(flexConfig['plugFunction'])  # SOC dependend probability of connecting
-        self.transactionHourStart = transactionHourStart
+
+        self.inputTransactionHourStartName = createFileString(globalConfig=globalConfig, fileKey='transactionStartHour',
+                                              datasetID=datasetID)
+        self.inputTransactionHourStartPath = Path(globalConfig['pathRelative']['gridOutput']) / self.inputTransactionHourStartName
+        self.transactionHourStart = pd.read_csv(self.inputTransactionHourStartPath, keep_default_na=False, index_col='genericID')
 
         #  Future release: In a future release, a composition approach with a dataclass based
         #  encapsulation will be pursued here. This will also make it easy to communicate the data to the outside of
@@ -360,13 +364,13 @@ class FlexEstimator:
                 else:
                     socMaxProfiles[iHour] = chargeMaxProfiles[iHour] / batCapMax
                     # Calculate if an owner is connecting their car or not: connectionEvent (True/False) * connectionChoice (probability)
-                    plugProbability[iHour] = self.transactionHourStart[iHour] * \
+                    plugProbability[iHour] = self.transactionHourStart[str(iHour)] * \
                                              socMaxProfiles[iHour].apply(self.plugProbFunc)
 
                     # Set all hours from current to end to respective plug choice
                     plugChoiceHour = plugProbability[iHour] >= np.random.random(nProf)
                     discretePlugChoice.loc[plugChoiceHour, iHour:] = True
-                    discretePlugChoice.loc[self.transactionHourStart[iHour] & ~plugChoiceHour, iHour:] = False
+                    discretePlugChoice.loc[self.transactionHourStart[str(iHour)] & ~plugChoiceHour, iHour:] = False
 
                     # Calculate and append column with new SoC Max value for comparison and cleaner code
                     chargeMaxProfiles['newCharge'] = chargeMaxProfiles[iHour - 1] + \
@@ -986,6 +990,7 @@ if __name__ == '__main__':
 
     vpData = DataParser(parseConfig=parseConfig, globalConfig=globalConfig, localPathConfig=localPathConfig,
                         datasetID=datasetID, loadEncrypted=False)
+
     vpFlexEst = FlexEstimator(flexConfig=flexConfig, globalConfig=globalConfig, evaluatorConfig=evaluatorConfig,
                               ParseData=vpData, datasetID=datasetID)
     vpFlexEst.run()
