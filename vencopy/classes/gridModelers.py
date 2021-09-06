@@ -415,7 +415,7 @@ class GridModeler:
     def profileCalulation(self):
         self.fastChargingHHID = self.fastChargingList()
         # self.simpleGrid = self.assignSimpleGridViaPurposes()
-        self.probabilityGrid = self.assignGridViaProbabilities(model='average charging power', fastChargingHHID=self.fastChargingHHID)
+        self.probabilityGrid = self.assignGridViaProbabilities(model='distribution', fastChargingHHID=self.fastChargingHHID)
         self.writeoutPlugProfiles = self.writeOutGridAvailability()
         self.plotProfiles = self.stackPlot()
         self.transactionHourStart = self.getTransactionHourStart()

@@ -20,6 +20,7 @@ inputDataScalars:
         Maximum_SOC: 0.97                       # in %
         Minimum_SOC: 0.03                       # in %
         Rated_power_of_charging_column: 11.0    # kW, input assumption. In future releases this will be specified in gridConfig
+        Probability_based_rated_power_of_charging_column: 1
         Is_BEV?: 1                              # 1=BEV, 0=PHEV (not yet tested)
 
     KiD: # differentiate between light commercial vehicle (LCV), medium-duty truck (MDT), and heavy-duty truck (HDT).
@@ -49,4 +50,4 @@ inputDataScalars:
 plugFunction:
 # f(x) = 1 - 1 / (1 + exp(-k * (x - SOC))) with k being the slope at 50% probability and SOC being SOC at 50% probability
     k: 15
-    SOC: 0.5
+    SOC: 1

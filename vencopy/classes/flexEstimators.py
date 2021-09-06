@@ -314,7 +314,7 @@ class FlexEstimator:
 
         return driveProfiles * flexConfig['inputDataScalars'][self.datasetID]['Electric_consumption'] / float(100)
 
-    def calcChargeProfiles(self, plugProfiles: pd.DataFrame, flexConfig) -> pd.DataFrame:
+    def calcChargeProfiles(self, plugProfiles: pd.DataFrame, flexConfig, model: str) -> pd.DataFrame:
         '''
         Calculates the maximum possible charge power based on the plug profile assuming the charge column power
         given in the scalar input data file (so far under Panschluss).
@@ -324,10 +324,14 @@ class FlexEstimator:
         :return: Returns scaled plugProfile in the same format as plugProfiles.
         '''
 
-        return plugProfiles * flexConfig['inputDataScalars'][self.datasetID]['Rated_power_of_charging_column']
+        if model == 'distribution':
+            plugProfiles = plugProfiles * flexConfig['inputDataScalars'][self.datasetID]['Probability_based_rated_power_of_charging_column']
+        else:
+            plugProfiles = plugProfiles * flexConfig['inputDataScalars'][self.datasetID]['Rated_power_of_charging_column']
+        return plugProfiles
 
     def calcChargeMaxProfiles(self, chargeProfiles: pd.DataFrame, consumptionProfiles: pd.DataFrame, batCap: np.float,
-                              minSOC: np.float, maxSOC:np.float, nIter: int) -> pd.DataFrame:
+                              minSOC: np.float, maxSOC:np.float, nIter: int, plugChoice: bool) -> pd.DataFrame:
         """
         Calculates all maximum SoC profiles under the assumption that batteries are always charged as soon as they
         are plugged to the grid. Values are assured to not fall below SoC_min * battery capacity or surpass
@@ -352,35 +356,51 @@ class FlexEstimator:
         batCapMin = batCap * minSOC  # absolute in kWh
         batCapMax = batCap * maxSOC
         nHours = self.scalarsProc['nHours']
+        np.random.seed(1)
         for idxIt in range(nIter):
             print(f'Starting with iteration {idxIt}')
             for iHour in range(nHours):
                 if iHour == 0:
                     chargeMaxProfiles[iHour] = chargeMaxProfiles[nHours - 1].where(
-                        cond=chargeMaxProfiles[iHour] <= batCapMax, other=batCapMax)
+                        cond=chargeMaxProfiles[nHours - 1] <= batCapMax, other=batCapMax)
                     socMaxProfiles[iHour] = chargeMaxProfiles[iHour] / batCapMax
                 else:
                     socMaxProfiles[iHour] = chargeMaxProfiles[iHour] / batCapMax
-                    # Calculate if an owner is connecting their car or not: connectionEvent (True/False) * connectionChoice (probability)
-                    plugProbability[iHour] = transactionStartHour[str(iHour)] * \
-                                             socMaxProfiles[iHour].apply(self.plugProbFunc)
 
-                    # Set all hours from current to end to respective plug choice
-                    plugChoiceHour = plugProbability[iHour] >= np.random.random(nProf)
-                    discretePlugChoice.loc[plugChoiceHour, iHour:] = True
-                    discretePlugChoice.loc[transactionStartHour[str(iHour)] & ~plugChoiceHour, iHour:] = False
+                    if plugChoice == True:
+                        # Calculate if an owner is connecting their car or not: connectionEvent (True/False) * connectionChoice (probability)
+                        plugProbability[iHour] = transactionStartHour[str(iHour)] * \
+                                                 socMaxProfiles[iHour].apply(self.plugProbFunc)
 
-                    # Calculate and append column with new SoC Max value for comparison and cleaner code
-                    chargeMaxProfiles['newCharge'] = chargeMaxProfiles[iHour - 1] + \
-                                                     chargeProfiles[iHour] * discretePlugChoice[iHour].astype(int) - \
-                                                     consumptionProfiles[iHour]
+                        # Set all hours from current to end to respective plug choice
+                        plugChoiceHour = plugProbability[iHour] >= np.random.random_sample(nProf)
+                        discretePlugChoice.loc[plugChoiceHour, iHour:] = True
+                        discretePlugChoice.loc[transactionStartHour[str(iHour)] & ~plugChoiceHour, iHour:] = False
 
-                    # Ensure that chargeMaxProfiles values are between batCapMin and batCapMax
-                    chargeMaxProfiles[iHour] \
-                        = chargeMaxProfiles['newCharge'].where(cond=chargeMaxProfiles['newCharge'] <= batCapMax,
-                                                               other=batCapMax)
-                    chargeMaxProfiles[iHour] \
-                        = chargeMaxProfiles[iHour].where(cond=chargeMaxProfiles[iHour] >= batCapMin, other=batCapMin)
+                        # Calculate and append column with new SoC Max value for comparison and cleaner code
+                        chargeMaxProfiles['newCharge'] = chargeMaxProfiles[iHour - 1] + \
+                                                         chargeProfiles[iHour] * discretePlugChoice[iHour].astype(int) - \
+                                                         consumptionProfiles[iHour]
+                        # Ensure that chargeMaxProfiles values are between batCapMin and batCapMax
+                        chargeMaxProfiles[iHour] \
+                            = chargeMaxProfiles['newCharge'].where(cond=chargeMaxProfiles['newCharge'] <= batCapMax,
+                                                                   other=batCapMax)
+                        chargeMaxProfiles[iHour] \
+                            = chargeMaxProfiles[iHour].where(cond=chargeMaxProfiles[iHour] >= batCapMin,
+                                                             other=batCapMin)
+
+                    else:
+                        # Calculate and append column with new SoC Max value for comparison and cleaner code
+                        chargeMaxProfiles['newCharge'] = chargeMaxProfiles[iHour - 1] + \
+                                                         chargeProfiles[iHour] - \
+                                                         consumptionProfiles[iHour]
+
+                        # Ensure that chargeMaxProfiles values are between batCapMin and batCapMax
+                        chargeMaxProfiles[iHour] \
+                            = chargeMaxProfiles['newCharge'].where(cond=chargeMaxProfiles['newCharge'] <= batCapMax,
+                                                                    other=batCapMax)
+                        chargeMaxProfiles[iHour] \
+                            = chargeMaxProfiles[iHour].where(cond=chargeMaxProfiles[iHour] >= batCapMin, other=batCapMin)
 
             devCrit = chargeMaxProfiles[nHours - 1].sum() - chargeMaxProfiles[0].sum()
             print(devCrit)
@@ -514,12 +534,13 @@ class FlexEstimator:
         """
 
         self.drainProfiles = self.calcDrainProfiles(driveProfiles=self.driveProfiles, flexConfig=self.flexConfig)
-        self.chargeProfiles = self.calcChargeProfiles(plugProfiles=self.plugProfiles, flexConfig=self.flexConfig)
+        self.chargeProfiles = self.calcChargeProfiles(plugProfiles=self.plugProfiles, flexConfig=self.flexConfig, model='distribution')
         self.chargeMaxProfiles = self.calcChargeMaxProfiles(chargeProfiles=self.chargeProfiles,
-                                                            consumptionProfiles=self.drainProfiles, nIter=3,
+                                                            consumptionProfiles=self.drainProfiles, nIter=20,
                                         batCap=self.flexConfig['inputDataScalars'][self.datasetID]['Battery_capacity'],
                                             minSOC=self.flexConfig['inputDataScalars'][self.datasetID]['Minimum_SOC'],
-                                            maxSOC=self.flexConfig['inputDataScalars'][self.datasetID]['Maximum_SOC'])
+                                            maxSOC=self.flexConfig['inputDataScalars'][self.datasetID]['Maximum_SOC'],
+                                                            plugChoice=True)
         # self.connectionType = self.assignConnectionType()
         self.chargeProfilesUncontrolled = self.calcChargeProfilesUncontrolled(chargeMaxProfiles=self.chargeMaxProfiles,
                                                                               scalarsProc=self.scalarsProc)
