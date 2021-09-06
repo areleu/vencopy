@@ -11,6 +11,7 @@ __license__ = 'BSD-3-Clause'
 from pathlib import Path
 import pandas as pd
 import numpy as np
+from scipy.stats import beta, gamma
 import matplotlib.pyplot as plt
 import yaml
 import os
@@ -421,6 +422,16 @@ class GridModeler:
         self.transactionHourStart = self.getTransactionHourStart()
         self.writeOutTransactionStartHour(transactionHours=self.transactionHourStart)
 
+    def betaMixtureModel(self):
+        w = flexConfig['BMMParams']['weekdayPlugin']['mode1']['w1']
+        a = flexConfig['BMMParams']['weekdayPlugin']['mode1']['a1']
+        b = flexConfig['BMMParams']['weekdayPlugin']['mode1']['b1']
+        # beta = lambda x: gamma(a + b) / (gamma(a) * gamma(b)) * x ^ (a - 1) * (1 - x) ^ (b - 1)
+        fig, ax = plt.subplots(1, 1)
+        x = np.linspace(beta.ppf(0.01, a),
+                        beta.ppf(0.99, a), 100)
+        ax.plot(x, beta.pdf(x, a),
+                'r-', lw=5, alpha=0.6, label='gamma pdf')
 
 if __name__ == '__main__':
     datasetID = 'MiD17'

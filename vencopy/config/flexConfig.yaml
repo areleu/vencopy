@@ -51,3 +51,22 @@ plugFunction:
 # f(x) = 1 - 1 / (1 + exp(-k * (x - SOC))) with k being the slope at 50% probability and SOC being SOC at 50% probability
     k: 15
     SOC: 1
+
+BMMParams:
+    weekdayPlugin:
+        mode1:
+            w1: 0.23
+            a1: 32.8
+            b1: 76.76
+        mode2:
+            w2: 0.14
+            a1: 32.8
+            b1: 33.4
+        mode3:
+            w3: 0.56
+            a3: 4.13
+            b3: 2.34
+        mode4:
+            w4: 0.08
+            a4: 36.12
+            b4: 42.65

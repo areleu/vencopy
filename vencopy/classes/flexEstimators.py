@@ -359,10 +359,12 @@ class FlexEstimator:
         np.random.seed(1)
         for idxIt in range(nIter):
             print(f'Starting with iteration {idxIt}')
+            plugCapacity = discretePlugChoice * chargeProfiles
             for iHour in range(nHours):
                 if iHour == 0:
                     chargeMaxProfiles[iHour] = chargeMaxProfiles[nHours - 1].where(
                         cond=chargeMaxProfiles[nHours - 1] <= batCapMax, other=batCapMax)
+                    discretePlugChoice[iHour] = plugCapacity[nHours-1].where(plugCapacity[nHours-1] == 0, other=1)
                     socMaxProfiles[iHour] = chargeMaxProfiles[iHour] / batCapMax
                 else:
                     socMaxProfiles[iHour] = chargeMaxProfiles[iHour] / batCapMax
