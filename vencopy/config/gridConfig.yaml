@@ -133,30 +133,30 @@ chargingColumnAveragePower:
     'DRIVING':
         0: 1
     'HOME':
-        0.36 : 0.50
-        2.2: 0.25            #0.25 (0.75 - 0.50) probability of finding a charging station
+        2.88 : 0.50
+        5.5: 0.25            #0.25 (0.75 - 0.50) probability of finding a charging station
         7.3 : 0.15        #0.05 (0.80 - 0.75) probability of finding a charging station
         0: 0.1            #0.2 (1- 0.80) probability of finding a charging station
     'WORK':
-        2.2 : 0.50
+        5.5 : 0.50
         7.3: 0.35
         0 : 0.15
     'SCHOOL':
-        2.2: 0.35
+        5.5: 0.35
         7.3: 0.20
         0: 0.45
     'SHOPPING':
-        2.2: 0.35
+        5.5: 0.35
         7.3: 0.20
         0: 0.45
     'LEISURE':
-        2.2: 0.35
+        5.5: 0.35
         7.3: 0.20
         0: 0.45
     'OTHER':
-        2.2: 0.20
+        5.5: 0.20
         7.3: 0.10
-        0: 70
+        0: 0.70
     '0.0':
         0: 1
 

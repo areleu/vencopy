@@ -294,7 +294,6 @@ class GridModeler:
         prob_min = 0
 
         for index, (key, value) in enumerate(self.gridAveragePower[purpose].items()):
-            key = 0.67 * key
             prob_max = prob_min + value
             range_dict.update({index: {'min_range': prob_min, 'max_range': prob_max}})
             prob_min = prob_max

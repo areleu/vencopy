@@ -26,7 +26,7 @@ def createFileString(globalConfig: dict, fileKey: str, datasetID: str=None, manu
     """
     if datasetID is None:
         return f"{globalConfig['files'][fileKey]}_{globalConfig['labels']['runLabel']}_{manualLabel}.{filetypeStr}"
-    return f"{globalConfig['files'][datasetID][fileKey]}_{globalConfig['labels']['runLabel']}_{manualLabel}_" \
+    return f"{globalConfig['files'][datasetID][fileKey]}_{globalConfig['labels']['runLabel']}_{manualLabel}" \
            f"{datasetID}.{filetypeStr}"
 
 

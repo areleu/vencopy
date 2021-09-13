@@ -44,35 +44,35 @@ if __name__ == '__main__':
     with open(pathFlexConfig) as ipf:
         flexConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
 
-    # vpData = DataParser(datasetID=datasetID, parseConfig=parseConfig, globalConfig=globalConfig,
-    #                     localPathConfig=localPathConfig, loadEncrypted=False)
-    #
-    # # Trip distance and purpose diary compositions
+    vpData = DataParser(datasetID=datasetID, parseConfig=parseConfig, globalConfig=globalConfig,
+                        localPathConfig=localPathConfig, loadEncrypted=False)
+
+    # Trip distance and purpose diary compositions
     # vpTripDiary = TripDiaryBuilder(datasetID=datasetID, tripConfig=tripConfig, globalConfig=globalConfig,
-    #                                ParseData=vpData, debug=False)
-    #
-    # # Grid model applications
-    # vpGrid = GridModeler(gridConfig=gridConfig, flexConfig=flexConfig, globalConfig=globalConfig, datasetID=datasetID)
-    # vpGrid.profileCalulation()
-    #
-    # # Evaluate drive and trip purpose profiles
-    # vpEval = Evaluator(globalConfig=globalConfig, evaluatorConfig=evaluatorConfig,
-    #                    parseData=pd.Series(data=vpData, index=[datasetID]))
-    # vpEval.hourlyAggregates = vpEval.calcVariableSpecAggregates(by=['tripStartWeekday'])
-    # vpEval.plotAggregates()
+    #                                ParseData=vpData, debug=True)
 
-    # # Estimate charging flexibility based on driving profiles and charge connection
-    # vpFlex = FlexEstimator(flexConfig=flexConfig, globalConfig=globalConfig, evaluatorConfig=evaluatorConfig,
-    #                        datasetID=datasetID, ParseData=vpData, transactionHourStart=vpGrid.transactionHourStart)
-    # vpFlex.baseProfileCalculation()
-    # vpFlex.filter()
-    # vpFlex.aggregate()
-    # vpFlex.correct()
-    # vpFlex.normalize()
-    # vpFlex.writeOut()
+    # Grid model applications
+    vpGrid = GridModeler(gridConfig=gridConfig, flexConfig=flexConfig, globalConfig=globalConfig, datasetID=datasetID)
+    vpGrid.profileCalulation()
+
+    # Evaluate drive and trip purpose profiles
+    vpEval = Evaluator(globalConfig=globalConfig, evaluatorConfig=evaluatorConfig,
+                       parseData=pd.Series(data=vpData, index=[datasetID]))
+    vpEval.hourlyAggregates = vpEval.calcVariableSpecAggregates(by=['tripStartWeekday'])
+    vpEval.plotAggregates()
+
+    # Estimate charging flexibility based on driving profiles and charge connection
+    vpFlex = FlexEstimator(flexConfig=flexConfig, globalConfig=globalConfig, evaluatorConfig=evaluatorConfig,
+                           datasetID=datasetID, ParseData=vpData, transactionStartHour=vpGrid.transactionHourStart)
+    vpFlex.baseProfileCalculation()
+    vpFlex.filter()
+    vpFlex.aggregate()
+    vpFlex.correct()
+    vpFlex.normalize()
+    vpFlex.writeOut()
 
 
 
-    # vpEval.plotProfiles(flexEstimator=vpFlex)
+    vpEval.plotProfiles(flexEstimator=vpFlex)
 
 

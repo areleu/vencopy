@@ -17,7 +17,6 @@ import math
 import pandas as pd
 import numpy as np
 from random import seed, random
-from statistics import NormalDist
 
 
 from vencopy.scripts.globalFunctions import createFileString, mergeVariables, calculateWeightedAverage, \
@@ -69,8 +68,8 @@ class FlexEstimator:
                                        self.driveProfiles, self.plugProfiles)
         self.plugProbFunc = self.initPlugFunc(flexConfig['plugFunction'])  # SOC dependend probability of connecting
 
-        self.inputTransactionHourStartName = createFileString(globalConfig=globalConfig, fileKey='transactionStartHour',
-                                              datasetID=datasetID)
+        # self.transactionStartHour = transactionStartHour
+
 
         #  Future release: In a future release, a composition approach with a dataclass based
         #  encapsulation will be pursued here. This will also make it easy to communicate the data to the outside of
@@ -356,18 +355,54 @@ class FlexEstimator:
         batCapMin = batCap * minSOC  # absolute in kWh
         batCapMax = batCap * maxSOC
         nHours = self.scalarsProc['nHours']
-        np.random.seed(1)
+        np.random.seed(42)
+        randomProb = pd.DataFrame(np.random.uniform(0, 1, size=(len(chargeProfiles.index), len(chargeProfiles.columns)))
+                                  , columns=list(chargeProfiles.columns), index=chargeProfiles.index)
         for idxIt in range(nIter):
             print(f'Starting with iteration {idxIt}')
-            plugCapacity = discretePlugChoice * chargeProfiles
             for iHour in range(nHours):
                 if iHour == 0:
-                    chargeMaxProfiles[iHour] = chargeMaxProfiles[nHours - 1].where(
-                        cond=chargeMaxProfiles[nHours - 1] <= batCapMax, other=batCapMax)
-                    discretePlugChoice[iHour] = plugCapacity[nHours-1].where(plugCapacity[nHours-1] == 0, other=1)
                     socMaxProfiles[iHour] = chargeMaxProfiles[iHour] / batCapMax
+                    if plugChoice == True:
+                        # Calculate if an owner is connecting their car or not: connectionEvent (True/False) * connectionChoice (probability)
+                        plugProbability[iHour] = transactionStartHour[str(iHour)] * \
+                                                 socMaxProfiles[nHours - 1].apply(self.plugProbFunc)
+
+                        # Set all hours from current to end to respective plug choice
+                        plugChoiceHour = plugProbability[iHour] >= randomProb[iHour]
+                        discretePlugChoice.loc[plugChoiceHour, iHour:] = True
+                        discretePlugChoice.loc[transactionStartHour[str(iHour)] & ~plugChoiceHour, iHour:] = False
+                        discretePlugChoice.loc[~transactionStartHour[str(iHour)] & ~plugChoiceHour, iHour: iHour] = False
+                        discretePlugChoice[iHour] = discretePlugChoice[nHours - 1].where(
+                            cond=discretePlugChoice[nHours - 1] == True, other=discretePlugChoice[iHour])
+
+                        # Calculate and append column with new SoC Max value for comparison and cleaner code
+                        chargeMaxProfiles['newCharge'] = chargeMaxProfiles[nHours - 1] + \
+                                                         chargeProfiles[iHour] * discretePlugChoice[iHour].astype(int) - \
+                                                         consumptionProfiles[iHour]
+                        # Ensure that chargeMaxProfiles values are between batCapMin and batCapMax
+                        chargeMaxProfiles[iHour] \
+                            = chargeMaxProfiles['newCharge'].where(cond=chargeMaxProfiles['newCharge'] <= batCapMax,
+                                                                   other=batCapMax)
+                        chargeMaxProfiles[iHour] \
+                            = chargeMaxProfiles[iHour].where(cond=chargeMaxProfiles[iHour] >= batCapMin,
+                                                             other=batCapMin)
+                    else:
+                        chargeMaxProfiles[iHour] = chargeMaxProfiles[nHours - 1].where(
+                            cond=chargeMaxProfiles[nHours - 1] <= batCapMax, other=batCapMax)
+                        socMaxProfiles[iHour] = chargeMaxProfiles[iHour] / batCapMax
                 else:
                     socMaxProfiles[iHour] = chargeMaxProfiles[iHour] / batCapMax
+
+                    # socIntermediateList = []
+                    # for i, soc in socMaxProfiles[iHour].items():
+                    #     if soc >= 0.8:
+                    #         soc = True
+                    #     else:
+                    #         soc = False
+                    #     socIntermediateList.append(soc)
+                    # socIntermediate = pd.Series(data=socIntermediateList, index=socMaxProfiles.index)
+                    # transactionStartHour[str(iHour)] = transactionStartHour[str(iHour)] & ~socIntermediate
 
                     if plugChoice == True:
                         # Calculate if an owner is connecting their car or not: connectionEvent (True/False) * connectionChoice (probability)
@@ -375,8 +410,9 @@ class FlexEstimator:
                                                  socMaxProfiles[iHour].apply(self.plugProbFunc)
 
                         # Set all hours from current to end to respective plug choice
-                        plugChoiceHour = plugProbability[iHour] >= np.random.random_sample(nProf)
+                        plugChoiceHour = plugProbability[iHour] >= randomProb[iHour]
                         discretePlugChoice.loc[plugChoiceHour, iHour:] = True
+                        # discretePlugChoice.loc[~plugChoiceHour, iHour:] = False
                         discretePlugChoice.loc[transactionStartHour[str(iHour)] & ~plugChoiceHour, iHour:] = False
 
                         # Calculate and append column with new SoC Max value for comparison and cleaner code
@@ -406,7 +442,6 @@ class FlexEstimator:
 
             devCrit = chargeMaxProfiles[nHours - 1].sum() - chargeMaxProfiles[0].sum()
             print(devCrit)
-        self.chargeProfiles = chargeProfiles * discretePlugChoice.astype(int)
         chargeMaxProfiles.drop(labels='newCharge', axis='columns', inplace=True)
         return chargeMaxProfiles
 
