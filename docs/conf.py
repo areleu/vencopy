@@ -16,18 +16,19 @@ import sphinx_rtd_theme
 sys.path.insert(0, os.path.abspath('.'))
 sys.path.append(os.path.abspath('..'))
 sys.path.append(os.path.abspath('../scripts'))
-
+sys.path.append(os.path.abspath('../classes'))
 
 # -- Project information -----------------------------------------------------
 
 project = 'VencoPy'
-copyright = '2020-2021, Deutsches Zentrum fuer Luft- und Raumfahrt (DLR)'
-author = 'Niklas Wulff'
-contributors = 'Fabia Miorelli, Benjamin Fuchs'
+copyright = '2020-2021, German Aerospace Center (DLR)'
+author = 'German Aerospace Center (DLR)'
+# contributors = 'Fabia Miorelli, Benjamin Fuchs'
 
 # The full version, including alpha/beta/rc tags
-release = 'March 2020'
+release = 'September 2021'
 
+highlight_language = 'python3'
 
 # -- General configuration ---------------------------------------------------
 
@@ -37,8 +38,16 @@ release = 'March 2020'
 extensions = ['sphinx.ext.autodoc',
               'sphinx_rtd_theme',
               'sphinx.ext.napoleon',
-              'sphinx.ext.autosectionlabel']
+              'sphinx.ext.autosectionlabel',
+              'rst2pdf.pdfbuilder']
 
+pdf_documents = [('index','vencopy','vencopypdf','Fabia'),] 
+
+source_suffix = {
+    '.rst': 'restructuredtext',
+    '.txt': 'markdown',
+    '.md': 'markdown',
+}
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
@@ -64,7 +73,8 @@ html_theme_options = {
     'includehidden': True,
     'titles_only': False
 }
-
+# If true, "Created using Sphinx" is shown in the HTML footer. Default is True.
+html_show_sphinx = False
 # html_css_files = ['style.css']
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

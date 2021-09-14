@@ -17,7 +17,7 @@ results from VencoPy. A brief description of the classes is presented below. For
 of the tool please refer to the :ref:`publications` section.
 
 
-.. image:: figures/vencopy_classes.png
+.. image:: ../figures/vencopy_classes.png
    :width: 600
 
 Interface to the dataset: DataParser class

@@ -8,48 +8,51 @@ __license__ = 'BSD-3-Clause'
 
 
 #----- imports & packages ------
+if __package__ is None or __package__ == '':
+    import sys
+    from os import path
+    sys.path.append(path.dirname(path.dirname(path.dirname(__file__))))
+
 from pathlib import Path
 import pandas as pd
 import numpy as np
 from scipy.stats import beta, gamma
 import matplotlib.pyplot as plt
-import yaml
-import os
-from vencopy.scripts.globalFunctions import createFileString
+from vencopy.scripts.globalFunctions import createFileString, loadConfigDict
 
 
 class GridModeler:
-    def __init__(self, gridConfig: dict, globalConfig: dict, flexConfig: dict, datasetID: str):
+    def __init__(self, configDict: dict, datasetID: str):
         """
         Class for modeling individual vehicle connection options dependent on parking purposes. Configurations on
         charging station availabilities can be parametrized in gridConfig. globalConfig and datasetID are needed for
         reading the input files.
 
-        :param gridConfig: Dictionary containing a key chargingInfrastructureMapping with a sub-dictionary mapping the
-        relevant parking purposes to grid availability (true/false). The gridConfig will contain dictionaries with
-        probabilistic grid availabilities per parking purpose and rated charging power.
-        :param globalConfig: Dictionary with relative paths and filenames. Used for referencing the purpose input file
+        :param configDict: A dictionary containing multiple yaml config files
         :param datasetID: String, used for referencing the purpose input file
         """
 
-        self.inputFileName = createFileString(globalConfig=globalConfig, fileKey='purposesProcessed',
+        self.globalConfig = configDict['globalConfig']
+        self.gridConfig = configDict['gridConfig']
+        self.flexConfig = configDict['flexConfig']
+        self.inputFileName = createFileString(globalConfig=self.globalConfig, fileKey='purposesProcessed',
                                               datasetID=datasetID)
-        self.inputFilePath = Path(globalConfig['pathRelative']['diaryOutput']) / self.inputFileName
-        self.inputDriveProfilesName = createFileString(globalConfig=globalConfig, fileKey='inputDataDriveProfiles',
+        self.inputFilePath = Path(__file__).parent / self.globalConfig['pathRelative']['diaryOutput'] / self.inputFileName
+        self.inputDriveProfilesName = createFileString(globalConfig=self.globalConfig, fileKey='inputDataDriveProfiles',
                                                        datasetID=datasetID)
-        self.inputDriveProfilesPath = Path(globalConfig['pathRelative']['diaryOutput']) / self.inputDriveProfilesName
-        self.scalarsPath = flexConfig['inputDataScalars'][datasetID]
-        self.gridMappings = gridConfig['chargingInfrastructureMappings']
-        self.gridProbability = gridConfig['gridAvailabilityProbability']
-        self.gridDistribution = gridConfig['gridAvailabilityDistribution']
-        self.gridFastCharging = gridConfig['gridAvailabilityFastCharging']
-        self.gridFastChargingThreshold = gridConfig['fastChargingThreshold']
-        self.gridAveragePower = gridConfig['chargingColumnAveragePower']
-        self.outputFileName = createFileString(globalConfig=globalConfig, fileKey='inputDataPlugProfiles',
+        self.inputDriveProfilesPath = Path(__file__).parent / self.globalConfig['pathRelative']['diaryOutput'] / self.inputDriveProfilesName
+        self.scalarsPath = self.flexConfig['inputDataScalars'][datasetID]
+        self.gridMappings = self.gridConfig['chargingInfrastructureMappings']
+        self.gridProbability = self.gridConfig['gridAvailabilityProbability']
+        self.gridDistribution = self.gridConfig['gridAvailabilityDistribution']
+        self.gridFastCharging = self.gridConfig['gridAvailabilityFastCharging']
+        self.gridFastChargingThreshold = self.gridConfig['fastChargingThreshold']
+        self.gridAveragePower = self.gridConfig['chargingColumnAveragePower']
+        self.outputFileName = createFileString(globalConfig=self.globalConfig, fileKey='inputDataPlugProfiles',
                                                datasetID=datasetID)
-        self.outputFileNameTransactionStartHour = createFileString(globalConfig=globalConfig, fileKey='transactionStartHour', datasetID=datasetID)
-        self.outputFilePath = Path(globalConfig['pathRelative']['gridOutput']) / self.outputFileName
-        self.outputFilPathTransactionStartHour =  Path(globalConfig['pathRelative']['gridOutput']) / self.outputFileNameTransactionStartHour
+        self.outputFileNameTransactionStartHour = createFileString(globalConfig=self.globalConfig, fileKey='transactionStartHour', datasetID=datasetID)
+        self.outputFilePath = Path(__file__).parent / self.globalConfig['pathRelative']['gridOutput'] / self.outputFileName
+        self.outputFilePathTransactionStartHour = Path(__file__).parent / self.globalConfig['pathRelative']['gridOutput'] / self.outputFileNameTransactionStartHour
         self.purposeData = pd.read_csv(self.inputFilePath, keep_default_na=False)
         self.driveData = pd.read_csv(self.inputDriveProfilesPath, keep_default_na=False)
         self.transactionHourStart = None
@@ -64,7 +67,7 @@ class GridModeler:
         :return: None
         """
         print(f'Starting with charge connection replacement of location purposes')
-        self.chargeAvailability = self.purposeData.replace(self.gridDistribution)
+        self.chargeAvailability = self.purposeData.replace(self.gridMappings)
         self.chargeAvailability.set_index(['genericID'], inplace=True)
         self.chargeAvailability = (~(self.chargeAvailability != True))
         print('Grid connection assignment complete')
@@ -96,24 +99,6 @@ class GridModeler:
         :param fastChargingHHID: List of household trips for fast charging
         :return: Returns a dataFrame holding charging capacity for each trip assigned with probability distribution
         '''
-
-        # dict = {}
-        #
-        # if lossFactor == True:
-        #     for key, value in self.gridDistribution.items():
-        #         for nestedKey, nestedValue in value.items():
-        #             nestedKey = nestedKey * 0.67
-        #             if nestedKey == 0.0:
-        #                 nestedKey = int(nestedKey)
-        #             else:
-        #                 nestedKey
-        #             value2 = {nestedKey: nestedValue}
-        #             # dict[key] = value2
-        #             dict[key].update(value2)
-        #         print(dict)
-
-
-
         self.chargeAvailability = self.purposeData.copy()
         self.chargeAvailability.set_index(['genericID'], inplace=True)
         print('Starting with charge connection replacement ')
@@ -318,14 +303,13 @@ class GridModeler:
         :return: Plots charging station assigned to each trip and EV's parking area/trip purposes during a time span of
         24 hours
         '''
-        # keys = []
-        # for key, value in self.gridDistribution.items():
-        #     for nestedKey, nestedValue in value.items():
-        #         keys.append(nestedKey)
-        # capacityList = keys
-        # capacityList = list(set(capacityList))
-        # capacityList.sort()
-
+        keys = []
+        for key, value in self.gridDistribution.items():
+            for nestedKey, nestedValue in value.items():
+                keys.append(nestedKey)
+        capacityList = keys
+        capacityList = list(set(capacityList))
+        capacityList.sort()
         capacity = self.chargeAvailability.transpose()
         capacityList = list(np.unique(capacity.loc[:, :].values))
 
@@ -399,7 +383,7 @@ class GridModeler:
                     else:
                         row[iHour] = False
             self.transactionHourStart.loc[genericID] = row
-        print('There are ' +str(countStartHour)+ ' transactions')
+        print('There are ' + str(countStartHour) + ' transactions')
         self.transactionHourStart.columns = self.transactionHourStart.columns.astype(int)
         return self.transactionHourStart
 
@@ -410,7 +394,7 @@ class GridModeler:
 
            :return: None
            """
-        transactionHours.to_csv(self.outputFilPathTransactionStartHour)
+        transactionHours.to_csv(self.outputFilePathTransactionStartHour)
 
     def profileCalulation(self):
         self.fastChargingHHID = self.fastChargingList()
@@ -422,9 +406,9 @@ class GridModeler:
         self.writeOutTransactionStartHour(transactionHours=self.transactionHourStart)
 
     def betaMixtureModel(self):
-        w = flexConfig['BMMParams']['weekdayPlugin']['mode1']['w1']
-        a = flexConfig['BMMParams']['weekdayPlugin']['mode1']['a1']
-        b = flexConfig['BMMParams']['weekdayPlugin']['mode1']['b1']
+        w = self.flexConfig['BMMParams']['weekdayPlugin']['mode1']['w1']
+        a = self.flexConfig['BMMParams']['weekdayPlugin']['mode1']['a1']
+        b = self.flexConfig['BMMParams']['weekdayPlugin']['mode1']['b1']
         # beta = lambda x: gamma(a + b) / (gamma(a) * gamma(b)) * x ^ (a - 1) * (1 - x) ^ (b - 1)
         fig, ax = plt.subplots(1, 1)
         x = np.linspace(beta.ppf(0.01, a),
@@ -434,20 +418,9 @@ class GridModeler:
 
 if __name__ == '__main__':
     datasetID = 'MiD17'
-    pathGlobalConfig = Path.cwd().parent / 'config' / 'globalConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
-    with open(pathGlobalConfig) as ipf:
-        globalConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
-    pathGridConfig = Path.cwd().parent / 'config' / 'gridConfig.yaml'
-    with open(pathGridConfig) as ipf:
-        gridConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
-    pathFlexConfig = Path.cwd().parent / 'config' / 'flexConfig.yaml'
-    with open(pathFlexConfig) as ipf:
-        flexConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
-    pathLocalPathConfig = Path.cwd().parent / 'config' / 'localPathConfig.yaml'
-    with open(pathLocalPathConfig) as ipf:
-        localPathConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
-    os.chdir(localPathConfig['pathAbsolute']['vencoPyRoot'])
-    vpg = GridModeler(gridConfig=gridConfig, flexConfig=flexConfig, globalConfig=globalConfig, datasetID=datasetID)
+    configNames = ('globalConfig', 'localPathConfig', 'parseConfig', 'tripConfig', 'gridConfig', 'flexConfig', 'evaluatorConfig')
+    configDict = loadConfigDict(configNames)
+    vpg = GridModeler(configDict=configDict, datasetID=datasetID)
     vpg.profileCalulation()
 
     # print('Data Analysis Started')

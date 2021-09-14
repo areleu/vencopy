@@ -6,40 +6,35 @@ __birthdate__ = '21.09.2020'
 __status__ = 'test'  # options are: dev, test, prod
 __license__ = 'BSD-3-Clause'
 
-import yaml
-import os
-import pathlib
+
 import pandas as pd
 import seaborn as sns
-import numpy as np
 from pathlib import Path
 import matplotlib.pyplot as plt
 from vencopy.scripts.globalFunctions import createFileString, calculateWeightedAverage, mergeDataToWeightsAndDays, \
-    writeProfilesToCSV
+     writeProfilesToCSV
 # from classes.flexEstimators import FlexEstimator
 
 
 class Evaluator:
-    def __init__(self, globalConfig:dict, evaluatorConfig: dict, parseData: pd.Series = None, weightPlot=True):
+    def __init__(self, configDict: dict, parseData: pd.Series = None, weightPlot=True):
         """
         CURRENTLY IN SEMI-PROUDCTION MODE. Some interfaces may only apply to specific cases.
         Overall evaluation class for assessing vencopy mobility and charging profiles.
 
-        :param globalConfig: global config instances for paths
-        :param evaluatorConfig: evaluator config mainly for plot properties
-        :param label: String for saving plots to hard disk
+        :param configDict: A dictionary containing multiple yaml config files
         :param parseData: Series with instances of VencoPy class ParseData and keys specifying the name of the
             respective class
         :param weightPlot: If True, profiles are weighted for plotting
         """
 
-        self.globalConfig = globalConfig
-        self.evaluatorConfig = evaluatorConfig
+        self.globalConfig = configDict['globalConfig']
+        self.evaluatorConfig = configDict['evaluatorConfig']
         self.weightPlot = weightPlot
         self.normPlotting = True
         self.dailyMileageGermany2008 = 3.080e9  # pkm/d
         self.dailyMileageGermany2017 = 3.214e9  # pkm/d
-        self.hourVec = [str(i) for i in range(0, globalConfig['numberOfHours'])]
+        self.hourVec = [str(i) for i in range(0, self.globalConfig['numberOfHours'])]
         if parseData is not None:
             self.datasetIDs = list(parseData.index)
             self.parseData = parseData
@@ -67,7 +62,7 @@ class Evaluator:
         ret = pd.Series(dtype=object)
         for iFileKey in fileKeys:
             for iDat in datasets:
-                dataIn = pd.read_csv(pathlib.Path(self.globalConfig['pathRelative']['diaryOutput']) /
+                dataIn = pd.read_csv(Path(__file__).parent / (self.globalConfig['pathRelative']['diaryOutput']) /
                                      createFileString(globalConfig=self.globalConfig, fileKey=iFileKey,
                                                       datasetID=iDat), dtype={'genericID': int},
                                      # index_col=['genericID', 'tripStartWeekday'])
@@ -269,7 +264,7 @@ class Evaluator:
         if self.evaluatorConfig['plotConfig']['save']:
             fileName = createFileString(globalConfig=self.globalConfig, fileKey='aggPlotName', manualLabel=self.globalConfig['labels']['runLabel'],
                                         filetypeStr='svg')
-            fig.savefig(Path(self.globalConfig['pathRelative']['evalOutput']) / fileName, bbox_inches='tight')
+            fig.savefig(Path(__file__).parent / self.globalConfig['pathRelative']['evalOutput'] / fileName, bbox_inches='tight')
 
     def linePlot(self, profileDict, pathOutput, flexEstimator, show=True, write=True, ylabel='Normalized profiles',
                  ylim=None, filename=''):
@@ -338,14 +333,14 @@ class Evaluator:
             for iDict, iYLabel, iYLim, iName in zip(profileDictList, ylabel, ylim, filenames):
                 writeProfilesToCSV(profileDictOut=iDict, globalConfig=self.globalConfig, singleFile=False,
                                    datasetID=flexEstimator.datasetID)
-                self.linePlot(iDict, pathOutput=Path(self.globalConfig['pathRelative']['evalOutput']),
+                self.linePlot(iDict, pathOutput=Path(__file__).parent / self.globalConfig['pathRelative']['evalOutput'],
                               flexEstimator=flexEstimator, show=show, write=write, ylabel=iYLabel, ylim=iYLim,
                               filename=iName)
         else:
             for iDict, iYLabel, iName in zip(profileDictList, ylabel, filenames):
                 writeProfilesToCSV(profileDictOut=iDict, globalConfig=self.globalConfig, singleFile=False,
                                    datasetID=flexEstimator.datasetID)
-                self.linePlot(iDict, pathOutput=Path(self.globalConfig['pathRelative']['evalOutput']),
+                self.linePlot(iDict, pathOutput=Path(__file__).parent / self.globalConfig['pathRelative']['evalOutput'],
                               flexEstimator=flexEstimator, show=show, write=write, ylabel=iYLabel,
                               filename=iName)
 
@@ -508,26 +503,15 @@ class chargingTransactionEvaluator:
 
 if __name__ == '__main__':
     from vencopy.classes.dataParsers import DataParser
-    pathGlobalConfig = Path.cwd().parent / 'config' / 'globalConfig.yaml'  # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
-    with open(pathGlobalConfig) as ipf:
-        globalConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
-    pathParseConfig = Path.cwd().parent / 'config' / 'parseConfig.yaml'
-    with open(pathParseConfig) as ipf:
-        parseConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
-    pathEvaluatorConfig = Path.cwd().parent / 'config' / 'evaluatorConfig.yaml'
-    with open(pathEvaluatorConfig) as ipf:
-        evaluatorConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
-    pathLocalPathConfig = Path.cwd().parent / 'config' / 'localPathConfig.yaml'
-    with open(pathLocalPathConfig) as ipf:
-        localPathConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
-    os.chdir(localPathConfig['pathAbsolute']['vencoPyRoot'])
-    parseDataAll = pd.Series(dtype=object)
-    parseDataAll['MiD08'] = DataParser(datasetID='MiD08', parseConfig=parseConfig, globalConfig=globalConfig,
-                                       localPathConfig=localPathConfig, loadEncrypted=False)
-    parseDataAll['MiD17'] = DataParser(datasetID='MiD17', parseConfig=parseConfig, globalConfig=globalConfig,
-                                       localPathConfig=localPathConfig, loadEncrypted=False)
+    from vencopy.scripts.globalFunctions import loadConfigDict
+    configNames = ('globalConfig', 'localPathConfig', 'parseConfig', 'tripConfig', 'gridConfig', 'flexConfig', 'evaluatorConfig')
+    configDict = loadConfigDict(configNames)
 
-    vpEval = Evaluator(globalConfig=globalConfig, evaluatorConfig=evaluatorConfig, parseData=parseDataAll)
+    parseDataAll = pd.Series(dtype=object)
+    #parseDataAll['MiD08'] = DataParser(datasetID='MiD08', configDict=configDict, loadEncrypted=False)
+    parseDataAll['MiD17'] = DataParser(datasetID='MiD17', configDict=configDict, loadEncrypted=False)
+
+    vpEval = Evaluator(configDict=configDict, parseData=parseDataAll)
     vpEval.hourlyAggregates = vpEval.calcVariableSpecAggregates(by=['tripStartWeekday'])
     vpEval.plotAggregates()
 

@@ -1,9 +1,9 @@
 .. VencoPy documentation source file, created for sphinx
 
-.. _outputProfileSpecification:
+.. _outputProfiles:
 
 
-Profile specification of output profiles
+Output Profiles
 =========================================
 
 

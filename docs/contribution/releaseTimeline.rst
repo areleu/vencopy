@@ -8,7 +8,8 @@ Release Timeline
 ===================================
 
 
-Timeline
+A provisional development timeline is provided below.
+
 
 .. table:: Historic and future release timeline of VencoPy
     :widths: 25, 25, 50

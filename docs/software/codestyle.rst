@@ -4,7 +4,7 @@
     
 .. _codestyle:
 
-Codestyle guideline
+Codestyle Guideline
 ===================================
 
 

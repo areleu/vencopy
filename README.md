@@ -1,11 +1,15 @@
-[![License: BSD 3-Clause](https://img.shields.io/badge/license-BSD%203--Clause-blue.svg)](https://github.com/TechSmith/hyde/blob/master/LICENSE.txt)
-[![Documentation Status](https://readthedocs.org/projects/vencopy/badge/?version=latest)](https://vencopy.readthedocs.io/en/latest/?badge=latest)
+# Welcome to VencoPy!
 
 
-# VencoPy README File
+![PyPI](https://img.shields.io/pypi/v/vencopy)
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/vencopy)
+![Documentation Status](https://readthedocs.org/projects/vencopy/badge/?version=latest)
+![PyPI - License](https://img.shields.io/pypi/l/vencopy)
+
 - Authors: Niklas Wulff, Fabia Miorelli
 - Contact: niklas.wulff@dlr.de
 - Version: 0.1.0
+
 
 Contents
 ========
@@ -14,11 +18,13 @@ Contents
  * [Installation](#installation)
  * [Codestyle](#codestyle)
  * [Documentation](#documentation)
+ * [Useful Links](#useful-links)
  * [Want to contribute?](#want-to-contribute)
 
 Description
 ---
 A data processing tool offering hourly demand and flexibility profiles for future electric vehicle fleets in an aggregated manner.
+
 
 Installation
 ---
@@ -94,13 +100,24 @@ We use PEP-8, with the exception of lowerCamelCase for method and variable names
 
 Documentation
 ---
+The documentation can be found here: https://vencopy.readthedocs.io/en/latest/index.html
 To build the documentation from a conda bash with an activated environment type:
 
 ```python
 sphinx-build -b html ./docs/ ./build/
 ``` 
 
+Useful Links
+---
+
+* Documentation: https://vencopy.readthedocs.io/en/latest/index.html#
+* Source code: https://gitlab.com/dlr-ve/vencopy
+* PyPI release: https://pypi.org/project/vencopy
+* Licence: https://opensource.org/licenses/BSD-3-Clause
+  
+
+
+
 Want to contribute?
 ---
-Great, welcome on the VP team! Please read our contribute section in the documentation and reach out to Niklas 
-(niklas.wulff@dlr.de). 
+Great, welcome on the VP team! Please read our contribute section in the documentation and reach out to Niklas(niklas.wulff@dlr.de). 

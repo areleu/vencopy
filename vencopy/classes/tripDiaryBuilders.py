@@ -6,18 +6,19 @@ __birthdate__ = '31.12.2019'
 __status__ = 'prod'  # options are: dev, test, prod
 __license__ = 'BSD-3-Clause'
 
+if __package__ is None or __package__ == '':
+    import sys
+    from os import path
+    sys.path.append(path.dirname(path.dirname(path.dirname(__file__))))
 
 import pandas as pd
 import numpy as np
-from typing import Callable
 from pathlib import Path
-import yaml
-import os
 from vencopy.scripts.globalFunctions import createFileString
 
 
 class TripDiaryBuilder:
-    def __init__(self, tripConfig: dict, globalConfig: dict, ParseData, datasetID: str = 'MiD17', debug: bool=False):
+    def __init__(self, configDict: dict, ParseData, datasetID: str = 'MiD17', debug: bool=False):
         """
         Class to build diaries of trips and parking purposes ("purposes"). Currently a discretization of 1 hour is
         used and tested. Some assumptions are taken in order to build the diaries:
@@ -29,16 +30,15 @@ class TripDiaryBuilder:
         3. If an hour comprises multiple purposes (e.g. driving and home), the purpose with the higher share is taken.
         Potential ambiguities in the diaries are later corrected in the gridModel.
 
-        :param tripConfig: In beta release (0.1.0) an empty file
-        :param globalConfig: Config holding relative paths, run labels and filenames
+        :param configDict: A dictionary containing multiple yaml config files
         :param ParseData: Class instance of ParseData storing MiD data
         :param datasetID: Can be 'MiD17' or 'MiD08' depending on input data set
         :param debug: Boolean argument. If True, only the first 2000 trips are converted to diaries. This parameter is
         used in the beta since the performance of the current tripDiaryBuilder is quite low.
         """
 
-        self.tripConfig = tripConfig
-        self.globalConfig = globalConfig
+        self.tripConfig = configDict['tripConfig']
+        self.globalConfig = configDict['globalConfig']
         self.datasetID = datasetID
         self.parsedData = ParseData
         self.tripDataClean = None
@@ -48,9 +48,9 @@ class TripDiaryBuilder:
             self.tripDataClean = self.calculateConsistentHourlyShares(data=ParseData.data.loc[0:2000, :])
         else:
             self.tripDataClean = self.calculateConsistentHourlyShares(data=ParseData.data)
-        self.tripDistanceDiary = self.tripDistanceAllocation(globalConfig)
+        self.tripDistanceDiary = self.tripDistanceAllocation(globalConfig=self.globalConfig)
         self.tripPurposeAllocation()
-        self.writeOut(globalConfig=globalConfig, datasetID=datasetID, dataDrive=self.tripDistanceDiary,
+        self.writeOut(globalConfig=self.globalConfig, datasetID=datasetID, dataDrive=self.tripDistanceDiary,
                       dataPurpose=self.tripPurposeDiary)
 
     def tripDuration(self, timestampStart: np.datetime64, timestampEnd: np.datetime64) -> np.datetime64:
@@ -63,7 +63,8 @@ class TripDiaryBuilder:
         :param timestampEnd:  end time of a trip
         :param duration: duration of a trip
         :return: Returns a data frame of share of individual trip for trips completed in an hour and more w.r.t start
-        time of the trip
+                 time of the trip
+
         """
         isSameHourTrip = timestampStart.dt.hour == timestampEnd.dt.hour
         shareSameHour = (timestampEnd.dt.minute - timestampStart.dt.minute) / (duration.dt.seconds / 60)
@@ -77,8 +78,9 @@ class TripDiaryBuilder:
         :param timestampEnd: end time of a trip
         :param duration: duration of a trip
         :param isSameHourTrip: data frame containing same start time of various trips
-        :return: Returns a data frame of share of individual trip for trips completed in an hour and more w.r.t end
-        time of the trip
+        :return: Returns a data frame of share of individual trip for trips completed in an hour and more w.r.t end time
+                 of the trip
+
         """
         share = timestampEnd.dt.minute / (duration.dt.seconds / 60)
         return share.where(~isSameHourTrip, 0)
@@ -140,7 +142,7 @@ class TripDiaryBuilder:
         :param ts_st: String specifying the trip start column
         :param ts_en: String specifying the trip end column
         :return: data frame consisting additional information regarding share of a trip, number of full hours and
-        lenght of each trip
+                 lenght of each trip
         """
 
         duration = self.tripDuration(data.loc[:, ts_st], data.loc[:, ts_en])
@@ -265,7 +267,7 @@ class TripDiaryBuilder:
 
         :param tripData: data frame holding all the information about individual trip
         :param purposeDataDays: DataFrame with 24 (hour) columns holding 0s and 'DRIVING' for trip hours (for hours
-        where majority of time is driving)
+               where majority of time is driving)
         :return: Returns a data frame of individual trip with it's hourly activity or parking purpose
         """
         hpID = str()
@@ -384,11 +386,10 @@ class TripDiaryBuilder:
         :param datasetID: ID used for filenames
         :return: None
         """
-        dataDrive.to_csv(Path(globalConfig['pathRelative']['diaryOutput']) /
+        dataDrive.to_csv(Path(__file__).parent / globalConfig['pathRelative']['diaryOutput'] /
                          createFileString(globalConfig=globalConfig, fileKey='inputDataDriveProfiles',
-                                          datasetID=datasetID),
-                         na_rep=0)
-        dataPurpose.to_csv(Path(globalConfig['pathRelative']['diaryOutput']) /
+                                          datasetID=datasetID), na_rep='0')
+        dataPurpose.to_csv(Path(__file__).parent / globalConfig['pathRelative']['diaryOutput'] /
                            createFileString(globalConfig=globalConfig, fileKey='purposesProcessed',
                                             datasetID=datasetID))
         print(f"Drive data and trip purposes written to files "
@@ -416,22 +417,14 @@ class FillHourValues:
 
 
 if __name__ == '__main__':
-    # datasetID = 'MiD17' #options are MiD08, MiD17, KiD
-    datasetID = 'KiD'
+    datasetID = 'MiD17' #options are MiD08, MiD17, KiD
+    # datasetID = 'KiD'
+
     from vencopy.classes.dataParsers import DataParser
-    pathGlobalConfig = Path.cwd().parent / 'config' / 'globalConfig.yaml'
-    with open(pathGlobalConfig) as ipf:
-        globalConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
-    pathParseConfig = Path.cwd().parent / 'config' / 'parseConfig.yaml'
-    with open(pathParseConfig) as ipf:
-        parseConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
-    pathTripConfig = Path.cwd().parent / 'config' / 'tripConfig.yaml'
-    with open(pathTripConfig) as ipf:
-        tripConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
-    pathLocalPathConfig = Path.cwd().parent / 'config' / 'localPathConfig.yaml'
-    with open(pathLocalPathConfig) as ipf:
-        localPathConfig = yaml.load(ipf, Loader=yaml.SafeLoader)
-    os.chdir(localPathConfig['pathAbsolute']['vencoPyRoot'])
-    vpData = DataParser(parseConfig=parseConfig, globalConfig=globalConfig, localPathConfig=localPathConfig,
-                        loadEncrypted=False, datasetID=datasetID)
-    vpDiary = TripDiaryBuilder(tripConfig=tripConfig, globalConfig=globalConfig, ParseData=vpData, datasetID=datasetID)
+    from vencopy.scripts.globalFunctions import loadConfigDict
+
+    configNames = ('globalConfig', 'localPathConfig', 'parseConfig', 'tripConfig', 'gridConfig', 'flexConfig', 'evaluatorConfig')
+    configDict = loadConfigDict(configNames)
+    vpData = DataParser(configDict=configDict, loadEncrypted=False, datasetID=datasetID)
+    vpData.process()
+    vpDiary = TripDiaryBuilder(configDict=configDict, ParseData=vpData, datasetID=datasetID, debug=True)
