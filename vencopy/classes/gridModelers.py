@@ -19,6 +19,8 @@ import numpy as np
 from scipy.stats import beta, gamma
 import matplotlib.pyplot as plt
 from vencopy.scripts.globalFunctions import createFileString, loadConfigDict
+from vencopy.classes.evaluators import Evaluator
+from profilehooks import profile
 
 
 class GridModeler:
@@ -95,8 +97,6 @@ class GridModeler:
         self.chargeAvailability = self.purposeData.copy()
         self.chargeAvailability.set_index(['genericID'], inplace=True)
         print('Starting with charge connection replacement ')
-        # print('There are ' + str(len(fastChargingHHID)) + ' trips having consumption greater than ' +
-        #       str(self.gridFastChargingThreshold) + '% of battery capacity')
         np.random.seed(42)
         for genericID, row in self.chargeAvailability.iterrows():
             activity = row.copy(deep=True)
@@ -104,16 +104,6 @@ class GridModeler:
                 if iHour == 0:
                     row[iHour] = self.allocatePowerViaProbabilities(purpose=activity[iHour],
                                                                     gridAvailability=gridAvailability)
-                    # if model == 'probability':
-                    #     row[iHour] = self.allocatePowerViaProbabilities(purpose=activity[iHour],
-                    #                                                     gridAvailability=self.gridProbability)
-                    # elif model == 'distribution':
-                    #     row[iHour] = self.allocatePowerViaProbabilities(purpose=activity[iHour],
-                    #                                                     gridAvailability=self.gridDistribution)
-                    # elif model == 'average charging power':
-                    #     row[iHour] = self.allocatePowerViaProbabilities(purpose=activity[iHour],
-                    #                                                     gridAvailability=self.gridAveragePower)
-                        # print(f'Power: {row[iHour]}, Activity: {activity[iHour]},householdPersonID: {hhPersonID}')
                 elif iHour > 0:
                     if activity[iHour] == activity[iHour - 1]:
                         row[iHour] = row[iHour - 1]
@@ -122,16 +112,6 @@ class GridModeler:
                     else:
                         row[iHour] = self.allocatePowerViaProbabilities(purpose=activity[iHour],
                                                                     gridAvailability=gridAvailability)
-                    # elif model == 'probability':
-                    #     row[iHour] = self.allocatePowerViaProbabilities(purpose=activity[iHour],
-                    #                                                     gridAvailability=self.gridProbability)
-                    # elif model == 'distribution':
-                    #     row[iHour] = self.allocatePowerViaProbabilities(purpose=activity[iHour],
-                    #                                                     gridAvailability=self.gridDistribution)
-                    # elif model == 'average charging power':
-                    #     row[iHour] = self.allocatePowerViaProbabilities(purpose=activity[iHour],
-                    #                                                     gridAvailability=self.gridAveragePower)
-                    # print(f'Power: {row[iHour]}, Activity: {activity[iHour]}, householdPersonID: {hhPersonID}')
             self.chargeAvailability.loc[genericID] = row
         print('Grid connection assignment complete')
         return self.chargeAvailability
@@ -164,7 +144,7 @@ class GridModeler:
            """
         self.chargeAvailability.to_csv(self.outputFilePath)
 
-    def stackPlot(self):
+    def stackPlot(self): #chargeAvail, purposes
         '''
         :return: Plots charging station of each trip and EV's parking area/trip purposes during a time span of
         24 hours
@@ -223,29 +203,24 @@ class GridModeler:
 
     def getTransactionHourStart(self):
         print('Caculating number of transactions')
-        self.transactionStartHour = self.chargeAvailability
+        self.transactionStartHour = self.chargeAvailability.copy()
         # self.transactionHourStart.set_index('genericID', inplace=True)
-        countStartHour = 0
         nHours = len(self.transactionStartHour.columns)
         for genericID, row in self.transactionStartHour.iterrows():
             capacity = row.copy()
             for iHour in range(0, len(row)):
                 if iHour == 0:
-                    if capacity[nHours-1] == 0 and capacity[iHour] > capacity[nHours-1]:
+                    if capacity[iHour] > capacity[nHours-1]:
                         row[iHour] = True
-                        if row[iHour] == True:
-                            countStartHour += 1
                     else:
                         row[iHour] = False
                 elif iHour > 0:
-                    if capacity[iHour-1] == 0 and capacity[iHour] > capacity[iHour-1]:
+                    if capacity[iHour] > capacity[iHour-1]:
                         row[iHour] = True
-                        if row[iHour] == True:
-                            countStartHour += 1
                     else:
                         row[iHour] = False
             self.transactionStartHour.loc[genericID] = row
-        print('There are ' + str(countStartHour) + ' transactions')
+        print('There are ' + str(self.transactionStartHour.sum().sum()) + ' transactions')
         self.transactionStartHour.columns = self.transactionStartHour.columns.astype(int)
         return self.transactionStartHour
 
@@ -258,7 +233,8 @@ class GridModeler:
            """
         transactionHours.to_csv(self.outputFilePathTransactionStartHour)
 
-    def profileCalulation(self):
+    @profile
+    def calcGrid(self):
         self.fastChargingHHID = self.getFastChargingIDs()
         # self.simpleGrid = self.assignGridViaPurposes()
         self.assignGridViaProbabilities(gridAvailability=self.gridAvail)
@@ -284,7 +260,10 @@ if __name__ == '__main__':
     configDict = loadConfigDict(configNames)
     vpg = GridModeler(configDict=configDict, datasetID=datasetID,
                       gridPowerDict=configDict['gridConfig']['gridAvailabilityDistribution'])
-    vpg.profileCalulation()
+    vpg.calcGrid()
+
+    # FixMe: implement plotting in evaluator
+    # vpEval = Evaluator()
 
     # print('Data Analysis Started')
     # objs = [GridModeler(gridConfig=gridConfig, globalConfig=globalConfig) for i in range(8)]

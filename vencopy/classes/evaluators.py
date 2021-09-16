@@ -500,6 +500,12 @@ class chargingTransactionEvaluator:
         sTrans.loc[dfDiff.loc[:, 0] == 0, :] = 0
         return sTrans + dfDiff.gt(0).sum(axis=1)
 
+    def plotPurposes(self):
+        pass
+
+    def plotChargingPower(self):
+        pass
+
 
 if __name__ == '__main__':
     from vencopy.classes.dataParsers import DataParser

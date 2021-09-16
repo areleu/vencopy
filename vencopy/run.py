@@ -39,7 +39,7 @@ if __name__ == '__main__':
 
     # Grid model applications
     vpGrid = GridModeler(configDict=configDict, datasetID=datasetID)
-    vpGrid.profileCalulation()
+    vpGrid.calcGrid()
 
     # Evaluate drive and trip purpose profile
     vpEval = Evaluator(configDict=configDict, parseData=pd.Series(data=vpData, index=[datasetID]))
