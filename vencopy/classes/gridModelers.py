@@ -77,20 +77,10 @@ class GridModeler:
         Returns a list of household trips having consumption greater than 80% (40 kWh) of battery capacity (50 kWh)
         '''
         driveProfiles = self.driveData.set_index(['genericID'])
-        driveProfiles = driveProfiles.loc[:].sum(axis=1)
         driveProfiles = driveProfiles * self.scalarsPath['Electric_consumption_corr'] / 100
-        driveProfiles = np.where(
-            driveProfiles > (self.gridFastChargingThreshold * (self.scalarsPath['Battery_capacity'])),
-            driveProfiles, 0)
-        driveProfiles = pd.DataFrame(driveProfiles)
-        driveProfiles.set_index(self.driveData['genericID'], inplace=True)
-        driveProfiles = driveProfiles.replace(0, np.nan)
-        driveProfiles = driveProfiles.dropna(how='all', axis=0)
-        driveProfiles.reset_index(inplace=True)
-        drive = pd.Series(driveProfiles['genericID'])
-        fastChargingHHID = []
-        for i, item in drive.items():
-            fastChargingHHID.append(item)
+        driveProfiles = driveProfiles.loc[:].sum(axis=1)
+        driveProfiles = driveProfiles < (self.gridFastChargingThreshold * (self.scalarsPath['Battery_capacity']))
+        fastChargingHHID = driveProfiles[driveProfiles == False].index.tolist()
         return fastChargingHHID
 
     def assignGridViaProbabilities(self, model: str, fastChargingHHID):
@@ -104,30 +94,8 @@ class GridModeler:
         print('Starting with charge connection replacement ')
         print('There are ' + str(len(fastChargingHHID)) + ' trips having consumption greater than ' + str(self.gridFastChargingThreshold) + '% of battery capacity')
         np.random.seed(42)
-        for hhPersonID, row in self.chargeAvailability.iterrows():
+        for genericID, row in self.chargeAvailability.iterrows():
             activity = row.copy(deep=True)
-            # if None:
-            # # if hhPersonID in fastChargingHHID:
-            #     for iHour in range(0, len(row)):
-            #         if iHour == 0:
-            #             if model == 'probability':
-            #                 row[iHour] = self.getRandomNumberForModel1(activity[iHour])
-            #             elif model == 'distribution':
-            #                 row[iHour] = self.getRandomNumberForModel3(activity[iHour])
-            #                 # print(row[iHour], activity[iHour], hhPersonID)
-            #         elif iHour > 0:
-            #             if activity[iHour] == activity[iHour - 1]:
-            #                 # print(row[j-1])
-            #                 row[iHour] = row[iHour - 1]
-            #             elif activity[iHour] == 'HOME' and (activity[iHour] in activity[range(0, iHour)].values):
-            #                 selector = activity[activity == 'HOME']
-            #                 selectorindex = selector.index[0]
-            #                 row[iHour] = row[selectorindex]
-            #             elif model == 'probability':
-            #                 row[iHour] = self.getRandomNumberForModel1(activity[iHour])
-            #             elif model == 'distribution':
-            #                 row[iHour] = self.getRandomNumberForModel3(activity[iHour])
-            # else:
             for iHour in range(0, len(row)):
                 if iHour == 0:
                     if model == 'probability':
@@ -151,7 +119,7 @@ class GridModeler:
                     elif model == 'average charging power':
                         row[iHour] = self.getRandomNumberForModel4(activity[iHour])
                     # print(f'Power: {row[iHour]}, Activity: {activity[iHour]}, householdPersonID: {hhPersonID}')
-            self.chargeAvailability.loc[hhPersonID] = row
+            self.chargeAvailability.loc[genericID] = row
         print('Grid connection assignment complete')
 
     def getRandomNumberForModel1(self, purpose):
@@ -224,7 +192,6 @@ class GridModeler:
         prob_min = 0
 
         for index, (key, value) in enumerate(self.gridDistribution[purpose].items()):
-            key = 0.67 * key
             prob_max = prob_min + value
             range_dict.update({index: {'min_range': prob_min, 'max_range': prob_max}})
             prob_min = prob_max
@@ -300,16 +267,11 @@ class GridModeler:
 
     def stackPlot(self):
         '''
-        :return: Plots charging station assigned to each trip and EV's parking area/trip purposes during a time span of
+        :return: Plots charging station of each trip and EV's parking area/trip purposes during a time span of
         24 hours
         '''
-        keys = []
-        for key, value in self.gridDistribution.items():
-            for nestedKey, nestedValue in value.items():
-                keys.append(nestedKey)
-        capacityList = keys
-        capacityList = list(set(capacityList))
-        capacityList.sort()
+
+        #Plot for charging station
         capacity = self.chargeAvailability.transpose()
         capacityList = list(np.unique(capacity.loc[:, :].values))
 
@@ -330,6 +292,7 @@ class GridModeler:
         plt.legend(capacityListStr, loc='upper center', ncol=len(capacityList))
         plt.show()
 
+        #Plot for purposes in purposeDiary
         purposeList = list(self.gridDistribution)
         purposes = self.purposeData.copy()
         purposes = purposes.set_index(['genericID']).transpose()

@@ -281,7 +281,7 @@ class FlexEstimator:
     def mergeDataToWeightsAndDays(self, ParseData):
         """
         Function to merging weekday and trip weight data to driving and plugging data of respective personHHIDs. It is
-        assumed that trips occur on one daz and trip weights are equal for all trips of one genericID
+        assumed that trips occur on one day and trip weights are equal for all trips of one genericID
 
         :param ParseData: Class instance of type DataParser
         :return: None
@@ -334,7 +334,7 @@ class FlexEstimator:
 
     def calcChargeMaxProfiles(self, chargeProfiles: pd.DataFrame, consumptionProfiles: pd.DataFrame, batCap: np.float,
                               minSOC: np.float, maxSOC: np.float, nIter: int, probabilisticPlug: bool,
-                              socThreshold: bool) -> pd.DataFrame:
+                              discretePlug: bool) -> pd.DataFrame:
         """
         Calculates all maximum SoC profiles under the assumption that batteries are always charged as soon as they
         are plugged to the grid. Values are assured to not fall below SoC_min * battery capacity or surpass
@@ -355,6 +355,8 @@ class FlexEstimator:
         socMaxProfiles = chargeProfiles.copy()  # relative to battery capacity between 0 and 1
         plugProbability = chargeProfiles.copy()
         discretePlugChoice = pd.DataFrame(data=True, index=chargeProfiles.index, columns=chargeProfiles.columns)
+        self.transactionStartHour.set_index(chargeProfiles.index, inplace=True)
+        self.transactionStartHour.columns = self.transactionStartHour.columns.astype(int)
         nProf = len(chargeProfiles)
         batCapMin = batCap * minSOC  # absolute in kWh
         batCapMax = batCap * maxSOC
@@ -369,17 +371,17 @@ class FlexEstimator:
                     socMaxProfiles[iHour] = chargeMaxProfiles[iHour] / batCapMax
                     if probabilisticPlug:
                         # Calculate if an owner is connecting their car or not: connectionEvent (True/False) * connectionChoice (probability)
-                        plugProbability[iHour] = self.transactionStartHour[str(iHour)] * \
+                        plugProbability[iHour] = self.transactionStartHour[iHour] * \
                                                  socMaxProfiles[nHours - 1].apply(self.plugProbFunc)
 
                         # Set all hours from current to end to respective plug choice
                         plugChoiceHour = plugProbability[iHour] >= randomProb[iHour]
                         discretePlugChoice.loc[plugChoiceHour, iHour:] = True
-                        discretePlugChoice.loc[self.transactionStartHour[str(iHour)] & ~plugChoiceHour, iHour:] = False
-                        discretePlugChoice.loc[~self.transactionStartHour[str(iHour)] & ~plugChoiceHour,
+                        discretePlugChoice.loc[self.transactionStartHour[iHour] & ~plugChoiceHour, iHour:] = False
+                        discretePlugChoice.loc[~self.transactionStartHour[iHour] & ~plugChoiceHour,
                         iHour: iHour] = False
                         discretePlugChoice[iHour] = discretePlugChoice[nHours - 1].where(
-                            cond=discretePlugChoice[nHours - 1], other=discretePlugChoice[iHour])
+                            cond=discretePlugChoice[nHours - 1]==True, other=discretePlugChoice[iHour])
 
                         # Calculate and append column with new SoC Max value for comparison and cleaner code
                         chargeMaxProfiles['newCharge'] = chargeMaxProfiles[nHours - 1] + \
@@ -392,11 +394,13 @@ class FlexEstimator:
                         chargeMaxProfiles[iHour] \
                             = chargeMaxProfiles[iHour].where(cond=chargeMaxProfiles[iHour] >= batCapMin,
                                                              other=batCapMin)
-                    elif socThreshold:
-                        # socIntermediateList = []
-                        discretePlugChoice[iHour] = \
-                         (socMaxProfiles[iHour] >= self.flexConfig['inputDataScalars'][self.datasetID]['SoC_plugging_threshold']
-                          & self.transactionStartHour[iHour])
+                    elif discretePlug:
+                        plugChoiceHour = socMaxProfiles[iHour] >= self.flexConfig['inputDataScalars']\
+                                                    [self.datasetID]['SoC_plugging_threshold']
+                        # transactionStartHour[iHour] = transactionStartHour[iHour] & ~threshold
+                        discretePlugChoice.loc[self.transactionStartHour[iHour] & ~plugChoiceHour, iHour:] = True
+                        discretePlugChoice[iHour] = discretePlugChoice[nHours - 1].where(
+                            cond=discretePlugChoice[nHours - 1] == True, other=False)
 
                         # Calculate and append column with new SoC Max value for comparison and cleaner code
                         chargeMaxProfiles['newCharge'] = chargeMaxProfiles[nHours - 1] + \
@@ -409,9 +413,6 @@ class FlexEstimator:
                         chargeMaxProfiles[iHour] \
                             = chargeMaxProfiles[iHour].where(cond=chargeMaxProfiles[iHour] >= batCapMin,
                                                              other=batCapMin)
-                        # chargeMaxProfiles[iHour] = chargeMaxProfiles[nHours -1].where(
-                        # cond=chargeMaxProfiles[nHours - 1] <= batCap*flexConfig['inputDataScalars'][datasetID]
-                        # ['SoC_plugging_threshold'], other=chargeMaxProfiles[iHour])
 
                     else:
                         chargeMaxProfiles[iHour] = chargeMaxProfiles[nHours - 1].where(
@@ -419,16 +420,17 @@ class FlexEstimator:
                         socMaxProfiles[iHour] = chargeMaxProfiles[iHour] / batCapMax
                 else:
                     socMaxProfiles[iHour] = chargeMaxProfiles[iHour] / batCapMax
-                    if probabilisticPlug == True:
+                    if probabilisticPlug:
                         # Calculate if an owner is connecting their car or not: connectionEvent (True/False) * connectionChoice (probability)
-                        plugProbability[iHour] = transactionStartHour[str(iHour)] * \
+                        plugProbability[iHour] = self.transactionStartHour[iHour] * \
                                                  socMaxProfiles[iHour].apply(self.plugProbFunc)
 
                         # Set all hours from current to end to respective plug choice
                         plugChoiceHour = plugProbability[iHour] >= randomProb[iHour]
+                        discretePlugChoice[iHour] = discretePlugChoice[iHour - 1]
                         discretePlugChoice.loc[plugChoiceHour, iHour:] = True
                         # discretePlugChoice.loc[~plugChoiceHour, iHour:] = False
-                        discretePlugChoice.loc[transactionStartHour[str(iHour)] & ~plugChoiceHour, iHour:] = False
+                        discretePlugChoice.loc[self.transactionStartHour[iHour] & ~plugChoiceHour, iHour:] = False
 
                         # Calculate and append column with new SoC Max value for comparison and cleaner code
                         chargeMaxProfiles['newCharge'] = chargeMaxProfiles[iHour - 1] + \
@@ -442,21 +444,16 @@ class FlexEstimator:
                             = chargeMaxProfiles[iHour].where(cond=chargeMaxProfiles[iHour] >= batCapMin,
                                                              other=batCapMin)
 
-                    elif socThreshold == True:
-                        socIntermediateList = []
-                        for i, soc in socMaxProfiles[iHour].items():
-                            if soc >= flexConfig['inputDataScalars'][datasetID]['SoC_plugging_threshold']:
-                                soc = False
-                            else:
-                                soc = True
-                            socIntermediateList.append(soc)
-                        socIntermediate = pd.Series(data=socIntermediateList, index=socMaxProfiles.index)
-                        socMaxProfiles[iHour] = socIntermediate
-                        # transactionStartHour[str(iHour)] = transactionStartHour[str(iHour)] & ~socIntermediate
+                    elif discretePlug:
+                        plugChoiceHour = socMaxProfiles[iHour] >= self.flexConfig['inputDataScalars'] \
+                            [self.datasetID]['SoC_plugging_threshold']
+                        discretePlugChoice[iHour] = discretePlugChoice[iHour - 1]
+                        discretePlugChoice.loc[self.transactionStartHour[iHour] & ~plugChoiceHour,  iHour:] = True
+                        discretePlugChoice.loc[self.transactionStartHour[iHour] & plugChoiceHour, iHour:] = False
 
                         # Calculate and append column with new SoC Max value for comparison and cleaner code
                         chargeMaxProfiles['newCharge'] = chargeMaxProfiles[iHour - 1] + \
-                                                         chargeProfiles[iHour] * socMaxProfiles[iHour].astype(int) - \
+                                                         chargeProfiles[iHour] * discretePlugChoice[iHour].astype(int) - \
                                                          consumptionProfiles[iHour]
                         # Ensure that chargeMaxProfiles values are between batCapMin and batCapMax
                         chargeMaxProfiles[iHour] \
@@ -625,7 +622,7 @@ class FlexEstimator:
                                                                 'Minimum_SOC'],
                                                             maxSOC=self.flexConfig['inputDataScalars'][self.datasetID][
                                                                 'Maximum_SOC'],
-                                                            probabilisticPlug=False, socThreshold=True)
+                                                            probabilisticPlug=False, discretePlug=True)
         # self.connectionType = self.assignConnectionType()
         self.chargeProfilesUncontrolled = self.calcChargeProfilesUncontrolled(chargeMaxProfiles=self.chargeMaxProfiles,
                                                                               scalarsProc=self.scalarsProc)
@@ -1084,7 +1081,11 @@ if __name__ == '__main__':
     configDict = loadConfigDict(configNames)
     vpData = DataParser(configDict=configDict, datasetID=datasetID, loadEncrypted=False)
     vpData.process()
-    vpFlexEst = FlexEstimator(configDict=configDict, ParseData=vpData, datasetID=datasetID)
+    globalConfig = configDict['globalConfig']
+    inputTransactionHourStartPath = Path(globalConfig['pathRelative']['gridOutput']) / createFileString(
+        globalConfig=globalConfig, fileKey='transactionStartHour', datasetID=datasetID)
+    transactionStartHour = pd.read_csv(inputTransactionHourStartPath, keep_default_na=False, index_col='genericID')
+    vpFlexEst = FlexEstimator(configDict=configDict, ParseData=vpData, datasetID=datasetID, transactionStartHour=transactionStartHour)
     vpFlexEst.run()
     vpEval = Evaluator(configDict=configDict, parseData=pd.Series(data=vpData, index=[datasetID]))
     vpEval.plotProfiles(flexEstimator=vpFlexEst)
