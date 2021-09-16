@@ -22,7 +22,7 @@ from vencopy.scripts.globalFunctions import createFileString, loadConfigDict
 
 
 class GridModeler:
-    def __init__(self, configDict: dict, datasetID: str):
+    def __init__(self, configDict: dict, datasetID: str, gridPowerDict: dict):
         """
         Class for modeling individual vehicle connection options dependent on parking purposes. Configurations on
         charging station availabilities can be parametrized in gridConfig. globalConfig and datasetID are needed for
@@ -35,6 +35,7 @@ class GridModeler:
         self.globalConfig = configDict['globalConfig']
         self.gridConfig = configDict['gridConfig']
         self.flexConfig = configDict['flexConfig']
+        self.gridAvail = gridPowerDict
         self.inputFileName = createFileString(globalConfig=self.globalConfig, fileKey='purposesProcessed',
                                               datasetID=datasetID)
         self.inputFilePath = Path(__file__).parent / self.globalConfig['pathRelative']['diaryOutput'] / self.inputFileName
@@ -55,10 +56,11 @@ class GridModeler:
         self.outputFilePathTransactionStartHour = Path(__file__).parent / self.globalConfig['pathRelative']['gridOutput'] / self.outputFileNameTransactionStartHour
         self.purposeData = pd.read_csv(self.inputFilePath, keep_default_na=False)
         self.driveData = pd.read_csv(self.inputDriveProfilesPath, keep_default_na=False)
-        self.transactionHourStart = None
+        self.transactionStartHour = None
         self.chargeAvailability = None
+        self.fastChargingHHID = None
 
-    def assignSimpleGridViaPurposes(self):
+    def assignGridViaPurposes(self):
         """
         Method to translate hourly purpose profiles into hourly profiles of true/false giving the charging station
         availability in each hour for each individual vehicle.
@@ -71,189 +73,87 @@ class GridModeler:
         self.chargeAvailability = (~(self.chargeAvailability != True))
         print('Grid connection assignment complete')
 
-    def fastChargingList(self):
+    def getFastChargingIDs(self):
         '''
-        Returns a list of household trips having consumption greater than 80% (40 kWh) of battery capacity (50 kWh)
+        Returns a list of household IDs having consumption greater than 80% (40 kWh) of battery capacity (50 kWh) per
+        daily trip diary
         '''
         driveProfiles = self.driveData.set_index(['genericID'])
         driveProfiles = driveProfiles * self.scalarsPath['Electric_consumption_corr'] / 100
         driveProfiles = driveProfiles.loc[:].sum(axis=1)
-        driveProfiles = driveProfiles < (self.gridFastChargingThreshold * (self.scalarsPath['Battery_capacity']))
-        fastChargingHHID = driveProfiles[driveProfiles == False].index.tolist()
+        driveProfiles = driveProfiles >= (self.gridFastChargingThreshold * (self.scalarsPath['Battery_capacity']))
+        fastChargingHHID = driveProfiles.loc[driveProfiles].index.tolist()
         return fastChargingHHID
 
-    def assignGridViaProbabilities(self, model: str, fastChargingHHID):
-        '''
-        :param model: Input for assigning probability according to models presented in gridConfig
+    def assignGridViaProbabilities(self, gridAvailability: dict):  # fastChargingHHID: list,
+        """
+
         :param fastChargingHHID: List of household trips for fast charging
         :return: Returns a dataFrame holding charging capacity for each trip assigned with probability distribution
-        '''
+        """
+
         self.chargeAvailability = self.purposeData.copy()
         self.chargeAvailability.set_index(['genericID'], inplace=True)
         print('Starting with charge connection replacement ')
-        print('There are ' + str(len(fastChargingHHID)) + ' trips having consumption greater than ' + str(self.gridFastChargingThreshold) + '% of battery capacity')
+        # print('There are ' + str(len(fastChargingHHID)) + ' trips having consumption greater than ' +
+        #       str(self.gridFastChargingThreshold) + '% of battery capacity')
         np.random.seed(42)
         for genericID, row in self.chargeAvailability.iterrows():
             activity = row.copy(deep=True)
-            for iHour in range(0, len(row)):
+            for iHour in range(0, len(row)):  # FIXME implement vectorized
                 if iHour == 0:
-                    if model == 'probability':
-                        row[iHour] = self.getRandomNumberForModel1(activity[iHour])
-                    elif model == 'distribution':
-                        row[iHour] = self.getRandomNumberForModel2(activity[iHour])
-                    elif model == 'average charging power':
-                        row[iHour] = self.getRandomNumberForModel4(activity[iHour])
+                    row[iHour] = self.allocatePowerViaProbabilities(purpose=activity[iHour],
+                                                                    gridAvailability=gridAvailability)
+                    # if model == 'probability':
+                    #     row[iHour] = self.allocatePowerViaProbabilities(purpose=activity[iHour],
+                    #                                                     gridAvailability=self.gridProbability)
+                    # elif model == 'distribution':
+                    #     row[iHour] = self.allocatePowerViaProbabilities(purpose=activity[iHour],
+                    #                                                     gridAvailability=self.gridDistribution)
+                    # elif model == 'average charging power':
+                    #     row[iHour] = self.allocatePowerViaProbabilities(purpose=activity[iHour],
+                    #                                                     gridAvailability=self.gridAveragePower)
                         # print(f'Power: {row[iHour]}, Activity: {activity[iHour]},householdPersonID: {hhPersonID}')
                 elif iHour > 0:
                     if activity[iHour] == activity[iHour - 1]:
                         row[iHour] = row[iHour - 1]
                     elif activity[iHour] == 'HOME' and (activity[iHour] in activity[range(0, iHour)].values):
-                        selector = activity[activity == 'HOME']
-                        selectorindex = selector.index[0]
-                        row[iHour] = row[selectorindex]
-                    elif model == 'probability':
-                        row[iHour] = self.getRandomNumberForModel1(activity[iHour])
-                    elif model == 'distribution':
-                        row[iHour] = self.getRandomNumberForModel2(activity[iHour])
-                    elif model == 'average charging power':
-                        row[iHour] = self.getRandomNumberForModel4(activity[iHour])
+                        row[iHour] = row[activity[activity == 'HOME'].index[0]]
+                    else:
+                        row[iHour] = self.allocatePowerViaProbabilities(purpose=activity[iHour],
+                                                                    gridAvailability=gridAvailability)
+                    # elif model == 'probability':
+                    #     row[iHour] = self.allocatePowerViaProbabilities(purpose=activity[iHour],
+                    #                                                     gridAvailability=self.gridProbability)
+                    # elif model == 'distribution':
+                    #     row[iHour] = self.allocatePowerViaProbabilities(purpose=activity[iHour],
+                    #                                                     gridAvailability=self.gridDistribution)
+                    # elif model == 'average charging power':
+                    #     row[iHour] = self.allocatePowerViaProbabilities(purpose=activity[iHour],
+                    #                                                     gridAvailability=self.gridAveragePower)
                     # print(f'Power: {row[iHour]}, Activity: {activity[iHour]}, householdPersonID: {hhPersonID}')
             self.chargeAvailability.loc[genericID] = row
         print('Grid connection assignment complete')
+        return self.chargeAvailability
 
-    def getRandomNumberForModel1(self, purpose):
-        '''
+    def allocatePowerViaProbabilities(self, purpose: str, gridAvailability: dict):
+        """
         Assigns a random number between 0 and 1 for all the purposes, and allots a charging station according to the
         probability distribution
         :param purpose: Purpose of each hour of a trip
-        :return: Returns a charging capacity for a purpose based on probability distribution 1
-        '''
-        if purpose == "HOME":
-            rnd = np.random.random_sample()
-            if rnd <= 1:
-                rnd = self.gridProbability['HOME'][1]
-            else:
-                rnd = 0.0
-        elif purpose == "WORK":
-            rnd = np.random.random_sample()
-            if rnd <= 1:
-                rnd = self.gridProbability['WORK'][1]
-            else:
-                rnd = 0.0
-        elif purpose == "DRIVING":
-            rnd = 0
-            if rnd == 0:
-                rnd = self.gridProbability['DRIVING'][1]
-        elif purpose == "LEISURE":
-            rnd = np.random.random_sample()
-            if rnd <= 1:
-                rnd = self.gridProbability['LEISURE'][1]
-            else:
-                rnd = 0.0
-        elif purpose == "SHOPPING":
-            rnd = np.random.random_sample()
-            if rnd <= 1:
-                rnd = self.gridProbability['SHOPPING'][1]
-            else:
-                rnd = 0.0
-        elif purpose == "SCHOOL":
-            rnd = np.random.random_sample()
-            if rnd <= 1:
-                rnd = self.gridProbability['SCHOOL'][1]
-            else:
-                rnd = 0.0
-        elif purpose == "OTHER":
-            rnd = np.random.random_sample()
-            if rnd <= 1:
-                rnd = self.gridProbability['OTHER'][1]
-            else:
-                rnd = 0.0
-        else:
-            rnd = 0
-            if rnd == 0:
-                rnd = self.gridProbability['NA'][1]
-        return rnd
-
-    def getRandomNumberForModel2(self, purpose):
-        '''
-        Assigns a random number between 0 and 1 for all the purposes, and allots a charging station according to the
-        probability distribution
-        :param purpose: Purpose of each hour of a trip
+        :param gridAvailability: Dictionary specifying the probability of different charging powers at different parking
+            purposes
         :return: Returns a charging capacity for a purpose based on probability distribution model 2
-        '''
-        if purpose == 'DRIVING':
-            rnd = 0
-        else:
-            rnd = np.random.random_sample()
+        """
 
-        keys = list(self.gridDistribution[purpose].keys())
-        range_dict = {}
+        rnd = np.random.random_sample()
         prob_min = 0
-
-        for index, (key, value) in enumerate(self.gridDistribution[purpose].items()):
-            prob_max = prob_min + value
-            range_dict.update({index: {'min_range': prob_min, 'max_range': prob_max}})
+        for index, (iPow, iProb) in enumerate(gridAvailability[purpose].items()):
+            prob_max = prob_min + iProb
+            if prob_min <= rnd <= prob_max:
+                power = iPow
+                return power
             prob_min = prob_max
-
-        for dictIndex, rangeValue in range_dict.items():
-            if rangeValue['min_range'] <= rnd <= rangeValue['max_range']:
-                power = keys[dictIndex]
-                break
-        return power
-
-    def getRandomNumberForModel3(self, purpose):
-        '''
-        Assigns a random number between 0 and 1 for all the purposes, and allots a charging station according to the
-        probability distribution
-        :param purpose: Purpose of each hour of a trip
-        :return: Returns a charging capacity for a purpose based on probability distribution model 3 (fast charging)
-        '''
-        if purpose == 'DRIVING':
-            rnd = 0
-        else:
-            rnd = np.random.random_sample()
-
-        keys = list(self.gridFastCharging[purpose].keys())
-        range_dict_fast = {}
-        prob_min = 0
-
-        for index, (key, value) in enumerate(self.gridFastCharging[purpose].items()):
-            prob_max = prob_min + value
-            range_dict_fast.update({index: {'min_range': prob_min, 'max_range': prob_max}})
-            prob_min = prob_max
-
-        for dictIndex, rangeValue in range_dict_fast.items():
-            if rangeValue['min_range'] <= rnd <= rangeValue['max_range']:
-                power = keys[dictIndex]
-                break
-        return power
-
-    def getRandomNumberForModel4(self, purpose):
-        '''
-        Assigns a random number between 0 and 1 for all the purposes, and allots a charging station according to the
-        probability distribution
-        :param purpose: Purpose of each hour of a trip
-        :return: Returns a charging capacity for a purpose based on probability distribution model 2
-        '''
-        if purpose == 'DRIVING':
-            rnd = 0
-        else:
-            rnd = np.random.random_sample()
-
-        keys = list(self.gridAveragePower[purpose].keys())
-        range_dict = {}
-        prob_min = 0
-
-        for index, (key, value) in enumerate(self.gridAveragePower[purpose].items()):
-            prob_max = prob_min + value
-            range_dict.update({index: {'min_range': prob_min, 'max_range': prob_max}})
-            prob_min = prob_max
-
-        for dictIndex, rangeValue in range_dict.items():
-            if rangeValue['min_range'] <= rnd <= rangeValue['max_range']:
-                power = keys[dictIndex]
-                break
-        return power
 
     def writeOutGridAvailability(self):
         """
@@ -323,11 +223,11 @@ class GridModeler:
 
     def getTransactionHourStart(self):
         print('Caculating number of transactions')
-        self.transactionHourStart = self.chargeAvailability
+        self.transactionStartHour = self.chargeAvailability
         # self.transactionHourStart.set_index('genericID', inplace=True)
         countStartHour = 0
-        nHours = len(self.transactionHourStart.columns)
-        for genericID, row in self.transactionHourStart.iterrows():
+        nHours = len(self.transactionStartHour.columns)
+        for genericID, row in self.transactionStartHour.iterrows():
             capacity = row.copy()
             for iHour in range(0, len(row)):
                 if iHour == 0:
@@ -344,10 +244,10 @@ class GridModeler:
                             countStartHour += 1
                     else:
                         row[iHour] = False
-            self.transactionHourStart.loc[genericID] = row
+            self.transactionStartHour.loc[genericID] = row
         print('There are ' + str(countStartHour) + ' transactions')
-        self.transactionHourStart.columns = self.transactionHourStart.columns.astype(int)
-        return self.transactionHourStart
+        self.transactionStartHour.columns = self.transactionStartHour.columns.astype(int)
+        return self.transactionStartHour
 
     def writeOutTransactionStartHour(self, transactionHours):
         """
@@ -359,13 +259,13 @@ class GridModeler:
         transactionHours.to_csv(self.outputFilePathTransactionStartHour)
 
     def profileCalulation(self):
-        self.fastChargingHHID = self.fastChargingList()
-        # self.simpleGrid = self.assignSimpleGridViaPurposes()
-        self.probabilityGrid = self.assignGridViaProbabilities(model='distribution', fastChargingHHID=self.fastChargingHHID)
-        self.writeoutPlugProfiles = self.writeOutGridAvailability()
-        self.plotProfiles = self.stackPlot()
-        self.transactionHourStart = self.getTransactionHourStart()
-        self.writeOutTransactionStartHour(transactionHours=self.transactionHourStart)
+        self.fastChargingHHID = self.getFastChargingIDs()
+        # self.simpleGrid = self.assignGridViaPurposes()
+        self.assignGridViaProbabilities(gridAvailability=self.gridAvail)
+        self.writeOutGridAvailability()
+        self.stackPlot()
+        self.transactionStartHour = self.getTransactionHourStart()
+        self.writeOutTransactionStartHour(transactionHours=self.transactionStartHour)
 
     def betaMixtureModel(self):
         w = self.flexConfig['BMMParams']['weekdayPlugin']['mode1']['w1']
@@ -382,7 +282,8 @@ if __name__ == '__main__':
     datasetID = 'MiD17'
     configNames = ('globalConfig', 'localPathConfig', 'parseConfig', 'tripConfig', 'gridConfig', 'flexConfig', 'evaluatorConfig')
     configDict = loadConfigDict(configNames)
-    vpg = GridModeler(configDict=configDict, datasetID=datasetID)
+    vpg = GridModeler(configDict=configDict, datasetID=datasetID,
+                      gridPowerDict=configDict['gridConfig']['gridAvailabilityDistribution'])
     vpg.profileCalulation()
 
     # print('Data Analysis Started')
@@ -400,3 +301,113 @@ if __name__ == '__main__':
     #     obj.writeOutGridAvailability()
     #     obj.stackPlot()
 
+
+
+### SANDBOX ###
+
+    # def allocatePowerViaProbability(self, purpose):
+    #     '''
+    #     Assigns a random number between 0 and 1 for all the purposes, and allots a charging station according to the
+    #     probability distribution
+    #     :param purpose: Purpose of each hour of a trip
+    #     :return: Returns a charging capacity for a purpose based on probability distribution 1
+    #     '''
+    #     if purpose == "HOME":
+    #         rnd = np.random.random_sample()
+    #         if rnd <= 1:
+    #             rnd = self.gridProbability['HOME'][1]
+    #         else:
+    #             rnd = 0.0
+    #     elif purpose == "WORK":
+    #         rnd = np.random.random_sample()
+    #         if rnd <= 1:
+    #             rnd = self.gridProbability['WORK'][1]
+    #         else:
+    #             rnd = 0.0
+    #     elif purpose == "DRIVING":
+    #         rnd = 0
+    #         if rnd == 0:
+    #             rnd = self.gridProbability['DRIVING'][1]
+    #     elif purpose == "LEISURE":
+    #         rnd = np.random.random_sample()
+    #         if rnd <= 1:
+    #             rnd = self.gridProbability['LEISURE'][1]
+    #         else:
+    #             rnd = 0.0
+    #     elif purpose == "SHOPPING":
+    #         rnd = np.random.random_sample()
+    #         if rnd <= 1:
+    #             rnd = self.gridProbability['SHOPPING'][1]
+    #         else:
+    #             rnd = 0.0
+    #     elif purpose == "SCHOOL":
+    #         rnd = np.random.random_sample()
+    #         if rnd <= 1:
+    #             rnd = self.gridProbability['SCHOOL'][1]
+    #         else:
+    #             rnd = 0.0
+    #     elif purpose == "OTHER":
+    #         rnd = np.random.random_sample()
+    #         if rnd <= 1:
+    #             rnd = self.gridProbability['OTHER'][1]
+    #         else:
+    #             rnd = 0.0
+    #     else:
+    #         rnd = 0
+    #         if rnd == 0:
+    #             rnd = self.gridProbability['NA'][1]
+    #     return rnd
+
+    # def getRandomNumberForModel3(self, purpose):
+    #     '''
+    #     Assigns a random number between 0 and 1 for all the purposes, and allots a charging station according to the
+    #     probability distribution
+    #     :param purpose: Purpose of each hour of a trip
+    #     :return: Returns a charging capacity for a purpose based on probability distribution model 3 (fast charging)
+    #     '''
+    #     if purpose == 'DRIVING':
+    #         rnd = 0
+    #     else:
+    #         rnd = np.random.random_sample()
+    #
+    #     keys = list(self.gridFastCharging[purpose].keys())
+    #     range_dict_fast = {}
+    #     prob_min = 0
+    #
+    #     for index, (key, value) in enumerate(self.gridFastCharging[purpose].items()):
+    #         prob_max = prob_min + value
+    #         range_dict_fast.update({index: {'min_range': prob_min, 'max_range': prob_max}})
+    #         prob_min = prob_max
+    #
+    #     for dictIndex, rangeValue in range_dict_fast.items():
+    #         if rangeValue['min_range'] <= rnd <= rangeValue['max_range']:
+    #             power = keys[dictIndex]
+    #             break
+    #     return power
+    #
+    # def getRandomNumberForModel4(self, purpose):
+    #     '''
+    #     Assigns a random number between 0 and 1 for all the purposes, and allots a charging station according to the
+    #     probability distribution
+    #     :param purpose: Purpose of each hour of a trip
+    #     :return: Returns a charging capacity for a purpose based on probability distribution model 2
+    #     '''
+    #     if purpose == 'DRIVING':
+    #         rnd = 0
+    #     else:
+    #         rnd = np.random.random_sample()
+    #
+    #     keys = list(self.gridAveragePower[purpose].keys())
+    #     range_dict = {}
+    #     prob_min = 0
+    #
+    #     for index, (key, value) in enumerate(self.gridAveragePower[purpose].items()):
+    #         prob_max = prob_min + value
+    #         range_dict.update({index: {'min_range': prob_min, 'max_range': prob_max}})
+    #         prob_min = prob_max
+    #
+    #     for dictIndex, rangeValue in range_dict.items():
+    #         if rangeValue['min_range'] <= rnd <= rangeValue['max_range']:
+    #             power = keys[dictIndex]
+    #             break
+    #     return power

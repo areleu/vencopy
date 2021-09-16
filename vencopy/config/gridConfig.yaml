@@ -41,26 +41,22 @@ chargingInfrastructureDistributions:  # Grid model 2: Probabilities given for ea
     'NA':
 
 gridAvailabilityProbability:  # Grid model 2: Probabilities given for each location aka trip purpose and capacity
+#   PURPOSE:
+#       POWER: PROBABILITY
     'DRIVING':
-        1: 0
+        0: 1
     'HOME':
-        1: 11
-#        0.7: 3.6
+        11: 1
     'WORK':
-        1: 11
-#        0.5: 11
+        11: 1
     'SCHOOL':
-        1: 0
-#        0.5: 11
+        0: 1
     'SHOPPING':
-        1: 0
-#        0.5: 11
+        0: 1
     'LEISURE':
-        1: 0
-#        0.5: 11
+        0: 1
     'OTHER':
-        1: 0
-#        0.5: 11
+        0: 1
 
 gridAvailabilityDistribution:  # Grid model 3: Probabilities given for each location aka trip purpose and capacity
     'DRIVING':
@@ -68,7 +64,7 @@ gridAvailabilityDistribution:  # Grid model 3: Probabilities given for each loca
         #0.005: 75
         #0.005: 150
     'HOME':
-        3.6 : 0.50
+        3.6 : 0.5
         11: 0.25            #0.25 (0.75 - 0.50) probability of finding a charging station
         22 : 0.15        #0.05 (0.80 - 0.75) probability of finding a charging station
         0: 0.1            #0.2 (1- 0.80) probability of finding a charging station

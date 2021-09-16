@@ -48,7 +48,7 @@ if __name__ == '__main__':
 
     # Estimate charging flexibility based on driving profiles and charge connection
     vpFlex = FlexEstimator(configDict=configDict, datasetID=datasetID, ParseData=vpData,
-                           transactionStartHour=vpGrid.transactionHourStart)
+                           transactionStartHour=vpGrid.transactionStartHour)
     vpFlex.baseProfileCalculation()
     vpFlex.filter()
     vpFlex.aggregate()
