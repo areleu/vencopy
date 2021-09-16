@@ -58,7 +58,6 @@ class GridModeler:
         self.transactionHourStart = None
         self.chargeAvailability = None
 
-
     def assignSimpleGridViaPurposes(self):
         """
         Method to translate hourly purpose profiles into hourly profiles of true/false giving the charging station
