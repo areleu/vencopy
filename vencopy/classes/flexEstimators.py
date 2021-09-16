@@ -379,7 +379,7 @@ class FlexEstimator:
                         discretePlugChoice.loc[plugChoiceHour, iHour:] = True
                         discretePlugChoice.loc[self.transactionStartHour[iHour] & ~plugChoiceHour, iHour:] = False
                         discretePlugChoice.loc[~self.transactionStartHour[iHour] & ~plugChoiceHour,
-                        iHour: iHour] = False
+                        iHour: iHour] = False  # set column slice to iHour instead of iHour:iHour
                         discretePlugChoice[iHour] = discretePlugChoice[nHours - 1].where(
                             cond=discretePlugChoice[nHours - 1]==True, other=discretePlugChoice[iHour])
 
@@ -396,7 +396,7 @@ class FlexEstimator:
                                                              other=batCapMin)
                     elif discretePlug:
                         plugChoiceHour = socMaxProfiles[iHour] >= self.flexConfig['inputDataScalars']\
-                                                    [self.datasetID]['SoC_plugging_threshold']
+                                                    [self.datasetID]['SoC_plugging_threshold']  # make it SMALLER THAN
                         # transactionStartHour[iHour] = transactionStartHour[iHour] & ~threshold
                         discretePlugChoice.loc[self.transactionStartHour[iHour] & ~plugChoiceHour, iHour:] = True
                         discretePlugChoice[iHour] = discretePlugChoice[nHours - 1].where(
