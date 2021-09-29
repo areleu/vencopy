@@ -46,16 +46,14 @@ class GridModeler:
         self.inputDriveProfilesPath = Path(__file__).parent / self.globalConfig['pathRelative']['diaryOutput'] / self.inputDriveProfilesName
         self.scalarsPath = self.flexConfig['inputDataScalars'][datasetID]
         self.gridMappings = self.gridConfig['chargingInfrastructureMappings']
-        self.gridProbability = self.gridConfig['gridAvailabilityProbability']
-        self.gridDistribution = self.gridConfig['gridAvailabilityDistribution']
-        self.gridFastCharging = self.gridConfig['gridAvailabilityFastCharging']
         self.gridFastChargingThreshold = self.gridConfig['fastChargingThreshold']
-        self.gridAveragePower = self.gridConfig['chargingColumnAveragePower']
         self.outputFileName = createFileString(globalConfig=self.globalConfig, fileKey='inputDataPlugProfiles',
                                                datasetID=datasetID)
-        self.outputFileNameTransactionStartHour = createFileString(globalConfig=self.globalConfig, fileKey='transactionStartHour', datasetID=datasetID)
+        self.outputFileNameTransactionStartHour = createFileString(globalConfig=self.globalConfig,
+                                                                   fileKey='transactionStartHour', datasetID=datasetID)
         self.outputFilePath = Path(__file__).parent / self.globalConfig['pathRelative']['gridOutput'] / self.outputFileName
-        self.outputFilePathTransactionStartHour = Path(__file__).parent / self.globalConfig['pathRelative']['gridOutput'] / self.outputFileNameTransactionStartHour
+        self.outputFilePathTransactionStartHour = Path(__file__).parent / self.globalConfig['pathRelative']['gridOutput']\
+                                                  / self.outputFileNameTransactionStartHour
         self.purposeData = pd.read_csv(self.inputFilePath, keep_default_na=False)
         self.driveData = pd.read_csv(self.inputDriveProfilesPath, keep_default_na=False)
         self.transactionStartHour = None
@@ -87,7 +85,7 @@ class GridModeler:
         fastChargingHHID = driveProfiles.loc[driveProfiles].index.tolist()
         return fastChargingHHID
 
-    def assignGridViaProbabilities(self, gridAvailability: dict):  # fastChargingHHID: list,
+    def assignGridViaProbabilities(self, gridAvailability: dict, nIter:int, setSeed:int):  # fastChargingHHID: list,
         """
 
         :param fastChargingHHID: List of household trips for fast charging
@@ -96,27 +94,63 @@ class GridModeler:
 
         self.chargeAvailability = self.purposeData.copy()
         self.chargeAvailability.set_index(['genericID'], inplace=True)
+        self.chargeAvailability.columns= self.chargeAvailability.columns.astype(int)
+        self.purposeData.set_index('genericID', inplace=True)
+        self.purposeData.columns = self.purposeData.columns.astype(int)
+        nHours = len(self.chargeAvailability.columns)
         print('Starting with charge connection replacement ')
-        np.random.seed(42)
-        for genericID, row in self.chargeAvailability.iterrows():
-            activity = row.copy(deep=True)
-            for iHour in range(0, len(row)):  # FIXME implement vectorized
+        np.random.seed(setSeed)
+        for idxIt in range(nIter):
+            for iHour in range(nHours):
                 if iHour == 0:
-                    row[iHour] = self.allocatePowerViaProbabilities(purpose=activity[iHour],
-                                                                    gridAvailability=gridAvailability)
-                elif iHour > 0:
-                    if activity[iHour] == activity[iHour - 1]:
-                        row[iHour] = row[iHour - 1]
-                    elif activity[iHour] == 'HOME' and (activity[iHour] in activity[range(0, iHour)].values):
-                        row[iHour] = row[activity[activity == 'HOME'].index[0]]
+                    self.chargeAvailability[iHour] = self.allocatePowerViaProbabilities(purpose=self.chargeAvailability
+                    [iHour], gridAvailability=gridAvailability)
+                    self.homePower = self.chargeAvailability[0].where(self.purposeData[0] == 'HOME', np.nan).dropna()
+                else:
+                    if iHour > 1:
+                        self.homePower = self.homePower.append(self.chargeAvailability[iHour - 1].where(
+                            self.purposeData[iHour - 1] == 'HOME', np.nan).dropna())
+                        self.homePower = self.homePower.iloc[np.unique(self.homePower.index.values, return_index=True)[1]]
+
+                    oldPurpose = self.purposeData[iHour-1]
+                    equalPurpose = oldPurpose == self.chargeAvailability[iHour]
+                    unequalPurpose = self.chargeAvailability[iHour].where(~equalPurpose, np.nan).dropna()
+                    unequalPurposeHome = unequalPurpose[unequalPurpose == 'HOME']
+                    unequalPurposeHomePower = self.homePower.filter(unequalPurposeHome.index)
+                    homeNew = pd.Series(unequalPurposeHome.index.isin(self.homePower.index), index=unequalPurposeHome.index)
+                    unequalPurposeHomeNew = unequalPurposeHome.filter(homeNew.drop(homeNew[homeNew].index).index)
+                    unequalPurpose.drop(unequalPurpose[unequalPurpose == 'HOME'].index, inplace=True)
+                    unequalPurpose = unequalPurpose.append(unequalPurposeHomeNew).sort_index()
+                    equalPurposePower = self.chargeAvailability[iHour - 1].where(equalPurpose, np.nan).dropna()
+                    equalPurposePower = equalPurposePower.append(unequalPurposeHomePower).sort_index()
+
+                    if unequalPurpose.empty:
+                        self.chargeAvailability[iHour] = equalPurposePower
                     else:
-                        row[iHour] = self.allocatePowerViaProbabilities(purpose=activity[iHour],
-                                                                    gridAvailability=gridAvailability)
-            self.chargeAvailability.loc[genericID] = row
+                        unequalPurposePower = self.allocatePowerViaProbabilities(purpose=unequalPurpose,
+                                                                             gridAvailability=gridAvailability)
+                        self.chargeAvailability[iHour] = unequalPurposePower.append(equalPurposePower).sort_index()
+
+        # for genericID, row in self.chargeAvailability.iterrows():
+        #     activity = row.copy(deep=True)
+        #     for iHour in range(0, len(row)):  # FIXME implement vectorized
+        #         if iHour == 0:
+        #             row[iHour] = self.allocatePowerViaProbabilities(purpose=activity[iHour],
+        #                                                             gridAvailability=gridAvailability)
+        #         elif iHour > 0:
+        #             if activity[iHour] == activity[iHour - 1]:
+        #                 row[iHour] = row[iHour - 1]
+        #             elif activity[iHour] == 'HOME' and (activity[iHour] in activity[range(0, iHour)].values):
+        #                 row[iHour] = row[activity[activity == 'HOME'].index[0]]
+        #             else:
+        #                 row[iHour] = self.allocatePowerViaProbabilities(purpose=activity[iHour],
+        #                                                             gridAvailability=gridAvailability)
+        #     self.chargeAvailability.loc[genericID] = row
+
         print('Grid connection assignment complete')
         return self.chargeAvailability
 
-    def allocatePowerViaProbabilities(self, purpose: str, gridAvailability: dict):
+    def allocatePowerViaProbabilities(self, purpose: pd.Series, gridAvailability: dict):
         """
         Assigns a random number between 0 and 1 for all the purposes, and allots a charging station according to the
         probability distribution
@@ -125,15 +159,25 @@ class GridModeler:
             purposes
         :return: Returns a charging capacity for a purpose based on probability distribution model 2
         """
-
-        rnd = np.random.random_sample()
-        prob_min = 0
-        for index, (iPow, iProb) in enumerate(gridAvailability[purpose].items()):
-            prob_max = prob_min + iProb
-            if prob_min <= rnd <= prob_max:
-                power = iPow
-                return power
-            prob_min = prob_max
+        for genericID, tripPurpose in purpose.items():
+            rnd = np.random.random_sample()
+            prob_min = 0
+            for index, (iPow, iProb) in enumerate(gridAvailability[tripPurpose].items()):
+                prob_max = prob_min + iProb
+                if prob_min <= rnd <= prob_max:
+                    power = iPow
+                    purpose.loc[genericID] = power
+                    break
+                prob_min = prob_max
+        return purpose
+        # rnd = np.random.random_sample()
+        # prob_min = 0
+        # for index, (iPow, iProb) in enumerate(gridAvailability[purpose].items()):
+        #     prob_max = prob_min + iProb
+        #     if prob_min <= rnd <= prob_max:
+        #         power = iPow
+        #         return power
+        #     prob_min = prob_max
 
     def writeOutGridAvailability(self):
         """
@@ -144,7 +188,7 @@ class GridModeler:
            """
         self.chargeAvailability.to_csv(self.outputFilePath)
 
-    def stackPlot(self): #chargeAvail, purposes
+    def stackPlot(self, gridAvailability: dict): #chargeAvail, purposes
         '''
         :return: Plots charging station of each trip and EV's parking area/trip purposes during a time span of
         24 hours
@@ -172,9 +216,10 @@ class GridModeler:
         plt.show()
 
         #Plot for purposes in purposeDiary
-        purposeList = list(self.gridDistribution)
+        purposeList = list(gridAvailability)
         purposes = self.purposeData.copy()
-        purposes = purposes.set_index(['genericID']).transpose()
+        # purposes = purposes.set_index(['genericID']).transpose()
+        purposes = purposes.transpose()
         totalTripPurpose = pd.DataFrame()
 
         for i in range(0, len(purposeList)):
@@ -201,25 +246,37 @@ class GridModeler:
         plt.legend(purposeList, loc='upper center', ncol=len(purposeList))
         plt.show()
 
-    def getTransactionHourStart(self):
+    def getTransactionHourStart(self, nIter:int):
         print('Caculating number of transactions')
-        self.transactionStartHour = self.chargeAvailability.copy()
-        # self.transactionHourStart.set_index('genericID', inplace=True)
+        self.plugProfile = self.chargeAvailability.copy()
+        # self.plugProfile = pd.read_csv(self.outputFilePath, keep_default_na=False, index_col='genericID')
+        self.transactionStartHour = pd.DataFrame(columns=self.plugProfile.columns)
+        self.plugProfile.columns = self.plugProfile.columns.astype(int)
         nHours = len(self.transactionStartHour.columns)
-        for genericID, row in self.transactionStartHour.iterrows():
-            capacity = row.copy()
-            for iHour in range(0, len(row)):
+        # for genericID, row in self.transactionStartHour.iterrows():
+        #     capacity = row.copy()
+        #     for iHour in range(0, len(row)):
+        #         if iHour == 0:
+        #             if capacity[iHour] > capacity[nHours-1]:
+        #                 row[iHour] = True
+        #             else:
+        #                 row[iHour] = False
+        #         elif iHour > 0:
+        #             if capacity[iHour] > capacity[iHour-1]:
+        #                 row[iHour] = True
+        #             else:
+        #                 row[iHour] = False
+        #     self.transactionStartHour.loc[genericID] = row
+
+        for idxIt in range(nIter):
+            for iHour in range(nHours):
                 if iHour == 0:
-                    if capacity[iHour] > capacity[nHours-1]:
-                        row[iHour] = True
-                    else:
-                        row[iHour] = False
-                elif iHour > 0:
-                    if capacity[iHour] > capacity[iHour-1]:
-                        row[iHour] = True
-                    else:
-                        row[iHour] = False
-            self.transactionStartHour.loc[genericID] = row
+                    self.transactionStartHour[iHour] = self.plugProfile[iHour] > self.plugProfile[nHours-1]
+
+                else:
+                    self.transactionStartHour[iHour] = self.plugProfile[iHour] > self.plugProfile[iHour - 1]
+
+        self.transactionStartHour.dropna(axis=1, inplace=True)
         print('There are ' + str(self.transactionStartHour.sum().sum()) + ' transactions')
         self.transactionStartHour.columns = self.transactionStartHour.columns.astype(int)
         return self.transactionStartHour
@@ -233,14 +290,14 @@ class GridModeler:
            """
         transactionHours.to_csv(self.outputFilePathTransactionStartHour)
 
-    @profile
+    # @profile
     def calcGrid(self):
         self.fastChargingHHID = self.getFastChargingIDs()
         # self.simpleGrid = self.assignGridViaPurposes()
-        self.assignGridViaProbabilities(gridAvailability=self.gridAvail)
+        self.assignGridViaProbabilities(gridAvailability=self.gridAvail, nIter=1, setSeed=42)
         self.writeOutGridAvailability()
-        self.stackPlot()
-        self.transactionStartHour = self.getTransactionHourStart()
+        self.stackPlot(gridAvailability=self.gridAvail)
+        self.transactionStartHour = self.getTransactionHourStart(nIter=1)
         self.writeOutTransactionStartHour(transactionHours=self.transactionStartHour)
 
     def betaMixtureModel(self):

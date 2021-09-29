@@ -19,6 +19,7 @@ import warnings
 import math
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 from random import seed, random
 
 from vencopy.scripts.globalFunctions import createFileString, mergeVariables, calculateWeightedAverage, \
@@ -327,7 +328,7 @@ class FlexEstimator:
         if model == 'distribution':
             plugProfiles = plugProfiles * flexConfig['inputDataScalars'][self.datasetID][
                 'Probability_based_rated_power_of_charging_column']
-        else:
+        elif model == 'simpleGrid':
             plugProfiles = plugProfiles * flexConfig['inputDataScalars'][self.datasetID][
                 'Rated_power_of_charging_column']
         return plugProfiles
@@ -478,8 +479,19 @@ class FlexEstimator:
                             = chargeMaxProfiles[iHour].where(cond=chargeMaxProfiles[iHour] >= batCapMin,
                                                              other=batCapMin)
 
+            # if 6 <= idxIt <= 7:
+            #     plt.hist(chargeMaxProfiles[23], bins= np.arange(0,50,2))
+            #     plt.xlabel('Battery SOC (kWh)')
+            #     plt.ylabel('Number of vehicles')
+            #     plt.title('ChargeMaxProfiles 24th hour' +str(idxIt) +'th iteration')
+            #     plt.grid(True)
+            #     plt.savefig('ChargeMaxProfiles24th hour-' + str(idxIt) + '.png')
+            #     plt.show()
+
+
             devCrit = chargeMaxProfiles[nHours - 1].sum() - chargeMaxProfiles[0].sum()
             print(devCrit)
+
         chargeMaxProfiles.drop(labels='newCharge', axis='columns', inplace=True)
         return chargeMaxProfiles
 
@@ -613,7 +625,7 @@ class FlexEstimator:
 
         self.drainProfiles = self.calcDrainProfiles(driveProfiles=self.driveProfiles, flexConfig=self.flexConfig)
         self.chargeProfiles = self.calcChargeProfiles(plugProfiles=self.plugProfiles, flexConfig=self.flexConfig,
-                                                      model='distribution')
+                                                      model='distribution') #model: 'simpleGrid', 'distribution'
         self.chargeMaxProfiles = self.calcChargeMaxProfiles(chargeProfiles=self.chargeProfiles,
                                                             consumptionProfiles=self.drainProfiles, nIter=20,
                                                             batCap=self.flexConfig['inputDataScalars'][self.datasetID][
@@ -622,7 +634,7 @@ class FlexEstimator:
                                                                 'Minimum_SOC'],
                                                             maxSOC=self.flexConfig['inputDataScalars'][self.datasetID][
                                                                 'Maximum_SOC'],
-                                                            probabilisticPlug=False, discretePlug=True)
+                                                            probabilisticPlug=False, discretePlug=False)
         # self.connectionType = self.assignConnectionType()
         self.chargeProfilesUncontrolled = self.calcChargeProfilesUncontrolled(chargeMaxProfiles=self.chargeMaxProfiles,
                                                                               scalarsProc=self.scalarsProc)

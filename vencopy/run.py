@@ -38,7 +38,8 @@ if __name__ == '__main__':
     vpTripDiary = TripDiaryBuilder(datasetID=datasetID,configDict=configDict, ParseData=vpData, debug=True)
 
     # Grid model applications
-    vpGrid = GridModeler(configDict=configDict, datasetID=datasetID)
+    vpGrid = GridModeler(configDict=configDict, datasetID=datasetID,
+                         gridPowerDict=configDict['gridConfig']['gridAvailabilityDistribution'])
     vpGrid.calcGrid()
 
     # Evaluate drive and trip purpose profile
