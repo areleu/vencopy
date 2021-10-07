@@ -87,11 +87,13 @@ class GridModeler:
 
     def assignGridViaProbabilities(self, gridAvailability: dict, nIter:int, setSeed:int):  # fastChargingHHID: list,
         """
-
+        :param gridAvailability: Dictionary specifying the probability of different charging powers at different parking
+            purposes
         :param fastChargingHHID: List of household trips for fast charging
+        :param nIter: Pre-defined number for iteration
+        :param setSeed: Seed for reproducing random number
         :return: Returns a dataFrame holding charging capacity for each trip assigned with probability distribution
         """
-
         self.chargeAvailability = self.purposeData.copy()
         self.chargeAvailability.set_index(['genericID'], inplace=True)
         self.chargeAvailability.columns= self.chargeAvailability.columns.astype(int)
@@ -154,10 +156,11 @@ class GridModeler:
         """
         Assigns a random number between 0 and 1 for all the purposes, and allots a charging station according to the
         probability distribution
+
         :param purpose: Purpose of each hour of a trip
         :param gridAvailability: Dictionary specifying the probability of different charging powers at different parking
             purposes
-        :return: Returns a charging capacity for a purpose based on probability distribution model 2
+        :return: Returns a charging capacity for a purpose
         """
         for genericID, tripPurpose in purpose.items():
             rnd = np.random.random_sample()
@@ -189,10 +192,12 @@ class GridModeler:
         self.chargeAvailability.to_csv(self.outputFilePath)
 
     def stackPlot(self, gridAvailability: dict): #chargeAvail, purposes
-        '''
+        """
+        :param gridAvailability:  Dictionary specifying the probability of different charging powers at different parking
+            purposes
         :return: Plots charging station of each trip and EV's parking area/trip purposes during a time span of
-        24 hours
-        '''
+            24 hours
+        """
 
         #Plot for charging station
         capacity = self.chargeAvailability.transpose()
@@ -247,6 +252,10 @@ class GridModeler:
         plt.show()
 
     def getTransactionHourStart(self, nIter:int):
+        """
+        :param nIter: Pre-defined number for iteration
+        return: Dataframe of transaction start hour based on the plug profiles
+        """
         print('Caculating number of transactions')
         self.plugProfile = self.chargeAvailability.copy()
         # self.plugProfile = pd.read_csv(self.outputFilePath, keep_default_na=False, index_col='genericID')
@@ -283,7 +292,7 @@ class GridModeler:
 
     def writeOutTransactionStartHour(self, transactionHours):
         """
-           Function to write out the boolean charging station availability for each vehicle in each hour to the output
+           Function to write out the transaction start hour for each vehicle in each hour to the output
            file path.
 
            :return: None
@@ -292,6 +301,10 @@ class GridModeler:
 
     # @profile
     def calcGrid(self):
+        """
+        Wrapper function for grid assignment. The number of iterations for assignGridViaProbabilities() and
+        transactionStartHour() and seed for reproduction of random numbers can be specified here.
+        """
         self.fastChargingHHID = self.getFastChargingIDs()
         # self.simpleGrid = self.assignGridViaPurposes()
         self.assignGridViaProbabilities(gridAvailability=self.gridAvail, nIter=1, setSeed=42)
