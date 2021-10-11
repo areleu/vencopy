@@ -29,13 +29,14 @@ if __name__ == '__main__':
     datasetID = 'MiD17'
     # review: should the datasetID not be part of the config files?
 
-    configNames = ('globalConfig', 'localPathConfig', 'parseConfig', 'tripConfig', 'gridConfig', 'flexConfig', 'evaluatorConfig')
+    configNames = ('globalConfig', 'localPathConfig', 'parseConfig', 'tripConfig', 'gridConfig', 'flexConfig',
+                   'evaluatorConfig')
     configDict = loadConfigDict(configNames)
 
     vpData = DataParser(datasetID=datasetID, configDict=configDict, loadEncrypted=False)
     vpData.process()
     # Trip distance and purpose diary compositions
-    vpTripDiary = TripDiaryBuilder(datasetID=datasetID,configDict=configDict, ParseData=vpData, debug=True)
+    vpTripDiary = TripDiaryBuilder(datasetID=datasetID, configDict=configDict, ParseData=vpData, debug=True)
 
     # Grid model applications
     vpGrid = GridModeler(configDict=configDict, datasetID=datasetID)
