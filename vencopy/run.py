@@ -1,4 +1,4 @@
-__version__ = '0.1.0'
+__version__ = '0.1.3'
 __maintainer__ = 'Niklas Wulff'
 __contributors__ = 'Fabia Miorelli, Parth Butte'
 __email__ = 'Niklas.Wulff@dlr.de'
@@ -8,7 +8,6 @@ __license__ = 'BSD-3-Clause'
 
 
 #----- imports & packages ------
-# NOTE: REMOVE BEFORE PACKAGING 
 if __package__ is None or __package__ == '':
     import sys
     from os import path

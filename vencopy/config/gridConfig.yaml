@@ -39,28 +39,23 @@ chargingInfrastructureDistributions:  # Grid model 2: Probabilities given for ea
     'OTHER':
         0.5: 11
     'NA':
+        1: 0
 
 gridAvailabilityProbability:  # Grid model 2: Probabilities given for each location aka trip purpose and capacity
     'DRIVING':
         1: 0
     'HOME':
         1: 11
-#        0.7: 3.6
     'WORK':
         1: 11
-#        0.5: 11
     'SCHOOL':
         1: 0
-#        0.5: 11
     'SHOPPING':
         1: 0
-#        0.5: 11
     'LEISURE':
         1: 0
-#        0.5: 11
     'OTHER':
         1: 0
-#        0.5: 11
 
 gridAvailabilityDistribution:  # Grid model 3: Probabilities given for each location aka trip purpose and capacity
     'DRIVING':
