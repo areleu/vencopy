@@ -75,7 +75,7 @@ def calculateWeightedAverage(col, weightCol):
     return sum(col * weightCol) / sum(weightCol)
 
 
-def writeProfilesToCSV(profileDictOut, globalConfig: dict, singleFile=True, datasetID='MiD17'):
+def writeProfilesToCSV(profileDictOut, globalConfig: dict, localPathConfig: dict, singleFile=True, datasetID='MiD17'):
     """
     Function to write VencoPy profiles to either one or five .csv files in the output folder specified in outputFolder.
 
@@ -90,11 +90,11 @@ def writeProfilesToCSV(profileDictOut, globalConfig: dict, singleFile=True, data
 
     if singleFile:
         dataOut = pd.DataFrame(profileDictOut)
-        dataOut.to_csv(Path(__file__).parent / globalConfig['pathRelative']['flexOutput'] /
+        dataOut.to_csv(Path(localPathConfig['pathAbsolute']['vencoPyRoot']) / globalConfig['pathRelative']['flexOutput'] /
                        createFileString(globalConfig=globalConfig, fileKey='output',
                                         manualLabel=globalConfig['labels']['technologyLabel'], datasetID=datasetID),
                        header=True)
     else:
         for iName, iProf in profileDictOut.items():
-            iProf.to_csv(Path(__file__).parent / globalConfig['pathRelative']['flexOutput'] /
+            iProf.to_csv(Path(localPathConfig['pathAbsolute']['vencoPyRoot']) / globalConfig['pathRelative']['flexOutput'] /
                          Path(f'vencopy_{iName}_{datasetID}.csv'), header=True)

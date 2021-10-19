@@ -51,6 +51,7 @@ class FlexEstimator:
         self.globalConfig = configDict['globalConfig']
         self.flexConfig = configDict['flexConfig']
         self.evaluatorConfig = configDict['evaluatorConfig']
+        self.localPathConfig = configDict['localPathConfig']
         self.hourVec = range(self.globalConfig['numberOfHours'])
         self.datasetID = datasetID
         self.driveProfilesIn, self.plugProfilesIn = self.readVencoInput(datasetID=datasetID)
@@ -173,15 +174,15 @@ class FlexEstimator:
         """
         print('Reading Venco input scalars, drive profiles and boolean plug profiles')
 
-        driveProfiles_raw = self.readInputCSV(filePath=Path(__file__).parent / self.globalConfig['pathRelative']['diaryOutput'] /
-                                              createFileString(globalConfig=self.globalConfig,
-                                                               fileKey='inputDataDriveProfiles',
-                                                               datasetID=datasetID))
-        plugProfiles_raw = self.readInputBoolean(filePath=Path(__file__).parent / self.globalConfig['pathRelative']['gridOutput'] /
+        driveProfiles_raw = self.readInputCSV(Path(self.localPathConfig['pathAbsolute']['vencoPyRoot']) / self.globalConfig['pathRelative']['diaryOutput'] / 
+                                                createFileString(globalConfig=self.globalConfig,
+                                                                fileKey='inputDataDriveProfiles',
+                                                                datasetID=datasetID))
+        plugProfiles_raw = self.readInputBoolean(Path(self.localPathConfig['pathAbsolute']['vencoPyRoot']) / self.globalConfig['pathRelative']['gridOutput'] /
                                                  createFileString(globalConfig=self.globalConfig,
                                                                   fileKey='inputDataPlugProfiles',
                                                                   datasetID=datasetID))
-
+                                                                  
         print('There are ' + str(len(driveProfiles_raw)) + ' drive profiles and ' +
               str(len(driveProfiles_raw)) + ' plug profiles.')
 
@@ -913,8 +914,8 @@ class FlexEstimator:
                                    gridConnectionShare=self.plugProfilesWAggVar,
                                    auxFuelDriveProfile=self.auxFuelDemandProfilesWAggVar)
 
-        writeProfilesToCSV(profileDictOut=self.profileDictOut, globalConfig=self.globalConfig, singleFile=True,
-                           datasetID=self.datasetID)
+        writeProfilesToCSV(profileDictOut=self.profileDictOut, globalConfig=self.globalConfig, localPathConfig=self.localPathConfig,
+             singleFile=True, datasetID=self.datasetID)
 
     def run(self):
         """

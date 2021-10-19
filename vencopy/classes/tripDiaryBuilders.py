@@ -13,6 +13,7 @@ if __package__ is None or __package__ == '':
 
 import pandas as pd
 import numpy as np
+from typing import Tuple
 from pathlib import Path
 from vencopy.scripts.globalFunctions import createFileString
 
@@ -39,6 +40,7 @@ class TripDiaryBuilder:
 
         self.tripConfig = configDict['tripConfig']
         self.globalConfig = configDict['globalConfig']
+        self.localPathConfig = configDict['localPathConfig']
         self.datasetID = datasetID
         self.parsedData = ParseData
         self.tripDataClean = None
@@ -56,8 +58,8 @@ class TripDiaryBuilder:
     def tripDuration(self, timestampStart: np.datetime64, timestampEnd: np.datetime64) -> np.datetime64:
         return timestampEnd - timestampStart
 
-    def calcHourShareStart(self, timestampStart: pd.Series, timestampEnd: pd.Series, duration: pd.Series) -> (pd.Series,
-                                                                                                           pd.Series):
+    def calcHourShareStart(self, timestampStart: pd.Series, timestampEnd: pd.Series, duration: pd.Series) -> Tuple[pd.Series,
+                                                                                                           pd.Series]:
         """
         :param timestampStart: start time of a trip
         :param timestampEnd:  end time of a trip
@@ -386,10 +388,11 @@ class TripDiaryBuilder:
         :param datasetID: ID used for filenames
         :return: None
         """
-        dataDrive.to_csv(Path(__file__).parent / globalConfig['pathRelative']['diaryOutput'] /
+
+        dataDrive.to_csv(Path(self.localPathConfig['pathAbsolute']['vencoPyRoot']) / globalConfig['pathRelative']['diaryOutput'] /
                          createFileString(globalConfig=globalConfig, fileKey='inputDataDriveProfiles',
                                           datasetID=datasetID), na_rep='0')
-        dataPurpose.to_csv(Path(__file__).parent / globalConfig['pathRelative']['diaryOutput'] /
+        dataPurpose.to_csv(Path(self.localPathConfig['pathAbsolute']['vencoPyRoot']) / globalConfig['pathRelative']['diaryOutput'] /
                            createFileString(globalConfig=globalConfig, fileKey='purposesProcessed',
                                             datasetID=datasetID))
         print(f"Drive data and trip purposes written to files "

@@ -34,12 +34,13 @@ class GridModeler:
         self.globalConfig = configDict['globalConfig']
         self.gridConfig = configDict['gridConfig']
         self.flexConfig = configDict['flexConfig']
+        self.localPathConfig = configDict['localPathConfig']
         self.inputFileName = createFileString(globalConfig=self.globalConfig, fileKey='purposesProcessed',
                                               datasetID=datasetID)
-        self.inputFilePath = Path(__file__).parent / self.globalConfig['pathRelative']['diaryOutput'] / self.inputFileName
+        self.inputFilePath = Path(self.localPathConfig['pathAbsolute']['vencoPyRoot']) / self.globalConfig['pathRelative']['diaryOutput'] / self.inputFileName
         self.inputDriveProfilesName = createFileString(globalConfig=self.globalConfig, fileKey='inputDataDriveProfiles',
                                                       datasetID=datasetID)
-        self.inputDriveProfilesPath = Path(__file__).parent / self.globalConfig['pathRelative']['diaryOutput'] / self.inputDriveProfilesName
+        self.inputDriveProfilesPath = Path(self.localPathConfig['pathAbsolute']['vencoPyRoot']) / self.globalConfig['pathRelative']['diaryOutput'] / self.inputDriveProfilesName
         self.scalarsPath = self.flexConfig['inputDataScalars'][datasetID]
         self.gridMappings = self.gridConfig['chargingInfrastructureMappings']
         self.gridProbability = self.gridConfig['gridAvailabilityProbability']
@@ -48,7 +49,7 @@ class GridModeler:
         self.gridFastChargingThreshold = self.gridConfig['fastChargingThreshold']
         self.outputFileName = createFileString(globalConfig=self.globalConfig, fileKey='inputDataPlugProfiles',
                                                datasetID=datasetID)
-        self.outputFilePath = Path(__file__).parent / self.globalConfig['pathRelative']['gridOutput'] / self.outputFileName
+        self.outputFilePath = Path(self.localPathConfig['pathAbsolute']['vencoPyRoot']) / self.globalConfig['pathRelative']['gridOutput'] / self.outputFileName
         self.purposeData = pd.read_csv(self.inputFilePath, keep_default_na=False)
         self.driveData = pd.read_csv(self.inputDriveProfilesPath, keep_default_na=False)
         self.chargeAvailability = None
