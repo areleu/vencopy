@@ -32,14 +32,14 @@ About
 ------------------
 - Authors: Niklas Wulff, Fabia Miorelli
 - Contact: niklas.wulff@dlr.de
-- Version: 0.1.0
+- Version: 0.1.3
 
 
 Links
 -------------------
 - Source code: https://gitlab.com/dlr-ve/vencopy
 - PyPI release: https://pypi.org/project/vencopy
-- Licence: https://opensource.org/licenses/BSD-3-Clause
+- License: https://opensource.org/licenses/BSD-3-Clause
 
 
 
