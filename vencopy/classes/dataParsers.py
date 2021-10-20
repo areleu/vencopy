@@ -292,7 +292,7 @@ class DataParser:
             elif iKey == 'smallerThan':
                 ret = ret.join(self.setSmallerThanFilter(iVal, self.data.index))
             else:
-                warnings.warn(f'A filter dictionary was defined in the parseConfig with an unknown filtering key. '
+                warnings.warn(f'A filter dictionary was defined in the parseConfig with an unknown filtering key.'
                               f'Current filtering keys comprise include, exclude, smallerThan and greaterThan.'
                               f'Continuing with ignoring the dictionary {iKey}')
         self.data = self.data[ret.all(axis='columns')]
@@ -569,17 +569,23 @@ class ParseKiD(DataParser):
         endsFollowingDay = self.data['tripEndNextDay'] == 1
         self.data.loc[endsFollowingDay, 'timestampEnd'] = self.data.loc[endsFollowingDay,
                                                                             'timestampEnd'] + pd.offsets.Day(1)
-    def assignDates(self):
-        pass
+
+
+    def excludeHours(self):
+        """
+        Removes trips where both start and end trip time are missing
+        """
+        self.data = self.data.loc[(self.data['tripStartClock'] != '-1:-1') & (self.data['tripEndClock'] != '-1:-1'), :]
+
 
     def process(self):
         """
         Wrapper function for harmonising and filtering the dataset.
         """
-        self.assignDates()
         self.selectColumns()
         self.harmonizeVariables()
         self.convertTypes()
+        self.excludeHours()
         self.checkFilterDict()
         self.filter()
         self.filterConsistentHours()
@@ -594,8 +600,8 @@ if __name__ == '__main__':
     configNames = ('globalConfig', 'localPathConfig', 'parseConfig', 'tripConfig', 'gridConfig', 'flexConfig', 'evaluatorConfig')
     configDict = loadConfigDict(configNames)
 
-    datasetID = 'MiD17' #options are MiD08, MiD17, KiD
-    # datasetID = 'KiD'
-    #vpData = ParseKiD(configDict=configDict, datasetID=datasetID)
-    vpData = DataParser(configDict=configDict, loadEncrypted=False, datasetID=datasetID)
+    #datasetID = 'MiD17' #options are MiD08, MiD17, KiD
+    datasetID = 'KiD'
+    vpData = ParseKiD(configDict=configDict, datasetID=datasetID)
+    #vpData = DataParser(configDict=configDict, loadEncrypted=False, datasetID=datasetID)
     vpData.process()
