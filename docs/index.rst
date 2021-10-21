@@ -54,14 +54,15 @@ Links
 
 .. toctree::
    :caption: Software
-   :hidden:
+   :hidden: 
    :maxdepth: 1
-
-   software/codestyle
+   
    software/architecture
+   software/classes
    software/functions
-   software/filtering
-   software/outputProfiles
+   software/inputOutput
+   software/codestyle
+
 
 .. toctree::
    :caption: Contribution

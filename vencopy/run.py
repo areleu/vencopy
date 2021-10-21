@@ -13,27 +13,28 @@ if __package__ is None or __package__ == '':
     from os import path
     sys.path.append(path.dirname(path.dirname(__file__)))
 
-
 import pandas as pd
 from vencopy.classes.dataParsers import DataParser
 from vencopy.classes.tripDiaryBuilders import TripDiaryBuilder
 from vencopy.classes.gridModelers import GridModeler
 from vencopy.classes.flexEstimators import FlexEstimator
 from vencopy.classes.evaluators import Evaluator
-from vencopy.scripts.globalFunctions import loadConfigDict
+from vencopy.scripts.globalFunctions import loadConfigDict, createOutputFolders
 
 if __name__ == '__main__':
-    # Set dataset and config to analyze
+    # Set dataset and config to analyze, create output folders
     #datasetID = 'KiD'
     datasetID = 'MiD17'
     # review: should the datasetID not be part of the config files?
-
     configNames = ('globalConfig', 'localPathConfig', 'parseConfig', 'tripConfig', 'gridConfig', 'flexConfig',
                    'evaluatorConfig')
     configDict = loadConfigDict(configNames)
+    createOutputFolders(configDict=configDict)
 
+    # Parse datasets
     vpData = DataParser(datasetID=datasetID, configDict=configDict, loadEncrypted=False)
     vpData.process()
+
     # Trip distance and purpose diary compositions
     vpTripDiary = TripDiaryBuilder(datasetID=datasetID, configDict=configDict, ParseData=vpData, debug=True)
 

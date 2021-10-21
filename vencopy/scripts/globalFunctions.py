@@ -9,7 +9,7 @@ __license__ = 'BSD-3-Clause'
 import pandas as pd
 import yaml
 from pathlib import Path
-
+import os
 
 def loadConfigDict(configNames: tuple):
     # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
@@ -27,6 +27,22 @@ def loadConfigDict(configNames: tuple):
             configDict[configName] = yaml.load(ipf, Loader=yaml.SafeLoader)
     return configDict
 
+def createOutputFolders(configDict: dict):
+    """
+    Function to crete vencopy output folder and subfolders
+
+    :param: config dictionary
+    :return: None
+    """
+    root = Path(configDict['localPathConfig']['pathAbsolute']['vencoPyRoot'])
+    mainDir = 'output'
+    if not os.path.exists(Path(root / mainDir)):
+        os.mkdir(Path(root / mainDir))
+    
+    subDirs =  ('dataParser', 'tripDiaryBuilder', 'gridModeler', 'flexEstimator', 'evaluator')
+    for subDir in subDirs:
+        if not os.path.exists(Path(root / mainDir / subDir)):
+            os.mkdir(Path(root / mainDir / subDir))
 
 def createFileString(globalConfig: dict, fileKey: str, datasetID: str=None, manualLabel: str = '',
                      filetypeStr: str = 'csv'):

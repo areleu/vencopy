@@ -1,17 +1,50 @@
 .. VencoPy documentation source file, created for sphinx
 
-.. _outputProfiles:
+.. _flexEstimator:
 
 
-Output Profiles
-=========================================
+FlexEstimator Class
+===================================
+
+Filtering Functionalities in FlexEstimator
+---------------------------------------------------
+
+In the following, filtering procedures in VencoPy for individual profiles are documented. Filtering occurs after
+the completion of the main calculation steps using selectors. These are calculated based only on the four flow-related 
+profiles (consumption, plugPower, uncontrolledCharge and auxilliaryFuelConsumption) in `calcProfileSelectors()` and 
+applied to both flow-profiles and state-profiles. 
+
+Four criteria are applied to select individual profiles that are eligible for load shifting.
+
+1.  Profiles that depend on auxilliary fuel are excluded. These are profiles where consumption is higher than available
+    battery SOC for at least one hour. This can also occur when vehicles drive only short distances but don't connect
+    to the grid sufficiently.
+    
+2.  A minimum daily mileage in km can be set in the non-profile data (per default VencoPy_scalarInput.xlsx) to filter 
+    out profiles where the mileage is below a specified threshold. In the shipped file, this value is set to 0. 
+
+3.  In case a fully charged battery does not suffice for the daily mileage of the respective profile, this profiles is
+    excluded.
+
+4.  Available charging throughout the day doesn't supply sufficient energy for the driven distance. This may occur even
+    though the profile is eligible from criteria 3 e.g. when connection is never possible. 
+
+
+
+FlexEstimator Input
+---------------------------------------------------
+
+
+
+FlexEstimator Output
+---------------------------------------------------
+
 
 
 This file documents the specifications of the output modules. This is important, because the output produced holds only
 numbers without any units. These specifications describes how these values can be interpreted when VencoPy is configured
 correctly. Different steps of filtering, aggregation, correction and normalization are performed for the six profiles.
-Thus, it is important to understand what the numbers in the output files refer to. For all examples we assume 18000 
-individual input profiles for illustrative purposes.
+Thus, it is important to understand what the numbers in the output files refer to. 
 
 *************
 Flow profiles
@@ -33,7 +66,7 @@ Calculation steps
 up of boolean values describing if the respective vehicle is connected to the grid (1, Yes, True) or not (0, No, False). 
 This hourly boolean profiles are multiplied with the charging capacity e.g. 3.7 kW for a simple home charger. 
 
-We're left with 18000 hourly profiles in kW. Functions: `calcChargeProfiles()  <file:///C:/vencopy_repo/build/functions.html#scripts.libProfileCalculation.calcChargeProfiles>`_ in the library `libProfileCalculation.py`.
+We're left with 18000 hourly profiles in kW. Functions: calcChargeProfiles()  in the library `libProfileCalculation.py`.
 
 2. The profiles are filtered according to a specified selector. If 1000 profiles don't fulfill the selection criteria,
 we're left with 17000 profiles still in hourly values of kW. Function: `filterConsProfiles()` in the library 
@@ -170,3 +203,4 @@ Maximum state-of-charge profile
 
 Minimum state-of-charge profile
 #################################################################
+
