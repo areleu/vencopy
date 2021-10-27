@@ -600,8 +600,8 @@ if __name__ == '__main__':
     configNames = ('globalConfig', 'localPathConfig', 'parseConfig', 'tripConfig', 'gridConfig', 'flexConfig', 'evaluatorConfig')
     configDict = loadConfigDict(configNames)
 
-    #datasetID = 'MiD17' #options are MiD08, MiD17, KiD
-    datasetID = 'KiD'
-    vpData = ParseKiD(configDict=configDict, datasetID=datasetID)
+    datasetID = 'MiD17' #options are MiD08, MiD17, KiD
+    #datasetID = 'KiD'
+    vpData = ParseMiD(configDict=configDict, datasetID=datasetID)
     #vpData = DataParser(configDict=configDict, loadEncrypted=False, datasetID=datasetID)
     vpData.process()
