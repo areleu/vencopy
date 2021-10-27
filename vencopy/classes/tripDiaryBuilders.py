@@ -117,7 +117,11 @@ class TripDiaryBuilder:
         numberOfDays = timedeltaTrip.apply(lambda x: x.components.days)
         minLeftFirstHour = pd.to_timedelta(60 - timestampStart.dt.minute, unit='m')
         hasFullHourAfterFirstHour = (timedeltaTrip - minLeftFirstHour) >= pd.Timedelta(1, unit='h')
+        # NEW FIX FOR OVERNIGHT / FIRST HOUR = FULL HOUR
+        # Count down the full hours where first hour is full hour AND the trip has at least one other full hour
+        countDown = ((minLeftFirstHour == pd.to_timedelta(60, unit='m')) & hasFullHourAfterFirstHour)
         numberOfHours = numberOfHours.where(hasFullHourAfterFirstHour, other=0)
+        numberOfHours = numberOfHours.where(~countDown, other=numberOfHours-1)
         return numberOfHours.where(numberOfDays != -1, other=0)
 
     def calcFullHourTripLength(self, duration: pd.Series, numberOfFullHours: pd.Series, tripLength: pd.Series) -> \
@@ -174,6 +178,7 @@ class TripDiaryBuilder:
                                            (tripDataWHourlyShares['noOfFullHours'] == 0)), :]
 
 
+    # DEPRECATED WILL BE REMOVED IN NEXT PATCH due to one-liner
     def initiateHourDataframe(self, indexCol, nHours: int) -> pd.DataFrame:
         """
         Sets up an empty dataframe to be filled with hourly data.
@@ -184,6 +189,7 @@ class TripDiaryBuilder:
         """
         return pd.DataFrame(index=indexCol, columns=range(nHours))
 
+    # DEPRECATED WILL BE REMOVED IN NEXT PATCH due to one-liner
     def fillDataframe(self, hourlyArray: pd.DataFrame, fillFunction) -> pd.DataFrame:
         return hourlyArray.apply(fillFunction, axis=1)
 
@@ -200,14 +206,21 @@ class TripDiaryBuilder:
 
     def initiateColRange(self, row: pd.Series):
         """
-        Returns a range object with start and end hour as limits
+        Returns a range object with start and end hour as limits describing only full hours e.g.
+        for a trip from 18:30 to 21:20 the hours 19 and 20 (21 will be included in the range but disregarded
+        in the following)
 
         :param row: A trip observation
-        :return:
+        :return: range of full hours
         """
+        nHours = self.globalConfig['numberOfHours']
         if row['tripStartHour'] + 1 < row['tripEndHour']:
-            return range(row['tripStartHour'] + 1, row['tripEndHour'])  # The hour of arrival (tripEndHour) will
-            # not be indexed further below but is part of the range() object
+            return range(row['tripStartHour'] + 1, row['tripEndHour'])
+            # The hour of arrival (tripEndHour) will not be indexed further below but is part of the range() object
+        elif row['tripEndNextDay'] and (row['tripStartHour'] < nHours-1 or row['tripStartMinute'] == 0):
+            lst = [iC for iC in range(0, row['tripEndHour'])]
+            return lst + [iC for iC in range(row['tripStartHour'], nHours)]
+
         else:
             return None
 
@@ -219,10 +232,13 @@ class TripDiaryBuilder:
         :return: Trip distance diary as a pd.DataFrame
         """
         print('Trip distance diary setup starting')
-        self.formatDF = self.initiateHourDataframe(indexCol=self.tripDataClean.index,
-                                                   nHours=globalConfig['numberOfHours'])
+        self.formatDF = pd.DataFrame(index=self.tripDataClean.index, columns=range(globalConfig['numberOfHours']))
         fillHourValues = FillHourValues(data=self.tripDataClean, rangeFunction=self.initiateColRange)
-        driveDataTrips = self.fillDataframe(self.formatDF, fillFunction=fillHourValues)
+        driveDataTrips = self.formatDF.apply(fillHourValues, axis=1)
+
+        # DEPRECATED
+        # driveDataTrips = self.fillDataframe(self.formatDF, fillFunction=fillHourValues)
+
         driveDataTrips.loc[:, ['genericID', 'tripID']] = pd.DataFrame(self.tripDataClean.loc[:, ['genericID',
                                                                                                  'tripID']])
         driveDataTrips = driveDataTrips.astype({'genericID': int, 'tripID': int})
@@ -407,14 +423,18 @@ class FillHourValues:
         self.endHour = data['tripEndHour']
         self.distanceEndHour = data['shareEndHour'] * data['tripDistance']
         self.fullHourCols = data.apply(rangeFunction, axis=1)
-        self.fullHourRange = data['fullHourTripLength']
+        self.fullHourRange = data['fullHourTripLength'] / data['noOfFullHours']
 
     def __call__(self, row):
         idx = row.name
+        # if np.isnan(row[self.startHour[idx]]):
         row[self.startHour[idx]] = self.distanceStartHour[idx]
+        # else:
+        #    row[self.startHour[idx]] = row[self.startHour[idx]] + self.distanceStartHour[idx]
+
         if self.endHour[idx] != self.startHour[idx]:
             row[self.endHour[idx]] = self.distanceEndHour[idx]
-        if isinstance(self.fullHourCols[idx], range):
+        if isinstance(self.fullHourCols[idx], range) or isinstance(self.fullHourCols[idx], list):
             row[self.fullHourCols[idx]] = self.fullHourRange[idx]
         return row
 
