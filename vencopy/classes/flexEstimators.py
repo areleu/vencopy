@@ -29,7 +29,7 @@ class FlexEstimator:
                  datasetID: str):
         """
         Class to estimate uncontrolled charging, electricity drain, grid connection, auxiliary fuel, SOC min and
-        SOC max profiles based on hourly driving and boolean grid connection profiles. Requires a .xlsx file specifying
+        SOC max profiles based on hourly driving and boolean grid connection profiles. Requires the flexConfig file specifying
         a global value for specific electric consumption (in kWh/ 100 km) and a global rated capacity of considered
         charging stations. Automatically compiles input file names from the filekeys "inputDataDriveProfiles" /
         "inputDataPlugProfiles", runlabel (as specified in globalConfig) and datasetID (as given on instantiation). The
@@ -121,7 +121,6 @@ class FlexEstimator:
         self.profileDictOut = {}
 
         print('Flex Estimator initialization complete')
-
 
 
     def readInputCSV(self, filePath) -> pd.DataFrame:
