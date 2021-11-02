@@ -6,6 +6,9 @@
 FlexEstimator Class
 ===================================
 
+.. image:: ../figures/IOflexEstimator.png
+   :width: 600
+
 Filtering Functionalities in FlexEstimator
 ---------------------------------------------------
 

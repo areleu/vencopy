@@ -6,6 +6,8 @@
 GridModeler Class
 ===================================
 
+.. image:: ../figures/IOgridModeler.png
+   :width: 600
 
 GridModeler Input
 ---------------------------------------------------

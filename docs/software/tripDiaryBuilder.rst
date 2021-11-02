@@ -6,11 +6,15 @@
 TripDiaryBuilder Class
 ===================================
 
+.. image:: ../figures/IOtripDiaryBuilder.png
+   :width: 600
 
 
 TripDiaryBuilder Input
 ---------------------------------------------------
+Config Files:
 
+Disk Files:
 
 
 TripDiaryBuilder Output
