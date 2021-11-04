@@ -11,10 +11,19 @@ GridModeler Class
 
 GridModeler Input
 ---------------------------------------------------
+Config File (gridConfig.yaml): 
+- chargingInfrastructureMappings (assigns True-False to the respective type of charging infrastucture)
 
 
 
 GridModeler Output
 ---------------------------------------------------
+Output Functions:
+- vpGrid = GridModeler(configDict=configDict, datasetID=datasetID)
+- vpGrid.assignSimpleGridViaPurposes()
+- vpGrid.writeOutGridAvailability()
+
+Disk File:
+- Hourly boolean dataset with plugging time fo all vehicles (.csv)
 
 
