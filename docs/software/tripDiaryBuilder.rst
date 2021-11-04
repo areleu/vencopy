@@ -7,22 +7,25 @@ TripDiaryBuilder Class
 ===================================
 
 .. image:: ../figures/IOtripDiaryBuilder.png
-   :width: 600
+   :width: 800
 
 
 TripDiaryBuilder Input
 ---------------------------------------------------
-Config File (tripConfig.yaml): currently empty.
+**Config File (tripConfig.yaml):** currently empty.
 
-VencoPy Classes:
-- DataParser class output
+**VencoPy Classes:**
+
+ * DataParser class output
 
 TripDiaryBuilder Output
 ---------------------------------------------------
-Output Functions:
-- vpDiary = TripDiaryBuilder(configDict=configDict, ParseData=vpData, datasetID=datasetID, debug=True)
+**Output Functions:**
+ 
+ * vpDiary = TripDiaryBuilder(configDict=configDict, ParseData=vpData, datasetID=datasetID, debug=True)
 
 
-Disk Files:
-- Hourly boolean dataset with parking and driving time fo all vehicles (.csv)
-- Hourly purpose dataset for all vehicles (.csv)
+**Disk Files:**
+
+ * Hourly boolean dataset with parking and driving time fo all vehicles (.csv)
+ * Hourly purpose dataset for all vehicles (.csv)

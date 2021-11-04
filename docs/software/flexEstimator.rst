@@ -7,37 +7,41 @@ FlexEstimator Class
 ===================================
 
 .. image:: ../figures/IOflexEstimator.png
-   :width: 600
+   :width: 800
 
 
 
 FlexEstimator Input
 ---------------------------------------------------
-Config File (flexConfig.yaml):
-- inputDataScalars (technical assumption related to the vehicles, e.g. battery size, specfic consumption,..)
+**Config File (flexConfig.yaml):**
 
-VencoPy Classes:
-- DataParser class output
+* inputDataScalars (technical assumption related to the vehicles, e.g. battery size, specfic consumption,..)
+
+**VencoPy Classes:**
+
+* DataParser class output
 
 
 FlexEstimator Output
 ---------------------------------------------------
-Output Functions:
-- vpFlex = FlexEstimator(configDict=configDict, datasetID=datasetID, ParseData=vpData)
-- vpFlex.baseProfileCalculation()
-- vpFlex.filter()
-- vpFlex.aggregate()
-- vpFlex.correct()
-- vpFlex.normalize()
-- vpFlex.writeOut()
+**Output Functions:**
 
-Disk Files:
-- Profile for connection capacity of the fleet `plugProfile`
-- Profile for uncontrolled charging `chargeProfileUncontrolled`
-- Profile for electric demand `electricPowerProfile`
-- Profile for additional fuel consumption `driveProfileFuelAux`
-- Minimum state-of-charge (SoC) battery profile `socMin`
-- Maximum state-of-charge (SoC) battery profile `socMax`
+* vpFlex = FlexEstimator(configDict=configDict, datasetID=datasetID, ParseData=vpData)
+* vpFlex.baseProfileCalculation()
+* vpFlex.filter()
+* vpFlex.aggregate()
+* vpFlex.correct()
+* vpFlex.normalize()
+* vpFlex.writeOut()
+
+**Disk Files:**
+
+* Profile for connection capacity of the fleet `plugProfile`
+* Profile for uncontrolled charging `chargeProfileUncontrolled`
+* Profile for electric demand `electricPowerProfile`
+* Profile for additional fuel consumption `driveProfileFuelAux`
+* Minimum state-of-charge (SoC) battery profile `socMin`
+* Maximum state-of-charge (SoC) battery profile `socMax`
  
 
 Output Profiles
@@ -62,6 +66,8 @@ This profile represents the hourly maximum charging capacity of the electric veh
 higher than this profile but may be lower since not all charging stations run on full capacity or it is attractive for
 balancing renewable feed-in to not charge at full capacity. Currently, only one charging capacity per run of VencoPy can
 be taken into account. 
+
+**Units:** Profiles can be either in power units [kW], defined as share of the overall vehicle fleet.
 
 Calculation steps
 *************************
@@ -94,6 +100,8 @@ For each individual trip and plug profile, one uncontrolled charging profile is 
 flow of the grid to the battery under the assumption that the battery is fully charged at beginning of the day. If the 
 battery SOC decreases through a trip and the vehicle is connected to the grid, charging occurs with full capacity until
 the battery is fully charged. 
+
+**Units:** Profiles can be either in power units [kW] or hourly percentages of the annual demand.
 
 Calculation steps
 *************************
@@ -134,6 +142,8 @@ the battery to the electric motor for the purpose of propulsion of the vehicle. 
 consumption profile, a potential additional fuel demand for longer trips than feasible with the assumed battery capacity
 is subtracted to result in the purely electric consumption.
 
+**Units:** Profiles can be either in power units [kW] or hourly percentages of the annual demand.
+
 Calculation steps
 *************************
 
@@ -169,6 +179,9 @@ General description
 This profile gives hourly values for fuel consumption in case a trip and plug profile cannot be supplied only from the 
 vehicle battery. This profile is given in units of l of the specified fuel. 
 
+**Units:** Profiles are in [unit].
+
+
 Calculation steps
 *************************
 
@@ -203,9 +216,15 @@ State Profiles
 
 Maximum state-of-charge profile `socMax`
 #################################################################
+Time series containing the maximum energy level of the vehicle batteries. 
+
+**Units:** Profiles can be either in energy units [kWh] or relative to the battery capacity.
 
 Minimum state-of-charge profile `socMin`
 #################################################################
+Time series containing the minimum energy level of the vehicle batteries. 
+
+**Units:** Profiles can be either in energy units [kWh] or relative to the battery capacity.
 
 Filtering Functionalities in FlexEstimator
 ---------------------------------------------------

@@ -81,7 +81,7 @@ python run.py
 and enjoy the tool!
 
 
-Installation for developpers
+Installation for developers
 -------------------------------------
 
 This part of the documentation holds a step-by-step installation guide for VencoPy. 
