@@ -67,7 +67,7 @@ higher than this profile but may be lower since not all charging stations run on
 balancing renewable feed-in to not charge at full capacity. Currently, only one charging capacity per run of VencoPy can
 be taken into account. 
 
-**Units:** Profiles can be either in power units [kW], defined as share of the overall vehicle fleet.
+**Units:** Profiles are in power units [kW], defined as share of the overall vehicle fleet.
 
 Calculation steps
 *************************
