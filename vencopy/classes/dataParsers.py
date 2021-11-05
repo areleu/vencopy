@@ -385,8 +385,14 @@ class DataParser:
             dat = self.data
             self.data = dat.loc[(dat['tripStartClock'] <= dat['tripEndClock']) | (dat['tripEndNextDay'] == 1), :]
             # If we want to get rid of tripStartClock and tripEndClock (they are redundant variables)
-            # self.data = dat.loc[pd.to_datetime(dat.loc[:, 'tripStartHour']) <= pd.to_datetime(dat.loc[:, 'tripEndHour']) |
-            #                     (dat['tripEndNextDay'] == 1), :]
+            # self.data = dat.loc[pd.to_datetime(dat.loc[:, 'tripStartHour']) <= pd.to_datetime(dat.loc[:,
+            # 'tripEndHour']) | (dat['tripEndNextDay'] == 1), :]
+            filter = (self.data.loc[:, 'tripStartHour'] == self.data.loc[:, 'tripEndHour']) & \
+                     (self.data.loc[:, 'tripStartMinute'] == self.data.loc[:, 'tripEndMinute']) & \
+                     (self.data.loc[:, 'tripEndNextDay'])
+
+            self.data = self.data.loc[~filter, :]
+
 
     def addStrColumnFromVariable(self, colName: str, varName: str):
         """

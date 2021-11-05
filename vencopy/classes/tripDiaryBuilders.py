@@ -51,9 +51,9 @@ class TripDiaryBuilder:
         else:
             self.tripDataClean = self.calculateConsistentHourlyShares(data=ParseData.data)
         self.tripDistanceDiary = self.tripDistanceAllocation(globalConfig=self.globalConfig)
-        self.tripPurposeAllocation()
-        self.writeOut(globalConfig=self.globalConfig, datasetID=datasetID, dataDrive=self.tripDistanceDiary,
-                      dataPurpose=self.tripPurposeDiary)
+        # self.tripPurposeAllocation()
+        # self.writeOut(globalConfig=self.globalConfig, datasetID=datasetID, dataDrive=self.tripDistanceDiary,
+                      # dataPurpose=self.tripPurposeDiary)
 
     def tripDuration(self, timestampStart: np.datetime64, timestampEnd: np.datetime64) -> np.datetime64:
         return timestampEnd - timestampStart
@@ -113,15 +113,19 @@ class TripDiaryBuilder:
         :return: Returns a data frame of number of full hours of all trips
         """
         timedeltaTrip = timestampEnd - timestampStart
-        numberOfHours = timedeltaTrip.apply(lambda x: x.components.hours)
+        numberOfHours = timestampEnd.dt.hour - (timestampStart.dt.hour + 1)
+        # DEPRECATED
+        #numberOfHours = timedeltaTrip.apply(lambda x: x.components.hours)
         numberOfDays = timedeltaTrip.apply(lambda x: x.components.days)
         minLeftFirstHour = pd.to_timedelta(60 - timestampStart.dt.minute, unit='m')
         hasFullHourAfterFirstHour = (timedeltaTrip - minLeftFirstHour) >= pd.Timedelta(1, unit='h')
         # NEW FIX FOR OVERNIGHT / FIRST HOUR = FULL HOUR
         # Count down the full hours where first hour is full hour AND the trip has at least one other full hour
-        countDown = ((minLeftFirstHour == pd.to_timedelta(60, unit='m')) & hasFullHourAfterFirstHour)
+        # countDown = ((minLeftFirstHour == pd.to_timedelta(60, unit='m')) & hasFullHourAfterFirstHour)
+
+        numberOfHours = numberOfHours.where(numberOfHours > 0, other=0)
         numberOfHours = numberOfHours.where(hasFullHourAfterFirstHour, other=0)
-        numberOfHours = numberOfHours.where(~countDown, other=numberOfHours-1)
+        # numberOfHours = numberOfHours.where(~countDown, other=numberOfHours-1)
         return numberOfHours.where(numberOfDays != -1, other=0)
 
     def calcFullHourTripLength(self, duration: pd.Series, numberOfFullHours: pd.Series, tripLength: pd.Series) -> \
@@ -154,7 +158,8 @@ class TripDiaryBuilder:
         duration = self.tripDuration(data.loc[:, ts_st], data.loc[:, ts_en])
         data.loc[:, 'shareStartHour'], data.loc[:, 'shareEndHour'] = self.calcDistanceShares(data, duration, ts_st,
                                                                                              ts_en)
-        data.loc[:, 'noOfFullHours'] = self.numberOfFullHours(data.loc[:, ts_st], data.loc[:, ts_en])
+        data.loc[:, 'noOfFullHours'] = self.numberOfFullHours(timestampStart=data.loc[:, ts_st],
+                                                              timestampEnd=data.loc[:, ts_en])
         data.loc[:, 'fullHourTripLength'] = self.calcFullHourTripLength(duration, data.loc[:, 'noOfFullHours'],
                                                                         data.loc[:, 'tripDistance'])
         return data
@@ -219,7 +224,7 @@ class TripDiaryBuilder:
             # The hour of arrival (tripEndHour) will not be indexed further below but is part of the range() object
         elif row['tripEndNextDay'] and (row['tripStartHour'] < nHours-1 or row['tripStartMinute'] == 0):
             lst = [iC for iC in range(0, row['tripEndHour'])]
-            return lst + [iC for iC in range(row['tripStartHour'], nHours)]
+            return lst + [iC for iC in range(row['tripStartHour'] + 1, nHours)]
 
         else:
             return None
@@ -423,7 +428,8 @@ class FillHourValues:
         self.endHour = data['tripEndHour']
         self.distanceEndHour = data['shareEndHour'] * data['tripDistance']
         self.fullHourCols = data.apply(rangeFunction, axis=1)
-        self.fullHourRange = data['fullHourTripLength'] / data['noOfFullHours']
+        #self.fullHourRange = data['fullHourTripLength'] / data['noOfFullHours']
+        self.fullHourRange = data['fullHourTripLength']
 
     def __call__(self, row):
         idx = row.name
@@ -435,7 +441,7 @@ class FillHourValues:
         if self.endHour[idx] != self.startHour[idx]:
             row[self.endHour[idx]] = self.distanceEndHour[idx]
         if isinstance(self.fullHourCols[idx], range) or isinstance(self.fullHourCols[idx], list):
-            row[self.fullHourCols[idx]] = self.fullHourRange[idx]
+            row[self.fullHourCols[idx]] = self.fullHourRange[idx] / len(self.fullHourCols[idx])
         return row
 
 
