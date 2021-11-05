@@ -24,8 +24,7 @@ Welcome to VencoPy's documentation!
 
 
 A data processing tool offering hourly demand and flexibility profiles for future electric vehicle fleets in an aggregated manner.
-VencoPy is developed at the department of Energy Systems Analysis at the German Aerospace Center (DLR).
-
+VencoPy is developed at the `Department of Energy Systems Analysis <https://www.dlr.de/ve/en/desktopdefault.aspx/tabid-15971/25909_read-66550/>`_ at the `German Aerospace Center (DLR) <https://www.dlr.de/EN/Home/home_node.html>`_.
 
 
 About
