@@ -19,7 +19,6 @@ import warnings
 import math
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
 from random import seed, random
 
 from vencopy.scripts.globalFunctions import createFileString, mergeVariables, calculateWeightedAverage, \
@@ -491,6 +490,28 @@ class FlexEstimator:
             devCrit = chargeMaxProfiles[nHours - 1].sum() - chargeMaxProfiles[0].sum()
             print(devCrit)
 
+        #VEP calculation- Natur energy Wei et al.
+        # self.SOC = chargeMaxProfiles.copy()
+        # for idxIt in range(1):
+        #     print(f'Starting with iteration {idxIt}')
+        #     for iHour in range(nHours):
+        #         if iHour == 0:
+        #             self.SOC[iHour] = chargeMaxProfiles[iHour].where((chargeMaxProfiles[iHour] - chargeMaxProfiles[nHours-1] < 0), batCapMax)
+        #         else:
+        #             self.SOC[iHour] = chargeMaxProfiles[iHour].where((chargeMaxProfiles[iHour] - chargeMaxProfiles[iHour-1] < 0), batCapMax)
+        # self.SOC.drop(labels='newCharge', axis=1, inplace=True)
+        #
+        # soc = pd.Series()
+        # for idxIt in range(1):
+        #     print(f'Starting with iteration {idxIt}')
+        #     for iHour in range(nHours):
+        #         if iHour == 0:
+        #             soc = soc.append(self.SOC[iHour], ignore_index=True)
+        #         else:
+        #             soc = soc.append(self.SOC[iHour], ignore_index=True)
+        # i = soc[soc == batCapMax].index
+        # soc.drop(labels=i, inplace=True)
+        # self.soc = soc.copy()
         chargeMaxProfiles.drop(labels='newCharge', axis='columns', inplace=True)
         return chargeMaxProfiles
 
@@ -626,14 +647,14 @@ class FlexEstimator:
         self.chargeProfiles = self.calcChargeProfiles(plugProfiles=self.plugProfiles, flexConfig=self.flexConfig,
                                                       model='distribution') #model: 'simpleGrid', 'distribution'
         self.chargeMaxProfiles = self.calcChargeMaxProfiles(chargeProfiles=self.chargeProfiles,
-                                                            consumptionProfiles=self.drainProfiles, nIter=20,
+                                                            consumptionProfiles=self.drainProfiles, nIter=15,
                                                             batCap=self.flexConfig['inputDataScalars'][self.datasetID][
                                                                 'Battery_capacity'],
                                                             minSOC=self.flexConfig['inputDataScalars'][self.datasetID][
                                                                 'Minimum_SOC'],
                                                             maxSOC=self.flexConfig['inputDataScalars'][self.datasetID][
                                                                 'Maximum_SOC'],
-                                                            probabilisticPlug=False, discretePlug=True)
+                                                            probabilisticPlug=False, discretePlug=False)
         # self.connectionType = self.assignConnectionType()
         self.chargeProfilesUncontrolled = self.calcChargeProfilesUncontrolled(chargeMaxProfiles=self.chargeMaxProfiles,
                                                                               scalarsProc=self.scalarsProc)

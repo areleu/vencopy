@@ -16,6 +16,7 @@ if __package__ is None or __package__ == '':
 
 
 import pandas as pd
+import numpy as np
 from vencopy.classes.dataParsers import DataParser
 from vencopy.classes.tripDiaryBuilders import TripDiaryBuilder
 from vencopy.classes.gridModelers import GridModeler
@@ -31,6 +32,7 @@ if __name__ == '__main__':
 
     configNames = ('globalConfig', 'localPathConfig', 'parseConfig', 'tripConfig', 'gridConfig', 'flexConfig', 'evaluatorConfig')
     configDict = loadConfigDict(configNames)
+    flexConfig = configDict['flexConfig']
 
     vpData = DataParser(datasetID=datasetID, configDict=configDict, loadEncrypted=False)
     vpData.process()
@@ -47,6 +49,20 @@ if __name__ == '__main__':
     vpEval.hourlyAggregates = vpEval.calcVariableSpecAggregates(by=['tripStartWeekday'])
     vpEval.plotAggregates()
 
+    # cumSumAgg = pd.Series()
+    # for i in range(10, 210, 10):
+    #     flexConfig['inputDataScalars'][datasetID]['Battery_capacity'] += 10
+    #     vpFlex = FlexEstimator(configDict=configDict, datasetID=datasetID, ParseData=vpData,
+    #                            transactionStartHour=vpGrid.transactionStartHour)
+    #     vpFlex.baseProfileCalculation()
+    #     batCap = vpFlex.soc
+    #     batCap.reset_index(drop=True, inplace=True)
+    #     vencoPyBatCap = flexConfig['inputDataScalars'][datasetID]['Battery_capacity']
+    #     xThreshold = pd.Series(np.where(batCap > (0.2 * vencoPyBatCap), 1, 0))
+    #     cumSum = pd.Series(xThreshold.sum()/len(batCap), index=[vencoPyBatCap])
+    #
+    #     cumSumAgg = cumSumAgg.append(cumSum)
+    #     cumSumAgg
     # Estimate charging flexibility based on driving profiles and charge connection
     vpFlex = FlexEstimator(configDict=configDict, datasetID=datasetID, ParseData=vpData,
                            transactionStartHour=vpGrid.transactionStartHour)
