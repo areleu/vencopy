@@ -128,7 +128,8 @@ class TripDiaryBuilder:
         # numberOfHours = numberOfHours.where(~countDown, other=numberOfHours-1)
         return numberOfHours.where(numberOfDays != -1, other=0)
 
-    def calcFullHourTripLength(self, duration: pd.Series, numberOfFullHours: pd.Series, tripLength: pd.Series) -> \
+    def calcFullHourTripLength(self, duration: pd.Series, numberOfFullHours: pd.Series, tripLength: pd.Series,
+                               shareStartHour:pd.Series, shareEndHour: pd.Series) -> \
             pd.Series:
         """
         Calculates the share of the full trip hours. E.g. the fullHourTripLength of a trip starting at 1:45 and ending
@@ -140,9 +141,11 @@ class TripDiaryBuilder:
         :return: Returns a Series of full hour trip lengths for all trips
         """
 
-        fullHourTripLength = (numberOfFullHours / (duration.dt.seconds / 3600)) * tripLength
+        # fullHourTripLength = (numberOfFullHours / (duration.dt.seconds / 3600)) * tripLength
+        fullHourTripShare = 1 - (shareStartHour + shareEndHour)
+        fullHourTripLength = fullHourTripShare * tripLength
         fullHourTripLength.loc[duration == pd.Timedelta(0)] = 0  # set trip length to 0 that would otherwise be NaN
-        return fullHourTripLength
+        return fullHourTripShare, fullHourTripLength
 
     def calcHourlyShares(self, data: pd.DataFrame, ts_st: str, ts_en: str) -> pd.DataFrame:
         """
@@ -160,8 +163,9 @@ class TripDiaryBuilder:
                                                                                              ts_en)
         data.loc[:, 'noOfFullHours'] = self.numberOfFullHours(timestampStart=data.loc[:, ts_st],
                                                               timestampEnd=data.loc[:, ts_en])
-        data.loc[:, 'fullHourTripLength'] = self.calcFullHourTripLength(duration, data.loc[:, 'noOfFullHours'],
-                                                                        data.loc[:, 'tripDistance'])
+        data.loc[:, 'fullHourTripShare'], data.loc[:, 'fullHourTripLength'] = \
+            self.calcFullHourTripLength(duration, data.loc[:, 'noOfFullHours'], data.loc[:, 'tripDistance'],
+                                        data.loc[:, 'shareStartHour'], data.loc[:, 'shareEndHour'])
         return data
 
     def calculateConsistentHourlyShares(self, data: pd.DataFrame):
@@ -222,7 +226,7 @@ class TripDiaryBuilder:
         if row['tripStartHour'] + 1 < row['tripEndHour']:
             return range(row['tripStartHour'] + 1, row['tripEndHour'])
             # The hour of arrival (tripEndHour) will not be indexed further below but is part of the range() object
-        elif row['tripEndNextDay'] and (row['tripStartHour'] < nHours-1 or row['tripStartMinute'] == 0):
+        elif row['tripEndNextDay'] and (row['tripStartHour'] <= nHours-1 or row['tripStartMinute'] == 0):
             lst = [iC for iC in range(0, row['tripEndHour'])]
             return lst + [iC for iC in range(row['tripStartHour'] + 1, nHours)]
 
