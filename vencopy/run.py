@@ -37,7 +37,7 @@ if __name__ == '__main__':
     vpData = DataParser(datasetID=datasetID, configDict=configDict, loadEncrypted=False)
     vpData.process()
     # Trip distance and purpose diary compositions
-    vpTripDiary = TripDiaryBuilder(datasetID=datasetID,configDict=configDict, ParseData=vpData, debug=True)
+    vpTripDiary = TripDiaryBuilder(datasetID=datasetID,configDict=configDict, ParseData=vpData, debug=False)
 
     # Grid model applications
     vpGrid = GridModeler(configDict=configDict, datasetID=datasetID,
@@ -50,19 +50,22 @@ if __name__ == '__main__':
     vpEval.plotAggregates()
 
     # cumSumAgg = pd.Series()
+    # a = pd.Series()
     # for i in range(10, 210, 10):
     #     flexConfig['inputDataScalars'][datasetID]['Battery_capacity'] += 10
+    #     vencoPyBatCap = flexConfig['inputDataScalars'][datasetID]['Battery_capacity']
     #     vpFlex = FlexEstimator(configDict=configDict, datasetID=datasetID, ParseData=vpData,
     #                            transactionStartHour=vpGrid.transactionStartHour)
     #     vpFlex.baseProfileCalculation()
-    #     batCap = vpFlex.soc
-    #     batCap.reset_index(drop=True, inplace=True)
-    #     vencoPyBatCap = flexConfig['inputDataScalars'][datasetID]['Battery_capacity']
-    #     xThreshold = pd.Series(np.where(batCap > (0.2 * vencoPyBatCap), 1, 0))
-    #     cumSum = pd.Series(xThreshold.sum()/len(batCap), index=[vencoPyBatCap])
+    #     VEP = pd.Series(vpFlex.VEP, index=[vencoPyBatCap])
+    #     # batCap.reset_index(drop=True, inplace=True)
     #
-    #     cumSumAgg = cumSumAgg.append(cumSum)
+    #     # xThreshold = pd.Series(np.where(batCap > (0.2 * vencoPyBatCap), 1, 0))
+    #     # cumSum = pd.Series(xThreshold.sum()/len(batCap), index=[vencoPyBatCap])
+    #
+    #     cumSumAgg = cumSumAgg.append(VEP)
     #     cumSumAgg
+
     # Estimate charging flexibility based on driving profiles and charge connection
     vpFlex = FlexEstimator(configDict=configDict, datasetID=datasetID, ParseData=vpData,
                            transactionStartHour=vpGrid.transactionStartHour)
@@ -72,5 +75,7 @@ if __name__ == '__main__':
     vpFlex.correct()
     vpFlex.normalize()
     vpFlex.writeOut()
+    print(f'Total absolute electricity charged in uncontrolled charging: '
+          f'{vpFlex.chargeProfilesUncontrolled.sum().sum()} based on MiD17')
 
     vpEval.plotProfiles(flexEstimator=vpFlex)

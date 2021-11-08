@@ -118,7 +118,7 @@ class TripDiaryBuilder:
         numberOfHours = numberOfHours.where(hasFullHourAfterFirstHour, other=0)
         return numberOfHours.where(numberOfDays != -1, other=0)
 
-    def calcFullHourTripLength(self, duration: pd.Series, numberOfFullHours: pd.Series, tripLength: pd.Series) -> \
+    def calcFullHourTripLength(self, duration: pd.Series, tripLength: pd.Series, startHourShare, endHourShare) -> \
             pd.Series:
         """
         Calculates the share of the full trip hours. E.g. the fullHourTripLength of a trip starting at 1:45 and ending
@@ -130,7 +130,8 @@ class TripDiaryBuilder:
         :return: Returns a Series of full hour trip lengths for all trips
         """
 
-        fullHourTripLength = (numberOfFullHours / (duration.dt.seconds / 3600)) * tripLength
+        # fullHourTripLength = (numberOfFullHours / (duration.dt.seconds / 3600)) * tripLength
+        fullHourTripLength = (1 - (startHourShare+endHourShare))*tripLength
         fullHourTripLength.loc[duration == pd.Timedelta(0)] = 0  # set trip length to 0 that would otherwise be NaN
         return fullHourTripLength
 
@@ -149,8 +150,10 @@ class TripDiaryBuilder:
         data.loc[:, 'shareStartHour'], data.loc[:, 'shareEndHour'] = self.calcDistanceShares(data, duration, ts_st,
                                                                                              ts_en)
         data.loc[:, 'noOfFullHours'] = self.numberOfFullHours(data.loc[:, ts_st], data.loc[:, ts_en])
-        data.loc[:, 'fullHourTripLength'] = self.calcFullHourTripLength(duration, data.loc[:, 'noOfFullHours'],
-                                                                        data.loc[:, 'tripDistance'])
+        data.loc[:, 'fullHourTripLength'] = self.calcFullHourTripLength(duration,
+                                                                        data.loc[:, 'tripDistance'],
+                                                                        data.loc[:, 'shareStartHour'],
+                                                                        data.loc[:, 'shareEndHour'])
         return data
 
     def calculateConsistentHourlyShares(self, data: pd.DataFrame):
@@ -203,9 +206,19 @@ class TripDiaryBuilder:
         :param row: A trip observation
         :return:
         """
+        # if row['tripStartHour'] + 1 < row['tripEndHour']:
+        #     return range(row['tripStartHour'] + 1, row['tripEndHour'])  # The hour of arrival (tripEndHour) will
+        #     # not be indexed further below but is part of the range() object
+        # else:
+        #     return None
+        nHours = self.globalConfig['numberOfHours']
         if row['tripStartHour'] + 1 < row['tripEndHour']:
-            return range(row['tripStartHour'] + 1, row['tripEndHour'])  # The hour of arrival (tripEndHour) will
-            # not be indexed further below but is part of the range() object
+            return range(row['tripStartHour'] + 1, row['tripEndHour'])
+            # The hour of arrival (tripEndHour) will not be indexed further below but is part of the range() object
+        elif row['tripEndNextDay'] and (row['tripStartHour'] < nHours - 1 or row['tripStartMinute'] == 0):
+            lst = [iC for iC in range(0, row['tripEndHour'])]
+            return lst + [iC for iC in range(row['tripStartHour'] + 1, nHours)]
+
         else:
             return None
 
@@ -411,8 +424,8 @@ class FillHourValues:
         row[self.startHour[idx]] = self.distanceStartHour[idx]
         if self.endHour[idx] != self.startHour[idx]:
             row[self.endHour[idx]] = self.distanceEndHour[idx]
-        if isinstance(self.fullHourCols[idx], range):
-            row[self.fullHourCols[idx]] = self.fullHourRange[idx]
+        if isinstance(self.fullHourCols[idx], range) or isinstance(self.fullHourCols[idx], list):
+            row[self.fullHourCols[idx]] = self.fullHourRange[idx]/ len(self.fullHourCols[idx])
         return row
 
 
@@ -427,4 +440,4 @@ if __name__ == '__main__':
     configDict = loadConfigDict(configNames)
     vpData = DataParser(configDict=configDict, loadEncrypted=False, datasetID=datasetID)
     vpData.process()
-    vpDiary = TripDiaryBuilder(configDict=configDict, ParseData=vpData, datasetID=datasetID, debug=True)
+    vpDiary = TripDiaryBuilder(configDict=configDict, ParseData=vpData, datasetID=datasetID, debug=False)

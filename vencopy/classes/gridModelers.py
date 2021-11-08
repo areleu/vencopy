@@ -85,7 +85,7 @@ class GridModeler:
         fastChargingHHID = driveProfiles.loc[driveProfiles].index.tolist()
         return fastChargingHHID
 
-    def assignGridViaProbabilities(self, gridAvailability: dict, nIter:int, setSeed:int):  # fastChargingHHID: list,
+    def assignGridViaProbabilities(self, gridAvailability:dict, nIter:int, setSeed:int):  # fastChargingHHID: list,
         """
         :param gridAvailability: Dictionary specifying the probability of different charging powers at different parking
             purposes
@@ -173,7 +173,6 @@ class GridModeler:
                             self.chargeAvailability[iHour] = unequalPurposePower.append(equalPurposePower).sort_index()
 
                     elif 20 <= iHour <= 23:
-                        print('I am' + str(iHour))
                         if iHour == 20:
                             self.homePower = self.homePower.append(self.chargeAvailability[6].where(
                                 self.purposeData[6] == 'HOME', np.nan).dropna())
@@ -273,30 +272,6 @@ class GridModeler:
         #         return power
         #     prob_min = prob_max
 
-    def allocatePowerViaProbabilitiesDay(self, purpose: pd.Series, gridAvailabilityDay: dict):
-        """
-        Assigns a random number between 0 and 1 for all the purposes, and allots a charging station according to the
-        probability distribution
-
-        :param purpose: Purpose of each hour of a trip
-        :param gridAvailability: Dictionary specifying the probability of different charging powers at different parking
-            purposes
-        :return: Returns a charging capacity for a purpose
-        """
-        for genericID, tripPurpose in purpose.items():
-            if genericID == 10017721 and tripPurpose == 'OTHER':
-                print('I am '+str(genericID))
-            rnd = np.random.random_sample()
-            prob_min = 0
-            for index, (iPow, iProb) in enumerate(gridAvailabilityDay[tripPurpose].items()):
-                prob_max = prob_min + iProb
-                if prob_min <= rnd <= prob_max:
-                    power = iPow
-                    purpose.loc[genericID] = power
-                    break
-                prob_min = prob_max
-        return purpose
-
     def writeOutGridAvailability(self):
         """
            Function to write out the boolean charging station availability for each vehicle in each hour to the output
@@ -378,21 +353,6 @@ class GridModeler:
         self.transactionStartHour = pd.DataFrame(columns=self.plugProfile.columns)
         self.plugProfile.columns = self.plugProfile.columns.astype(int)
         nHours = len(self.transactionStartHour.columns)
-        # for genericID, row in self.transactionStartHour.iterrows():
-        #     capacity = row.copy()
-        #     for iHour in range(0, len(row)):
-        #         if iHour == 0:
-        #             if capacity[iHour] > capacity[nHours-1]:
-        #                 row[iHour] = True
-        #             else:
-        #                 row[iHour] = False
-        #         elif iHour > 0:
-        #             if capacity[iHour] > capacity[iHour-1]:
-        #                 row[iHour] = True
-        #             else:
-        #                 row[iHour] = False
-        #     self.transactionStartHour.loc[genericID] = row
-
         for idxIt in range(nIter):
             for iHour in range(nHours):
                 if iHour == 0:

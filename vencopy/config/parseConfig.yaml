@@ -38,6 +38,7 @@ dataVariables:
     tripEndMinute: ['en_min', 'W_AZM', 'NA']
     tripEndNextDay: ['en_dat', 'W_FOLGETAG', 'NA']
     tripIsIntermodal: ['NA', 'weg_intermod', 'NA']
+    tripState: ['NA', 'BLAND', 'NA', 'NA']
     #    tripStartLocation: [ 'NA', 'KKZ_SO' ]
     #    tripEndLocation: [ 'NA', 'KKZ_ZO' ]
 
@@ -119,6 +120,7 @@ filterDicts:
     MiD17:
         include:
             isMIVDriver: [1]
+#            tripState: [5]
         exclude:
             tripStartHour: [99, 701]
             tripEndHour: [99, 701]

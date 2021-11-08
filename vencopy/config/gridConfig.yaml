@@ -87,7 +87,7 @@ gridAvailabilityDistribution:  # Grid model 3: Probabilities given for each loca
     'OTHER':
         11: 0.20
         22: 0.10
-        0: 70
+        0: 0.70
     '0.0':
         0: 1
 

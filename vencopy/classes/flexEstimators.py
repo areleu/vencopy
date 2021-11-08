@@ -490,28 +490,42 @@ class FlexEstimator:
             devCrit = chargeMaxProfiles[nHours - 1].sum() - chargeMaxProfiles[0].sum()
             print(devCrit)
 
-        #VEP calculation- Natur energy Wei et al.
+        #VEP calculation- Nature energy Wei et al.
         # self.SOC = chargeMaxProfiles.copy()
         # for idxIt in range(1):
         #     print(f'Starting with iteration {idxIt}')
         #     for iHour in range(nHours):
         #         if iHour == 0:
-        #             self.SOC[iHour] = chargeMaxProfiles[iHour].where((chargeMaxProfiles[iHour] - chargeMaxProfiles[nHours-1] < 0), batCapMax)
+        #             self.SOC[iHour] = chargeMaxProfiles[iHour].where((chargeMaxProfiles[iHour] -
+        #                                                               chargeMaxProfiles[nHours-1] < 0), batCapMax)
         #         else:
-        #             self.SOC[iHour] = chargeMaxProfiles[iHour].where((chargeMaxProfiles[iHour] - chargeMaxProfiles[iHour-1] < 0), batCapMax)
+        #             self.SOC[iHour] = chargeMaxProfiles[iHour].where((chargeMaxProfiles[iHour] -
+        #                                                               chargeMaxProfiles[iHour-1] < 0), batCapMax)
         # self.SOC.drop(labels='newCharge', axis=1, inplace=True)
-        #
-        # soc = pd.Series()
+        # self.SOC.replace(batCapMax, 0, inplace=True)
+        # countTrips= self.SOC.copy()
         # for idxIt in range(1):
-        #     print(f'Starting with iteration {idxIt}')
         #     for iHour in range(nHours):
         #         if iHour == 0:
-        #             soc = soc.append(self.SOC[iHour], ignore_index=True)
+        #             countTrips[iHour] = np.where(countTrips[iHour] > 0, 1, 0)
         #         else:
-        #             soc = soc.append(self.SOC[iHour], ignore_index=True)
-        # i = soc[soc == batCapMax].index
-        # soc.drop(labels=i, inplace=True)
-        # self.soc = soc.copy()
+        #             countTrips[iHour] = np.where(countTrips[iHour] > 0, 1, 0)
+        # countTrips = countTrips.sum(axis=1)
+        #
+        # for idxIt in range(1):
+        #     for iHour in range(nHours):
+        #         if iHour == 0:
+        #             self.SOC[iHour] = np.where(self.SOC[iHour] > (0.2*batCapMax), 1, 0)
+        #         else:
+        #             self.SOC[iHour] = np.where(self.SOC[iHour] > (0.2 * batCapMax), 1, 0)
+        # self.SOC = self.SOC.sum(axis=1)
+        # soc = pd.Series(np.where((countTrips == 0) & (self.SOC == 0), 0, 1), index=self.SOC.index)
+        # soc = soc.drop(soc[soc == 0].index)
+        # self.SOC = self.SOC[soc.index]
+        # countTrips = countTrips[soc.index]
+        # electrifiedDays = pd.Series(np.where(countTrips == self.SOC, 1, 0))
+        #
+        # self.VEP = electrifiedDays.sum()/len(countTrips)
         chargeMaxProfiles.drop(labels='newCharge', axis='columns', inplace=True)
         return chargeMaxProfiles
 
@@ -647,7 +661,7 @@ class FlexEstimator:
         self.chargeProfiles = self.calcChargeProfiles(plugProfiles=self.plugProfiles, flexConfig=self.flexConfig,
                                                       model='distribution') #model: 'simpleGrid', 'distribution'
         self.chargeMaxProfiles = self.calcChargeMaxProfiles(chargeProfiles=self.chargeProfiles,
-                                                            consumptionProfiles=self.drainProfiles, nIter=15,
+                                                            consumptionProfiles=self.drainProfiles, nIter=10,
                                                             batCap=self.flexConfig['inputDataScalars'][self.datasetID][
                                                                 'Battery_capacity'],
                                                             minSOC=self.flexConfig['inputDataScalars'][self.datasetID][

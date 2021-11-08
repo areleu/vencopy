@@ -469,6 +469,7 @@ class DataParser:
 
         """
         self.data['genericID'] = self.data[str(self.parseConfig['IDVariablesNames'][self.datasetID])]
+        # self.data['tripDistance'] = 0.62 * self.data['tripDistance']
         print('Finished harmonization of ID variables')
 
     def process(self):
