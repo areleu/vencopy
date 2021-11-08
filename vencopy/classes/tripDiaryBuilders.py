@@ -51,9 +51,9 @@ class TripDiaryBuilder:
         else:
             self.tripDataClean = self.calculateConsistentHourlyShares(data=ParseData.data)
         self.tripDistanceDiary = self.tripDistanceAllocation(globalConfig=self.globalConfig)
-        # self.tripPurposeAllocation()
-        # self.writeOut(globalConfig=self.globalConfig, datasetID=datasetID, dataDrive=self.tripDistanceDiary,
-                      # dataPurpose=self.tripPurposeDiary)
+        #self.tripPurposeAllocation()
+        #self.writeOut(globalConfig=self.globalConfig, datasetID=datasetID, dataDrive=self.tripDistanceDiary,
+                     #dataPurpose=self.tripPurposeDiary)
 
     def tripDuration(self, timestampStart: np.datetime64, timestampEnd: np.datetime64) -> np.datetime64:
         return timestampEnd - timestampStart
@@ -226,10 +226,13 @@ class TripDiaryBuilder:
         if row['tripStartHour'] + 1 < row['tripEndHour']:
             return range(row['tripStartHour'] + 1, row['tripEndHour'])
             # The hour of arrival (tripEndHour) will not be indexed further below but is part of the range() object
-        elif row['tripEndNextDay'] and (row['tripStartHour'] <= nHours-1 or row['tripStartMinute'] == 0):
+        # elif row['tripEndNextDay'] and (row['tripStartHour'] <= nHours-1 or row['tripStartMinute'] == 0):
+        elif row['tripEndNextDay']:
             lst = [iC for iC in range(0, row['tripEndHour'])]
-            return lst + [iC for iC in range(row['tripStartHour'] + 1, nHours)]
-
+            ret = lst + [iC for iC in range(row['tripStartHour'] + 1, nHours)]
+            if row['tripStartHour'] == nHours-1 and row['tripEndHour'] == 0:
+                ret = None
+            return ret
         else:
             return None
 
