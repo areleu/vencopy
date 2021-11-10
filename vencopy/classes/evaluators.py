@@ -375,7 +375,8 @@ class Evaluator:
 
             profileDictList = [profileDictConnectionShare, profileDictFlowsAbs, profileDictStateAbs]
 
-            yLabels = ['Average EV connection share', 'Average EV flow in kW', 'Average EV SOC in kWh']
+            yLabels = ['Average EV connection share between 0 and 1', 'Average hourly electricity volume in kWh',
+                       'Average EV SOC in kWh']
             filenames = [flexEstimator.datasetID + '_connection', flexEstimator.datasetID + '_flows',
                                           flexEstimator.datasetID + '_state']
         self.separateLinePlots(profileDictList, show=True, write=True, flexEstimator=flexEstimator,

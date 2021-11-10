@@ -67,7 +67,7 @@ higher than this profile but may be lower since not all charging stations run on
 balancing renewable feed-in to not charge at full capacity. Currently, only one charging capacity per run of VencoPy can
 be taken into account. 
 
-**Units:** Profiles are in power units [kW], defined as share of the overall vehicle fleet.
+**Units:** Profiles are in percentage (between 0 and 1), defined as share of number of vehicles of the overall vehicle fleet.
 
 Calculation steps
 *************************
@@ -86,8 +86,8 @@ average electricity consumption for one model vehicle for the complete EV fleet.
 profile in hourly values of kW. Function: `aggregateProfilesMean()` in the library `libProfileCalculation.py`.
 
 
-This profile may later be scaled by the number of vehicles in an EV fleet to calculate the average maximum hourly 
-recharge capacity of the EV fleet. 
+This profile may later be scaled by the number of vehicles in an EV fleet and the average rated connection capacity per 
+vehicle to calculate the average maximum hourly recharge capacity of the EV fleet. 
 
 
 Profile for uncontrolled charging `chargeProfileUncontrolled`
@@ -101,7 +101,7 @@ flow of the grid to the battery under the assumption that the battery is fully c
 battery SOC decreases through a trip and the vehicle is connected to the grid, charging occurs with full capacity until
 the battery is fully charged. 
 
-**Units:** Profiles can be either in power units [kW] or hourly percentages of the annual demand.
+**Units:** Profiles are in hourly values of kWh of the representative average vehicle. 
 
 Calculation steps
 *************************
@@ -142,7 +142,7 @@ the battery to the electric motor for the purpose of propulsion of the vehicle. 
 consumption profile, a potential additional fuel demand for longer trips than feasible with the assumed battery capacity
 is subtracted to result in the purely electric consumption.
 
-**Units:** Profiles can be either in power units [kW] or hourly percentages of the annual demand.
+**Units:** Profiles are in hourly values of kWh of the representative average vehicle. 
 
 Calculation steps
 *************************
@@ -165,6 +165,7 @@ profile in hourly values of kW. Function: `aggregateProfilesMean()` in the libra
 
 4. The aggregated profile is then corrected according to more realistic specific electric consumption measurements. 
 Function: `correctProfiles()` in the library `libProfileCalculation.py`.
+
 This profile may later be scaled by the number of vehicles in an EV fleet to calculate the average electric flow leaving 
 the EV fleet battery. 
 
@@ -179,7 +180,7 @@ General description
 This profile gives hourly values for fuel consumption in case a trip and plug profile cannot be supplied only from the 
 vehicle battery. This profile is given in units of l of the specified fuel. 
 
-**Units:** Profiles are in [unit].
+**Units:** Profiles are in l fuel per hour for the representative average vehicle.
 
 
 Calculation steps
@@ -218,13 +219,16 @@ Maximum state-of-charge profile `socMax`
 #################################################################
 Time series containing the maximum energy level of the vehicle batteries. 
 
-**Units:** Profiles can be either in energy units [kWh] or relative to the battery capacity.
+**Units:** Profiles are in hourly values of kWh for the average fleet vehicle - usually close to the maximum (average) battery
+capacity of an average vehicle. 
 
 Minimum state-of-charge profile `socMin`
 #################################################################
 Time series containing the minimum energy level of the vehicle batteries. 
 
-**Units:** Profiles can be either in energy units [kWh] or relative to the battery capacity.
+**Units:** Profiles are in hourly values of kWh for the average fleet vehicle - usually close to the minimum (average) battery
+security margin of an average vehicle. 
+
 
 Filtering Functionalities in FlexEstimator
 ---------------------------------------------------

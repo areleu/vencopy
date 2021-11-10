@@ -51,9 +51,9 @@ class TripDiaryBuilder:
         else:
             self.tripDataClean = self.calculateConsistentHourlyShares(data=ParseData.data)
         self.tripDistanceDiary = self.tripDistanceAllocation(globalConfig=self.globalConfig)
-        #self.tripPurposeAllocation()
-        #self.writeOut(globalConfig=self.globalConfig, datasetID=datasetID, dataDrive=self.tripDistanceDiary,
-                     #dataPurpose=self.tripPurposeDiary)
+        self.tripPurposeAllocation()
+        self.writeOut(globalConfig=self.globalConfig, datasetID=datasetID, dataDrive=self.tripDistanceDiary,
+                      dataPurpose=self.tripPurposeDiary)
 
     def tripDuration(self, timestampStart: np.datetime64, timestampEnd: np.datetime64) -> np.datetime64:
         return timestampEnd - timestampStart
