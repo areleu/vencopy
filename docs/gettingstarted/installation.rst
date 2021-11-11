@@ -25,8 +25,8 @@ As a user, you will apply VencoPy for answering analytical questions. Thus, you'
 Install using the environment management system conda, open the conda console, create a new environment and activate it by typing
 
 ```python
-conda create -n YOUR_ENV python=3.9
-conda activate YOUR_ENV
+conda create -n <your environment name> python=3.9
+conda activate <your environment name>
 ```
 
 Install VencoPy from the Python Package Index PyPI:
