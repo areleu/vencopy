@@ -14,6 +14,7 @@ if __package__ is None or __package__ == '':
     sys.path.append(path.dirname(path.dirname(__file__)))
 
 import pandas as pd
+from pathlib import Path
 from vencopy.classes.dataParsers import DataParser
 from vencopy.classes.tripDiaryBuilders import TripDiaryBuilder
 from vencopy.classes.gridModelers import GridModeler
@@ -25,10 +26,10 @@ if __name__ == '__main__':
     # Set dataset and config to analyze, create output folders
     #datasetID = 'KiD'
     datasetID = 'MiD17'
-    # review: should the datasetID not be part of the config files?
     configNames = ('globalConfig', 'localPathConfig', 'parseConfig', 'tripConfig', 'gridConfig', 'flexConfig',
                    'evaluatorConfig')
-    configDict = loadConfigDict(configNames)
+    basePath = Path(__file__).parent
+    configDict = loadConfigDict(configNames, basePath)
     createOutputFolders(configDict=configDict)
 
     # Parse datasets

@@ -11,7 +11,7 @@ import yaml
 from pathlib import Path
 import os
 
-def loadConfigDict(configNames: tuple):
+def loadConfigDict(configNames: tuple, basePath):
     # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
     """
     Generic function to load and open yaml config files
@@ -19,10 +19,10 @@ def loadConfigDict(configNames: tuple):
     :param configNames: Tuple containing names of config files to be loaded
     :return: Dictionary with opened yaml config files
     """
-    basePath = Path(__file__).parent.parent / 'config'
+    configPath = basePath / 'config'
     configDict = {}
     for configName in configNames:
-        filePath = (basePath / configName).with_suffix('.yaml')
+        filePath = (configPath / configName).with_suffix('.yaml')
         with open(filePath) as ipf:
             configDict[configName] = yaml.load(ipf, Loader=yaml.SafeLoader)
     return configDict
@@ -38,7 +38,7 @@ def createOutputFolders(configDict: dict):
     mainDir = 'output'
     if not os.path.exists(Path(root / mainDir)):
         os.mkdir(Path(root / mainDir))
-    
+        
     subDirs =  ('dataParser', 'tripDiaryBuilder', 'gridModeler', 'flexEstimator', 'evaluator')
     for subDir in subDirs:
         if not os.path.exists(Path(root / mainDir / subDir)):
