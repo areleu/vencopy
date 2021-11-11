@@ -11,6 +11,7 @@ import yaml
 from pathlib import Path
 import os
 
+
 def loadConfigDict(configNames: tuple, basePath):
     # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
     """
@@ -26,6 +27,7 @@ def loadConfigDict(configNames: tuple, basePath):
         with open(filePath) as ipf:
             configDict[configName] = yaml.load(ipf, Loader=yaml.SafeLoader)
     return configDict
+
 
 def createOutputFolders(configDict: dict):
     """
@@ -43,6 +45,7 @@ def createOutputFolders(configDict: dict):
     for subDir in subDirs:
         if not os.path.exists(Path(root / mainDir / subDir)):
             os.mkdir(Path(root / mainDir / subDir))
+
 
 def createFileString(globalConfig: dict, fileKey: str, datasetID: str=None, manualLabel: str = '',
                      filetypeStr: str = 'csv'):
