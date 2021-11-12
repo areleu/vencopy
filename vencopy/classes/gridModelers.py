@@ -69,6 +69,8 @@ class GridModeler:
 
     def getFastChargingList(self):
         '''
+        Not tested, preliminary version
+
         Returns a list of household trips having consumption greater than 80% (40 kWh) of battery capacity (50 kWh)
         '''
         driveProfiles = self.driveData.set_index(['genericID'])
@@ -88,7 +90,7 @@ class GridModeler:
 
     def assignGridViaProbabilities(self, model: str, fastChargingHHID):
         '''
-        Not tested, preleiminary version
+        Not tested, preliminary version
 
         :param model: Input for assigning probability according to models presented in gridConfig
         :param fastChargingHHID: List of household trips for fast charging
@@ -148,7 +150,7 @@ class GridModeler:
 
     def getRandomNumberForModel1(self, purpose):
         '''
-        Not tested, preleiminary version
+        Not tested, preliminary version
 
         Assigns a random number between 0 and 1 for all the purposes, and allots a charging station according to the
         probability distribution
