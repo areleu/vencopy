@@ -54,7 +54,6 @@ class GridModeler:
         self.driveData = pd.read_csv(self.inputDriveProfilesPath, keep_default_na=False)
         self.chargeAvailability = None
 
-
     def assignSimpleGridViaPurposes(self):
         """
         Method to translate hourly purpose profiles into hourly profiles of true/false giving the charging station
@@ -89,6 +88,8 @@ class GridModeler:
 
     def assignGridViaProbabilities(self, model: str, fastChargingHHID):
         '''
+        Not tested, preleiminary version
+
         :param model: Input for assigning probability according to models presented in gridConfig
         :param fastChargingHHID: List of household trips for fast charging
         :return: Returns a dataFrame holding charging capacity for each trip assigned with probability distribution
@@ -147,6 +148,8 @@ class GridModeler:
 
     def getRandomNumberForModel1(self, purpose):
         '''
+        Not tested, preleiminary version
+
         Assigns a random number between 0 and 1 for all the purposes, and allots a charging station according to the
         probability distribution
         :param purpose: Purpose of each hour of a trip
@@ -200,6 +203,8 @@ class GridModeler:
 
     def getRandomNumberForModel2(self, purpose):
         '''
+        Not tested, preleiminary version
+
         Assigns a random number between 0 and 1 for all the purposes, and allots a charging station according to the
         probability distribution
         :param purpose: Purpose of each hour of a trip
@@ -227,6 +232,8 @@ class GridModeler:
 
     def getRandomNumberForModel3(self, purpose):
         '''
+        Not tested, preleiminary version
+
         Assigns a random number between 0 and 1 for all the purposes, and allots a charging station according to the
         probability distribution
         :param purpose: Purpose of each hour of a trip
@@ -261,92 +268,12 @@ class GridModeler:
         """
         self.chargeAvailability.to_csv(self.outputFilePath)
 
-    def stackPlot(self):
-        '''
-        :return: Plots charging station assigned to each trip and EV's parking area/trip purposes during a time span of
-                 24 hours
-        '''
-        keys = []
-        for key, value in self.gridDistribution.items():
-            for nestedKey, nestedValue in value.items():
-                keys.append(nestedKey)
-        capacityList = keys
-        capacityList = list(set(capacityList))
-        capacityList.sort()
-        capacity = self.chargeAvailability.transpose()
-
-        totalChargingStation = pd.DataFrame()
-        for i in range(0, len(capacityList)):
-            total = capacity.where(capacity.loc[:] == capacityList[i]).count(axis=1)
-            totalChargingStation = pd.concat([totalChargingStation, total], ignore_index=True, axis=1)
-        totalChargingStation.columns = totalChargingStation.columns[:-len(capacityList)].tolist() + capacityList
-        totalChargingStation.index = np.arange(1, len(totalChargingStation)+1)
-        totalChargingStation.plot(kind='area', title='Vehicles connected to different charging station over 24 hours',
-                                  figsize=(10, 8), colormap='Paired')
-        capacityListStr = [str(x) for x in capacityList]
-        appendStr = ' kW'
-        capacityListStr = [sub + appendStr for sub in capacityListStr]
-        plt.xlim(1, 24)
-        plt.xlabel('Time (hours)')
-        plt.ylabel('Number of vehicles')
-        plt.legend(capacityListStr, loc='upper center', ncol=len(capacityList))
-        plt.show()
-
-        purposeList = list(self.gridDistribution)
-        purposes = self.purposeData.copy()
-        purposes = purposes.set_index(['genericID']).transpose()
-        totalTripPurpose = pd.DataFrame()
-
-        for i in range(0, len(purposeList)):
-            total = purposes.where(purposes.loc[:] == purposeList[i]).count(axis=1)
-            totalTripPurpose = pd.concat([totalTripPurpose, total], ignore_index=True, axis=1)
-        totalTripPurpose.columns = totalTripPurpose.columns[:-len(purposeList)].tolist() + purposeList
-        totalTripPurpose.index = np.arange(1, len(totalTripPurpose) + 1)
-
-        fig, ax = plt.subplots(1, figsize=(20, 8))
-        x = np.arange(0, len(totalTripPurpose.index))
-        plt.bar(x-0.4375, totalTripPurpose['DRIVING'], width=0.125, color='#D35400')
-        plt.bar(x-0.3125, totalTripPurpose['HOME'], width=0.125, color='#1D2F6F')
-        plt.bar(x-0.1875, totalTripPurpose['WORK'], width=0.125, color='#928aed')
-        plt.bar(x-0.0625, totalTripPurpose['SCHOOL'], width=0.125, color='#6EAF46')
-        plt.bar(x+0.0625, totalTripPurpose['SHOPPING'], width=0.125, color='#FAC748')
-        plt.bar(x+0.1875, totalTripPurpose['LEISURE'], width=0.125, color='#FA8390')
-        plt.bar(x+0.3125, totalTripPurpose['OTHER'], width=0.125, color='#FF0000')
-        plt.bar(x+0.4375, totalTripPurpose['0.0'], width=0.125, color='#1ABC9C')
-        plt.ylabel('Trip purposes during 24 hours')
-        plt.xlabel('Time (hours)')
-        plt.xticks(x, totalTripPurpose.index)
-        plt.xlim(-1, 24)
-        ax.yaxis.grid(color='black', linestyle='dashed', alpha=0.3)
-        plt.legend(purposeList, loc='upper center', ncol=len(purposeList))
-        plt.show()
 
 if __name__ == '__main__':
     from vencopy.scripts.globalFunctions import loadConfigDict
     datasetID = 'MiD17'
-    # datasetID = 'KiD'
-
     configNames = ('globalConfig', 'localPathConfig', 'parseConfig', 'tripConfig', 'gridConfig', 'flexConfig', 'evaluatorConfig')
     configDict = loadConfigDict(configNames)
     vpg = GridModeler(configDict=configDict, datasetID=datasetID)
-    # fastChargingHHID = vpg.getFastChargingList()
     vpg.assignSimpleGridViaPurposes()
-    # vpg.assignGridViaProbabilities(model='distribution', fastChargingHHID=fastChargingHHID)
     vpg.writeOutGridAvailability()
-    # vpg.stackPlot()
-
-    # print('Data Analysis Started')
-    # objs = [GridModeler(gridConfig=gridConfig, globalConfig=globalConfig) for i in range(8)]
-    # for obj in objs:
-    #     # keys = list(obj.gridDistribution.keys())
-    #     # print(keys)
-    #     # for i in np.arange(0.1, 1.0, 0.1):
-    #     obj.gridDistribution['HOME'][11] = obj.gridDistribution['HOME'][11]+0.1
-    #     # print(obj.gridDistribution)
-    #     obj.gridDistribution['HOME'][0] = obj.gridDistribution['HOME'][0]-0.1
-    #     print(obj.gridDistribution)
-    #     fastChargingHHID = obj.fastChargingList()
-    #     obj.assignGridViaProbabilities(model='distribution', fastChargingHHID=fastChargingHHID)
-    #     obj.writeOutGridAvailability()
-    #     obj.stackPlot()
-
