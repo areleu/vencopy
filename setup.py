@@ -1,4 +1,4 @@
-__version__ = "0.1.3"
+__version__ = "0.1.4"
 __author__ = 'Niklas Wulff'
 __contributors__ = 'Benjamin Fuchs'
 __credits__ = 'German Aerospace Center (DLR)'
@@ -22,7 +22,7 @@ dataFilePaths.extend(walkDataFiles('./vencopy/tutorials'))
 long_description = (pathlib.Path(__file__).parent.resolve() / 'README.md').read_text(encoding='utf-8')
 setup(
     name='vencopy',
-    version='0.1.3',
+    version='0.1.4',
     description='Vehicle Energy Consumption in Python: A tool to simulate load flexibility of electric vehicle fleets.',
     long_description=long_description,
     long_description_content_type='text/markdown',

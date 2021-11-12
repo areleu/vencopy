@@ -7,8 +7,9 @@ GridModeler Class
 ===================================
 
 .. image:: ../figures/IOgridModeler.png
-   :width: 800
-
+	:width: 800
+	:align: center
+	
 GridModeler Input
 ---------------------------------------------------
 **Config File (gridConfig.yaml):**

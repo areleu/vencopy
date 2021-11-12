@@ -7,8 +7,8 @@ FlexEstimator Class
 ===================================
 
 .. image:: ../figures/IOflexEstimator.png
-   :width: 800
-
+	:width: 800
+	:align: center
 
 
 FlexEstimator Input

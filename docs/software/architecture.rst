@@ -18,8 +18,9 @@ of the tool please refer to the :ref:`publications` section.
 
 
 .. image:: ../figures/vencopy_classes.png
-   :width: 600
-
+	:width: 600
+	:align: center
+	
    
 Quality values
 ---------------------------------------------------

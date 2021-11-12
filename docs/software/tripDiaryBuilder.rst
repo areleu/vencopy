@@ -7,8 +7,8 @@ TripDiaryBuilder Class
 ===================================
 
 .. image:: ../figures/IOtripDiaryBuilder.png
-   :width: 800
-
+	:width: 800
+	:align: center
 
 TripDiaryBuilder Input
 ---------------------------------------------------

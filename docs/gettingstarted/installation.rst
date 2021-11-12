@@ -15,31 +15,25 @@ VencoPy runs on Unix and Windows-based operating systems. It requires an install
 major, minor and fix (X.Y.Z) changes versioning system via git-labels. You can use VencoPy as a user or contribute to the codebase and documentation as developer. Depending on that choice the installation and setup differs.
 
 .. image:: ../figures/ApplicationContext.drawio.png
-   :width: 600
-
+	:width: 600
+	:align: center
 
 Installation for users
 -------------------------------------
 As a user, you will apply VencoPy for answering analytical questions. Thus, you're mainly interested in applying VencoPy's built-in features and functions. On this level, you will not change the codebase within the VencoPy class objects - of course you can write your own data processing routines around those functions. 
 
-Install using the environment management system conda, open the conda console, create a new environment and activate it by typing
+Install using the environment management system conda, open the conda console, create a new environment and activate it by typing::
 
-```python
-conda create -n <your environment name> python=3.9
-conda activate <your environment name>
-```
+	conda create -n <your environment name> python=3.9
+	conda activate <your environment name>
 
-Install VencoPy from the Python Package Index PyPI:
+Install VencoPy from the Python Package Index PyPI::
 
-```python
-pip install vencopy
-```
+	pip install vencopy
 
-Navigate to a parent directory where you want to create your VencoPy user folder in and type
+Navigate to a parent directory where you want to create your VencoPy user folder in and type::
 
-```python
-vencopy
-```
+	vencopy
 
 You will be prompted for a userfolder name, type it and hit enter. Your VencoPy user folder will now be created. It
 will look like this:
@@ -72,11 +66,10 @@ can request it here from the clearingboard transport: https://daten.clearingstel
 VencoPy is only tested with the B2 data set.
 
 In your localPathConfig.yaml, please enter the path to your local MiD STATA folder, it will end on .../B2/STATA/. Now
-open your user folder in an IDE, configure your interpreter (environment) or type: 
+open your user folder in an IDE, configure your interpreter (environment) or type::
 
-```python
-python run.py
-``` 
+	python run.py
+
 
 and enjoy the tool!
 

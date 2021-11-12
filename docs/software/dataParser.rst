@@ -8,8 +8,9 @@ DataParser Class
 
 
 .. image:: ../figures/IOdataParser.png
-   :width: 800
-
+	:width: 800
+	:align: center
+	
 DataParser Input
 ---------------------------------------------------
 **Config File (parseConfig.yaml):**
