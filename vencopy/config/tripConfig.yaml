@@ -1,7 +1,7 @@
 #-*- coding:utf-8 -*-
 
-# __version__ = '0.1.4'
-# __maintainer__ = 'Niklas Wulff 2019-02-12'
+# __version__ = '0.1.X'
+# __maintainer__ = 'Niklas Wulff'
 # __contributors__ = 'Fabia Miorelli, Parth Butte'
 # __email__ = 'Niklas.Wulff@dlr.de'
 # __birthdate__ = '2019-02-12'

@@ -1,4 +1,4 @@
-__version__ = '0.1.4'
+__version__ = '0.1.X'
 __maintainer__ = 'Niklas Wulff 31.12.2019'
 __contributors__ = 'Fabia Miorelli, Parth Butte'
 __email__ = 'Niklas.Wulff@dlr.de'

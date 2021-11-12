@@ -1,6 +1,6 @@
-__version__ = '0.1.4'
+__version__ = '0.1.X'
 __maintainer__ = 'Niklas Wulff'
-__contributors__ = 'Fabia Miorelli, Parth Butte, Ronald Stegen'
+__contributors__ = 'Fabia Miorelli, Parth Butte'
 __email__ = 'Niklas.Wulff@dlr.de'
 __birthdate__ = '30.09.2020'
 __status__ = 'prod'  # options are: dev, test, prod

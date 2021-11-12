@@ -1,6 +1,6 @@
 #-*- coding:utf-8 -*-
 
-# __version__ = '0.1.4'
+# __version__ = '0.1.X'
 # __maintainer__ = 'Niklas Wulff'
 # __contributors__ = 'Fabia Miorelli, Parth Butte'
 # __email__ = 'niklas.wulff@dlr.de'
