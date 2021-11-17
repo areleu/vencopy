@@ -11,6 +11,7 @@ import pandas as pd
 import seaborn as sns
 from pathlib import Path
 import matplotlib.pyplot as plt
+import numpy as np
 from vencopy.scripts.globalFunctions import createFileString, calculateWeightedAverage, mergeDataToWeightsAndDays, \
      writeProfilesToCSV
 # from classes.flexEstimators import FlexEstimator
@@ -463,6 +464,61 @@ class Evaluator:
 
     def boxPlot(self, profiles):
         profiles.boxplot()
+        plt.show()
+
+    def stackPlot(self, vpGrid):
+        # Plot for charging station
+        # capacity = pd.read_csv(self.outputFilePath, keep_default_na=False, index_col='genericID')
+
+        capacity = vpGrid.chargeAvailability.transpose()
+        capacityList = list(np.unique(capacity.loc[:, :].values))
+
+        totalChargingStation = pd.DataFrame()
+        for i in range(0, len(capacityList)):
+            total = capacity.where(capacity.loc[:] == capacityList[i]).count(axis=1)
+            totalChargingStation = pd.concat([totalChargingStation, total], ignore_index=True, axis=1)
+        totalChargingStation.columns = totalChargingStation.columns[:-len(capacityList)].tolist() + capacityList
+        totalChargingStation.index = np.arange(1, len(totalChargingStation) + 1)
+        totalChargingStation.plot(kind='area', title='Vehicles connected to different charging station over 24 hours',
+                                  figsize=(10, 8), colormap='Paired')
+        capacityListStr = [str(x) for x in capacityList]
+        appendStr = ' kW'
+        capacityListStr = [sub + appendStr for sub in capacityListStr]
+        plt.xlim(1, 24)
+        plt.xlabel('Time (hours)')
+        plt.ylabel('Number of vehicles')
+        plt.legend(capacityListStr, loc='upper center', ncol=len(capacityList))
+        plt.show()
+
+        # Plot for purposes in purposeDiary
+        purposeList = list(vpGrid.gridAvail)
+        purposes = vpGrid.purposeData.copy()
+        # purposes = purposes.set_index(['genericID']).transpose()
+        purposes = purposes.transpose()
+        totalTripPurpose = pd.DataFrame()
+
+        for i in range(0, len(purposeList)):
+            total = purposes.where(purposes.loc[:] == purposeList[i]).count(axis=1)
+            totalTripPurpose = pd.concat([totalTripPurpose, total], ignore_index=True, axis=1)
+        totalTripPurpose.columns = totalTripPurpose.columns[:-len(purposeList)].tolist() + purposeList
+        totalTripPurpose.index = np.arange(1, len(totalTripPurpose) + 1)
+
+        fig, ax = plt.subplots(1, figsize=(20, 8))
+        x = np.arange(0, len(totalTripPurpose.index))
+        plt.bar(x - 0.4375, totalTripPurpose['DRIVING'], width=0.125, color='#D35400')
+        plt.bar(x - 0.3125, totalTripPurpose['HOME'], width=0.125, color='#1D2F6F')
+        plt.bar(x - 0.1875, totalTripPurpose['WORK'], width=0.125, color='#928aed')
+        plt.bar(x - 0.0625, totalTripPurpose['SCHOOL'], width=0.125, color='#6EAF46')
+        plt.bar(x + 0.0625, totalTripPurpose['SHOPPING'], width=0.125, color='#FAC748')
+        plt.bar(x + 0.1875, totalTripPurpose['LEISURE'], width=0.125, color='#FA8390')
+        plt.bar(x + 0.3125, totalTripPurpose['OTHER'], width=0.125, color='#FF0000')
+        plt.bar(x + 0.4375, totalTripPurpose['0.0'], width=0.125, color='#1ABC9C')
+        plt.ylabel('Trip purposes during 24 hours')
+        plt.xlabel('Time (hours)')
+        plt.xticks(x, totalTripPurpose.index)
+        plt.xlim(-1, 24)
+        ax.yaxis.grid(color='black', linestyle='dashed', alpha=0.3)
+        plt.legend(purposeList, loc='upper center', ncol=len(purposeList))
         plt.show()
 
 class chargingTransactionEvaluator:

@@ -20,6 +20,7 @@ from scipy.stats import beta, gamma
 import matplotlib.pyplot as plt
 from vencopy.scripts.globalFunctions import createFileString, loadConfigDict
 from vencopy.classes.evaluators import Evaluator
+from vencopy.classes.dataParsers import DataParser
 from profilehooks import profile
 
 
@@ -102,114 +103,31 @@ class GridModeler:
         nHours = len(self.chargeAvailability.columns)
         print('Starting with charge connection replacement ')
         np.random.seed(setSeed)
-        for idxIt in range(nIter):
-            for iHour in range(nHours):
-                if iHour == 0:
-                    self.chargeAvailability[iHour] = self.allocatePowerViaProbabilities(purpose=self.chargeAvailability
-                    [iHour], gridAvailability=gridAvailability)
-                    self.homePower = self.chargeAvailability[0].where(self.purposeData[0] == 'HOME', np.nan).dropna()
-                elif 7 <= iHour <= 19:
-                    print('I am' + str(iHour))
-                    self.chargeAvailability[iHour] = 0
-                #     if iHour == 7:
-                #         self.chargeAvailability[iHour] = self.allocatePowerViaProbabilitiesDay(
-                #             purpose=self.chargeAvailability
-                #             [iHour], gridAvailabilityNight=gridAvailabilityNight)
-                #         self.homePower = self.chargeAvailability[iHour].where(self.purposeData[iHour] == 'HOME',
-                #                                                           np.nan).dropna()
-                #     else:
-                #         if iHour > 8:
-                #             self.homePower = self.homePower.append(self.chargeAvailability[iHour - 1].where(
-                #                 self.purposeData[iHour - 1] == 'HOME', np.nan).dropna())
-                #             self.homePower = self.homePower.iloc[
-                #                 np.unique(self.homePower.index.values, return_index=True)[1]]
-                #
-                #         oldPurpose = self.purposeData[iHour - 1]
-                #         equalPurpose = oldPurpose == self.chargeAvailability[iHour]
-                #         unequalPurpose = self.chargeAvailability[iHour].where(~equalPurpose, np.nan).dropna()
-                #         unequalPurposeHome = unequalPurpose[unequalPurpose == 'HOME']
-                #         unequalPurposeHomePower = self.homePower.filter(unequalPurposeHome.index)
-                #         homeNew = pd.Series(unequalPurposeHome.index.isin(self.homePower.index),
-                #                             index=unequalPurposeHome.index)
-                #         unequalPurposeHomeNew = unequalPurposeHome.filter(homeNew.drop(homeNew[homeNew].index).index)
-                #         unequalPurpose.drop(unequalPurpose[unequalPurpose == 'HOME'].index, inplace=True)
-                #         unequalPurpose = unequalPurpose.append(unequalPurposeHomeNew).sort_index()
-                #         equalPurposePower = self.chargeAvailability[iHour - 1].where(equalPurpose, np.nan).dropna()
-                #         equalPurposePower = equalPurposePower.append(unequalPurposeHomePower).sort_index()
-                #
-                #         if unequalPurpose.empty:
-                #             self.chargeAvailability[iHour] = equalPurposePower
-                #         else:
-                #             unequalPurposePower = self.allocatePowerViaProbabilitiesDay\
-                #                 (purpose=unequalPurpose, gridAvailabilityNight=gridAvailabilityNight)
-                #             self.chargeAvailability[iHour] = unequalPurposePower.append(equalPurposePower).sort_index()
+        if nightCharging:
+            for idxIt in range(nIter):
+                for iHour in range(nHours):
+                    if iHour == 0:
+                        self.chargeAvailability[iHour] = self.allocatePowerViaProbabilities(purpose=self.chargeAvailability
+                        [iHour], gridAvailability=gridAvailability)
+                        self.homePower = self.chargeAvailability[0].where(self.purposeData[0] == 'HOME', np.nan).dropna()
+                    elif 7 <= iHour <= 19:
+                        print('I am' + str(iHour))
+                        self.chargeAvailability[iHour] = 0
 
-                elif 1 <= iHour <= 6 or 20 <= iHour <= 23:
-                    print('I am' +str(iHour))
-                    if 1 <= iHour <= 6:
-                        if iHour > 1:
-                            self.homePower = self.homePower.append(self.chargeAvailability[iHour - 1].where(
-                                self.purposeData[iHour - 1] == 'HOME', np.nan).dropna())
-                            self.homePower = self.homePower.iloc[
-                                np.unique(self.homePower.index.values, return_index=True)[1]]
+                    elif 1 <= iHour <= 6 or 20 <= iHour <= 23:
+                        if 1 <= iHour <= 6:
+                            if iHour > 1:
+                                self.homePower = self.homePower.append(self.chargeAvailability[iHour - 1].where(
+                                    self.purposeData[iHour - 1] == 'HOME', np.nan).dropna())
+                                self.homePower = self.homePower.iloc[
+                                    np.unique(self.homePower.index.values, return_index=True)[1]]
 
-                        oldPurpose = self.purposeData[iHour-1]
-                        equalPurpose = oldPurpose == self.chargeAvailability[iHour]
-                        unequalPurpose = self.chargeAvailability[iHour].where(~equalPurpose, np.nan).dropna()
-                        unequalPurposeHome = unequalPurpose[unequalPurpose == 'HOME']
-                        unequalPurposeHomePower = self.homePower.filter(unequalPurposeHome.index)
-                        homeNew = pd.Series(unequalPurposeHome.index.isin(self.homePower.index), index=unequalPurposeHome.index)
-                        unequalPurposeHomeNew = unequalPurposeHome.filter(homeNew.drop(homeNew[homeNew].index).index)
-                        unequalPurpose.drop(unequalPurpose[unequalPurpose == 'HOME'].index, inplace=True)
-                        unequalPurpose = unequalPurpose.append(unequalPurposeHomeNew).sort_index()
-                        equalPurposePower = self.chargeAvailability[iHour - 1].where(equalPurpose, np.nan).dropna()
-                        equalPurposePower = equalPurposePower.append(unequalPurposeHomePower).sort_index()
-
-                        if unequalPurpose.empty:
-                            self.chargeAvailability[iHour] = equalPurposePower
-                        else:
-                            unequalPurposePower = self.allocatePowerViaProbabilities(purpose=unequalPurpose,
-                                                                                 gridAvailability=gridAvailability)
-                            self.chargeAvailability[iHour] = unequalPurposePower.append(equalPurposePower).sort_index()
-
-                    elif 20 <= iHour <= 23:
-                        if iHour == 20:
-                            self.homePower = self.homePower.append(self.chargeAvailability[6].where(
-                                self.purposeData[6] == 'HOME', np.nan).dropna())
-                            self.homePower = self.homePower.iloc[
-                                np.unique(self.homePower.index.values, return_index=True)[1]]
-                            oldPurpose = self.purposeData[6]
+                            oldPurpose = self.purposeData[iHour-1]
                             equalPurpose = oldPurpose == self.chargeAvailability[iHour]
                             unequalPurpose = self.chargeAvailability[iHour].where(~equalPurpose, np.nan).dropna()
                             unequalPurposeHome = unequalPurpose[unequalPurpose == 'HOME']
                             unequalPurposeHomePower = self.homePower.filter(unequalPurposeHome.index)
-                            homeNew = pd.Series(unequalPurposeHome.index.isin(self.homePower.index),
-                                                index=unequalPurposeHome.index)
-                            unequalPurposeHomeNew = unequalPurposeHome.filter(homeNew.drop(homeNew[homeNew].index).index)
-                            unequalPurpose.drop(unequalPurpose[unequalPurpose == 'HOME'].index, inplace=True)
-                            unequalPurpose = unequalPurpose.append(unequalPurposeHomeNew).sort_index()
-                            equalPurposePower = self.chargeAvailability[6].where(equalPurpose, np.nan).dropna()
-                            equalPurposePower = equalPurposePower.append(unequalPurposeHomePower).sort_index()
-
-                            if unequalPurpose.empty:
-                                self.chargeAvailability[iHour] = equalPurposePower
-                            else:
-                                unequalPurposePower = self.allocatePowerViaProbabilities(purpose=unequalPurpose,
-                                                                                         gridAvailability=gridAvailability)
-                                self.chargeAvailability[iHour] = unequalPurposePower.append(equalPurposePower).sort_index()
-                        else:
-                            self.homePower = self.homePower.append(self.chargeAvailability[iHour - 1].where(
-                                self.purposeData[iHour - 1] == 'HOME', np.nan).dropna())
-                            self.homePower = self.homePower.iloc[
-                                np.unique(self.homePower.index.values, return_index=True)[1]]
-
-                            oldPurpose = self.purposeData[iHour - 1]
-                            equalPurpose = oldPurpose == self.chargeAvailability[iHour]
-                            unequalPurpose = self.chargeAvailability[iHour].where(~equalPurpose, np.nan).dropna()
-                            unequalPurposeHome = unequalPurpose[unequalPurpose == 'HOME']
-                            unequalPurposeHomePower = self.homePower.filter(unequalPurposeHome.index)
-                            homeNew = pd.Series(unequalPurposeHome.index.isin(self.homePower.index),
-                                                index=unequalPurposeHome.index)
+                            homeNew = pd.Series(unequalPurposeHome.index.isin(self.homePower.index), index=unequalPurposeHome.index)
                             unequalPurposeHomeNew = unequalPurposeHome.filter(homeNew.drop(homeNew[homeNew].index).index)
                             unequalPurpose.drop(unequalPurpose[unequalPurpose == 'HOME'].index, inplace=True)
                             unequalPurpose = unequalPurpose.append(unequalPurposeHomeNew).sort_index()
@@ -220,8 +138,94 @@ class GridModeler:
                                 self.chargeAvailability[iHour] = equalPurposePower
                             else:
                                 unequalPurposePower = self.allocatePowerViaProbabilities(purpose=unequalPurpose,
-                                                                                         gridAvailability=gridAvailability)
+                                                                                     gridAvailability=gridAvailability)
                                 self.chargeAvailability[iHour] = unequalPurposePower.append(equalPurposePower).sort_index()
+
+                        elif 20 <= iHour <= 23:
+                            if iHour == 20:
+                                self.homePower = self.homePower.append(self.chargeAvailability[6].where(
+                                    self.purposeData[6] == 'HOME', np.nan).dropna())
+                                self.homePower = self.homePower.iloc[
+                                    np.unique(self.homePower.index.values, return_index=True)[1]]
+                                oldPurpose = self.purposeData[6]
+                                equalPurpose = oldPurpose == self.chargeAvailability[iHour]
+                                unequalPurpose = self.chargeAvailability[iHour].where(~equalPurpose, np.nan).dropna()
+                                unequalPurposeHome = unequalPurpose[unequalPurpose == 'HOME']
+                                unequalPurposeHomePower = self.homePower.filter(unequalPurposeHome.index)
+                                homeNew = pd.Series(unequalPurposeHome.index.isin(self.homePower.index),
+                                                    index=unequalPurposeHome.index)
+                                unequalPurposeHomeNew = unequalPurposeHome.filter(homeNew.drop(homeNew[homeNew].index).index)
+                                unequalPurpose.drop(unequalPurpose[unequalPurpose == 'HOME'].index, inplace=True)
+                                unequalPurpose = unequalPurpose.append(unequalPurposeHomeNew).sort_index()
+                                equalPurposePower = self.chargeAvailability[6].where(equalPurpose, np.nan).dropna()
+                                equalPurposePower = equalPurposePower.append(unequalPurposeHomePower).sort_index()
+
+                                if unequalPurpose.empty:
+                                    self.chargeAvailability[iHour] = equalPurposePower
+                                else:
+                                    unequalPurposePower = self.allocatePowerViaProbabilities(purpose=unequalPurpose,
+                                                                                             gridAvailability=gridAvailability)
+                                    self.chargeAvailability[iHour] = unequalPurposePower.append(equalPurposePower).sort_index()
+                            else:
+                                self.homePower = self.homePower.append(self.chargeAvailability[iHour - 1].where(
+                                    self.purposeData[iHour - 1] == 'HOME', np.nan).dropna())
+                                self.homePower = self.homePower.iloc[
+                                    np.unique(self.homePower.index.values, return_index=True)[1]]
+
+                                oldPurpose = self.purposeData[iHour - 1]
+                                equalPurpose = oldPurpose == self.chargeAvailability[iHour]
+                                unequalPurpose = self.chargeAvailability[iHour].where(~equalPurpose, np.nan).dropna()
+                                unequalPurposeHome = unequalPurpose[unequalPurpose == 'HOME']
+                                unequalPurposeHomePower = self.homePower.filter(unequalPurposeHome.index)
+                                homeNew = pd.Series(unequalPurposeHome.index.isin(self.homePower.index),
+                                                    index=unequalPurposeHome.index)
+                                unequalPurposeHomeNew = unequalPurposeHome.filter(homeNew.drop(homeNew[homeNew].index).index)
+                                unequalPurpose.drop(unequalPurpose[unequalPurpose == 'HOME'].index, inplace=True)
+                                unequalPurpose = unequalPurpose.append(unequalPurposeHomeNew).sort_index()
+                                equalPurposePower = self.chargeAvailability[iHour - 1].where(equalPurpose, np.nan).dropna()
+                                equalPurposePower = equalPurposePower.append(unequalPurposeHomePower).sort_index()
+
+                                if unequalPurpose.empty:
+                                    self.chargeAvailability[iHour] = equalPurposePower
+                                else:
+                                    unequalPurposePower = self.allocatePowerViaProbabilities(purpose=unequalPurpose,
+                                                                                             gridAvailability=gridAvailability)
+                                    self.chargeAvailability[iHour] = unequalPurposePower.append(equalPurposePower).sort_index()
+        else:
+            for idxIt in range(nIter):
+                for iHour in range(nHours):
+                    if iHour == 0:
+                        self.chargeAvailability[iHour] = self.allocatePowerViaProbabilities(
+                            purpose=self.chargeAvailability
+                            [iHour], gridAvailability=gridAvailability)
+                        self.homePower = self.chargeAvailability[0].where(self.purposeData[0] == 'HOME',
+                                                                          np.nan).dropna()
+                    else:
+                        if iHour > 1:
+                            self.homePower = self.homePower.append(self.chargeAvailability[iHour - 1].where(
+                                self.purposeData[iHour - 1] == 'HOME', np.nan).dropna())
+                            self.homePower = self.homePower.iloc[
+                                np.unique(self.homePower.index.values, return_index=True)[1]]
+
+                        oldPurpose = self.purposeData[iHour - 1]
+                        equalPurpose = oldPurpose == self.chargeAvailability[iHour]
+                        unequalPurpose = self.chargeAvailability[iHour].where(~equalPurpose, np.nan).dropna()
+                        unequalPurposeHome = unequalPurpose[unequalPurpose == 'HOME']
+                        unequalPurposeHomePower = self.homePower.filter(unequalPurposeHome.index)
+                        homeNew = pd.Series(unequalPurposeHome.index.isin(self.homePower.index),
+                                            index=unequalPurposeHome.index)
+                        unequalPurposeHomeNew = unequalPurposeHome.filter(homeNew.drop(homeNew[homeNew].index).index)
+                        unequalPurpose.drop(unequalPurpose[unequalPurpose == 'HOME'].index, inplace=True)
+                        unequalPurpose = unequalPurpose.append(unequalPurposeHomeNew).sort_index()
+                        equalPurposePower = self.chargeAvailability[iHour - 1].where(equalPurpose, np.nan).dropna()
+                        equalPurposePower = equalPurposePower.append(unequalPurposeHomePower).sort_index()
+
+                        if unequalPurpose.empty:
+                            self.chargeAvailability[iHour] = equalPurposePower
+                        else:
+                            unequalPurposePower = self.allocatePowerViaProbabilities(purpose=unequalPurpose,
+                                                                                     gridAvailability=gridAvailability)
+                            self.chargeAvailability[iHour] = unequalPurposePower.append(equalPurposePower).sort_index()
 
         # for genericID, row in self.chargeAvailability.iterrows():
         #     activity = row.copy(deep=True)
@@ -386,7 +390,7 @@ class GridModeler:
         self.assignGridViaProbabilities(gridAvailability=self.gridAvail,
                                         nIter=1, setSeed=42)
         self.writeOutGridAvailability()
-        self.stackPlot(gridAvailability=self.gridAvail)
+        # self.stackPlot(gridAvailability=self.gridAvail)
         self.transactionStartHour = self.getTransactionHourStart(nIter=1)
         self.writeOutTransactionStartHour(transactionHours=self.transactionStartHour)
 
@@ -405,9 +409,19 @@ if __name__ == '__main__':
     datasetID = 'MiD17'
     configNames = ('globalConfig', 'localPathConfig', 'parseConfig', 'tripConfig', 'gridConfig', 'flexConfig', 'evaluatorConfig')
     configDict = loadConfigDict(configNames)
+    nightCharging = False
+    if nightCharging:
+        gridPowerDict = configDict['gridConfig']['gridAvailabilityNightCharging']
+    else:
+        gridPowerDict = configDict['gridConfig']['gridAvailabilityDistribution']
+
+    vpData = DataParser(configDict=configDict, datasetID=datasetID, loadEncrypted=False)
+    vpData.process()
     vpg = GridModeler(configDict=configDict, datasetID=datasetID,
-                      gridPowerDict=configDict['gridConfig']['gridAvailabilityNightCharging-Night'])
+                      gridPowerDict=gridPowerDict)
     vpg.calcGrid()
+    vpEval = Evaluator(configDict=configDict, parseData=pd.Series(data=vpData, index=[datasetID]))
+    vpEval.stackPlot(vpGrid=vpg)
 
     # FixMe: implement plotting in evaluator
     # vpEval = Evaluator()

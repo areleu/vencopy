@@ -91,38 +91,7 @@ gridAvailabilityDistribution:  # Grid model 3: Probabilities given for each loca
     '0.0':
         0: 1
 
-gridAvailabilityNightCharging-Day:  # Grid model 3: Probabilities given for each location aka trip purpose and capacity
-    'DRIVING':
-        0: 1
-    'HOME':
-#        3.6: 0.5
-#        11: 0.25           #0.25 (0.75 - 0.50) probability of finding a charging station
-#        22: 0.05        #0.05 (0.80 - 0.75) probability of finding a charging station
-        0: 1          #0.2 (1- 0.80) probability of finding a charging station
-    'WORK':
-#        11 : 0.5
-#        22 : 0.35
-        0 : 1
-    'SCHOOL':
-#        11 : 0.35
-#        22 : 0.20
-        0 : 1
-    'SHOPPING':
-#        11: 0.35
-#        22: 0.20
-        0: 1
-    'LEISURE':
-#        11: 0.35
-#        22: 0.20
-        0: 1
-    'OTHER':
-#        11 : 0.20
-#        22 : 0.10
-        0 : 1
-    '0.0':
-        0 : 1
-
-gridAvailabilityNightCharging-Night:  # Grid model 3: Probabilities given for each location aka trip purpose and capacity
+gridAvailabilityNightCharging:  # Grid model 3: Probabilities given for each location aka trip purpose and capacity
     'DRIVING':
         0: 1
     'HOME':
