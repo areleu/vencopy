@@ -1,4 +1,4 @@
-__version__ = '0.1.0'
+__version__ = '0.1.X'
 __maintainer__ = 'Niklas Wulff'
 __contributors__ = 'Fabia Miorelli, Parth Butte'
 __email__ = 'Niklas.Wulff@dlr.de'
@@ -31,6 +31,7 @@ class Evaluator:
 
         self.globalConfig = configDict['globalConfig']
         self.evaluatorConfig = configDict['evaluatorConfig']
+        self.localPathConfig = configDict['localPathConfig']
         self.weightPlot = weightPlot
         self.normPlotting = True
         self.dailyMileageGermany2008 = 3.080e9  # pkm/d
@@ -63,7 +64,7 @@ class Evaluator:
         ret = pd.Series(dtype=object)
         for iFileKey in fileKeys:
             for iDat in datasets:
-                dataIn = pd.read_csv(Path(__file__).parent / (self.globalConfig['pathRelative']['diaryOutput']) /
+                dataIn = pd.read_csv(Path(self.localPathConfig['pathAbsolute']['vencoPyRoot']) / (self.globalConfig['pathRelative']['diaryOutput']) /
                                      createFileString(globalConfig=self.globalConfig, fileKey=iFileKey,
                                                       datasetID=iDat), dtype={'genericID': int},
                                      # index_col=['genericID', 'tripStartWeekday'])
@@ -265,7 +266,7 @@ class Evaluator:
         if self.evaluatorConfig['plotConfig']['save']:
             fileName = createFileString(globalConfig=self.globalConfig, fileKey='aggPlotName', manualLabel=self.globalConfig['labels']['runLabel'],
                                         filetypeStr='svg')
-            fig.savefig(Path(__file__).parent / self.globalConfig['pathRelative']['evalOutput'] / fileName, bbox_inches='tight')
+            fig.savefig(Path(self.localPathConfig['pathAbsolute']['vencoPyRoot']) / self.globalConfig['pathRelative']['evalOutput'] / fileName, bbox_inches='tight')
 
     def linePlot(self, profileDict, pathOutput, flexEstimator, show=True, write=True, ylabel='Normalized profiles',
                  ylim=None, filename=''):
@@ -332,16 +333,16 @@ class Evaluator:
         """
         if ylim:
             for iDict, iYLabel, iYLim, iName in zip(profileDictList, ylabel, ylim, filenames):
-                writeProfilesToCSV(profileDictOut=iDict, globalConfig=self.globalConfig, singleFile=False,
-                                   datasetID=flexEstimator.datasetID)
-                self.linePlot(iDict, pathOutput=Path(__file__).parent / self.globalConfig['pathRelative']['evalOutput'],
+                writeProfilesToCSV(profileDictOut=iDict, globalConfig=self.globalConfig, localPathConfig=self.localPathConfig,
+                                    singleFile=False, datasetID=flexEstimator.datasetID)
+                self.linePlot(iDict, pathOutput=Path(self.localPathConfig['pathAbsolute']['vencoPyRoot']) / self.globalConfig['pathRelative']['evalOutput'],
                               flexEstimator=flexEstimator, show=show, write=write, ylabel=iYLabel, ylim=iYLim,
                               filename=iName)
         else:
             for iDict, iYLabel, iName in zip(profileDictList, ylabel, filenames):
-                writeProfilesToCSV(profileDictOut=iDict, globalConfig=self.globalConfig, singleFile=False,
-                                   datasetID=flexEstimator.datasetID)
-                self.linePlot(iDict, pathOutput=Path(__file__).parent / self.globalConfig['pathRelative']['evalOutput'],
+                writeProfilesToCSV(profileDictOut=iDict, globalConfig=self.globalConfig, localPathConfig=self.localPathConfig,
+                                    singleFile=False, datasetID=flexEstimator.datasetID)
+                self.linePlot(iDict, pathOutput=Path(self.localPathConfig['pathAbsolute']['vencoPyRoot']) / self.globalConfig['pathRelative']['evalOutput'],
                               flexEstimator=flexEstimator, show=show, write=write, ylabel=iYLabel,
                               filename=iName)
 
@@ -375,7 +376,8 @@ class Evaluator:
 
             profileDictList = [profileDictConnectionShare, profileDictFlowsAbs, profileDictStateAbs]
 
-            yLabels = ['Average EV connection share in kW', 'Average EV flow in kW', 'Average EV SOC in kWh']
+            yLabels = ['Average EV connection share between 0 and 1', 'Average hourly electricity volume in kWh',
+                       'Average EV SOC in kWh']
             filenames = [flexEstimator.datasetID + '_connection', flexEstimator.datasetID + '_flows',
                                           flexEstimator.datasetID + '_state']
         self.separateLinePlots(profileDictList, show=True, write=True, flexEstimator=flexEstimator,

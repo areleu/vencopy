@@ -1,4 +1,4 @@
-__version__ = '0.1.0'
+__version__ = '0.1.X'
 __maintainer__ = 'Niklas Wulff'
 __contributors__ = 'Fabia Miorelli, Parth Butte'
 __email__ = 'Niklas.Wulff@dlr.de'
@@ -31,7 +31,7 @@ class FlexEstimator:
         #                 datasetID: str):
         """
         Class to estimate uncontrolled charging, electricity drain, grid connection, auxiliary fuel, SOC min and
-        SOC max profiles based on hourly driving and boolean grid connection profiles. Requires a .xlsx file specifying
+        SOC max profiles based on hourly driving and boolean grid connection profiles. Requires the flexConfig file specifying
         a global value for specific electric consumption (in kWh/ 100 km) and a global rated capacity of considered
         charging stations. Automatically compiles input file names from the filekeys "inputDataDriveProfiles" /
         "inputDataPlugProfiles", runlabel (as specified in globalConfig) and datasetID (as given on instantiation). The
@@ -53,6 +53,7 @@ class FlexEstimator:
         self.globalConfig = configDict['globalConfig']
         self.flexConfig = configDict['flexConfig']
         self.evaluatorConfig = configDict['evaluatorConfig']
+        self.localPathConfig = configDict['localPathConfig']
         self.hourVec = range(self.globalConfig['numberOfHours'])
         self.datasetID = datasetID
         self.driveProfilesIn, self.plugProfilesIn = self.readVencoInput(datasetID=datasetID)
@@ -127,6 +128,7 @@ class FlexEstimator:
 
         print('Flex Estimator initialization complete')
 
+
     def readInputCSV(self, filePath) -> pd.DataFrame:
         """
         Reads input and cuts out value columns from a given CSV file.
@@ -177,17 +179,15 @@ class FlexEstimator:
         """
         print('Reading Venco input scalars, drive profiles and boolean plug profiles')
 
-        driveProfiles_raw = self.readInputCSV(
-            filePath=Path(__file__).parent / self.globalConfig['pathRelative']['diaryOutput'] /
-                     createFileString(globalConfig=self.globalConfig,
-                                      fileKey='inputDataDriveProfiles',
-                                      datasetID=datasetID))
-        plugProfiles_raw = self.readInputBoolean(
-            filePath=Path(__file__).parent / self.globalConfig['pathRelative']['gridOutput'] /
-                     createFileString(globalConfig=self.globalConfig,
-                                      fileKey='inputDataPlugProfiles',
-                                      datasetID=datasetID))
-
+        driveProfiles_raw = self.readInputCSV(Path(self.localPathConfig['pathAbsolute']['vencoPyRoot']) / self.globalConfig['pathRelative']['diaryOutput'] / 
+                                                createFileString(globalConfig=self.globalConfig,
+                                                                fileKey='inputDataDriveProfiles',
+                                                                datasetID=datasetID))
+        plugProfiles_raw = self.readInputBoolean(Path(self.localPathConfig['pathAbsolute']['vencoPyRoot']) / self.globalConfig['pathRelative']['gridOutput'] /
+                                                 createFileString(globalConfig=self.globalConfig,
+                                                                  fileKey='inputDataPlugProfiles',
+                                                                  datasetID=datasetID))
+                                                                  
         print('There are ' + str(len(driveProfiles_raw)) + ' drive profiles and ' +
               str(len(driveProfiles_raw)) + ' plug profiles.')
 
@@ -1065,8 +1065,8 @@ class FlexEstimator:
                                    gridConnectionShare=self.plugProfilesWAggVar,
                                    auxFuelDriveProfile=self.auxFuelDemandProfilesWAggVar)
 
-        writeProfilesToCSV(profileDictOut=self.profileDictOut, globalConfig=self.globalConfig, singleFile=True,
-                           datasetID=self.datasetID)
+        writeProfilesToCSV(profileDictOut=self.profileDictOut, globalConfig=self.globalConfig, localPathConfig=self.localPathConfig,
+             singleFile=True, datasetID=self.datasetID)
 
     def run(self):
         """
@@ -1084,23 +1084,28 @@ class FlexEstimator:
 
 
 if __name__ == '__main__':
-    from vencopy.classes.dataParsers import DataParser
+    from vencopy.classes.dataParsers import ParseMiD
     from vencopy.classes.evaluators import Evaluator
     from vencopy.scripts.globalFunctions import loadConfigDict
 
     datasetID = 'MiD17'
     # datasetID = 'KiD'
-    configNames = (
-    'globalConfig', 'localPathConfig', 'parseConfig', 'tripConfig', 'gridConfig', 'flexConfig', 'evaluatorConfig')
-    configDict = loadConfigDict(configNames)
-    vpData = DataParser(configDict=configDict, datasetID=datasetID, loadEncrypted=False)
+    configNames = ('globalConfig', 'localPathConfig', 'parseConfig', 'tripConfig', 'gridConfig', 'flexConfig', 'evaluatorConfig')
+    basePath = Path(__file__).parent.parent
+    configDict = loadConfigDict(configNames, basePath=basePath)
+    vpData = ParseMiD(configDict=configDict, datasetID=datasetID, loadEncrypted=False)
     vpData.process()
+
     globalConfig = configDict['globalConfig']
-    inputTransactionHourStartPath = Path(globalConfig['pathRelative']['gridOutput']) / createFileString(
-        globalConfig=globalConfig, fileKey='transactionStartHour', datasetID=datasetID)
+    inputTransactionHourStartPath = Path(configDict['localPathConfig']['pathAbsolute']['vencoPyRoot']) / \
+                                   configDict['globalConfig']['pathRelative']['gridOutput'] / createFileString(
+                                        globalConfig=globalConfig, fileKey='transactionStartHour', datasetID=datasetID)
     transactionStartHour = pd.read_csv(inputTransactionHourStartPath, keep_default_na=False, index_col='genericID')
-    vpFlexEst = FlexEstimator(configDict=configDict, ParseData=vpData, datasetID=datasetID, transactionStartHour=transactionStartHour)
+
+    vpFlexEst = FlexEstimator(configDict=configDict, ParseData=vpData, datasetID=datasetID,
+                              transactionStartHour=transactionStartHour)
     vpFlexEst.run()
+
     vpEval = Evaluator(configDict=configDict, parseData=pd.Series(data=vpData, index=[datasetID]))
     vpEval.plotProfiles(flexEstimator=vpFlexEst)
     print(f'Total absolute electricity charged in uncontrolled charging: '

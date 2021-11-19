@@ -1,6 +1,6 @@
 #-*- coding:utf-8 -*-
 
-# __version__ = '0.1.0'
+# __version__ = '0.1.X'
 # __maintainer__ = 'Niklas Wulff'
 # __contributors__ = 'Fabia Miorelli, Parth Butte'
 # __email__ = 'niklas.wulff@dlr.de'
@@ -10,12 +10,12 @@
 # This config holds all relative paths and filenames for VencoPy
 
 pathRelative:
-    plots: ../output/evaluator/
-    parseOutput: ../output/dataParser/
-    diaryOutput: ../output/tripDiaryBuilder/
-    gridOutput: ../output/gridModeler/
-    flexOutput: ../output/flexEstimator/
-    evalOutput: ../output/evaluator/
+    plots: ./output/evaluator/
+    parseOutput: ./output/dataParser/
+    diaryOutput: ./output/tripDiaryBuilder/
+    gridOutput: ./output/gridModeler/
+    flexOutput: ./output/flexEstimator/
+    evalOutput: ./output/evaluator/
     scripts: ./scripts/
     config: ./config/
 
@@ -51,7 +51,6 @@ files:
         inputDataPlugProfiles: inputProfiles_Plug  # inputProfiles_Plug_RUNLABEL_MiD08.csv
         output: vencopy
         flexPlotName: flexProfileComparison
-    output: output
     KiD:
         tripsDataRaw: KiD2010-Fahrten-Datei-puf.dta
         vehiclesDataRaw: KiD2010-Fahrzeug-Datei-puf.dta
@@ -63,12 +62,13 @@ files:
         inputDataPlugProfiles:
         vencoPyOutput:
         flexPlotName:
+    output: output
     vencoPyOutput: vencoPyOutput
     aggPlotName: mobilityComparison
     flexPlotName: flexProfileComparison
 
 labels:
-    runLabel: beta
+    runLabel: cons18_bat50_home
     technologyLabel: BEV
     outputFileName: vencopy
     strAdd:

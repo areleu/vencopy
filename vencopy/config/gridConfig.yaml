@@ -1,6 +1,6 @@
 #-*- encoding:utf-8 -*-
 
-# __version__ = '0.1.0'
+# __version__ = '0.1.X'
 # __maintainer__ = 'Niklas Wulff'
 # __contributors__ = 'Fabia Miorelli, Parth Butte'
 # __email__ = 'niklas.wulff@dlr.de'
@@ -17,10 +17,10 @@
 chargingInfrastructureMappings:  # Grid model 1: Explicit mapping given for each location aka trip purpose
     'DRIVING': False
     'HOME': True
-    'WORK': False
+    'WORK': True
     'SCHOOL': False
-    'SHOPPING': False
-    'LEISURE': False
+    'SHOPPING': True
+    'LEISURE': True
     'OTHER': False
     'NA': False
 
@@ -42,6 +42,7 @@ chargingInfrastructureMappings:  # Grid model 1: Explicit mapping given for each
 #        0: 1
 #    'OTHER':
 #        0: 1
+#        1: 0
 
 gridAvailabilityDistribution:  # Grid model 3: Probabilities given for each location aka trip purpose and capacity
     'DRIVING':

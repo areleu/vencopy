@@ -1,7 +1,7 @@
 #-*- coding:utf-8 -*-
 
-# __version__ = '0.0.9'
-# __maintainer__ = 'Niklas Wulff 2019-02-12'
+# __version__ = '0.1.X'
+# __maintainer__ = 'Niklas Wulff'
 # __contributors__ = 'Fabia Miorelli, Parth Butte'
 # __email__ = 'Niklas.Wulff@dlr.de'
 # __birthdate__ = '2019-02-12'
@@ -33,7 +33,7 @@ dataVariables:
     tripStartWeekday: ['stichtag', 'ST_WOTAG', 'NA']
     tripStartHour: ['st_std', 'W_SZS', 'NA']
     tripStartMinute: ['st_min', 'W_SZM', 'NA']
-    tripStartDate: [ 'NA', 'NA', 'f10b' ]
+    tripStartDate: [ 'NA', 'NA', 'k22d' ]
     tripEndHour: ['en_std', 'W_AZS', 'NA']
     tripEndMinute: ['en_min', 'W_AZM', 'NA']
     tripEndNextDay: ['en_dat', 'W_FOLGETAG', 'NA']
@@ -134,13 +134,13 @@ filterDicts:
 
     KiD:
         exclude:
-            tripStartClock: ['-1:-1']
-            tripEndClock: ['-1:-1']
+            # tripStartClock: ['-1:-1']
+            # tripEndClock: ['-1:-1']
             tripStartDate: ['-1']
-            tripPurpose: []
+            # tripPurpose: []
         greaterThan:
         smallerThan:
-            tripDistance: [2500]
+            tripDistance: [1000]
 
     #    tripData = tripData.loc[(tripData['tripStartClock'] <= tripData['tripEndClock']) |
     #    (tripData['tripEndNextDay'] == 1), :]  # departure must be before arrival or the trip must end the following day

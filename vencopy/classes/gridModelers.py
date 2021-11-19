@@ -1,6 +1,6 @@
-__version__ = '0.1.0'
+__version__ = '0.1.X'
 __maintainer__ = 'Niklas Wulff'
-__contributors__ = 'Fabia Miorelli, Parth Butte, Ronald Stegen'
+__contributors__ = 'Fabia Miorelli, Parth Butte'
 __email__ = 'Niklas.Wulff@dlr.de'
 __birthdate__ = '30.09.2020'
 __status__ = 'prod'  # options are: dev, test, prod
@@ -20,7 +20,7 @@ from scipy.stats import beta, gamma
 import matplotlib.pyplot as plt
 from vencopy.scripts.globalFunctions import createFileString, loadConfigDict
 from vencopy.classes.evaluators import Evaluator
-from vencopy.classes.dataParsers import DataParser
+from vencopy.classes.dataParsers import ParseMiD
 # from profilehooks import profile
 
 
@@ -38,11 +38,14 @@ class GridModeler:
         self.globalConfig = configDict['globalConfig']
         self.gridConfig = configDict['gridConfig']
         self.flexConfig = configDict['flexConfig']
+        self.localPathConfig = configDict['localPathConfig']
         self.gridAvailabilitySimple = self.gridConfig['chargingInfrastructureMappings']
         self.gridAvailabilityProb = self.gridConfig['gridAvailabilityDistribution']
         self.inputFileName = createFileString(globalConfig=self.globalConfig, fileKey='purposesProcessed',
                                               datasetID=datasetID)
-        self.inputFilePath = Path(__file__).parent / self.globalConfig['pathRelative']['diaryOutput'] / self.inputFileName
+        self.inputFilePath = Path(self.localPathConfig['pathAbsolute']['vencoPyRoot']) / \
+                             self.globalConfig['pathRelative']['diaryOutput'] / self.inputFileName
+
         # FAST CHARGING - not to be merged
         # self.inputDriveProfilesName = createFileString(globalConfig=self.globalConfig, fileKey='inputDataDriveProfiles',
         #                                               datasetID=datasetID)
@@ -56,9 +59,11 @@ class GridModeler:
         # Needed for plugging choice modeling in flexEstimator
         self.outputFileNameTransactionStartHour = createFileString(globalConfig=self.globalConfig,
                                                                    fileKey='transactionStartHour', datasetID=datasetID)
-        self.outputFilePath = Path(__file__).parent / self.globalConfig['pathRelative']['gridOutput'] / self.outputFileName
-        self.outputFilePathTransactionStartHour = Path(__file__).parent / self.globalConfig['pathRelative']['gridOutput']\
-                                                  / self.outputFileNameTransactionStartHour
+        self.outputFilePath = Path(self.localPathConfig['pathAbsolute']['vencoPyRoot']) / \
+                                   self.globalConfig['pathRelative']['gridOutput'] / self.outputFileName
+        self.outputFilePathTransactionStartHour = Path(self.localPathConfig['pathAbsolute']['vencoPyRoot']) / \
+                                                       self.globalConfig['pathRelative']['gridOutput'] / \
+                                                       self.outputFileNameTransactionStartHour
         self.purposeData = pd.read_csv(self.inputFilePath, keep_default_na=False, index_col='genericID')
 
         # Needed only for FAST CHARGING
@@ -252,6 +257,8 @@ class GridModeler:
 
     def allocatePowerViaProbabilities(self, purpose: pd.Series, gridAvailability: dict):
         """
+        Not tested, preleiminary version
+
         Assigns a random number between 0 and 1 for all the purposes, and allots a charging station according to the
         probability distribution
 
@@ -380,7 +387,7 @@ class GridModeler:
         """
         if grid == 'simple':
             self.assignGridViaPurposes()
-        elif grid == 'probability':  #
+        elif grid == 'probability':
             self.assignGridViaProbabilities(setSeed=42)
         else:
             raise(ValueError(f'Specified grid modeling option {grid} is not implemented. Please choose'
@@ -402,13 +409,16 @@ class GridModeler:
 
 if __name__ == '__main__':
     datasetID = 'MiD17'
+    basePath = Path(__file__).parent.parent
     configNames = ('globalConfig', 'localPathConfig', 'parseConfig', 'tripConfig', 'gridConfig', 'flexConfig', 'evaluatorConfig')
-    configDict = loadConfigDict(configNames)
-    nightCharging = False
-    vpData = DataParser(configDict=configDict, datasetID=datasetID, loadEncrypted=False)
+    configDict = loadConfigDict(configNames, basePath=basePath)
+
+    vpData = ParseMiD(configDict=configDict, datasetID=datasetID, loadEncrypted=False)
     vpData.process()
+
     vpg = GridModeler(configDict=configDict, datasetID=datasetID)
     vpg.calcGrid(grid='simple')
+
     vpEval = Evaluator(configDict=configDict, parseData=pd.Series(data=vpData, index=[datasetID]))
     vpEval.plotParkingAndPowers(vpGrid=vpg)
 

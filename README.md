@@ -5,10 +5,10 @@
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/vencopy)
 ![Documentation Status](https://readthedocs.org/projects/vencopy/badge/?version=latest)
 ![PyPI - License](https://img.shields.io/pypi/l/vencopy)
+[![Gitter](https://badges.gitter.im/vencopy/community.svg)](https://gitter.im/vencopy/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 - Authors: Niklas Wulff, Fabia Miorelli
 - Contact: niklas.wulff@dlr.de
-- Version: 0.1.0
 
 
 Contents
@@ -28,70 +28,20 @@ A data processing tool offering hourly demand and flexibility profiles for futur
 
 Installation
 ---
-Install using the environment management system conda, open the conda console navigate to your VencoPy folder and run the following commands
+Depending on if you want to use VencoPy or if you want to contribute, there are 
+two different installation procedures described in VencoPy's documentation:
 
-```python
-conda env create -f requirements.yml
-[confirm]
-```
+[I want to apply the tool](https://vencopy.readthedocs.io/en/latest/gettingstarted/installation.html#installation-for-users)
 
-An environment named "VencoPy_env" will be created. Activate by entering
-```python
-conda activate VencoPy_env
-```
+[I want to contribute to the codebase, the documentation or the tutorials](https://vencopy.readthedocs.io/en/latest/gettingstarted/installation.html#installation-for-developers)
 
-Build your package locally (compared to from the package index PyPI) by navigating to the folder that you checked out 
-and typing
+In order to start using VencoPy, check out our [tutorials](https://vencopy.readthedocs.io/en/latest/gettingstarted/start.html#getting-started-and-tutorials). For this you won't need any additional data.
 
-```python
-pip install .
-```
-
-Navigate to a parent directory where you want to create your VencoPy user folder in and type
-
-```python
-vencopy
-```
-
-You will be prompted for a userfolder name, type it and hit enter. Your VencoPy user folder will now be created. It
-will look like this:
-
-
-
-    FOLDERNAME
-    ├── config
-    │   ├── evaluatorConfig.yaml
-    │   ├── flexConfig.yaml
-    │   ├── globalConfig.yaml
-    │   ├── gridConfig.yaml
-    │   ├── localPathConfig.yaml
-    │   └── parseConfig.yaml
-    ├── output
-    │   ├── tripConfig.yamldataParser
-    │   ├── evaluator
-    │   ├── flexEstimator
-    │   ├── gridModeler
-    │   └── tripDiaryBuilder 
-    ├── tutorials          
-    │   └── ..
-    └── run.py
-
-The configs in the config folder are the main interface between the user and the code. In order to learn more about 
-them, check out our tutorials. For this you won't need any additional data.
-
-To run VencoPy in full mode, you will need the data set Mobilität in Deutschland (German for mobility in Germany), you
+To run VencoPy in full mode, you will need the data set Mobilität in Deutschland (German for mobility in Germany). You
 can request it here from the clearingboard transport: https://daten.clearingstelle-verkehr.de/order-form.html Currently, 
-VencoPy is only tested with the B2 data set.
+VencoPy is so far only tested with the B2 data set of MiD 2008 and MiD 2017.
 
-In your localPathConfig.yaml, please enter the path to your local MiD STATA folder, it will end on .../B2/STATA/. Now
-open your user folder in an IDE, configure your interpreter (environment) or type: 
-
-```python
-python run.py
-``` 
-
-and enjoy the tool!
-
+Enjoy the tool, we're happy to receive feedback!
 
 
 Codestyle
@@ -116,8 +66,8 @@ Useful Links
 * Licence: https://opensource.org/licenses/BSD-3-Clause
   
 
-
-
 Want to contribute?
 ---
-Great, welcome on the VP team! Please read our contribute section in the documentation and reach out to Niklas(niklas.wulff@dlr.de). 
+Great, welcome on the VencoPy team! Please read our contribute section in the documentation and reach out to Niklas 
+(niklas.wulff@dlr.de). If experience difficulties on set up or have other technical questions, join our 
+[gitter community](https://gitter.im/vencopy/community)  

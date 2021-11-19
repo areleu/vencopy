@@ -1,4 +1,4 @@
-__version__ = '0.1.0'
+__version__ = '0.1.X'
 __maintainer__ = 'Niklas Wulff'
 __contributors__ = 'Fabia Miorelli, Parth Butte'
 __email__ = 'niklas.wulff@dlr.de'
@@ -9,9 +9,10 @@ __license__ = 'BSD-3-Clause'
 import pandas as pd
 import yaml
 from pathlib import Path
+import os
 
 
-def loadConfigDict(configNames: tuple):
+def loadConfigDict(configNames: tuple, basePath):
     # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
     """
     Generic function to load and open yaml config files
@@ -19,13 +20,31 @@ def loadConfigDict(configNames: tuple):
     :param configNames: Tuple containing names of config files to be loaded
     :return: Dictionary with opened yaml config files
     """
-    basePath = Path(__file__).parent.parent / 'config'
+    configPath = basePath / 'config'
     configDict = {}
     for configName in configNames:
-        filePath = (basePath / configName).with_suffix('.yaml')
+        filePath = (configPath / configName).with_suffix('.yaml')
         with open(filePath) as ipf:
             configDict[configName] = yaml.load(ipf, Loader=yaml.SafeLoader)
     return configDict
+
+
+def createOutputFolders(configDict: dict):
+    """
+    Function to crete vencopy output folder and subfolders
+
+    :param: config dictionary
+    :return: None
+    """
+    root = Path(configDict['localPathConfig']['pathAbsolute']['vencoPyRoot'])
+    mainDir = 'output'
+    if not os.path.exists(Path(root / mainDir)):
+        os.mkdir(Path(root / mainDir))
+        
+    subDirs =  ('dataParser', 'tripDiaryBuilder', 'gridModeler', 'flexEstimator', 'evaluator')
+    for subDir in subDirs:
+        if not os.path.exists(Path(root / mainDir / subDir)):
+            os.mkdir(Path(root / mainDir / subDir))
 
 
 def createFileString(globalConfig: dict, fileKey: str, datasetID: str=None, manualLabel: str = '',
@@ -75,7 +94,7 @@ def calculateWeightedAverage(col, weightCol):
     return sum(col * weightCol) / sum(weightCol)
 
 
-def writeProfilesToCSV(profileDictOut, globalConfig: dict, singleFile=True, datasetID='MiD17'):
+def writeProfilesToCSV(profileDictOut, globalConfig: dict, localPathConfig: dict, singleFile=True, datasetID='MiD17'):
     """
     Function to write VencoPy profiles to either one or five .csv files in the output folder specified in outputFolder.
 
@@ -90,11 +109,11 @@ def writeProfilesToCSV(profileDictOut, globalConfig: dict, singleFile=True, data
 
     if singleFile:
         dataOut = pd.DataFrame(profileDictOut)
-        dataOut.to_csv(Path(__file__).parent / globalConfig['pathRelative']['flexOutput'] /
+        dataOut.to_csv(Path(localPathConfig['pathAbsolute']['vencoPyRoot']) / globalConfig['pathRelative']['flexOutput'] /
                        createFileString(globalConfig=globalConfig, fileKey='output',
                                         manualLabel=globalConfig['labels']['technologyLabel'], datasetID=datasetID),
                        header=True)
     else:
         for iName, iProf in profileDictOut.items():
-            iProf.to_csv(Path(__file__).parent / globalConfig['pathRelative']['flexOutput'] /
+            iProf.to_csv(Path(localPathConfig['pathAbsolute']['vencoPyRoot']) / globalConfig['pathRelative']['flexOutput'] /
                          Path(f'vencopy_{iName}_{datasetID}.csv'), header=True)

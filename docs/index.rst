@@ -21,25 +21,25 @@ Welcome to VencoPy's documentation!
 .. image:: https://img.shields.io/pypi/l/vencopy
    :alt: PyPI - License
 
-
+.. image:: https://badges.gitter.im/vencopy/community.svg
+    :target: https://gitter.im/vencopy/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge
+    :alt: Chat on Gitter
 
 A data processing tool offering hourly demand and flexibility profiles for future electric vehicle fleets in an aggregated manner.
-VencoPy is developed at the department of Energy Systems Analysis at the German Aerospace Center (DLR).
-
+VencoPy is developed at the `Department of Energy Systems Analysis <https://www.dlr.de/ve/en/desktopdefault.aspx/tabid-15971/25909_read-66550/>`_ at the `German Aerospace Center (DLR) <https://www.dlr.de/EN/Home/home_node.html>`_.
 
 
 About
 ------------------
 - Authors: Niklas Wulff, Fabia Miorelli
 - Contact: niklas.wulff@dlr.de
-- Version: 0.1.0
 
 
 Links
 -------------------
 - Source code: https://gitlab.com/dlr-ve/vencopy
 - PyPI release: https://pypi.org/project/vencopy
-- Licence: https://opensource.org/licenses/BSD-3-Clause
+- License: https://opensource.org/licenses/BSD-3-Clause
 
 
 
@@ -54,15 +54,15 @@ Links
 
 .. toctree::
    :caption: Software
-   :hidden:
+   :hidden: 
    :maxdepth: 1
-
-   software/codestyle
+   
    software/architecture
+   software/classes
    software/functions
-   software/gridModeling
-   software/filtering
-   software/outputProfiles
+   software/inputOutput
+   software/codestyle
+
 
 .. toctree::
    :caption: Contribution

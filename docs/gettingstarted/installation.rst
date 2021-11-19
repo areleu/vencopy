@@ -12,9 +12,69 @@ Requirements and boundary conditions
 -------------------------------------
 
 VencoPy runs on Unix and Windows-based operating systems. It requires an installed version of python and the package, dependency and environment management tool conda as well as access to the internet for setting up the environment (downloading the required packages). VencoPy is consistent with the software application class 1 of the DLR software categorization. Versioning is based on 
-major, minor and fix (X.Y.Z) changes versioning system via git-labels.
+major, minor and fix (X.Y.Z) changes versioning system via git-labels. You can use VencoPy as a user or contribute to the codebase and documentation as developer. Depending on that choice the installation and setup differs.
 
-Installation
+.. image:: ../figures/ApplicationContext.drawio.png
+	:width: 600
+	:align: center
+
+Installation for users
+-------------------------------------
+As a user, you will apply VencoPy for answering analytical questions. Thus, you're mainly interested in applying VencoPy's built-in features and functions. On this level, you will not change the codebase within the VencoPy class objects - of course you can write your own data processing routines around those functions. 
+
+Install using the environment management system conda, open the conda console, create a new environment and activate it by typing::
+
+	conda create -n <your environment name> python=3.9
+	conda activate <your environment name>
+
+Install VencoPy from the Python Package Index PyPI::
+
+	pip install vencopy
+
+Navigate to a parent directory where you want to create your VencoPy user folder in and type::
+
+	vencopy
+
+You will be prompted for a userfolder name, type it and hit enter. Your VencoPy user folder will now be created. It
+will look like this:
+
+::
+
+    FOLDERNAME
+    ├── config
+    │   ├── evaluatorConfig.yaml
+    │   ├── flexConfig.yaml
+    │   ├── globalConfig.yaml
+    │   ├── gridConfig.yaml
+    │   ├── localPathConfig.yaml
+    │   └── parseConfig.yaml
+    ├── output
+    │   ├── tripConfig.yamldataParser
+    │   ├── evaluator
+    │   ├── flexEstimator
+    │   ├── gridModeler
+    │   └── tripDiaryBuilder 
+    ├── tutorials          
+    │   └── ..
+    └── run.py
+
+The configs in the config folder are the main interface between the user and the code. In order to learn more about 
+them, check out our tutorials. For this you won't need any additional data.
+
+To run VencoPy in full mode, you will need the data set Mobilität in Deutschland (German for mobility in Germany), you
+can request it here from the clearingboard transport: https://daten.clearingstelle-verkehr.de/order-form.html Currently, 
+VencoPy is only tested with the B2 data set.
+
+In your localPathConfig.yaml, please enter the path to your local MiD STATA folder, it will end on .../B2/STATA/. Now
+open your user folder in an IDE, configure your interpreter (environment) or type::
+
+	python run.py
+
+
+and enjoy the tool!
+
+
+Installation for developers
 -------------------------------------
 
 This part of the documentation holds a step-by-step installation guide for VencoPy. 
@@ -39,3 +99,4 @@ This part of the documentation holds a step-by-step installation guide for Venco
         python run.py
 
 5.  Have fun calculating electric vehicle flexibility!
+

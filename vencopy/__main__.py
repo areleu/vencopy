@@ -1,4 +1,4 @@
-__version__ = "0.1.0"
+__version__ = '0.1.X'
 __author__ = 'Niklas Wulff'
 __contributors__ = 'Fabia Miorelli, Benjamin Fuchs'
 __email__ = 'niklas.wulff@dlr.de'
