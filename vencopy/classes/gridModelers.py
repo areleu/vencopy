@@ -59,7 +59,7 @@ class GridModeler:
         self.outputFilePath = Path(__file__).parent / self.globalConfig['pathRelative']['gridOutput'] / self.outputFileName
         self.outputFilePathTransactionStartHour = Path(__file__).parent / self.globalConfig['pathRelative']['gridOutput']\
                                                   / self.outputFileNameTransactionStartHour
-        self.purposeData = pd.read_csv(self.inputFilePath, keep_default_na=False)
+        self.purposeData = pd.read_csv(self.inputFilePath, keep_default_na=False, index_col='genericID')
 
         # Needed only for FAST CHARGING
         # self.driveData = pd.read_csv(self.inputDriveProfilesPath, keep_default_na=False)
@@ -77,7 +77,6 @@ class GridModeler:
         """
         print(f'Starting with charge connection replacement of location purposes')
         self.chargeAvailability = self.purposeData.replace(self.gridAvailabilitySimple)
-        self.chargeAvailability.set_index(['genericID'], inplace=True)
         self.chargeAvailability = (~(self.chargeAvailability != True))
         print('Grid connection assignment complete')
 
@@ -104,9 +103,7 @@ class GridModeler:
         :return: Returns a dataFrame holding charging capacity for each trip assigned with probability distribution
         """
         self.chargeAvailability = self.purposeData.copy()
-        self.chargeAvailability.set_index(['genericID'], inplace=True)
-        self.chargeAvailability.columns= self.chargeAvailability.columns.astype(int)
-        self.purposeData.set_index('genericID', inplace=True)
+        self.chargeAvailability.columns = self.chargeAvailability.columns.astype(int)
         self.purposeData.columns = self.purposeData.columns.astype(int)
         homePower = pd.Series()
         nHours = len(self.chargeAvailability.columns)
