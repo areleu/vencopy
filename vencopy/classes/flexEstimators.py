@@ -352,6 +352,7 @@ class FlexEstimator:
         containing single-profile SOC max values for each hour in each profile.
         """
 
+        print(f'Starting with iterative chargeMax calculation')
         chargeMaxProfiles = chargeProfiles.copy()  # absolute battery fill in kWh
         socMaxProfiles = chargeProfiles.copy()  # relative to battery capacity between 0 and 1
         plugProbability = chargeProfiles.copy()
@@ -593,7 +594,9 @@ class FlexEstimator:
         consElectric = self.flexConfig['inputDataScalars'][self.datasetID]['Electric_consumption']
         consGasoline = self.flexConfig['inputDataScalars'][self.datasetID]['Fuel_consumption']
         nHours = self.scalarsProc['nHours']
+        print(f'Starting with iterative chargeMin calculation')
         for idxIt in range(nIter):
+            print(f'Starting with iteration {nIter}')
             for iHour in range(nHours):
                 if iHour == nHours - 1:
                     chargeMinProfiles[iHour] = chargeMinProfiles[0].where(cond=batCapMin <= chargeMinProfiles[iHour],
@@ -613,7 +616,7 @@ class FlexEstimator:
                         = chargeMinProfiles[iHour].where(cond=chargeMinProfiles[iHour] <= batCapMax, other=batCapMax)
 
             devCrit = chargeMinProfiles[nHours - 1].sum() - chargeMinProfiles[0].sum()
-            print(devCrit)
+            print(f'Aggregated difference of first and last hour: {devCrit}')
         chargeMinProfiles.drop(labels='newCharge', axis='columns', inplace=True)
         return chargeMinProfiles
 
