@@ -35,9 +35,6 @@ files:
         inputDataPlugProfiles: inputProfiles_Plug  # inputProfiles_Plug_RUNLABEL_MiD17.csv
         output: vencopy
         transactionStartHour: inputTransactionStartHour
-#        purposesProcessed: inputProfiles_Purpose  # inputProfiles_Purpose_runTest_MiD17.csv
-#        inputDataDriveProfiles: inputProfiles_Drive  # inputProfiles_Drive_runTest_MiD17.csv
-#        inputDataPlugProfiles: inputProfiles_Plug  # inputProfiles_Plug_runTest_MiD17.csv
         vencoPyOutput: vencoPyOutput
         flexPlotName: flexProfileComparison
     MiD08:

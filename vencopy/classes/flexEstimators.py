@@ -341,6 +341,7 @@ class FlexEstimator:
         SoC_max * battery capacity. Relevant profiles are chargeProfile and consumptionProfile. An iteration assures
         the boundary condition of chargeMaxProfile(0) = chargeMaxProfile(len(profiles)). The number of iterations
         is given as parameter.
+        Probabilistic and discrete plug choices are not yet runnable nor tested, so handle with care.
 
         :param chargeProfiles: Indexed dataframe of maximum capacity for charging in each hour.
         :param consumptionProfiles: Indexed dataframe of consumptionProfiles.
