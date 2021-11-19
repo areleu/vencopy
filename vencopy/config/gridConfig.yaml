@@ -11,7 +11,8 @@
 # probabilities will be given for each rated charging power at each parking purpose. In the beta release (0.1.X) only
 # chargingInfrastructureMappings is used
 
-fastChargingThreshold: 0.8       # Battery threshold for fast charging
+# FAST CHARGING
+# fastChargingThreshold: 0.8       # Battery threshold for fast charging
 
 chargingInfrastructureMappings:  # Grid model 1: Explicit mapping given for each location aka trip purpose
     'DRIVING': False
@@ -23,40 +24,24 @@ chargingInfrastructureMappings:  # Grid model 1: Explicit mapping given for each
     'OTHER': False
     'NA': False
 
-chargingInfrastructureDistributions:  # Grid model 2: Probabilities given for each location aka trip purpose and capacity
-    'DRIVING':
-        1: 0
-    'HOME':
-        0.7: 3.6
-    'WORK':
-        0.5: 11
-    'SCHOOL':
-        0.5: 11
-    'SHOPPING':
-        0.5: 11
-    'LEISURE':
-        0.5: 11
-    'OTHER':
-        0.5: 11
-    'NA':
-
-gridAvailabilityProbability:  # Grid model 2: Probabilities given for each location aka trip purpose and capacity
-#   PURPOSE:
-#       POWER: PROBABILITY
-    'DRIVING':
-        0: 1
-    'HOME':
-        11: 1
-    'WORK':
-        11: 1
-    'SCHOOL':
-        0: 1
-    'SHOPPING':
-        0: 1
-    'LEISURE':
-        0: 1
-    'OTHER':
-        0: 1
+# MOVE TO GRID MODELER TUTORIAL to show implementation of discrete mapping in probabilities
+# gridAvailabilityProbability:  # Grid model 2: Probabilities given for each location aka trip purpose and capacity
+##   PURPOSE:
+##       POWER: PROBABILITY
+#    'DRIVING':
+#        0: 1
+#    'HOME':
+#        11: 1
+#    'WORK':
+#        11: 1
+#    'SCHOOL':
+#        0: 1
+#    'SHOPPING':
+#        0: 1
+#    'LEISURE':
+#        0: 1
+#    'OTHER':
+#        0: 1
 
 gridAvailabilityDistribution:  # Grid model 3: Probabilities given for each location aka trip purpose and capacity
     'DRIVING':
@@ -91,69 +76,34 @@ gridAvailabilityDistribution:  # Grid model 3: Probabilities given for each loca
     '0.0':
         0: 1
 
-gridAvailabilityNightCharging:  # Grid model 3: Probabilities given for each location aka trip purpose and capacity
-    'DRIVING':
-        0: 1
-    'HOME':
-        3.6: 0.5
-        11: 0.25           #0.25 (0.75 - 0.50) probability of finding a charging station
-        22: 0.25        #0.05 (0.80 - 0.75) probability of finding a charging station
-#        0: 0.2          #0.2 (1- 0.80) probability of finding a charging station
-    'WORK':
-        11 : 0.5
-        22 : 0.35
-        0 : 0.15
-    'SCHOOL':
-        11 : 0.40
-        22 : 0.50
-        0 : 0.10
-    'SHOPPING':
-        11: 0.40
-        22: 0.50
-        0: 0.10
-    'LEISURE':
-        11: 0.45
-        22: 0.35
-        0: 0.20
-    'OTHER':
-        11 : 0.40
-        22 : 0.40
-        0 : 0.20
-    '0.0':
-        0 : 1
-
-chargingColumnAveragePower:
-    'DRIVING':
-        0: 1
-    'HOME':
-        2.88 : 0.50
-        5.5: 0.25            #0.25 (0.75 - 0.50) probability of finding a charging station
-        7.3 : 0.15        #0.05 (0.80 - 0.75) probability of finding a charging station
-        0: 0.1            #0.2 (1- 0.80) probability of finding a charging station
-    'WORK':
-        5.5 : 0.50
-        7.3: 0.35
-        0 : 0.15
-    'SCHOOL':
-        5.5: 0.35
-        7.3: 0.20
-        0: 0.45
-    'SHOPPING':
-        5.5: 0.35
-        7.3: 0.20
-        0: 0.45
-    'LEISURE':
-        5.5: 0.35
-        7.3: 0.20
-        0: 0.45
-    'OTHER':
-        5.5: 0.20
-        7.3: 0.10
-        0: 0.70
-    '0.0':
-        0: 1
-
-startHour:
-    'Yes': '1'
-    'No': '0'
-
+# IMPLEMENTATION OF RATED POWER REDUCTION
+# chargingColumnAveragePower:
+#    'DRIVING':
+#        0: 1
+#    'HOME':
+#        2.88 : 0.50
+#        5.5: 0.25            #0.25 (0.75 - 0.50) probability of finding a charging station
+#        7.3 : 0.15        #0.05 (0.80 - 0.75) probability of finding a charging station
+#        0: 0.1            #0.2 (1- 0.80) probability of finding a charging station
+#    'WORK':
+#        5.5 : 0.50
+#        7.3: 0.35
+#        0 : 0.15
+#    'SCHOOL':
+#        5.5: 0.35
+#        7.3: 0.20
+#        0: 0.45
+#    'SHOPPING':
+#        5.5: 0.35
+#        7.3: 0.20
+#        0: 0.45
+#    'LEISURE':
+#        5.5: 0.35
+#        7.3: 0.20
+#        0: 0.45
+#    'OTHER':
+#        5.5: 0.20
+#        7.3: 0.10
+#        0: 0.70
+#    '0.0':
+#        0: 1

@@ -49,6 +49,7 @@ inputDataScalars:
         Rated_power_of_charging_column: 11.0    #kW
         Is_BEV?: 1
 
+# For plugging choice implementation
 plugFunction:
 # f(x) = 1 - 1 / (1 + exp(-k * (x - SOC))) with k being the slope at 50% probability and SOC being SOC at 50% probability
     k: 15

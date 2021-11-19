@@ -30,41 +30,25 @@ if __name__ == '__main__':
     datasetID = 'MiD17'
     # review: should the datasetID not be part of the config files?
 
-    configNames = ('globalConfig', 'localPathConfig', 'parseConfig', 'tripConfig', 'gridConfig', 'flexConfig', 'evaluatorConfig')
+    configNames = ('globalConfig', 'localPathConfig', 'parseConfig', 'tripConfig', 'gridConfig', 'flexConfig',
+                   'evaluatorConfig')
     configDict = loadConfigDict(configNames)
-    flexConfig = configDict['flexConfig']
 
     vpData = DataParser(datasetID=datasetID, configDict=configDict, loadEncrypted=False)
     vpData.process()
+
     # Trip distance and purpose diary compositions
-    vpTripDiary = TripDiaryBuilder(datasetID=datasetID,configDict=configDict, ParseData=vpData, debug=False)
+    vpTripDiary = TripDiaryBuilder(datasetID=datasetID, configDict=configDict, ParseData=vpData, debug=True)
 
     # Grid model applications
-    vpGrid = GridModeler(configDict=configDict, datasetID=datasetID,
-                         gridPowerDict=configDict['gridConfig']['gridAvailabilityDistribution'])
-    vpGrid.calcGrid()
+    vpGrid = GridModeler(configDict=configDict, datasetID=datasetID)
+    vpGrid.calcGrid(grid='simple')
 
     # Evaluate drive and trip purpose profile
     vpEval = Evaluator(configDict=configDict, parseData=pd.Series(data=vpData, index=[datasetID]))
+    vpEval.plotParkingAndPowers(vpGrid=vpGrid)
     vpEval.hourlyAggregates = vpEval.calcVariableSpecAggregates(by=['tripStartWeekday'])
     vpEval.plotAggregates()
-
-    # cumSumAgg = pd.Series()
-    # a = pd.Series()
-    # for i in range(10, 210, 10):
-    #     flexConfig['inputDataScalars'][datasetID]['Battery_capacity'] += 10
-    #     vencoPyBatCap = flexConfig['inputDataScalars'][datasetID]['Battery_capacity']
-    #     vpFlex = FlexEstimator(configDict=configDict, datasetID=datasetID, ParseData=vpData,
-    #                            transactionStartHour=vpGrid.transactionStartHour)
-    #     vpFlex.baseProfileCalculation()
-    #     VEP = pd.Series(vpFlex.VEP, index=[vencoPyBatCap])
-    #     # batCap.reset_index(drop=True, inplace=True)
-    #
-    #     # xThreshold = pd.Series(np.where(batCap > (0.2 * vencoPyBatCap), 1, 0))
-    #     # cumSum = pd.Series(xThreshold.sum()/len(batCap), index=[vencoPyBatCap])
-    #
-    #     cumSumAgg = cumSumAgg.append(VEP)
-    #     cumSumAgg
 
     # Estimate charging flexibility based on driving profiles and charge connection
     vpFlex = FlexEstimator(configDict=configDict, datasetID=datasetID, ParseData=vpData,

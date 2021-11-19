@@ -466,7 +466,7 @@ class Evaluator:
         profiles.boxplot()
         plt.show()
 
-    def stackPlot(self, vpGrid):
+    def plotParkingAndPowers(self, vpGrid):
         # Plot for charging station
         # capacity = pd.read_csv(self.outputFilePath, keep_default_na=False, index_col='genericID')
 
@@ -491,7 +491,7 @@ class Evaluator:
         plt.show()
 
         # Plot for purposes in purposeDiary
-        purposeList = list(vpGrid.gridAvail)
+        purposeList = list(vpGrid.gridAvailabilitySimple)
         purposes = vpGrid.purposeData.copy()
         # purposes = purposes.set_index(['genericID']).transpose()
         purposes = purposes.transpose()
@@ -512,7 +512,7 @@ class Evaluator:
         plt.bar(x + 0.0625, totalTripPurpose['SHOPPING'], width=0.125, color='#FAC748')
         plt.bar(x + 0.1875, totalTripPurpose['LEISURE'], width=0.125, color='#FA8390')
         plt.bar(x + 0.3125, totalTripPurpose['OTHER'], width=0.125, color='#FF0000')
-        plt.bar(x + 0.4375, totalTripPurpose['0.0'], width=0.125, color='#1ABC9C')
+        plt.bar(x + 0.4375, totalTripPurpose['NA'], width=0.125, color='#1ABC9C')
         plt.ylabel('Trip purposes during 24 hours')
         plt.xlabel('Time (hours)')
         plt.xticks(x, totalTripPurpose.index)
