@@ -40,7 +40,7 @@ if __name__ == '__main__':
     # Trip distance and purpose diary compositions
     vpTripDiary = TripDiaryBuilder(datasetID=datasetID, configDict=configDict, ParseData=vpData, debug=True)
 
-    # Grid model application've
+    # Grid model application
     vpGrid = GridModeler(configDict=configDict, datasetID=datasetID)
     vpGrid.calcGrid(grid='simple')
 

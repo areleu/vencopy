@@ -387,6 +387,7 @@ class FlexEstimator:
                         chargeMaxProfiles['newCharge'] = chargeMaxProfiles[nHours - 1] + \
                                                          chargeProfiles[iHour] * discretePlugChoice[iHour].astype(int) - \
                                                          consumptionProfiles[iHour]
+
                         # Ensure that chargeMaxProfiles values are between batCapMin and batCapMax
                         chargeMaxProfiles[iHour] \
                             = chargeMaxProfiles['newCharge'].where(cond=chargeMaxProfiles['newCharge'] <= batCapMax,
@@ -394,17 +395,19 @@ class FlexEstimator:
                         chargeMaxProfiles[iHour] \
                             = chargeMaxProfiles[iHour].where(cond=chargeMaxProfiles[iHour] >= batCapMin,
                                                              other=batCapMin)
+
                     elif discretePlug:
-                        plugChoiceHour = socMaxProfiles[iHour] <= self.flexConfig['inputDataScalars']\
+                        plugChoiceHour = socMaxProfiles[iHour] <= self.flexConfig['inputDataScalars'] \
                                                     [self.datasetID]['SoC_plugging_threshold']
                         discretePlugChoice.loc[self.transactionStartHour[iHour] & plugChoiceHour, iHour:] = True
                         discretePlugChoice[iHour] = discretePlugChoice[nHours - 1].where(
                             cond=discretePlugChoice[nHours - 1] == True, other=False)
 
                         # Calculate and append column with new SoC Max value for comparison and cleaner code
-                        chargeMaxProfiles['newCharge'] = chargeMaxProfiles[nHours - 1] + \
-                                                         chargeProfiles[iHour] * discretePlugChoice[iHour].astype(int) - \
+                        chargeMaxProfiles['newCharge'] = chargeMaxProfiles[nHours - 1] + chargeProfiles[iHour] * \
+                                                         discretePlugChoice[iHour].astype(int) - \
                                                          consumptionProfiles[iHour]
+
                         # Ensure that chargeMaxProfiles values are between batCapMin and batCapMax
                         chargeMaxProfiles[iHour] \
                             = chargeMaxProfiles['newCharge'].where(cond=chargeMaxProfiles['newCharge'] <= batCapMax,
@@ -420,7 +423,8 @@ class FlexEstimator:
                 else:
                     socMaxProfiles[iHour] = chargeMaxProfiles[iHour] / batCapMax
                     if probabilisticPlug:
-                        # Calculate if an owner is connecting their car or not: connectionEvent (True/False) * connectionChoice (probability)
+                        # Calculate if an owner is connecting their car or not:
+                        # connectionEvent (True/False) * connectionChoice (probability)
                         plugProbability[iHour] = self.transactionStartHour[iHour] * \
                                                  socMaxProfiles[iHour].apply(self.plugProbFunc)
 
@@ -476,6 +480,7 @@ class FlexEstimator:
                             = chargeMaxProfiles[iHour].where(cond=chargeMaxProfiles[iHour] >= batCapMin,
                                                              other=batCapMin)
 
+            # used for debugging plugging choices
             # if 6 <= idxIt <= 12:
             #     plt.hist(chargeMaxProfiles[23], bins= np.arange(0,50,2))
             #     plt.xlabel('Battery SOC (kWh)')
@@ -486,46 +491,9 @@ class FlexEstimator:
             #     plt.savefig('ChargeMaxProfiles24th hour-' + str(idxIt) + '.png')
             #     plt.show()
 
-
             devCrit = chargeMaxProfiles[nHours - 1].sum() - chargeMaxProfiles[0].sum()
-            print(devCrit)
+            print(f'Aggregated difference of first and last hour: {devCrit}')
 
-        #VEP calculation- Nature energy Wei et al.
-        # self.SOC = chargeMaxProfiles.copy()
-        # for idxIt in range(1):
-        #     print(f'Starting with iteration {idxIt}')
-        #     for iHour in range(nHours):
-        #         if iHour == 0:
-        #             self.SOC[iHour] = chargeMaxProfiles[iHour].where((chargeMaxProfiles[iHour] -
-        #                                                               chargeMaxProfiles[nHours-1] < 0), batCapMax)
-        #         else:
-        #             self.SOC[iHour] = chargeMaxProfiles[iHour].where((chargeMaxProfiles[iHour] -
-        #                                                               chargeMaxProfiles[iHour-1] < 0), batCapMax)
-        # self.SOC.drop(labels='newCharge', axis=1, inplace=True)
-        # self.SOC.replace(batCapMax, 0, inplace=True)
-        # countTrips= self.SOC.copy()
-        # for idxIt in range(1):
-        #     for iHour in range(nHours):
-        #         if iHour == 0:
-        #             countTrips[iHour] = np.where(countTrips[iHour] > 0, 1, 0)
-        #         else:
-        #             countTrips[iHour] = np.where(countTrips[iHour] > 0, 1, 0)
-        # countTrips = countTrips.sum(axis=1)
-        #
-        # for idxIt in range(1):
-        #     for iHour in range(nHours):
-        #         if iHour == 0:
-        #             self.SOC[iHour] = np.where(self.SOC[iHour] > (0.2*batCapMax), 1, 0)
-        #         else:
-        #             self.SOC[iHour] = np.where(self.SOC[iHour] > (0.2 * batCapMax), 1, 0)
-        # self.SOC = self.SOC.sum(axis=1)
-        # soc = pd.Series(np.where((countTrips == 0) & (self.SOC == 0), 0, 1), index=self.SOC.index)
-        # soc = soc.drop(soc[soc == 0].index)
-        # self.SOC = self.SOC[soc.index]
-        # countTrips = countTrips[soc.index]
-        # electrifiedDays = pd.Series(np.where(countTrips == self.SOC, 1, 0))
-        #
-        # self.VEP = electrifiedDays.sum()/len(countTrips)
         chargeMaxProfiles.drop(labels='newCharge', axis='columns', inplace=True)
         return chargeMaxProfiles
 
