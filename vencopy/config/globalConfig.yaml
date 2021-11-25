@@ -65,7 +65,7 @@ files:
     flexPlotName: flexProfileComparison
 
 labels:
-    runLabel: cons18_bat50_home
+    runLabel: beta
     technologyLabel: BEV
     outputFileName: vencopy
     strAdd:

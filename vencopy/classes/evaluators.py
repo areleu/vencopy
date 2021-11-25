@@ -469,32 +469,12 @@ class Evaluator:
         plt.show()
 
     def plotParkingAndPowers(self, vpGrid):
-        # Plot for charging station
-        # capacity = pd.read_csv(self.outputFilePath, keep_default_na=False, index_col='genericID')
+        self.plotParkingPurpose(purposeDict=vpGrid.gridAvailabilitySimple, purposes=vpGrid.purposeData)
+        self.plotParkingPower(charingPower=vpGrid.chargeAvailability)
 
-        capacity = vpGrid.chargeAvailability.transpose()
-        capacityList = list(np.unique(capacity.loc[:, :].values))
-
-        totalChargingStation = pd.DataFrame()
-        for i in range(0, len(capacityList)):
-            total = capacity.where(capacity.loc[:] == capacityList[i]).count(axis=1)
-            totalChargingStation = pd.concat([totalChargingStation, total], ignore_index=True, axis=1)
-        totalChargingStation.columns = totalChargingStation.columns[:-len(capacityList)].tolist() + capacityList
-        totalChargingStation.index = np.arange(1, len(totalChargingStation) + 1)
-        totalChargingStation.plot(kind='area', title='Vehicles connected to different charging station over 24 hours',
-                                  figsize=(10, 8), colormap='Paired')
-        capacityListStr = [str(x) for x in capacityList]
-        appendStr = ' kW'
-        capacityListStr = [sub + appendStr for sub in capacityListStr]
-        plt.xlim(1, 24)
-        plt.xlabel('Time (hours)')
-        plt.ylabel('Number of vehicles')
-        plt.legend(capacityListStr, loc='upper center', ncol=len(capacityList))
-        plt.show()
-
+    def plotParkingPurpose(self, purposeDict, purposes):
         # Plot for purposes in purposeDiary
-        purposeList = list(vpGrid.gridAvailabilitySimple)
-        purposes = vpGrid.purposeData.copy()
+        purposeList = list(purposeDict)
         # purposes = purposes.set_index(['genericID']).transpose()
         purposes = purposes.transpose()
         totalTripPurpose = pd.DataFrame()
@@ -521,6 +501,29 @@ class Evaluator:
         plt.xlim(-1, 24)
         ax.yaxis.grid(color='black', linestyle='dashed', alpha=0.3)
         plt.legend(purposeList, loc='upper center', ncol=len(purposeList))
+        plt.show()
+
+    def plotParkingPower(self, charingPower):
+        # Plot for charging station
+        # capacity = pd.read_csv(self.outputFilePath, keep_default_na=False, index_col='genericID')
+        capacity = charingPower.transpose()
+        capacityList = list(np.unique(capacity.loc[:, :].values))
+
+        totalChargingStation = pd.DataFrame()
+        for i in range(0, len(capacityList)):
+            total = capacity.where(capacity.loc[:] == capacityList[i]).count(axis=1)
+            totalChargingStation = pd.concat([totalChargingStation, total], ignore_index=True, axis=1)
+        totalChargingStation.columns = totalChargingStation.columns[:-len(capacityList)].tolist() + capacityList
+        totalChargingStation.index = np.arange(1, len(totalChargingStation) + 1)
+        totalChargingStation.plot(kind='area', title='Vehicles connected to different charging station over 24 hours',
+                                  figsize=(10, 8), colormap='Paired')
+        capacityListStr = [str(x) for x in capacityList]
+        appendStr = ' kW'
+        capacityListStr = [sub + appendStr for sub in capacityListStr]
+        plt.xlim(1, 24)
+        plt.xlabel('Time (hours)')
+        plt.ylabel('Number of vehicles')
+        plt.legend(capacityListStr, loc='upper center', ncol=len(capacityList))
         plt.show()
 
 class chargingTransactionEvaluator:
