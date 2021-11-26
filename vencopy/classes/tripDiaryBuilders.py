@@ -393,7 +393,7 @@ class TripDiaryBuilder:
         print('Starting trip purpose diary setup')
         tripPurposesDriving = self.assignDriving(self.tripDistanceDiary)
         self.tripPurposeDiary = self.fillDayPurposes(tripData=self.tripDataClean, purposeDataDays=tripPurposesDriving)
-        self.tripPurposeDiary.replace({'0.0': 'HOME', 0.0: 'HOME'})  # Replace remaining non-allocated purposes with HOME
+        self.tripPurposeDiary.replace({'0.0': 'HOME', 0.0: 'HOME'}, inplace=True)  # Replace remaining non-allocated purposes with HOME
         print('Finished purpose replacements')
         print(f'There are {len(self.tripPurposeDiary)} daily trip diaries.')
 

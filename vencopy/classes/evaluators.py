@@ -469,12 +469,19 @@ class Evaluator:
         plt.show()
 
     def plotParkingAndPowers(self, vpGrid):
-        self.plotParkingPurpose(purposeDict=vpGrid.gridAvailabilitySimple, purposes=vpGrid.purposeData)
+        """
+        Wrapper function to plot parking purpose and charging distribution
+        """
+        self.plotParkingPurpose(purposes=vpGrid.purposeData)
         self.plotParkingPower(charingPower=vpGrid.chargeAvailability)
 
-    def plotParkingPurpose(self, purposeDict, purposes):
-        # Plot for purposes in purposeDiary
-        purposeList = list(purposeDict)
+    def plotParkingPurpose(self, purposes: pd.DataFrame):
+        """
+        :param purposes: Dataframe holding hourly purposes
+        """
+        # Plot for purposes
+        # purposeList = list(purposeDict)
+        purposeList = list(np.unique(purposes.loc[:, :].values))
         # purposes = purposes.set_index(['genericID']).transpose()
         purposes = purposes.transpose()
         totalTripPurpose = pd.DataFrame()
@@ -487,23 +494,26 @@ class Evaluator:
 
         fig, ax = plt.subplots(1, figsize=(20, 8))
         x = np.arange(0, len(totalTripPurpose.index))
-        plt.bar(x - 0.4375, totalTripPurpose['DRIVING'], width=0.125, color='#D35400')
-        plt.bar(x - 0.3125, totalTripPurpose['HOME'], width=0.125, color='#1D2F6F')
-        plt.bar(x - 0.1875, totalTripPurpose['WORK'], width=0.125, color='#928aed')
-        plt.bar(x - 0.0625, totalTripPurpose['SCHOOL'], width=0.125, color='#6EAF46')
-        plt.bar(x + 0.0625, totalTripPurpose['SHOPPING'], width=0.125, color='#FAC748')
-        plt.bar(x + 0.1875, totalTripPurpose['LEISURE'], width=0.125, color='#FA8390')
-        plt.bar(x + 0.3125, totalTripPurpose['OTHER'], width=0.125, color='#FF0000')
-        plt.bar(x + 0.4375, totalTripPurpose['NA'], width=0.125, color='#1ABC9C')
+        plt.bar(x - 0.426, totalTripPurpose.iloc[:, 0], width=0.142, color='#D35400')
+        plt.bar(x - 0.284, totalTripPurpose.iloc[:, 1], width=0.142, color='#1D2F6F')
+        plt.bar(x - 0.142, totalTripPurpose.iloc[:, 2], width=0.142, color='#FA8390')
+        plt.bar(x, totalTripPurpose.iloc[:, 3], width=0.142, color='#FF0000')
+        plt.bar(x + 0.142, totalTripPurpose.iloc[:, 4], width=0.142, color='#6EAF46')
+        plt.bar(x + 0.284, totalTripPurpose.iloc[:, 5], width=0.142, color='#FAC748')
+        plt.bar(x + 0.426, totalTripPurpose.iloc[:, 6], width=0.142, color='#928aed')
+        # plt.bar(x + 0.4375, totalTripPurpose['0.0'], width=0.142, color='#1ABC9C')
         plt.ylabel('Trip purposes during 24 hours')
         plt.xlabel('Time (hours)')
         plt.xticks(x, totalTripPurpose.index)
         plt.xlim(-1, 24)
         ax.yaxis.grid(color='black', linestyle='dashed', alpha=0.3)
-        plt.legend(purposeList, loc='upper center', ncol=len(purposeList))
+        plt.legend(totalTripPurpose.columns, loc='upper center', ncol=len(purposeList))
         plt.show()
 
-    def plotParkingPower(self, charingPower):
+    def plotParkingPower(self, charingPower:pd.DataFrame):
+        """
+        charingPower: Dataframe holding hourly charging station power
+        """
         # Plot for charging station
         # capacity = pd.read_csv(self.outputFilePath, keep_default_na=False, index_col='genericID')
         capacity = charingPower.transpose()

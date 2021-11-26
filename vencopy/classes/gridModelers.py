@@ -75,10 +75,6 @@ class GridModeler:
 
     def assignGridViaProbabilities(self, setSeed: int):
         """
-        :param gridAvailability: Dictionary specifying the probability of different charging powers at different parking
-            purposes
-        :param fastChargingHHID: List of household trips for fast charging
-        :param nIter: Pre-defined number for iteration
         :param setSeed: Seed for reproducing random number
         :return: Returns a dataFrame holding charging capacity for each trip assigned with probability distribution
         """
