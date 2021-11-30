@@ -26,7 +26,7 @@ from vencopy.scripts.globalFunctions import createFileString, mergeVariables, ca
 
 
 class FlexEstimator:
-    def __init__(self, configDict: dict, ParseData, datasetID: str, transactionStartHour: pd.DataFrame):
+    def __init__(self, configDict: dict, ParseData, datasetID: str, transactionStartHour: pd.DataFrame=None):
         # def __init__(self, globalConfig: dict, flexConfig: dict, evaluatorConfig: dict, ParseData,
         #                 datasetID: str):
         """
@@ -66,8 +66,7 @@ class FlexEstimator:
                                                                            nHours=self.globalConfig['numberOfHours'])
         self.scalarsProc = self.procScalars(self.driveProfilesIn, self.plugProfilesIn,
                                             self.driveProfiles, self.plugProfiles)
-        self.plugProbFunc = self.initPlugFunc(
-            self.flexConfig['plugFunction'])  # SOC dependend probability of connecting
+        self.plugProbFunc = self.initPlugFunc(self.flexConfig['plugFunction'])  # SOC dependend probability of connecting
 
         self.transactionStartHour = transactionStartHour
 
@@ -357,8 +356,9 @@ class FlexEstimator:
         socMaxProfiles = chargeProfiles.copy()  # relative to battery capacity between 0 and 1
         plugProbability = chargeProfiles.copy()
         discretePlugChoice = pd.DataFrame(data=True, index=chargeProfiles.index, columns=chargeProfiles.columns)
-        self.transactionStartHour.set_index(chargeProfiles.index, inplace=True)
-        self.transactionStartHour.columns = self.transactionStartHour.columns.astype(int)
+        if self.transactionStartHour:
+            self.transactionStartHour.set_index(chargeProfiles.index, inplace=True)
+            self.transactionStartHour.columns = self.transactionStartHour.columns.astype(int)
         nProf = len(chargeProfiles)
         batCapMin = batCap * minSOC  # absolute in kWh
         batCapMax = batCap * maxSOC
@@ -398,7 +398,10 @@ class FlexEstimator:
                             = chargeMaxProfiles[iHour].where(cond=chargeMaxProfiles[iHour] >= batCapMin,
                                                              other=batCapMin)
 
-                    elif discretePlug:
+                    elif discretePlug and not self.transactionStartHour:
+                        raise(ValueError('discrete plugging was chosen but transaction start hour is not given'))
+
+                    elif discretePlug and self.transactionStartHour:
                         plugChoiceHour = socMaxProfiles[iHour] <= self.flexConfig['inputDataScalars'] \
                                                     [self.datasetID]['SoC_plugging_threshold']
                         discretePlugChoice.loc[self.transactionStartHour[iHour] & plugChoiceHour, iHour:] = True
@@ -424,7 +427,7 @@ class FlexEstimator:
                         socMaxProfiles[iHour] = chargeMaxProfiles[iHour] / batCapMax
                 else:
                     socMaxProfiles[iHour] = chargeMaxProfiles[iHour] / batCapMax
-                    if probabilisticPlug:
+                    if probabilisticPlug and self.transactionStartHour:
                         # Calculate if an owner is connecting their car or not:
                         # connectionEvent (True/False) * connectionChoice (probability)
                         plugProbability[iHour] = self.transactionStartHour[iHour] * \
@@ -449,7 +452,7 @@ class FlexEstimator:
                             = chargeMaxProfiles[iHour].where(cond=chargeMaxProfiles[iHour] >= batCapMin,
                                                              other=batCapMin)
 
-                    elif discretePlug:
+                    elif discretePlug and self.transactionStartHour:
                         plugChoiceHour = socMaxProfiles[iHour] <= self.flexConfig['inputDataScalars'] \
                             [self.datasetID]['SoC_plugging_threshold']
                         discretePlugChoice[iHour] = discretePlugChoice[iHour - 1]
@@ -467,6 +470,10 @@ class FlexEstimator:
                         chargeMaxProfiles[iHour] \
                             = chargeMaxProfiles[iHour].where(cond=chargeMaxProfiles[iHour] >= batCapMin,
                                                              other=batCapMin)
+
+                    elif (discretePlug or probabilisticPlug) and not self.transactionStartHour:
+                        raise(ValueError('Transaction start hour is not specified but has to be to use discrete or'
+                                         'probabilistic plugging'))
 
                     else:
                         # Calculate and append column with new SoC Max value for comparison and cleaner code

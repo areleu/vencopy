@@ -122,7 +122,7 @@ class DataParser:
         :return: None
         """
 
-        assert all(isinstance(val, list) for val in self.returnDictBottomValues(filterDict)), \
+        assert all(isinstance(val, list) or val is None for val in self.returnDictBottomValues(filterDict)), \
             f'All values in filter dictionaries have to be lists, but are not'
 
     def returnDictBottomKeys(self, baseDict: dict, lst: list = None) -> list:
