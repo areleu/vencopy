@@ -20,11 +20,11 @@ from vencopy.classes.tripDiaryBuilders import TripDiaryBuilder
 from vencopy.classes.gridModelers import GridModeler
 from vencopy.classes.flexEstimators import FlexEstimator
 from vencopy.classes.evaluators import Evaluator
-from vencopy.scripts.globalFunctions import loadConfigDict, createOutputFolders
+from vencopy.scripts.globalFunctions import loadConfigDict, createFileString
 
 if __name__ == '__main__':
     # Set dataset and config to analyze, create output folders
-    #datasetID = 'KiD'
+    # datasetID = 'KiD'
     datasetID = 'MiD17'
     configNames = ('globalConfig', 'localPathConfig', 'parseConfig', 'tripConfig', 'gridConfig', 'flexConfig',
                    'evaluatorConfig')
@@ -45,7 +45,7 @@ if __name__ == '__main__':
     vpData.process()
 
     # Trip distance and purpose diary compositions
-    # vpTripDiary = TripDiaryBuilder(datasetID=datasetID, configDict=configDict, ParseData=vpData, debug=True)
+    vpTripDiary = TripDiaryBuilder(datasetID=datasetID, configDict=configDict, ParseData=vpData, debug=True)
 
     # Grid model application
     vpGrid = GridModeler(configDict=configDict, datasetID=datasetID)
@@ -58,8 +58,7 @@ if __name__ == '__main__':
     vpEval.plotAggregates()
 
     # Estimate charging flexibility based on driving profiles and charge connection
-    vpFlex = FlexEstimator(configDict=configDict, datasetID=datasetID, ParseData=vpData,
-                           transactionStartHour=vpGrid.transactionStartHour)
+    vpFlex = FlexEstimator(configDict=configDict, datasetID=datasetID, ParseData=vpData)
     vpFlex.baseProfileCalculation()
     vpFlex.filter()
     vpFlex.aggregate()

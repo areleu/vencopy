@@ -331,8 +331,8 @@ class FlexEstimator:
                 'Rated_power_of_charging_column']
         return plugProfiles
 
-    def calcChargeMaxProfiles(self, chargeProfiles: pd.DataFrame, consumptionProfiles: pd.DataFrame, batCap: np.float,
-                              minSOC: np.float, maxSOC: np.float, nIter: int, probabilisticPlug: bool,
+    def calcChargeMaxProfiles(self, chargeProfiles: pd.DataFrame, consumptionProfiles: pd.DataFrame, batCap: float,
+                              minSOC: float, maxSOC: float, nIter: int, probabilisticPlug: bool,
                               discretePlug: bool) -> pd.DataFrame:
         """
         Calculates all maximum SoC profiles under the assumption that batteries are always charged as soon as they
@@ -1107,17 +1107,17 @@ if __name__ == '__main__':
     vpData = ParseMiD(configDict=configDict, datasetID=datasetID, loadEncrypted=False)
     vpData.process()
 
-    globalConfig = configDict['globalConfig']
-    inputTransactionHourStartPath = Path(configDict['localPathConfig']['pathAbsolute']['vencoPyRoot']) / \
-                                   configDict['globalConfig']['pathRelative']['gridOutput'] / createFileString(
-                                        globalConfig=globalConfig, fileKey='transactionStartHour', datasetID=datasetID)
-    transactionStartHour = pd.read_csv(inputTransactionHourStartPath, keep_default_na=False, index_col='genericID')
+    # globalConfig = configDict['globalConfig']
+    # inputTransactionHourStartPath = Path(configDict['localPathConfig']['pathAbsolute']['vencoPyRoot']) / \
+    #                               configDict['globalConfig']['pathRelative']['gridOutput'] / createFileString(
+    #                                    globalConfig=globalConfig, fileKey='transactionStartHour', datasetID=datasetID)
+    # transactionStartHour = pd.read_csv(inputTransactionHourStartPath, keep_default_na=False, index_col='genericID')
 
-    vpFlexEst = FlexEstimator(configDict=configDict, ParseData=vpData, datasetID=datasetID,
-                              transactionStartHour=transactionStartHour)
+    vpFlexEst = FlexEstimator(configDict=configDict, ParseData=vpData, datasetID=datasetID)
     vpFlexEst.run()
 
     vpEval = Evaluator(configDict=configDict, parseData=pd.Series(data=vpData, index=[datasetID]))
     vpEval.plotProfiles(flexEstimator=vpFlexEst)
     print(f'Total absolute electricity charged in uncontrolled charging: '
           f'{vpFlexEst.chargeProfilesUncontrolled.sum().sum()} based on MiD17')
+
