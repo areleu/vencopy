@@ -27,6 +27,21 @@ Welcome to VencoPy's documentation!
 
 A data processing tool offering hourly demand and flexibility profiles for future electric vehicle fleets in an aggregated manner.
 VencoPy is developed at the `Department of Energy Systems Analysis <https://www.dlr.de/ve/en/desktopdefault.aspx/tabid-15971/25909_read-66550/>`_ at the `German Aerospace Center (DLR) <https://www.dlr.de/EN/Home/home_node.html>`_.
+In a nutshell, with VencoPy you can:
+- :ref:`simulate different charging strategies (uncontrolled, controlled charging , V2G) for EV fleets <flexEstimator>`
+- :ref:`model different grid infrastructure options (home charging, work charging, ..) <gridModeler>`
+- analyse charging behaviour based on socio-economic data and trip purpose
+
+
+
+Useful Information about VencoPy
+------------------
+- :ref:`Find a general description of VencoPy and its capabilities here <gettingstarted/intro>`
+- :ref:`Find the different installation instructions here <gettingstarted/installation>`
+- :ref:`Find some frequently asked questions here <faq>`
+- :ref:`Find information on planned future features <contribution/releaseTimeline>`
+- :ref:`Find information on how to contribute <contribution/howToContribute>`
+
 
 
 About

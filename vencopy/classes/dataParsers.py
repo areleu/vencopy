@@ -645,3 +645,4 @@ if __name__ == '__main__':
     vpData = ParseMiD(configDict=configDict, datasetID=datasetID)
     #vpData = DataParser(configDict=configDict, loadEncrypted=False, datasetID=datasetID)
     vpData.process()
+    i=1

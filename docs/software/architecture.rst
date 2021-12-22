@@ -62,7 +62,7 @@ Organizational information
    * - Open source ready
      - Features, dependencies and components which are contraindicative or at odds with an open source publication should not be used
    * - Development tools
-     - Source code and all artefacts are located in the DLR GITLAB repository for VencoPy including the software documentation. For development, the PyCharm community edition IDE and gitbash are used. For graphical depictions of software components and similar documentation draw.io is used.
+     - Source code and all artefacts are located in the DLR GitLab repository for VencoPy including the software documentation. For development, the PyCharm community edition IDE, VSCode and gitbash are used. For graphical depictions of software components and similar documentation draw.io and InkScape used.
 
 
 

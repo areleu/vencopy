@@ -11,8 +11,8 @@ Installation and Setup
 Requirements and boundary conditions
 -------------------------------------
 
-VencoPy runs on Unix and Windows-based operating systems. It requires an installed version of python and the package, dependency and environment management tool conda as well as access to the internet for setting up the environment (downloading the required packages). VencoPy is consistent with the software application class 1 of the DLR software categorization. Versioning is based on 
-major, minor and fix (X.Y.Z) changes versioning system via git-labels. You can use VencoPy as a user or contribute to the codebase and documentation as developer. Depending on that choice the installation and setup differs.
+VencoPy runs on Unix and Windows-based operating systems. It requires an installed version of python and the package, dependency and environment management tool conda as well as access to the internet for setting up the environment (downloading the required packages). 
+Versioning is based on major, minor and fix (X.Y.Z) changes versioning system via git-labels. You can use VencoPy as a user or contribute to the codebase and documentation as developer. Depending on that choice the installation and setup differs.
 
 .. image:: ../figures/ApplicationContext.drawio.png
 	:width: 600
