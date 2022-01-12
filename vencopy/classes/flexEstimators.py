@@ -603,7 +603,7 @@ class FlexEstimator:
         nHours = self.scalarsProc['nHours']
         print(f'Starting with iterative chargeMin calculation')
         for idxIt in range(nIter):
-            print(f'Starting with iteration {nIter}')
+            print(f'Starting with iteration {idxIt}')
             for iHour in range(nHours):
                 if iHour == nHours - 1:
                     chargeMinProfiles[iHour] = chargeMinProfiles[0].where(cond=batCapMin <= chargeMinProfiles[iHour],

@@ -6,7 +6,7 @@ dependencies:
   - click
   - jupyterlab
   - matplotlib
-  - openpyxl
+  - openpyxlcon
   - pandas=1.1.1
   - python=3.9
   - pyyaml
