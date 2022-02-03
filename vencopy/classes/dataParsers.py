@@ -6,7 +6,7 @@ __birthdate__ = '31.12.2019'
 __status__ = 'dev'  # options are: dev, test, prod
 
 
-#----- imports & packages ------
+# ----- imports & packages ------
 if __package__ is None or __package__ == '':
     import sys
     from os import path
@@ -22,80 +22,102 @@ from zipfile import ZipFile
 
 
 class DataParser:
-    def __init__(self, configDict: dict, filepath: Path, fpInZip=None, loadEncrypted=False):
+    def __init__(self, configDict: dict, filepath: Path, fpInZip=None,
+                 loadEncrypted=False):
         """
-        Basic class for parsing a mobility survey trip data set. Currently the both German travel surveys MiD 2008 and
-        MiD 2017 are pre-configured and one of the two can be given (default: MiD 2017).
-        The data set can be provided from an encrypted file on a server in which case the link to the ZIP-file as well
-        as a link to the file within the ZIP-file have to be supplied in the globalConfig and a password has to be
-        supplied in the parseConfig.
-        Columns relevant for the EV simulation are selected from the entirety of the data and renamed to VencoPy
-        internal variable names given in the dictionary parseConfig['dataVariables'] for the respective survey data set.
-        Manually configured exclude, include, greaterThan and smallerThan filters are applied as they are specified in
-        parseConfig. For some columns, raw data is transferred to human readable strings and respective columns are
-        added. Pandas timestamp columns are synthesized from the given trip start and trip end time information.
+        Basic class for parsing a mobility survey trip data set. Currently both
+        German travel surveys MiD 2008 and MiD 2017 are pre-configured and one
+        of the two can be given (default: MiD 2017).
+        The data set can be provided from an encrypted file on a server in
+        which case the link to the ZIP-file as well as a link to the file
+        within the ZIP-file have to be supplied in the globalConfig and a
+        password has to be supplied in the parseConfig.
+        Columns relevant for the EV simulation are selected from the entirety
+        of the data and renamed to VencoPy internal variable names given in
+        the dictionary parseConfig['dataVariables'] for the respective survey
+        data set. Manually configured exclude, include, greaterThan and
+        smallerThan filters are applied as they are specified in parseConfig.
+        For some columns, raw data is transferred to human readable strings
+        and respective columns are added. Pandas timestamp columns are
+        synthesized from the given trip start and trip end time information.
 
         :param configDict: A dictionary containing multiple yaml config files
-        :param datasetID: Currently, MiD08 and MiD17 are implemented as travel survey data sets
-        :param loadEncrypted: If True, load an encrypted ZIP file as specified in parseConfig
+        :param datasetID: Currently, MiD08 and MiD17 are implemented as travel
+                          survey data sets
+        :param loadEncrypted: If True, load an encrypted ZIP file as specified
+                              in parseConfig
         """
-        self.__parseConfig = configDict['parseConfig']
-        self.__rawDataPath = filepath
+        self.parseConfig = configDict['parseConfig']
+        self.rawDataPath = filepath
         self.rawData = None
         self.data = None
-        self.__filterDict = {}
-        self.__filterDictNameList = ['include', 'exclude', 'greaterThan', 'smallerThan']
+        self.filterDict = {}
+        self.filterDictNameList = ['include',
+                                   'exclude',
+                                   'greaterThan',
+                                   'smallerThan']
         print('Generic file parsing properties set up')
         if loadEncrypted:
-            print(f"Starting to retrieve encrypted data file from {self.__rawDataPath}")
-            self.__loadEncryptedData(pathToZip=filepath,
-                                     pathInZip=fpInZip)
+            print(f'Starting to retrieve encrypted data file'\
+                  f'from {self.rawDataPath}')
+            self.loadEncryptedData(pathToZip=filepath,
+                                   pathInZip=fpInZip)
         else:
-            print(f"Starting to retrieve local data file from {self.__rawDataPath}")
-            self.__loadData()
+            print(f'Starting to retrieve local data file'\
+                  f'from {self.rawDataPath}')
+            self.loadData()
 
-    def __loadData(self):
+    def loadData(self):
         """
-        Loads data specified in self.rawDataPath and stores it in self.rawData. Raises an exception if a invalid suffix
-        is specified in self.rawDataPath. READ IN OF CSV HAS NOT BEEN EXTENSIVELY TESTED BEFORE BETA RELEASE.
+        Loads data specified in self.rawDataPath and stores it in self.rawData.
+        Raises an exception if a invalid suffix is specified in 
+        self.rawDataPath. 
+        READ IN OF CSV HAS NOT BEEN EXTENSIVELY TESTED BEFORE BETA RELEASE.
 
         :return: None
         """
-        # Future releases: Are potential error messages (.dta not being a stata file even as the ending matches)
-        # readable for the user? Should we have a manual error treatment here?
-        if self.__rawDataPath.suffix == '.dta':
-            self.rawData = pd.read_stata(self.__rawDataPath, convert_categoricals=False, convert_dates=False,
+        # Future releases: Are potential error messages (.dta not being a stata
+        # file even as the ending matches) readable for the user?
+        # Should we have a manual error treatment here?
+        if self.rawDataPath.suffix == '.dta':
+            self.rawData = pd.read_stata(self.rawDataPath,
+                                         convert_categoricals=False,
+                                         convert_dates=False,
                                          preserve_dtypes=False)
 
         # This has not been tested before the beta release
-        elif self.__rawDataPath.suffix == '.csv':
-            self.rawData = pd.read_csv(self.__rawDataPath)
+        elif self.rawDataPath.suffix == '.csv':
+            self.rawData = pd.read_csv(self.rawDataPath)
         else:
-            Exception(f"Data type {self.__rawDataPath.suffix} not yet specified. Available types so far are .dta and "
-                      f".csv")
+            Exception(f"Data type {self.rawDataPath.suffix} not yet specified."
+                      f"Available types so far are .dta and .csv")
 
-        print(f'Finished loading {len(self.rawData)} rows of raw data of type {self.__rawDataPath.suffix}')
+        print(f'Finished loading {len(self.rawData)} rows of raw data'\
+              f'of type {self.rawDataPath.suffix}')
 
-    def __loadEncryptedData(self, pathToZip, pathInZip):
+    def loadEncryptedData(self, pathToZip, pathInZip):
         """
-        Since the MiD data sets are only accessible by an extensive data security contract, VencoPy provides the
-        possibility to access encrypted zip files. An encryption password has to be given in parseConfig.yaml in order
-        to access the encrypted file. Loaded data is stored in self.rawData
+        Since the MiD data sets are only accessible by an extensive data
+        security contract, VencoPy provides the possibility to access
+        encrypted zip files. An encryption password has to be given in
+        parseConfig.yaml in order to access the encrypted file. Loaded data
+        is stored in self.rawData
 
-        :param pathToZip: path from current working directory to the zip file or absolute path to zipfile
+        :param pathToZip: path from current working directory to the zip file
+                          or absolute path to zipfile
         :param pathInZip: Path to trip data file within the encrypted zipfile
         :return: None
         """
         with ZipFile(pathToZip) as myzip:
             if '.dta' in pathInZip:
-                self.rawData = pd.read_stata(myzip.open(pathInZip, pwd=bytes(self.__parseConfig['encryptionPW'],
+                self.rawData = pd.read_stata(myzip.open(pathInZip, pwd=bytes(self.parseConfig['encryptionPW'],
                                                                              encoding='utf-8')),
                                              convert_categoricals=False, convert_dates=False, preserve_dtypes=False)
             else:  # if '.csv' in pathInZip:
-                self.rawData = pd.read_csv(myzip.open(pathInZip, pwd=bytes(self.__parseConfig['encryptionPW'],
+                self.rawData = pd.read_csv(myzip.open(pathInZip, pwd=bytes(self.parseConfig['encryptionPW'],
                                                                            encoding='utf-8')), sep=';', decimal=',')
 
-        print(f'Finished loading {len(self.rawData)} rows of raw data of type {self.__rawDataPath.suffix}')
+        print(f'Finished loading {len(self.rawData)} rows of raw data of type {self.rawDataPath.suffix}')
 
     def returnDictBottomValues(self, baseDict: dict, lst: list = []) -> list:
         """
@@ -114,7 +136,7 @@ class DataParser:
                     lst.append(iVal)
         return lst
 
-    def _checkFilterDict(self, filterDict):
+    def checkFilterDict(self, filterDict):
         """
         Checking if all values of filter dictionaries are of type list.  Currently only checking if list of list str
         not typechecked all(map(self.__checkStr, val). Conditionally triggers an assert.
@@ -145,7 +167,7 @@ class DataParser:
                     lst.append(iKey)
         return lst
 
-    def _filter(self, filterDict: dict=None):
+    def filter(self, filterDict: dict=None):
         """
         Wrapper function to carry out filtering for the four filter logics of including, excluding, greaterThan and
         smallerThan. If a filterDict is defined with a different key, a warning is thrown. The function operates on
@@ -163,21 +185,21 @@ class DataParser:
         #  might be easy to code but hard to implement correctly.
         for iKey, iVal in filterDict.items():
             if iKey == 'include' and iVal:
-                ret = ret.join(self.__setIncludeFilter(iVal, self.data.index))
+                ret = ret.join(self.setIncludeFilter(iVal, self.data.index))
             elif iKey == 'exclude' and iVal:
-                ret = ret.join(self.__setExcludeFilter(iVal, self.data.index))
+                ret = ret.join(self.setExcludeFilter(iVal, self.data.index))
             elif iKey == 'greaterThan' and iVal:
-                ret = ret.join(self.__setGreaterThanFilter(iVal, self.data.index))
+                ret = ret.join(self.setGreaterThanFilter(iVal, self.data.index))
             elif iKey == 'smallerThan' and iVal:
-                ret = ret.join(self.__setSmallerThanFilter(iVal, self.data.index))
+                ret = ret.join(self.setSmallerThanFilter(iVal, self.data.index))
             elif iKey not in ['include', 'exclude', 'greaterThan', 'smallerThan']:
                 warnings.warn(f'A filter dictionary was defined in the parseConfig with an unknown filtering key.'
                               f'Current filtering keys comprise include, exclude, smallerThan and greaterThan.'
                               f'Continuing with ignoring the dictionary {iKey}')
         self.data = self.data[ret.all(axis='columns')]
-        self.__filterAnalysis(ret)
+        self.filterAnalysis(ret)
 
-    def __setIncludeFilter(self, includeFilterDict: dict, dataIndex) -> pd.DataFrame:
+    def setIncludeFilter(self, includeFilterDict: dict, dataIndex) -> pd.DataFrame:
         """
         Read-in function for include filter dict from parseConfig.yaml
 
@@ -191,7 +213,7 @@ class DataParser:
             incFilterCols[incCol] = self.data[incCol].isin(incElements)
         return incFilterCols
 
-    def __setExcludeFilter(self, excludeFilterDict: dict, dataIndex) -> pd.DataFrame:
+    def setExcludeFilter(self, excludeFilterDict: dict, dataIndex) -> pd.DataFrame:
         """
         Read-in function for exclude filter dict from parseConfig.yaml
 
@@ -199,12 +221,13 @@ class DataParser:
         :param dataIndex: Index for the data frame
         :return: Returns a filtered data frame with exclude filters
         """
-        exclFilterCols = pd.DataFrame(index=dataIndex, columns=excludeFilterDict.keys())
+        exclFilterCols = pd.DataFrame(index=dataIndex,
+                                      columns = excludeFilterDict.keys())
         for excCol, excElements in excludeFilterDict.items():
             exclFilterCols[excCol] = ~self.data[excCol].isin(excElements)
         return exclFilterCols
 
-    def __setGreaterThanFilter(self, greaterThanFilterDict: dict, dataIndex):
+    def setGreaterThanFilter(self, greaterThanFilterDict: dict, dataIndex):
         """
         Read-in function for greaterThan filter dict from parseConfig.yaml
 
@@ -212,7 +235,7 @@ class DataParser:
         :param dataIndex: Index for the data frame
         :return:
         """
-        greaterThanFilterCols = pd.DataFrame(index=dataIndex, columns=greaterThanFilterDict.keys())
+        greaterThanFilterCols = pd.DataFrame(index=dataIndex, columns = greaterThanFilterDict.keys())
         for greaterCol, greaterElements in greaterThanFilterDict.items():
             greaterThanFilterCols[greaterCol] = self.data[greaterCol] >= greaterElements.pop()
             if len(greaterElements) > 0:
@@ -220,7 +243,7 @@ class DataParser:
                               f'Only considering the last element given in the parseConfig.')
         return greaterThanFilterCols
 
-    def __setSmallerThanFilter(self, smallerThanFilterDict: dict, dataIndex) -> pd.DataFrame:
+    def setSmallerThanFilter(self, smallerThanFilterDict: dict, dataIndex) -> pd.DataFrame:
         """
         Read-in function for smallerThan filter dict from parseConfig.yaml
 
@@ -236,7 +259,7 @@ class DataParser:
                               f'Only considering the last element given in the parseConfig.')
         return smallerThanFilterCols
 
-    def __filterAnalysis(self, filterData: pd.DataFrame):
+    def filterAnalysis(self, filterData: pd.DataFrame):
         """
         Function supplies some aggregate info of the data after filtering to the user Function does not change any
         class attributes
@@ -256,38 +279,36 @@ class DataParser:
         """
         Wrapper function for harmonising and filtering the dataset.
         """
-        self._checkFilterDict(filterDict)
-        self._filter(filterDict)
+        self.checkFilterDict(filterDict)
+        self.filter(filterDict)
         print('Generic parsing completed')
 
 
-class ParseMiD(DataParser):
+class IntermediateParsing(DataParser):
     def __init__(self, configDict: dict, datasetID: str, loadEncrypted=False):
         """
-        Class for parsing MiD data sets. The VencoPy configs globalConfig, parseConfig and localPathConfig have
-        to be given on instantiation as well as the data set ID, e.g. 'MiD2017' that is used as key in the config
-        lookups. Also, an option can be specified to load the file from an encrypted ZIP-file. For this, a password
-        has to be given in the parseConfig.
+        Intermediate parsing class.
 
-        :param configDict: VencoPy config dictionary consisting at least of the config dictionaries globalConfig,
+        :param configDict: VencoPy config dictionary consisting at least of
+                           the config dictionaries globalConfig,
                            parseConfig and localPathConfig.
         :param datasetID: A string identifying the MiD data set.
-        :param loadEncrypted: Boolean. If True, data is read from encrypted file. For this, a possword has to be
+        :param loadEncrypted: Boolean. If True, data is read from encrypted
+                              file. For this, a possword has to be
                               specified in parseConfig['PW'].
         """
-
-        self.__globalConfig = configDict['globalConfig']
-        self.__parseConfig = configDict['parseConfig']
-        self.__localPathConfig = configDict['localPathConfig']
-        self.datasetID = self.__checkDatasetID(datasetID, self.__parseConfig)
-        filepath = Path(self.__localPathConfig['pathAbsolute'][self.datasetID]) / \
-                        self.__globalConfig['files'][self.datasetID]['tripsDataRaw']
-        self.__filterDict = self.__parseConfig['filterDicts'][self.datasetID]
+        self.globalConfig = configDict['globalConfig']
+        self.parseConfig = configDict['parseConfig']
+        self.localPathConfig = configDict['localPathConfig']
+        self.datasetID = self.checkDatasetID(datasetID, self.parseConfig)
+        filepath = Path(self.localPathConfig['pathAbsolute'][self.datasetID])/\
+                        self.globalConfig['files'][self.datasetID]['tripsDataRaw']
+        self.filterDict = self.parseConfig['filterDicts'][self.datasetID]
         super().__init__(configDict, filepath=filepath, loadEncrypted=loadEncrypted)
-        self.__subDict = {}
-        self.columns = self.__compileVariableList()
+        self.subDict = {}
+        self.columns = self.compileVariableList()
 
-    def __checkDatasetID(self, datasetID: str, parseConfig: dict) -> str:
+    def checkDatasetID(self, datasetID: str, parseConfig: dict) -> str:
         """
         General check if data set ID is defined in parseConfig.yaml
 
@@ -300,26 +321,30 @@ class ParseMiD(DataParser):
             f'Defined datasetID {datasetID} not specified under dataVariables in parseConfig. Specified datasetIDs ' \
             f'are {availableDatasetIDs}'
         return datasetID
-
-    def __compileVariableList(self) -> list:
+   
+    def compileVariableList(self) -> list:
         """
-        Clean up the replacement dictionary of raw data file variable (column) names. This has to be done because some
-        variables that may be relevant for the analysis later on are only contained in one raw data set while not
-        contained in another one. E.g. if a trip is an intermodal trip was only assessed in the MiD 2017 while it wasn't
-        in the MiD 2008. This has to be mirrored by the filter dict for the respective data set.
+        Clean up the replacement dictionary of raw data file variable (column)
+        names. This has to be done because some variables that may be relevant
+        for the analysis later on are only contained in one raw data set while
+        not contained in another one. E.g. if a trip is an intermodal trip was
+        only assessed in the MiD 2017 while it was not in the MiD 2008.
+        This has to be mirrored by the filter dict for the respective dataset.
 
         :return: List of variables
         """
-        listIndex = self.__parseConfig['dataVariables']['datasetID'].index(self.datasetID)
+        listIndex = self.parseConfig['dataVariables']['datasetID'].index(self.datasetID)
         variables = [val[listIndex] if not val[listIndex] == 'NA' else 'NA' for key, val in
-                     self.__parseConfig['dataVariables'].items()]
+                     self.parseConfig['dataVariables'].items()]
         variables.remove(self.datasetID)
-        self.__removeNA(variables)
+        self.removeNA(variables)
         return variables
 
-    def __removeNA(self, variables: list):
+    
+    def removeNA(self, variables: list):
         """
-        Removes all strings that can be capitalized to 'NA' from the list of variables
+        Removes all strings that can be capitalized to 'NA' from the list
+        of variables
 
         :param variables: List of variables of the mobility dataset
         :return: Returns a list with non NA values
@@ -331,25 +356,30 @@ class ParseMiD(DataParser):
                 del variables[idx - counter]
                 counter += 1
 
-    def __selectColumns(self):
+    def selectColumns(self):
         """
-        Function to filter the rawData for only relevant columns as specified by parseConfig and cleaned in
-        self.compileVariablesList(). Stores the subset of data in self.data
+        Function to filter the rawData for only relevant columns as specified
+        by parseConfig and cleaned in self.compileVariablesList().
+        Stores the subset of data in self.data
 
         :return: None
         """
 
         self.data = self.rawData.loc[:, self.columns]
 
-    def __harmonizeVariables(self):
+    def harmonizeVariables(self):
         """
-        Harmonizes the input data variables to match internal VencoPy names given as specified in the mapping in
-        parseConfig['dataVariables']. So far mappings for MiD08 and MiD17 are given. Since the MiD08 doesn't provide
-        a combined household and person unique identifier, it is synthesized of the both IDs.
+        Harmonizes the input data variables to match internal VencoPy names
+        given as specified in the mapping in parseConfig['dataVariables'].
+        So far mappings for MiD08 and MiD17 are given. Since the MiD08 does not
+        provide a combined household and person unique identifier, it is
+        synthesized of the both IDs.
 
         :return: None
         """
-        replacementDict = self.__createReplacementDict(self.datasetID, self.__parseConfig['dataVariables'])
+        replacementDict = self.createReplacementDict(self.datasetID,
+                                                     self.parseConfig[
+                                                         'dataVariables'])
         dataRenamed = self.data.rename(columns=replacementDict)
         if self.datasetID == 'MiD08':
             dataRenamed['hhPersonID'] = (dataRenamed['hhID'].astype('string') +
@@ -357,64 +387,37 @@ class ParseMiD(DataParser):
         self.data = dataRenamed
         print('Finished harmonization of variables')
 
-    def __createReplacementDict(self, datasetID: str, dictRaw: dict) -> dict:
+    def createReplacementDict(self, datasetID: str, dictRaw: dict) -> dict:
         """
-        Creates the mapping dictionary from raw data variable names to VencoPy internal variable names as specified
-        in parseConfig.yaml for the specified data set.
+        Creates the mapping dictionary from raw data variable names to VencoPy
+        internal variable names as specified in parseConfig.yaml
+        for the specified data set.
 
-        :param datasetID: list of strings declaring the datasetIDs to be read in
+        :param datasetID: list of strings declaring the datasetIDs to be read
         :param dictRaw: Contains dictionary of the raw data
-        :return: Dictionary with internal names as keys and raw data column names as values.
+        :return: Dictionary with internal names as keys and raw data column
+                 names as values.
         """
 
         if datasetID in dictRaw['datasetID']:
             listIndex = dictRaw['datasetID'].index(datasetID)
             return {val[listIndex]: key for (key, val) in dictRaw.items()}
         else:
-            raise ValueError(f'Data set {datasetID} not specified in parseConfig variable dictionary.')
-
-    def convertTypes(self):
+            raise ValueError(f'Data set {datasetID} not specified in' 
+                             f'parseConfig variable dictionary.')
+    
+    def updateFilterDict(self) -> None:
         """
-        Convert raw column types to predefined python types as specified in parseConfig['inputDTypes'][datasetID]. This is mainly
-        done for performance reasons. But also in order to avoid index values that are of type int to be cast to float.
-        The function operates only on self.data and writes back changes to self.data
-
-        :return: None
-        """
-
-        # Filter for dataset specific columns
-        conversionDict = self.__parseConfig['inputDTypes'][self.datasetID]
-        keys = {iCol for iCol in conversionDict.keys() if iCol in self.data.columns}
-        self.__subDict = {key: conversionDict[key] for key in conversionDict.keys() & keys}
-        self.data = self.data.astype(self.__subDict)
-
-    def process(self):
-        """
-        Wrapper function for harmonising and filtering the dataset.
-        """
-        self.__selectColumns()
-        self.__harmonizeVariables()
-        self.convertTypes()
-        self._checkFilterDict(self.__filterDict)
-        self._filter(self.__filterDict)
-        self.__filterConsistentHours()
-        self.__addStrColumns()
-        self.__composeStartAndEndTimestamps()
-        self.__updateEndTimestamp()
-        self.__harmonizeVariablesGenericIdNames()
-        print('Parsing MiD data set completed')
-
-    def __updateFilterDict(self) -> None:
-        """
-        Internal function to parse the filter dictionary of a specified data set from parseConfig.yaml
+        Internal function to parse the filter dictionary of a specified
+        dataset from parseConfig.yaml
 
         :return: None
         """
-        self.__filterDict[self.datasetID] = self.__parseConfig['filterDicts'][self.datasetID]
-        self.__filterDict[self.datasetID] = {iKey: iVal for iKey, iVal in self.__filterDict[self.datasetID].items() if self.__filterDict[self.datasetID][iKey] is not
+        self.filterDict[self.datasetID] = self.parseConfig['filterDicts'][self.datasetID]
+        self.filterDict[self.datasetID] = {iKey: iVal for iKey, iVal in self.filterDict[self.datasetID].items() if self.filterDict[self.datasetID][iKey] is not
                              None}
 
-    def __filterConsistentHours(self):
+    def filterConsistentHours(self):
         """
         Filtering out records where starting hour is after end hour but trip takes place on the same day.
         These observations are data errors.
@@ -434,33 +437,22 @@ class ParseMiD(DataParser):
 
             self.data = self.data.loc[~filter, :]
 
-    def __addStrColumnFromVariable(self, colName: str, varName: str):
+    def addStrColumnFromVariable(self, colName: str, varName: str):
         """
-        Replaces each occurence of a MiD/KiD variable e.g. 1,2,...,7 for weekdays with an explicitly mapped string e.g.
-        'MON', 'TUE',...,'SUN'.
+        Replaces each occurence of a MiD/KiD variable e.g. 1,2,...,7 for
+        weekdays with an explicitly mapped string e.g. 'MON', 'TUE',...,'SUN'.
 
-        :param colName: Name of the column in self.data where the explicit string info is stored
-        :param varName: Name of the VencoPy internal variable given in config/parseConfig['dataVariables']
+        :param colName: Name of the column in self.data where the explicit
+                        string info is stored
+        :param varName: Name of the VencoPy internal variable given in
+                        config/parseConfig['dataVariables']
         :return: None
         """
         self.data.loc[:, colName] \
-            = self.data.loc[:, varName].replace(self.__parseConfig['Replacements'][self.datasetID][varName])
+            = self.data.loc[:, varName].replace(
+                self.parseConfig['Replacements'][self.datasetID][varName])
 
-    def __addStrColumns(self, weekday=True, purpose=True):
-        """
-        Adds string columns for either weekday or purpose.
-
-        :param weekday: Boolean identifier if weekday string info should be added in a separate column
-        :param purpose: Boolean identifier if purpose string info should be added in a separate column
-        :return: None
-        """
-
-        if weekday:
-            self.__addStrColumnFromVariable(colName='weekdayStr', varName='tripStartWeekday')
-        if purpose:
-            self.__addStrColumnFromVariable(colName='purposeStr', varName='tripPurpose')
-
-    def __composeTimestamp(self, data: pd.DataFrame = None,
+    def composeTimestamp(self, data: pd.DataFrame = None,
                            colYear: str = 'tripStartYear',
                            colWeek: str = 'tripStartWeek',
                            colDay: str = 'tripStartWeekday',
@@ -484,17 +476,99 @@ class ParseMiD(DataParser):
                         pd.to_timedelta(data.loc[:, colMin], unit='minute')
         # return data
 
-    def __composeStartAndEndTimestamps(self):
+    def composeStartAndEndTimestamps(self):
         """
         :return: Returns start and end time of a trip
         """
-        self.__composeTimestamp(data=self.data)  # Starting timestamp
-        self.__composeTimestamp(data=self.data,  # Ending timestamps
+        self.composeTimestamp(data=self.data)  # Starting timestamp
+        self.composeTimestamp(data=self.data,  # Ending timestamps
                                 colHour='tripEndHour',
                                 colMin='tripEndMinute',
                                 colName='timestampEnd')
 
-    def __updateEndTimestamp(self):
+    def harmonizeVariablesGenericIdNames(self):
+        """
+
+        """
+        self.data['genericID'] = self.data[str(
+            self.parseConfig['IDVariablesNames'][self.datasetID])]
+        # self.data['tripDistance'] = 0.62 * self.data['tripDistance']
+        print('Finished harmonization of ID variables')
+
+    def process(self, filterDict):
+        """
+        Wrapper function for harmonising and filtering the dataset.
+        """
+        self._checkFilterDict(filterDict)
+        self._filter(filterDict)
+        print('Generic parsing completed')
+
+
+class ParseMiD(IntermediateParsing):
+    def __init__(self, configDict: dict, datasetID: str, loadEncrypted=False):
+        """
+        Class for parsing MiD data sets. The VencoPy configs globalConfig, 
+        parseConfig and localPathConfig have to be given on instantiation as
+        well as the data set ID, e.g. 'MiD2017' that is used as key in the
+        config lookups. Also, an option can be specified to load the file from
+        an encrypted ZIP-file. For this, a password has to be given in the
+        parseConfig.
+
+        :param configDict: VencoPy config dictionary consisting at least of the
+                           config dictionaries globalConfig, parseConfig and
+                           localPathConfig.
+        :param datasetID: A string identifying the MiD data set.
+        :param loadEncrypted: Boolean. If True, data is read from encrypted
+                              file. For this, a possword has to be
+                              specified in parseConfig['PW'].
+        """
+
+        self.globalConfig = configDict['globalConfig']
+        self.parseConfig = configDict['parseConfig']
+        self.localPathConfig = configDict['localPathConfig']
+        self.datasetID = self.checkDatasetID(datasetID, self.parseConfig)
+        filepath = Path(self.localPathConfig['pathAbsolute'][self.datasetID]) / \
+                        self.globalConfig['files'][self.datasetID]['tripsDataRaw']
+        self.filterDict = self.parseConfig['filterDicts'][self.datasetID]
+        super().__init__(configDict, datasetID, loadEncrypted=loadEncrypted)
+        self.subDict = {}
+        self.columns = self.compileVariableList()
+
+    def convertTypes(self):
+        """
+        Convert raw column types to predefined python types as specified in
+        parseConfig['inputDTypes'][datasetID]. This is mainly done for
+        performance reasons. But also in order to avoid index values that are
+        of type int to be cast to float. The function operates only on
+        self.data and writes back changes to self.data
+
+        :return: None
+        """
+        # Filter for dataset specific columns
+        conversionDict = self.parseConfig['inputDTypes'][self.datasetID]
+        keys = {iCol for iCol in conversionDict.keys() if iCol in self.data.columns}
+        self.subDict = {key: conversionDict[key] for key in conversionDict.keys() & keys}
+        self.data = self.data.astype(self.subDict)
+ 
+    def addStrColumns(self, weekday=True, purpose=True):
+        """
+        Adds string columns for either weekday or purpose.
+
+        :param weekday: Boolean identifier if weekday string info should be
+                        added in a separate column
+        :param purpose: Boolean identifier if purpose string info should be
+                        added in a separate column
+        :return: None
+        """
+
+        if weekday:
+            self.addStrColumnFromVariable(
+                colName='weekdayStr', varName='tripStartWeekday')
+        if purpose:
+            self.addStrColumnFromVariable(
+                colName='purposeStr', varName='tripPurpose')
+
+    def updateEndTimestamp(self):
         """
         :return:
         """
@@ -502,23 +576,24 @@ class ParseMiD(DataParser):
         self.data.loc[endsFollowingDay, 'timestampEnd'] = self.data.loc[endsFollowingDay,
                                                                     'timestampEnd'] + pd.offsets.Day(1)
 
-    # DEPRECATED, THIS WILL BE REMOVED ON NEXT PATCH
-    # def __updateEndTimestamps(self) -> np.datetime64:
-    #     """
-    #     :return: Returns start and end time of a trip
-    #     """
-    #     self.__updateEndTimestamp()
-
-    def __harmonizeVariablesGenericIdNames(self):
+    def process(self):
         """
-
+        Wrapper function for harmonising and filtering the dataset.
         """
-        self.data['genericID'] = self.data[str(self.__parseConfig['IDVariablesNames'][self.datasetID])]
-        # self.data['tripDistance'] = 0.62 * self.data['tripDistance']
-        print('Finished harmonization of ID variables')
+        self.selectColumns()
+        self.harmonizeVariables()
+        self.convertTypes()
+        self.checkFilterDict(self.filterDict)
+        self.filter(self.filterDict)
+        self.filterConsistentHours()
+        self.addStrColumns()
+        self.composeStartAndEndTimestamps()
+        self.updateEndTimestamp()
+        self.harmonizeVariablesGenericIdNames()
+        print('Parsing MiD dataset completed')
 
 
-class ParseKiD(DataParser):
+class ParseKiD(IntermediateParsing):
     # Inherited data class to differentiate between abstract interfaces such as vencopy internal
     # variable namings and data set specific functions such as filters etc.
     def __init__(self, configDict: dict, datasetID: str):
@@ -528,17 +603,17 @@ class ParseKiD(DataParser):
         """
         General check if data set ID is defined in parseConfig.yaml
 
-        :param datasetID: list of strings declaring the datasetIDs to be read in
-        :param parseConfig: A yaml config file holding a dictionary with the keys 'pathRelative' and 'pathAbsolute'
+        :param datasetID: list of strings declaring the datasetIDs to be read
+        :param parseConfig: A yaml config file holding a dictionary with the
+                            keys 'pathRelative' and 'pathAbsolute'
         :return: Returns a string value of a mobility data
         """
         availableDatasetIDs = parseConfig['dataVariables']['datasetID']
         assert datasetID in availableDatasetIDs, \
-            f'Defined datasetID {datasetID} not specified under dataVariables in parseConfig. Specified datasetIDs ' \
+            f'Defined datasetID {datasetID} not specified under' \
+            f'dataVariables in parseConfig. Specified datasetIDs ' \
             f'are {availableDatasetIDs}'
         return datasetID
-
-
 
     def loadData(self):
         rawDataPathTrips = Path(configDict['localPathConfig']['pathAbsolute'][self.datasetID]) / configDict['globalConfig']['files'][self.datasetID]['tripsDataRaw']
@@ -590,7 +665,7 @@ class ParseKiD(DataParser):
         """
 
         # Filter for dataset specific columns
-        conversionDict = self.__parseConfig['inputDTypes'][self.datasetID]
+        conversionDict = self.parseConfig['inputDTypes'][self.datasetID]
         keys = {iCol for iCol in conversionDict.keys() if iCol in self.data.columns}
         self.subDict = {key: conversionDict[key] for key in conversionDict.keys() & keys}
         # German df has commas instead of dots in floats
@@ -625,14 +700,14 @@ class ParseKiD(DataParser):
         self.harmonizeVariables()
         self.convertTypes()
         self.excludeHours()
-        self.__checkFilterDict()
-        self.__filter()
+        self.checkFilterDict()
+        self.filter()
         self.filterConsistentHours()
         self.addStrColumns()
         self.composeStartAndEndTimestamps()
         self.updateEndTimestamps()
         self.harmonizeVariablesGenericIdNames()
-        print('Parsing completed')
+        print('Parsing KiD dataset completed')
 
 if __name__ == '__main__':
     from vencopy.scripts.globalFunctions import loadConfigDict
@@ -643,6 +718,6 @@ if __name__ == '__main__':
     datasetID = 'MiD17' #options are MiD08, MiD17, KiD
     #datasetID = 'KiD'
     vpData = ParseMiD(configDict=configDict, datasetID=datasetID)
-    #vpData = DataParser(configDict=configDict, loadEncrypted=False, datasetID=datasetID)
+    #vpData = ParseKiD(configDict=configDict, datasetID=datasetID)
     vpData.process()
 

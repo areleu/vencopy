@@ -26,7 +26,8 @@ if __name__ == '__main__':
     # Set dataset and config to analyze, create output folders
     # datasetID = 'KiD'
     datasetID = 'MiD17'
-    configNames = ('globalConfig', 'localPathConfig', 'parseConfig', 'tripConfig', 'gridConfig', 'flexConfig',
+    configNames = ('globalConfig', 'localPathConfig', 'parseConfig', 
+                   'tripConfig', 'gridConfig', 'flexConfig',
                    'evaluatorConfig')
     basePath = Path(__file__).parent
     configDict = loadConfigDict(configNames, basePath)
@@ -40,25 +41,29 @@ if __name__ == '__main__':
     #                     loadEncrypted=False)
     # vpData.process(filterDict=configDict['parseConfig']['filterDicts'][datasetID])
 
-
-    vpData = ParseMiD(configDict=configDict, datasetID=datasetID, loadEncrypted=False)
+    vpData = ParseMiD(configDict=configDict, datasetID=datasetID, 
+                      loadEncrypted=False)
     vpData.process()
 
     # Trip distance and purpose diary compositions
-    vpTripDiary = TripDiaryBuilder(datasetID=datasetID, configDict=configDict, ParseData=vpData, debug=True)
+    vpTripDiary = TripDiaryBuilder(datasetID=datasetID, configDict=configDict, 
+                                   ParseData=vpData, debug=True)
 
     # Grid model application
     vpGrid = GridModeler(configDict=configDict, datasetID=datasetID)
     vpGrid.calcGrid(grid='probability')
 
     # Evaluate drive and trip purpose profile
-    vpEval = Evaluator(configDict=configDict, parseData=pd.Series(data=vpData, index=[datasetID]))
+    vpEval = Evaluator(configDict=configDict, 
+                       parseData=pd.Series(data=vpData, index=[datasetID]))
     vpEval.plotParkingAndPowers(vpGrid=vpGrid)
     vpEval.hourlyAggregates = vpEval.calcVariableSpecAggregates(by=['tripStartWeekday'])
     vpEval.plotAggregates()
 
-    # Estimate charging flexibility based on driving profiles and charge connection
-    vpFlex = FlexEstimator(configDict=configDict, datasetID=datasetID, ParseData=vpData)
+    # Estimate charging flexibility based on driving profiles 
+    # # and charge connection
+    vpFlex = FlexEstimator(configDict=configDict, 
+                           datasetID=datasetID, ParseData=vpData)
     vpFlex.baseProfileCalculation()
     vpFlex.filter()
     vpFlex.aggregate()
