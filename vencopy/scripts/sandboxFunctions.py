@@ -6,7 +6,8 @@ __birthdate__ = '31.12.2019'
 __status__ = 'dev'  # options are: dev, test, prod
 
 
-# THIS FILE IS A COLLECTION OF OLD OR UNUSED FUNCTIONS THAT ARE NOT TESTED OR USED
+# THIS FILE IS A COLLECTION OF OLD OR UNUSED FUNCTIONS
+# THAT ARE NOT TESTED OR USED
 
 import io
 import getpass
@@ -15,12 +16,22 @@ from zipfile import ZipFile
 import numpy as np
 import pathlib
 
+def updateFilterDict(self) -> None:
+    """
+    Internal function to parse the filter dictionary of a specified
+    dataset from parseConfig.yaml
+    :return: None
+    """
+    self.filterDict[self.datasetID] = \
+        self.parseConfig['filterDicts'][self.datasetID]
+    self.filterDict[self.datasetID] = \
+        {iKey: iVal for iKey, iVal in self.filterDict[self.datasetID].items()
+        if self.filterDict[self.datasetID][iKey] is not None}
 
 def assignMultiColToDType(dataFrame, cols, dType):
     dictDType = dict.fromkeys(cols, dType)
     dfOut = dataFrame.astype(dictDType)
     return(dfOut)
-
 
 def harmonizeVariables(data, dataset, config):
     replacementDict = createReplacementDict(dataset, config['dataVariables'])
@@ -64,12 +75,10 @@ def replaceTripsBeforeFirstTrips(driveData, replacement:str):
     driveData.loc[range(0, firstTripIdx)] = replacement
     return driveData
 
-
 def assignPurpose(driveData, tripData):
     firstHour = tripData['tripStartHour']
     lastHour = tripData['tripEndHour']
     tripPurpose = tripData['tripPurpose']
-
 
 def initiateColRange(self, row):
     if row['tripStartHour'] + 1 < row['tripEndHour']:
@@ -77,7 +86,6 @@ def initiateColRange(self, row):
                     'tripEndHour'])  # The hour of arrival (tripEndHour) will not be indexed further below but is part of the range() object
     else:
         return None
-
 
 class FillTripPurposes:
     def __init__(self, tripData, mergedDayTrips, rangeFunction=initiateColRange):

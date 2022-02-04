@@ -115,7 +115,8 @@ class Evaluator:
 
     def reindexData(self):
         """
-        Formatting function to set index of profiles with weekday and weight, in preparation for plotting
+        Formatting function to set index of profiles with weekday and weight,
+        in preparation for plotting
 
         :return: None
         """
@@ -317,8 +318,9 @@ class Evaluator:
         if write:
             fig.savefig(filePlot)
 
-    def separateLinePlots(self, profileDictList: list, flexEstimator, show=True,
-                          write=True, ylabel=[], ylim=[], filenames=[]):
+    def separateLinePlots(
+         self, profileDictList: list, flexEstimator, show=True, write=True,
+         ylabel=[], ylim=[], filenames=[]):
         """
         Wrapper function to draw and write multiple plots using linePlot().
 
@@ -333,20 +335,43 @@ class Evaluator:
         """
         if ylim:
             for iDict, iYLabel, iYLim, iName in zip(profileDictList, ylabel, ylim, filenames):
-                writeProfilesToCSV(profileDictOut=iDict, globalConfig=self.globalConfig, localPathConfig=self.localPathConfig,
-                                    singleFile=False, datasetID=flexEstimator.datasetID)
-                self.linePlot(iDict, pathOutput=Path(self.localPathConfig['pathAbsolute']['vencoPyRoot']) / self.globalConfig['pathRelative']['evalOutput'],
-                              flexEstimator=flexEstimator, show=show, write=write, ylabel=iYLabel, ylim=iYLim,
-                              filename=iName)
+                writeProfilesToCSV(
+                    profileDictOut=iDict,
+                    globalConfig=self.globalConfig,
+                    localPathConfig=self.localPathConfig,
+                    singleFile=False,
+                    datasetID=flexEstimator.datasetID)
+                self.linePlot(
+                    iDict, 
+                    pathOutput=Path(
+                        self.localPathConfig['pathAbsolute']['vencoPyRoot']) /
+                        self.globalConfig['pathRelative']['evalOutput'],
+                    flexEstimator=flexEstimator,
+                    show=show,
+                    write=write,
+                    ylabel=iYLabel,
+                    ylim=iYLim,
+                    filename=iName)
         else:
             for iDict, iYLabel, iName in zip(profileDictList, ylabel, filenames):
-                writeProfilesToCSV(profileDictOut=iDict, globalConfig=self.globalConfig, localPathConfig=self.localPathConfig,
-                                    singleFile=False, datasetID=flexEstimator.datasetID)
-                self.linePlot(iDict, pathOutput=Path(self.localPathConfig['pathAbsolute']['vencoPyRoot']) / self.globalConfig['pathRelative']['evalOutput'],
-                              flexEstimator=flexEstimator, show=show, write=write, ylabel=iYLabel,
-                              filename=iName)
+                writeProfilesToCSV(
+                    profileDictOut=iDict,
+                    globalConfig=self.globalConfig,
+                    localPathConfig=self.localPathConfig,
+                    singleFile=False,
+                    datasetID=flexEstimator.datasetID)
+                self.linePlot(
+                    iDict,
+                    pathOutput=Path(
+                        self.localPathConfig['pathAbsolute']['vencoPyRoot']) /
+                        self.globalConfig['pathRelative']['evalOutput'],
+                    flexEstimator=flexEstimator,
+                    show=show,
+                    write=write,
+                    ylabel=iYLabel,
+                    filename=iName)
 
-    def plotProfiles(self, flexEstimator, profileDictList: dict = None, yLabels: list = None, yLimits: list = None,
+    def plotProfiles(self,flexEstimator, profileDictList: dict = None, yLabels: list = None, yLimits: list = None,
                      filenames: list = None):
         """
         Wrapper function to plot both one Figure with all resulting output profiles and separate Figures for flow,

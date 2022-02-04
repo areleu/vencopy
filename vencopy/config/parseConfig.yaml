@@ -120,7 +120,7 @@ filterDicts:
     MiD17:
         include:
             isMIVDriver: [1]
-#            tripState: [5]
+            # tripState: [5]
         exclude:
             tripStartHour: [99, 701]
             tripEndHour: [99, 701]
@@ -133,6 +133,7 @@ filterDicts:
             tripDistance: [1000]
 
     KiD:
+        include:
         exclude:
             # tripStartClock: ['-1:-1']
             # tripEndClock: ['-1:-1']
