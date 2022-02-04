@@ -12,7 +12,6 @@ if __package__ is None or __package__ == '':
     from os import path
     sys.path.append(path.dirname(path.dirname(path.dirname(__file__))))
 
-
 import pprint
 import pandas as pd
 import numpy as np
@@ -52,10 +51,15 @@ class DataParser:
         self.rawData = None
         self.data = None
         self.filterDict = {}
-        self.filterDictNameList = ['include',
-                                   'exclude',
-                                   'greaterThan',
-                                   'smallerThan']
+        # self.filterDictNameList = ['include',
+        #                           'exclude',
+        #                           'greaterThan',
+        #                           'smallerThan']
+        self.updateFilterDict()
+        filepath = Path(self.localPathConfig[
+                        'pathAbsolute'][self.datasetID]) / \
+                        self.globalConfig[
+                        'files'][self.datasetID]['tripsDataRaw']
         print('Generic file parsing properties set up')
         if loadEncrypted:
             print(f'Starting to retrieve encrypted data file'\
@@ -110,18 +114,24 @@ class DataParser:
         """
         with ZipFile(pathToZip) as myzip:
             if '.dta' in pathInZip:
-                self.rawData = pd.read_stata(myzip.open(pathInZip, pwd=bytes(self.parseConfig['encryptionPW'],
-                                                                             encoding='utf-8')),
-                                             convert_categoricals=False, convert_dates=False, preserve_dtypes=False)
+                self.rawData = pd.read_stata(myzip.open(pathInZip,
+                               pwd = bytes(self.parseConfig['encryptionPW'],
+                               encoding='utf-8')),
+                               convert_categoricals=False,
+                               convert_dates=False,
+                               preserve_dtypes=False)
             else:  # if '.csv' in pathInZip:
-                self.rawData = pd.read_csv(myzip.open(pathInZip, pwd=bytes(self.parseConfig['encryptionPW'],
-                                                                           encoding='utf-8')), sep=';', decimal=',')
+                self.rawData = pd.read_csv(myzip.open(pathInZip,
+                               pwd=bytes(self.parseConfig['encryptionPW'],
+                               encoding='utf-8')), sep=';', decimal=',')
 
-        print(f'Finished loading {len(self.rawData)} rows of raw data of type {self.rawDataPath.suffix}')
+        print(f'Finished loading {len(self.rawData)}'\
+              f'rows of raw data of type {self.rawDataPath.suffix}')
 
     def returnDictBottomValues(self, baseDict: dict, lst: list = []) -> list:
         """
-        Returns a list of all dictionary values of the last dictionary level (the bottom) of baseDict. The parameter
+        Returns a list of all dictionary values of the last dictionary level
+        (the bottom) of baseDict. The parameter
         lst is used as an interface between recursion levels.
 
         :param baseDict: Dictionary of variables
@@ -138,25 +148,26 @@ class DataParser:
 
     def checkFilterDict(self, filterDict):
         """
-        Checking if all values of filter dictionaries are of type list.  Currently only checking if list of list str
-        not typechecked all(map(self.__checkStr, val). Conditionally triggers an assert.
+        Checking if all values of filter dictionaries are of type list.
+        Currently only checking if list of list str not typechecked
+        all(map(self.__checkStr, val). Conditionally triggers an assert.
 
         :return: None
         """
-
-        assert all(isinstance(val, list) or val is None for val in self.returnDictBottomValues(filterDict)), \
+        assert all(isinstance(val, list) or
+            val is None for val in self.returnDictBottomValues(filterDict)), \
             f'All values in filter dictionaries have to be lists, but are not'
 
     def returnDictBottomKeys(self, baseDict: dict, lst: list = None) -> list:
         """
-        Returns the lowest level keys of baseDict and returns all of them as a list. The parameter lst is used as
+        Returns the lowest level keys of baseDict and returns all of them
+        as a list. The parameter lst is used as
         interface between recursion levels.
 
         :param baseDict: Dictionary of variables
         :param lst: empty list, used as interface between recursion levels
         :return: Returns a list with all the bottom level dictionary keys
         """
-
         if lst is None:
             lst = []
         for iKey, iVal in baseDict.items():
@@ -169,20 +180,25 @@ class DataParser:
 
     def filter(self, filterDict: dict=None):
         """
-        Wrapper function to carry out filtering for the four filter logics of including, excluding, greaterThan and
-        smallerThan. If a filterDict is defined with a different key, a warning is thrown. The function operates on
-        self.data class-internally.
+        Wrapper function to carry out filtering for the four filter logics of
+        including, excluding, greaterThan and smallerThan.
+        If a filterDict is defined with a different key, a warning is thrown.
+        The function operates on self.data class-internally.
 
         :return: None
         """
-
-        print(f'Starting filtering, applying {len(self.returnDictBottomKeys(filterDict))} filters.')
+        print(f'Starting filtering, applying'\
+              f'{len(self.returnDictBottomKeys(self.filterDict))} filters.')
         ret = pd.DataFrame(index=self.data.index)
-        # Future releases: as discussed before we could indeed work here with a plug and pray approach.
-        #  we would need to introduce a filter manager and a folder structure where to look for filters.
-        #  this is very similar code than the one from ioproc. If we want to go down this route we should
-        #  take inspiration from the code there. It was not easy to get it right in the first place. This
-        #  might be easy to code but hard to implement correctly.
+        # Future releases: as discussed before we could indeed work here with
+        # a plug and pray approach.
+        # we would need to introduce a filter manager and a folder structure
+        # where to look for filters.
+        # this is very similar code than the one from ioproc. If we want to go
+        # down this route we should
+        # take inspiration from the code there. It was not easy to get i
+        # right in the first place. This
+        # might be easy to code but hard to implement correctly.
         for iKey, iVal in filterDict.items():
             if iKey == 'include' and iVal:
                 ret = ret.join(self.setIncludeFilter(iVal, self.data.index))
@@ -199,6 +215,19 @@ class DataParser:
         self.data = self.data[ret.all(axis='columns')]
         self.filterAnalysis(ret)
 
+    def updateFilterDict(self) -> None:
+        """
+        Internal function to parse the filter dictionary of a specified
+        dataset from parseConfig.yaml
+
+        :return: None
+        """
+        self.filterDict[self.datasetID] = \
+            self.parseConfig['filterDicts'][self.datasetID]
+        self.filterDict[self.datasetID] = \
+            {iKey: iVal for iKey, iVal in self.filterDict[self.datasetID].items()
+            if self.filterDict[self.datasetID][iKey] is not None}
+
     def setIncludeFilter(self, includeFilterDict: dict, dataIndex) -> pd.DataFrame:
         """
         Read-in function for include filter dict from parseConfig.yaml
@@ -207,7 +236,6 @@ class DataParser:
         :param dataIndex: Index for the data frame
         :return: Returns a data frame with individuals using car as a mode of transport
         """
-
         incFilterCols = pd.DataFrame(index=dataIndex, columns=includeFilterDict.keys())
         for incCol, incElements in includeFilterDict.items():
             incFilterCols[incCol] = self.data[incCol].isin(incElements)
@@ -231,7 +259,8 @@ class DataParser:
         """
         Read-in function for greaterThan filter dict from parseConfig.yaml
 
-        :param greaterThanFilterDict: Dictionary of greater than filters defined in parseConfig.yaml
+        :param greaterThanFilterDict: Dictionary of greater than filters
+                                      defined in parseConfig.yaml
         :param dataIndex: Index for the data frame
         :return:
         """
@@ -247,9 +276,11 @@ class DataParser:
         """
         Read-in function for smallerThan filter dict from parseConfig.yaml
 
-        :param smallerThanFilterDict: Dictionary of smaller than filters defined in parseConfig.yaml
+        :param smallerThanFilterDict: Dictionary of smaller than filters
+               defined in parseConfig.yaml
         :param dataIndex: Index for the data frame
-        :return: Returns a data frame of trips covering a distance of less than 1000 km
+        :return: Returns a data frame of trips covering
+                 a distance of less than 1000 km
         """
         smallerThanFilterCols = pd.DataFrame(index=dataIndex, columns=smallerThanFilterDict.keys())
         for smallerCol, smallerElements in smallerThanFilterDict.items():
@@ -261,13 +292,12 @@ class DataParser:
 
     def filterAnalysis(self, filterData: pd.DataFrame):
         """
-        Function supplies some aggregate info of the data after filtering to the user Function does not change any
-        class attributes
+        Function supplies some aggregate info of the data after filtering 
+        to the user Function does not change any class attributes
 
         :param filterData:
         :return: None
         """
-
         lenData = sum(filterData.all(axis='columns'))
         boolDict = {iCol: sum(filterData[iCol]) for iCol in filterData}
         print(f'The following values were taken into account after filtering:')
@@ -301,7 +331,7 @@ class IntermediateParsing(DataParser):
         self.parseConfig = configDict['parseConfig']
         self.localPathConfig = configDict['localPathConfig']
         self.datasetID = self.checkDatasetID(datasetID, self.parseConfig)
-        filepath = Path(self.localPathConfig['pathAbsolute'][self.datasetID])/\
+        filepath = Path(self.localPathConfig['pathAbsolute'][self.datasetID]) /\
                         self.globalConfig['files'][self.datasetID]['tripsDataRaw']
         self.filterDict = self.parseConfig['filterDicts'][self.datasetID]
         super().__init__(configDict, filepath=filepath, loadEncrypted=loadEncrypted)
@@ -312,8 +342,10 @@ class IntermediateParsing(DataParser):
         """
         General check if data set ID is defined in parseConfig.yaml
 
-        :param datasetID: list of strings declaring the datasetIDs to be read in
-        :param parseConfig: A yaml config file holding a dictionary with the keys 'pathRelative' and 'pathAbsolute'
+        :param datasetID: list of strings declaring the datasetIDs
+                          to be read in
+        :param parseConfig: A yaml config file holding a dictionary with the
+                            keys 'pathRelative' and 'pathAbsolute'
         :return: Returns a string value of a mobility data
         """
         availableDatasetIDs = parseConfig['dataVariables']['datasetID']
@@ -364,7 +396,6 @@ class IntermediateParsing(DataParser):
 
         :return: None
         """
-
         self.data = self.rawData.loc[:, self.columns]
 
     def harmonizeVariables(self):
@@ -398,41 +429,34 @@ class IntermediateParsing(DataParser):
         :return: Dictionary with internal names as keys and raw data column
                  names as values.
         """
-
         if datasetID in dictRaw['datasetID']:
             listIndex = dictRaw['datasetID'].index(datasetID)
             return {val[listIndex]: key for (key, val) in dictRaw.items()}
         else:
             raise ValueError(f'Data set {datasetID} not specified in' 
                              f'parseConfig variable dictionary.')
-    
-    def updateFilterDict(self) -> None:
-        """
-        Internal function to parse the filter dictionary of a specified
-        dataset from parseConfig.yaml
-
-        :return: None
-        """
-        self.filterDict[self.datasetID] = self.parseConfig['filterDicts'][self.datasetID]
-        self.filterDict[self.datasetID] = {iKey: iVal for iKey, iVal in self.filterDict[self.datasetID].items() if self.filterDict[self.datasetID][iKey] is not
-                             None}
 
     def filterConsistentHours(self):
         """
-        Filtering out records where starting hour is after end hour but trip takes place on the same day.
+        Filtering out records where starting hour is after end hour but trip
+        takes place on the same day.
         These observations are data errors.
 
         :return: No returns, operates only on the class instance
         """
-
         if self.datasetID == 'MiD17' or self.datasetID == 'MiD08':
             dat = self.data
-            self.data = dat.loc[(dat['tripStartClock'] <= dat['tripEndClock']) | (dat['tripEndNextDay'] == 1), :]
-            # If we want to get rid of tripStartClock and tripEndClock (they are redundant variables)
-            # self.data = dat.loc[pd.to_datetime(dat.loc[:, 'tripStartHour']) <= pd.to_datetime(dat.loc[:,
+            self.data = dat.loc[(dat['tripStartClock'] <= dat['tripEndClock'])|\
+                       (dat['tripEndNextDay'] == 1), :]
+            # If we want to get rid of tripStartClock and tripEndClock
+            # (they are redundant variables)
+            # self.data = dat.loc[pd.to_datetime(dat.loc[:, 'tripStartHour'])
+            # <= pd.to_datetime(dat.loc[:,
             # 'tripEndHour']) | (dat['tripEndNextDay'] == 1), :]
-            filter = (self.data.loc[:, 'tripStartHour'] == self.data.loc[:, 'tripEndHour']) & \
-                     (self.data.loc[:, 'tripStartMinute'] == self.data.loc[:, 'tripEndMinute']) & \
+            filter = (self.data.loc[:, 'tripStartHour'] ==
+                      self.data.loc[:, 'tripEndHour']) & \
+                     (self.data.loc[:, 'tripStartMinute'] ==
+                      self.data.loc[:, 'tripEndMinute']) & \
                      (self.data.loc[:, 'tripEndNextDay'])
 
             self.data = self.data.loc[~filter, :]
@@ -499,9 +523,9 @@ class IntermediateParsing(DataParser):
         """
         Wrapper function for harmonising and filtering the dataset.
         """
-        self._checkFilterDict(filterDict)
-        self._filter(filterDict)
-        print('Generic parsing completed')
+        self.checkFilterDict(self.filterDict)
+        self.filter(self.filterDict)
+        print('Generic intermediate parsing completed')
 
 
 class ParseMiD(IntermediateParsing):
@@ -522,17 +546,7 @@ class ParseMiD(IntermediateParsing):
                               file. For this, a possword has to be
                               specified in parseConfig['PW'].
         """
-
-        self.globalConfig = configDict['globalConfig']
-        self.parseConfig = configDict['parseConfig']
-        self.localPathConfig = configDict['localPathConfig']
-        self.datasetID = self.checkDatasetID(datasetID, self.parseConfig)
-        filepath = Path(self.localPathConfig['pathAbsolute'][self.datasetID]) / \
-                        self.globalConfig['files'][self.datasetID]['tripsDataRaw']
-        self.filterDict = self.parseConfig['filterDicts'][self.datasetID]
         super().__init__(configDict, datasetID, loadEncrypted=loadEncrypted)
-        self.subDict = {}
-        self.columns = self.compileVariableList()
 
     def convertTypes(self):
         """
@@ -546,10 +560,12 @@ class ParseMiD(IntermediateParsing):
         """
         # Filter for dataset specific columns
         conversionDict = self.parseConfig['inputDTypes'][self.datasetID]
-        keys = {iCol for iCol in conversionDict.keys() if iCol in self.data.columns}
-        self.subDict = {key: conversionDict[key] for key in conversionDict.keys() & keys}
+        keys = {iCol for iCol in conversionDict.keys()
+                if iCol in self.data.columns}
+        self.subDict = {key: conversionDict[key]
+                       for key in conversionDict.keys() & keys}
         self.data = self.data.astype(self.subDict)
- 
+
     def addStrColumns(self, weekday=True, purpose=True):
         """
         Adds string columns for either weekday or purpose.
@@ -573,8 +589,8 @@ class ParseMiD(IntermediateParsing):
         :return:
         """
         endsFollowingDay = self.data['tripEndNextDay'] == 1
-        self.data.loc[endsFollowingDay, 'timestampEnd'] = self.data.loc[endsFollowingDay,
-                                                                    'timestampEnd'] + pd.offsets.Day(1)
+        self.data.loc[endsFollowingDay, 'timestampEnd'] = \
+            self.data.loc[endsFollowingDay, 'timestampEnd'] + pd.offsets.Day(1)
 
     def process(self):
         """
@@ -594,8 +610,11 @@ class ParseMiD(IntermediateParsing):
 
 
 class ParseKiD(IntermediateParsing):
-    # Inherited data class to differentiate between abstract interfaces such as vencopy internal
-    # variable namings and data set specific functions such as filters etc.
+    """
+    Inherited data class to differentiate between abstract interfaces such
+    as vencopy internal variable namings and data set specific functions
+    such as filters etc.
+    """
     def __init__(self, configDict: dict, datasetID: str):
         super().__init__(configDict, datasetID)
 
@@ -616,11 +635,17 @@ class ParseKiD(IntermediateParsing):
         return datasetID
 
     def loadData(self):
-        rawDataPathTrips = Path(configDict['localPathConfig']['pathAbsolute'][self.datasetID]) / configDict['globalConfig']['files'][self.datasetID]['tripsDataRaw']
-        rawDataPathVehicles = Path(configDict['localPathConfig']['pathAbsolute'][self.datasetID]) / configDict['globalConfig']['files'][self.datasetID]['vehiclesDataRaw']
-        rawDataTrips = pd.read_stata(rawDataPathTrips, convert_categoricals=False, convert_dates=False,
+        rawDataPathTrips = Path(configDict['localPathConfig']['pathAbsolute'][self.datasetID]) /\
+                           configDict['globalConfig']['files'][self.datasetID]['tripsDataRaw']
+        rawDataPathVehicles = Path(configDict['localPathConfig']['pathAbsolute'][self.datasetID]) /\
+                              configDict['globalConfig']['files'][self.datasetID]['vehiclesDataRaw']
+        rawDataTrips = pd.read_stata(rawDataPathTrips,
+                                     convert_categoricals=False,
+                                     convert_dates=False,
                                      preserve_dtypes=False)
-        rawDataVehicles = pd.read_stata(rawDataPathVehicles, convert_categoricals=False, convert_dates=False,
+        rawDataVehicles = pd.read_stata(rawDataPathVehicles,
+                                        convert_categoricals=False,
+                                        convert_dates=False,
                                         preserve_dtypes=False)
         rawDataVehicles.set_index('k00', inplace=True)
         rawData = rawDataTrips.join(rawDataVehicles, on='k00')
@@ -712,7 +737,8 @@ class ParseKiD(IntermediateParsing):
 if __name__ == '__main__':
     from vencopy.scripts.globalFunctions import loadConfigDict
     basePath = Path(__file__).parent.parent
-    configNames = ('globalConfig', 'localPathConfig', 'parseConfig', 'tripConfig', 'gridConfig', 'flexConfig', 'evaluatorConfig')
+    configNames = ('globalConfig', 'localPathConfig', 'parseConfig',
+                   'tripConfig', 'gridConfig', 'flexConfig', 'evaluatorConfig')
     configDict = loadConfigDict(configNames, basePath)
 
     datasetID = 'MiD17' #options are MiD08, MiD17, KiD
