@@ -70,8 +70,8 @@ class DataParser:
     def loadData(self):
         """
         Loads data specified in self.rawDataPath and stores it in self.rawData.
-        Raises an exception if a invalid suffix is specified in 
-        self.rawDataPath. 
+        Raises an exception if a invalid suffix is specified in
+        self.rawDataPath.
         READ IN OF CSV HAS NOT BEEN EXTENSIVELY TESTED BEFORE BETA RELEASE.
 
         :return: None
@@ -157,6 +157,8 @@ class DataParser:
         :param lst: empty list, is used as interface to next recursion
         :return: Returns a list with all the bottom dictionary values
         """
+        # iKey not used in returndictBottomValues but used in checkFilterDict
+        # to have lists
         for iKey, iVal in baseDict.items():
             if isinstance(iVal, dict):
                 lst = self.returnDictBottomValues(iVal, lst)
@@ -173,7 +175,8 @@ class DataParser:
 
         :return: None
         """
-        assert all(isinstance(val, list) or val is None for val in self.returnDictBottomValues(filterDict)), f'All values in filter dictionaries have to be lists'
+        assert all(isinstance(val, list) for val in self.returnDictBottomValues(self.filterDict)), \
+            f'All values in filter dictionaries have to be lists, but are not'
 
     def returnDictBottomKeys(self, baseDict: dict, lst: list = None) -> list:
         """
@@ -241,11 +244,11 @@ class DataParser:
         self.filterAnalysis(ret)
 
     def setIncludeFilter(self, includeFilterDict: dict, dataIndex) \
-        -> pd.DataFrame:
+    -> pd.DataFrame:
         """
         Read-in function for include filter dict from parseConfig.yaml
 
-        :param includeFilterDict: Dictionary of include filters defined 
+        :param includeFilterDict: Dictionary of include filters defined
                                   in parseConfig.yaml
         :param dataIndex: Index for the data frame
         :return: Returns a data frame with individuals using car
@@ -258,7 +261,7 @@ class DataParser:
         return incFilterCols
 
     def setExcludeFilter(self, excludeFilterDict: dict, dataIndex) \
-        -> pd.DataFrame:
+    -> pd.DataFrame:
         """
         Read-in function for exclude filter dict from parseConfig.yaml
 
@@ -269,7 +272,7 @@ class DataParser:
         """
         exclFilterCols = pd.DataFrame(
             index=dataIndex,
-            columns = excludeFilterDict.keys())
+            columns=excludeFilterDict.keys())
         for excCol, excElements in excludeFilterDict.items():
             exclFilterCols[excCol] = ~self.data[excCol].isin(excElements)
         return exclFilterCols
@@ -322,7 +325,7 @@ class DataParser:
 
     def filterAnalysis(self, filterData: pd.DataFrame):
         """
-        Function supplies some aggregate info of the data after filtering 
+        Function supplies some aggregate info of the data after filtering
         to the user Function does not change any class attributes
 
         :param filterData:
@@ -332,9 +335,9 @@ class DataParser:
         boolDict = {iCol: sum(filterData[iCol]) for iCol in filterData}
         print(f'The following values were taken into account after filtering:')
         pprint.pprint(boolDict)
-        print(f'All filters combined yielded a total of {lenData}'\
+        print(f'All filters combined yielded a total of {lenData}'
               f'was taken into account')
-        print(f'This corresponds to {lenData / len(filterData)* 100}'\
+        print(f'This corresponds to {lenData / len(filterData)* 100}'
               f'percent of the original data')
 
     def process(self, filterDict):
@@ -447,7 +450,7 @@ class IntermediateParsing(DataParser):
             listIndex = dictRaw['datasetID'].index(datasetID)
             return {val[listIndex]: key for (key, val) in dictRaw.items()}
         else:
-            raise ValueError(f'Data set {datasetID} not specified in' 
+            raise ValueError(f'Data set {datasetID} not specified in'
                              f'parseConfig variable dictionary.')
 
     def filterConsistentHours(self):
@@ -491,13 +494,15 @@ class IntermediateParsing(DataParser):
             = self.data.loc[:, varName].replace(
                 self.parseConfig['Replacements'][self.datasetID][varName])
 
-    def composeTimestamp(self, data: pd.DataFrame = None,
-                           colYear: str = 'tripStartYear',
-                           colWeek: str = 'tripStartWeek',
-                           colDay: str = 'tripStartWeekday',
-                           colHour: str = 'tripStartHour',
-                           colMin: str = 'tripStartMinute',
-                           colName: str = 'timestampStart') -> np.datetime64:
+    def composeTimestamp(
+        self,
+        data: pd.DataFrame = None,
+        colYear: str = 'tripStartYear',
+        colWeek: str = 'tripStartWeek',
+        colDay: str = 'tripStartWeekday',
+        colHour: str = 'tripStartHour',
+        colMin: str = 'tripStartMinute',
+        colName: str = 'timestampStart') -> np.datetime64:
         """
         :param data: a data frame
         :param colYear: year of start of a particular trip
@@ -540,7 +545,7 @@ class IntermediateParsing(DataParser):
 class ParseMiD(IntermediateParsing):
     def __init__(self, configDict: dict, datasetID: str, loadEncrypted=False):
         """
-        Class for parsing MiD data sets. The VencoPy configs globalConfig, 
+        Class for parsing MiD data sets. The VencoPy configs globalConfig,
         parseConfig and localPathConfig have to be given on instantiation as
         well as the data set ID, e.g. 'MiD2017' that is used as key in the
         config lookups. Also, an option can be specified to load the file from
@@ -622,29 +627,16 @@ class ParseMiD(IntermediateParsing):
 
 
 class ParseKiD(IntermediateParsing):
-    """
-    Inherited data class to differentiate between abstract interfaces such
-    as vencopy internal variable namings and data set specific functions
-    such as filters etc.
-    """
-    def __init__(self, configDict: dict, datasetID: str):
-        super().__init__(configDict, datasetID)
-
-    def checkDatasetID(self, datasetID: str, parseConfig: dict) -> str:
+    def __init__(self, configDict: dict, datasetID: str, loadEncrypted=False):
         """
-        General check if data set ID is defined in parseConfig.yaml
-
-        :param datasetID: list of strings declaring the datasetIDs to be read
-        :param parseConfig: A yaml config file holding a dictionary with the
-                            keys 'pathRelative' and 'pathAbsolute'
-        :return: Returns a string value of a mobility data
+        Inherited data class to differentiate between abstract interfaces such
+        as vencopy internal variable namings and data set specific functions
+        such as filters etc.
         """
-        availableDatasetIDs = parseConfig['dataVariables']['datasetID']
-        assert datasetID in availableDatasetIDs, \
-            f'Defined datasetID {datasetID} not specified under' \
-            f'dataVariables in parseConfig. Specified datasetIDs ' \
-            f'are {availableDatasetIDs}'
-        return datasetID
+        super().__init__(
+            configDict=configDict,
+            datasetID=datasetID,
+            loadEncrypted=loadEncrypted)
 
     def loadData(self):
         rawDataPathTrips = Path(
@@ -723,7 +715,7 @@ class ParseKiD(IntermediateParsing):
 
         :return: None
         """
-        ## TO DO: move convertTypes to INtermediate class and create a new
+        # TODO: move convertTypes to INtermediate class and create a new
         # class for KiD to change commas to dots
         # Filter for dataset specific columns
         conversionDict = self.parseConfig['inputDTypes'][self.datasetID]
@@ -764,15 +756,16 @@ class ParseKiD(IntermediateParsing):
         self.selectColumns()
         self.harmonizeVariables()
         self.convertTypes()
+        self.checkFilterDict(self.filterDict)
+        self.filter(self.filterDict)
         self.excludeHours()
-        self.checkFilterDict()
-        self.filter()
         self.filterConsistentHours()
         self.addStrColumns()
         self.composeStartAndEndTimestamps()
-        self.updateEndTimestamps()
+        self.updateEndTimestamp()
         self.harmonizeVariablesGenericIdNames()
         print('Parsing KiD dataset completed')
+
 
 if __name__ == '__main__':
     from vencopy.scripts.globalFunctions import loadConfigDict
@@ -781,8 +774,7 @@ if __name__ == '__main__':
                    'tripConfig', 'gridConfig', 'flexConfig', 'evaluatorConfig')
     configDict = loadConfigDict(configNames, basePath)
 
-    datasetID = 'MiD17' #options are MiD08, MiD17, KiD
-    vpData = ParseMiD(configDict=configDict, datasetID=datasetID)
-    #vpData = ParseKiD(configDict=configDict, datasetID=datasetID)
+    datasetID = 'KiD'   # 'MiD17' # options are MiD08, MiD17, KiD
+    # vpData = ParseMiD(configDict=configDict, datasetID=datasetID)
+    vpData = ParseKiD(configDict=configDict, datasetID=datasetID)
     vpData.process()
-
