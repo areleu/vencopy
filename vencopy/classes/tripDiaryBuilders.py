@@ -385,7 +385,7 @@ class TripDiaryBuilder:
         self,
         tripData: pd.DataFrame,
         purposeDataDays: pd.DataFrame) -> pd.DataFrame:
-        # FixMe: Ask Ben for performance improvements
+        # FIXME: Ask Ben for performance improvements
         """
         Main purpose diary builder function. Root of low performance
         of tripDiaryBuilder. Will be improved in future releases.
@@ -407,9 +407,9 @@ class TripDiaryBuilder:
         # for iSubData in tripData.groupby('genericID'):
         #
         #     currentPerson = tripData['genericID'] == hpID
-        #     allWIDs = tripData.loc[currentPerson, 'tripID']  # FIXME perf
-        #     minWID = allWIDs.min()  # FIXME perf
-        #     maxWID = allWIDs.max()  # FIXME perf
+        #     allWIDs = tripData.loc[currentPerson, 'tripID']  # FIXME: perf
+        #     minWID = allWIDs.min()  # FIXME: perf
+        #     maxWID = allWIDs.max()  # FIXME: perf
         #
         #     isFirstTripID = iSubData['tripID'] == 1
         #

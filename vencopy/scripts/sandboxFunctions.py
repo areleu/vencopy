@@ -191,7 +191,7 @@ def cloneAndWriteProfile(profile, outputConfig, outputPath, noOfHoursOutput, tec
     # Is this handled upstream in the call chain?
     noOfClones = noOfHoursOutput / len(profile) - 1
 
-    # FixMe the int type cast could have a nasty side effect, as it is behaving like a floor operation
+    # FIXME: the int type cast could have a nasty side effect, as it is behaving like a floor operation
     # for the float division above. Is this intended?
     profileCloned = profile.append([profile] * int(noOfClones), ignore_index=True)
 
@@ -199,7 +199,7 @@ def cloneAndWriteProfile(profile, outputConfig, outputPath, noOfHoursOutput, tec
         subHours = noOfHoursOutput - len(profileCloned)
         profileCloned = profileCloned.append(profile[range(subHours)], ignore_index=True)
 
-    # FixMe this .copy() seems to be redundant if createEmptyDataFrame above indeed creates a fresh new empty
+    # FIXME: this .copy() seems to be redundant if createEmptyDataFrame above indeed creates a fresh new empty
     # dataframe. Am I missing something here?
     profilesOut = df.copy()
     for i in outputConfig['NonNullNodes']:
@@ -361,7 +361,7 @@ def calcAverageTripDistance(self):
 
 
 ### EXPERIMENTAL SANDBOX PART
-# def fillDayPurposesPerformant(tripData, purposeDataDays):  #FixMe: Ask Ben for performance improvements
+# def fillDayPurposesPerformant(tripData, purposeDataDays):  #FIXME: Ask Ben for performance improvements
 #     # This is an adaptation of fillDayPurposes()
 #
 # def merger(tripData, purposeDataDays):

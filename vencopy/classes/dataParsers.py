@@ -171,6 +171,43 @@ class DataParser:
             f"Specified datasetIDs are {availableDatasetIDs}"
         )
         return datasetID
+    
+    def harmonizeVariables(self):
+        """
+        Harmonizes the input data variables to match internal VencoPy names
+        given as specified in the mapping in parseConfig['dataVariables'].
+        So far mappings for MiD08 and MiD17 are given. Since the MiD08 does
+        not provide a combined household and person unique identifier, it is
+        synthesized of the both IDs.
+
+        :return: None
+        """
+        replacementDict = self.createReplacementDict(
+            self.datasetID, self.parseConfig["dataVariables"]
+        )
+        dataRenamed = self.data.rename(columns=replacementDict)
+        self.data = dataRenamed
+        print("Finished harmonization of variables")
+
+    def createReplacementDict(self, datasetID: str, dictRaw: dict) -> dict:
+        """
+        Creates the mapping dictionary from raw data variable names to VencoPy
+        internal variable names as specified in parseConfig.yaml
+        for the specified data set.
+
+        :param datasetID: list of strings declaring the datasetIDs to be read
+        :param dictRaw: Contains dictionary of the raw data
+        :return: Dictionary with internal names as keys and raw data column
+                 names as values.
+        """
+        if datasetID in dictRaw["datasetID"]:
+            listIndex = dictRaw["datasetID"].index(datasetID)
+            return {val[listIndex]: key for (key, val) in dictRaw.items()}
+        else:
+            raise ValueError(
+                f"Data set {datasetID} not specified in"
+                f"parseConfig variable dictionary."
+            )
 
     def returnDictBottomValues(self, baseDict: dict, lst: list = []) -> list:
         """
@@ -385,8 +422,8 @@ class DataParser:
             f"{pprint.pprint(boolDict)}"
         )
         print(
-            f"All filters combined yielded a total of {lenData}"
-            f"was taken into account"
+            f"All filters combined yielded a total of {lenData} rows,"
+            f"wwhich were taken into account"
         )
         print(
             f"This corresponds to {lenData / len(filterData)* 100}"
@@ -468,49 +505,6 @@ class IntermediateParsing(DataParser):
         :return: None
         """
         self.data = self.rawData.loc[:, self.columns]
-
-    def harmonizeVariables(self):
-        """
-        Harmonizes the input data variables to match internal VencoPy names
-        given as specified in the mapping in parseConfig['dataVariables'].
-        So far mappings for MiD08 and MiD17 are given. Since the MiD08 does
-        not provide a combined household and person unique identifier, it is
-        synthesized of the both IDs.
-
-        :return: None
-        """
-        replacementDict = self.createReplacementDict(
-            self.datasetID, self.parseConfig["dataVariables"]
-        )
-        dataRenamed = self.data.rename(columns=replacementDict)
-        # TODO: move next two lines in ParseMiD
-        if self.datasetID == "MiD08":
-            dataRenamed["hhPersonID"] = (
-                dataRenamed["hhID"].astype("string")
-                + dataRenamed["personID"].astype("string")
-            ).astype("int")
-        self.data = dataRenamed
-        print("Finished harmonization of variables")
-
-    def createReplacementDict(self, datasetID: str, dictRaw: dict) -> dict:
-        """
-        Creates the mapping dictionary from raw data variable names to VencoPy
-        internal variable names as specified in parseConfig.yaml
-        for the specified data set.
-
-        :param datasetID: list of strings declaring the datasetIDs to be read
-        :param dictRaw: Contains dictionary of the raw data
-        :return: Dictionary with internal names as keys and raw data column
-                 names as values.
-        """
-        if datasetID in dictRaw["datasetID"]:
-            listIndex = dictRaw["datasetID"].index(datasetID)
-            return {val[listIndex]: key for (key, val) in dictRaw.items()}
-        else:
-            raise ValueError(
-                f"Data set {datasetID} not specified in"
-                f"parseConfig variable dictionary."
-            )
 
     def filterConsistentHours(self):
         """
@@ -636,6 +630,28 @@ class ParseMiD(IntermediateParsing):
             datasetID=datasetID,
             loadEncrypted=loadEncrypted,
         )
+    
+    def harmonizeVariables(self):
+        """
+        Harmonizes the input data variables to match internal VencoPy names
+        given as specified in the mapping in parseConfig['dataVariables'].
+        So far mappings for MiD08 and MiD17 are given. Since the MiD08 does
+        not provide a combined household and person unique identifier, it is
+        synthesized of the both IDs.
+
+        :return: None
+        """
+        replacementDict = self.createReplacementDict(
+            self.datasetID, self.parseConfig["dataVariables"]
+        )
+        dataRenamed = self.data.rename(columns=replacementDict)
+        if self.datasetID == "MiD08":
+            dataRenamed["hhPersonID"] = (
+                dataRenamed["hhID"].astype("string")
+                + dataRenamed["personID"].astype("string")
+            ).astype("int")
+        self.data = dataRenamed
+        print("Finished harmonization of variables")
 
     def convertTypes(self):
         """

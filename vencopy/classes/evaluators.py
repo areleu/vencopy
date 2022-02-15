@@ -668,7 +668,7 @@ class Evaluator:
             io=pathToFile, sheet_name=sheetname, header=1, engine="openpyxl"
         )
         data = dataIn.groupby(by=["day"]).sum().drop(columns="hour")
-        # fix, ax = plt.subplots()
+        # FIXME: ax = plt.subplots()
         data.plot()
         plt.show()
         print(data)
