@@ -52,13 +52,13 @@ files:
         tripsDataRaw: KiD2010-Fahrten-Datei-puf.dta
         vehiclesDataRaw: KiD2010-Fahrzeug-Datei-puf.dta
         # tripsDataRaw: KiD2010_merged.dta
-        tripsProcessedOld:
-        purposesProcessedOld:
-        purposesProcessed:
-        inputDataDriveProfiles:
-        inputDataPlugProfiles:
-        vencoPyOutput:
-        flexPlotName:
+        purposesProcessed: inputProfiles_Purpose  
+        inputDataDriveProfiles: inputProfiles_Drive  
+        inputDataPlugProfiles: inputProfiles_Plug  
+        output: vencopy
+        flexPlotName: flexProfileComparison
+        transactionStartHour: transactionStartHour
+        
     output: output
     vencoPyOutput: vencoPyOutput
     aggPlotName: mobilityComparison

@@ -26,11 +26,11 @@ inputDataScalars:
 
     KiD: # differentiate between light commercial vehicle (LCV), medium-duty truck (MDT), and heavy-duty truck (HDT).
         Minimum_daily_mileage: 0.0              #km
-        Battery_capacity: 500.0                 #kWh
-        Electric_consumption: 140.0             #kWh/100km
-        Fuel_consumption: 28.0                  #l/100km
-        Electric_consumption_corr: 140.0     #kWh/100km
-        Fuel_consumption_corr: 28.0          #l/100km
+        Battery_capacity: 50.0                 #kWh
+        Electric_consumption: 20.0             #kWh/100km
+        Fuel_consumption: 2.0                  #l/100km
+        Electric_consumption_corr: 20.0     #kWh/100km
+        Fuel_consumption_corr: 2.0          #l/100km
         Maximum_SOC: 0.97                       #%
         Minimum_SOC: 0.03                       #%
         Rated_power_of_charging_column: 11.0    #kW

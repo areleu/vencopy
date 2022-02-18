@@ -330,7 +330,7 @@ class TripDiaryBuilder:
             index=self.tripDataClean.index,
             columns=range(globalConfig['numberOfHours']))
         fillHourValues = FillHourValues(
-            ata=self.tripDataClean,
+            data=self.tripDataClean,
             rangeFunction=self.initiateColRange)
         driveDataTrips = self.formatDF.apply(fillHourValues, axis=1)
 
@@ -521,14 +521,18 @@ class TripDiaryBuilder:
         """
 
         dataDrive.to_csv(Path(self.localPathConfig['pathAbsolute']['vencoPyRoot']) / globalConfig['pathRelative']['diaryOutput'] /
-                         createFileString(globalConfig=globalConfig, fileKey='inputDataDriveProfiles',
-                                          datasetID=datasetID), na_rep='0')
+                         createFileString(
+                             globalConfig=self.globalConfig,
+                             fileKey='inputDataDriveProfiles',
+                             datasetID=datasetID), na_rep='0')
         dataPurpose.to_csv(Path(self.localPathConfig['pathAbsolute']['vencoPyRoot']) / globalConfig['pathRelative']['diaryOutput'] /
-                           createFileString(globalConfig=globalConfig, fileKey='purposesProcessed',
-                                            datasetID=datasetID))
+                           createFileString(
+                                globalConfig=self.globalConfig,
+                                fileKey='purposesProcessed',
+                                datasetID=datasetID))
         print(f"Drive data and trip purposes written to files "
-              f"{createFileString(globalConfig=globalConfig, fileKey='inputDataDriveProfiles', datasetID=datasetID)} "
-              f"and {createFileString(globalConfig=globalConfig, fileKey='purposesProcessed', datasetID=datasetID)}")
+              f"{createFileString(globalConfig=self.globalConfig, fileKey='inputDataDriveProfiles', datasetID=datasetID)} "
+              f"and {createFileString(globalConfig=self.globalConfig, fileKey='purposesProcessed', datasetID=datasetID)}")
 
 
 class FillHourValues:
@@ -556,10 +560,10 @@ class FillHourValues:
 
 
 if __name__ == '__main__':
-    from vencopy.classes.dataParsers import ParseMiD
+    from vencopy.classes.dataParsers import ParseMiD, ParseKiD, ParseVF
     from vencopy.scripts.globalFunctions import loadConfigDict
 
-    datasetID = 'MiD17'
+    datasetID = 'KiD'
     basePath = Path(__file__).parent.parent
     configNames = (
         'globalConfig',
@@ -570,6 +574,12 @@ if __name__ == '__main__':
         'flexConfig',
         'evaluatorConfig')
     configDict = loadConfigDict(configNames, basePath)
-    vpData = ParseMiD(configDict=configDict, loadEncrypted=False, datasetID=datasetID)
+    if datasetID == "MiD17":
+        vpData = ParseMiD(configDict=configDict, datasetID=datasetID)
+    elif datasetID == "KiD":
+        vpData = ParseKiD(configDict=configDict, datasetID=datasetID)
+    elif datasetID == "VF":
+        vpData = ParseVF(configDict=configDict, datasetID=datasetID)
     vpData.process()
     vpDiary = TripDiaryBuilder(configDict=configDict, ParseData=vpData, datasetID=datasetID, debug=True)
+

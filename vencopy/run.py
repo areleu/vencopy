@@ -16,7 +16,7 @@ if __package__ is None or __package__ == "":
 
 import pandas as pd
 from pathlib import Path
-from vencopy.classes.dataParsers import ParseMiD
+from vencopy.classes.dataParsers import ParseMiD, ParseKiD, ParseVF
 from vencopy.classes.tripDiaryBuilders import TripDiaryBuilder
 from vencopy.classes.gridModelers import GridModeler
 from vencopy.classes.flexEstimators import FlexEstimator
@@ -25,7 +25,7 @@ from vencopy.scripts.globalFunctions import loadConfigDict, createOutputFolders
 
 if __name__ == "__main__":
     # Set dataset and config to analyze, create output folders
-    # datasetID = 'KiD'
+    # datasetID options: 'MiD08' - 'MiD17' - 'KiD' - 'VF'
     datasetID = "MiD17"
     configNames = (
         "globalConfig",
@@ -40,9 +40,13 @@ if __name__ == "__main__":
     configDict = loadConfigDict(configNames, basePath)
     createOutputFolders(configDict=configDict)
 
-    vpData = ParseMiD(
-        configDict=configDict, datasetID=datasetID, loadEncrypted=False
-    )
+    # Parsing datasets
+    if datasetID == "MiD17":
+        vpData = ParseMiD(configDict=configDict, datasetID=datasetID)
+    elif datasetID == "KiD":
+        vpData = ParseKiD(configDict=configDict, datasetID=datasetID)
+    elif datasetID == "VF":
+        vpData = ParseVF(configDict=configDict, datasetID=datasetID)
     vpData.process()
 
     # Trip distance and purpose diary compositions

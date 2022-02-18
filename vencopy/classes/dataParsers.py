@@ -422,7 +422,7 @@ class DataParser:
             f"{pprint.pprint(boolDict)}"
         )
         print(
-            f"All filters combined yielded a total of {lenData} rows,"
+            f"All filters combined yielded a total of {lenData} rows, "
             f"wwhich were taken into account"
         )
         print(
@@ -719,6 +719,118 @@ class ParseMiD(IntermediateParsing):
         print("Parsing MiD dataset completed")
 
 
+class ParseVF(IntermediateParsing):
+    def __init__(self, configDict: dict, datasetID: str, loadEncrypted=False):
+        """
+        Class for parsing MiD data sets. The VencoPy configs globalConfig,
+        parseConfig and localPathConfig have to be given on instantiation as
+        well as the data set ID, e.g. 'MiD2017' that is used as key in the
+        config lookups. Also, an option can be specified to load the file from
+        an encrypted ZIP-file. For this, a password has to be given in the
+        parseConfig.
+
+        :param configDict: VencoPy config dictionary consisting at least of the
+                           config dictionaries globalConfig, parseConfig and
+                           localPathConfig.
+        :param datasetID: A string identifying the MiD data set.
+        :param loadEncrypted: Boolean. If True, data is read from encrypted
+                              file. For this, a possword has to be
+                              specified in parseConfig['PW'].
+        """
+        super().__init__(
+            configDict=configDict,
+            datasetID=datasetID,
+            loadEncrypted=loadEncrypted,
+        )
+    
+    def harmonizeVariables(self):
+        """
+        Harmonizes the input data variables to match internal VencoPy names
+        given as specified in the mapping in parseConfig['dataVariables'].
+        So far mappings for MiD08 and MiD17 are given. Since the MiD08 does
+        not provide a combined household and person unique identifier, it is
+        synthesized of the both IDs.
+
+        :return: None
+        """
+        replacementDict = self.createReplacementDict(
+            self.datasetID, self.parseConfig["dataVariables"]
+        )
+        dataRenamed = self.data.rename(columns=replacementDict)
+        if self.datasetID == "MiD08":
+            dataRenamed["hhPersonID"] = (
+                dataRenamed["hhID"].astype("string")
+                + dataRenamed["personID"].astype("string")
+            ).astype("int")
+        self.data = dataRenamed
+        print("Finished harmonization of variables")
+
+    def convertTypes(self):
+        """
+        Convert raw column types to predefined python types as specified in
+        parseConfig['inputDTypes'][datasetID]. This is mainly done for
+        performance reasons. But also in order to avoid index values that are
+        of type int to be cast to float. The function operates only on
+        self.data and writes back changes to self.data
+
+        :return: None
+        """
+        # Filter for dataset specific columns
+        conversionDict = self.parseConfig["inputDTypes"][self.datasetID]
+        keys = {
+            iCol for iCol in conversionDict.keys() if iCol in self.data.columns
+        }
+        self.varDataTypeDict = {
+            key: conversionDict[key] for key in conversionDict.keys() & keys
+        }
+        self.data = self.data.astype(self.varDataTypeDict)
+
+    def addStrColumns(self, weekday=True, purpose=True):
+        """
+        Adds string columns for either weekday or purpose.
+
+        :param weekday: Boolean identifier if weekday string info should be
+                        added in a separate column
+        :param purpose: Boolean identifier if purpose string info should be
+                        added in a separate column
+        :return: None
+        """
+
+        if weekday:
+            self.addStrColumnFromVariable(
+                colName="weekdayStr", varName="tripStartWeekday"
+            )
+        if purpose:
+            self.addStrColumnFromVariable(
+                colName="purposeStr", varName="tripPurpose"
+            )
+
+    def updateEndTimestamp(self):
+        """
+        :return:
+        """
+        endsFollowingDay = self.data["tripEndNextDay"] == 1
+        self.data.loc[endsFollowingDay, "timestampEnd"] = self.data.loc[
+            endsFollowingDay, "timestampEnd"
+        ] + pd.offsets.Day(1)
+
+    def process(self):
+        """
+        Wrapper function for harmonising and filtering the dataset.
+        """
+        self.selectColumns()
+        self.harmonizeVariables()
+        self.convertTypes()
+        self.checkFilterDict(self.filterDict)
+        self.filter(self.filterDict)
+        self.filterConsistentHours()
+        self.addStrColumns()
+        self.composeStartAndEndTimestamps()
+        self.updateEndTimestamp()
+        self.harmonizeVariablesGenericIdNames()
+        print("Parsing MiD dataset completed")
+
+
 class ParseKiD(IntermediateParsing):
     def __init__(self, configDict: dict, datasetID: str, loadEncrypted=False):
         """
@@ -734,14 +846,14 @@ class ParseKiD(IntermediateParsing):
 
     def loadData(self):
         rawDataPathTrips = (
-            Path(configDict["localPathConfig"]["pathAbsolute"][self.datasetID])
-            / configDict["globalConfig"]["files"][self.datasetID][
+            Path(self.localPathConfig["pathAbsolute"][self.datasetID])
+            / self.globalConfig["files"][self.datasetID][
                 "tripsDataRaw"
             ]
         )
         rawDataPathVehicles = (
-            Path(configDict["localPathConfig"]["pathAbsolute"][self.datasetID])
-            / configDict["globalConfig"]["files"][self.datasetID][
+            Path(self.localPathConfig["pathAbsolute"][self.datasetID])
+            / self.globalConfig["files"][self.datasetID][
                 "vehiclesDataRaw"
             ]
         )
@@ -896,9 +1008,11 @@ if __name__ == "__main__":
     )
     configDict = loadConfigDict(configNames, basePath)
 
-    datasetID = "MiD17"  # 'MiD17' # options are MiD08, MiD17, KiD
+    datasetID = "KiD"  # 'MiD17' # options are MiD08, MiD17, KiD
     if datasetID == "MiD17":
         vpData = ParseMiD(configDict=configDict, datasetID=datasetID)
     elif datasetID == "KiD":
         vpData = ParseKiD(configDict=configDict, datasetID=datasetID)
+    elif datasetID == "VF":
+        vpData = ParseVF(configDict=configDict, datasetID=datasetID)
     vpData.process()

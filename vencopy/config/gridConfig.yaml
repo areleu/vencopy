@@ -18,9 +18,13 @@ chargingInfrastructureMappings:  # Simple grid model: Explicit mapping given for
     'WORK': True
     'SCHOOL': False
     'SHOPPING': True
-    'LEISURE': True
+    'LEISURE': False
     'OTHER': False
     'NA': False
+    # KiD additional purposes below
+    'PEOPLE_MOBILITY': False
+    'TRANSPORT': False
+    'SERVICES': False
 
 # MOVE TO GRID MODELER TUTORIAL to show implementation of discrete mapping in probabilities
 # gridAvailabilityProbability:  # Grid model 2: Probabilities given for each location aka trip purpose and capacity

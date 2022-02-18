@@ -20,15 +20,16 @@ from scipy.stats import beta, gamma
 import matplotlib.pyplot as plt
 from vencopy.scripts.globalFunctions import createFileString, loadConfigDict
 from vencopy.classes.evaluators import Evaluator
-from vencopy.classes.dataParsers import ParseMiD
+from vencopy.classes.dataParsers import ParseMiD, ParseKiD, ParseVF
 
 
 class GridModeler:
     def __init__(self, configDict: dict, datasetID: str):
         """
-        Class for modeling individual vehicle connection options dependent on parking purposes. Configurations on
-        charging station availabilities can be parametrized in gridConfig. globalConfig and datasetID are needed for
-        reading the input files.
+        Class for modeling individual vehicle connection options dependent on
+        parking purposes. Configurations on charging station availabilities
+        can be parametrized in gridConfig. globalConfig and datasetID are
+        needed for reading the input files.
 
         :param configDict: A dictionary containing multiple yaml config files
         :param datasetID: String, used for referencing the purpose input file
@@ -65,7 +66,7 @@ class GridModeler:
         self.outputFileNameTransactionStartHour = createFileString(
             globalConfig=self.globalConfig,
             fileKey="transactionStartHour",
-            datasetID=datasetID,
+            datasetID=datasetID
         )
         self.outputFilePath = (
             Path(self.localPathConfig["pathAbsolute"]["vencoPyRoot"])
@@ -86,7 +87,8 @@ class GridModeler:
 
     def assignGridViaPurposes(self):
         """
-        Method to translate hourly purpose profiles into hourly profiles of true/false giving the charging station
+        Method to translate hourly purpose profiles into hourly profiles of
+        true/false giving the charging station
         availability in each hour for each individual vehicle.
 
         :return: None
@@ -103,12 +105,12 @@ class GridModeler:
     def assignGridViaProbabilities(self, setSeed: int):
         """
         :param setSeed: Seed for reproducing random number
-        :return: Returns a dataFrame holding charging capacity for each trip assigned with probability distribution
+        :return: Returns a dataFrame holding charging capacity for each trip
+                 assigned with probability distribution
         """
         self.chargeAvailability = self.purposeData.copy()
-        self.chargeAvailability.columns = self.chargeAvailability.columns.astype(
-            int
-        )
+        self.chargeAvailability.columns =\
+            self.chargeAvailability.columns.astype(int)
         self.purposeData.columns = self.purposeData.columns.astype(int)
         homePower = pd.Series()
         nHours = len(self.chargeAvailability.columns)
@@ -190,12 +192,14 @@ class GridModeler:
         """
         Not tested, preleiminary version
 
-        Assigns a random number between 0 and 1 for all the purposes, and allots a charging station according to the
+        Assigns a random number between 0 and 1 for all the purposes, and
+        allots a charging station according to the
         probability distribution
 
         :param purpose: Purpose of each hour of a trip
-        :param gridAvailability: Dictionary specifying the probability of different charging powers at different parking
-            purposes
+        :param gridAvailability: Dictionary specifying the probability of
+                                 different charging powers at different parking
+                                 purposes
         :return: Returns a charging capacity for a purpose
         """
         for genericID, tripPurpose in purpose.items():
@@ -214,8 +218,8 @@ class GridModeler:
 
     def writeOutGridAvailability(self):
         """
-           Function to write out the boolean charging station availability for each vehicle in each hour to the output
-           file path.
+           Function to write out the boolean charging station availability for
+           each vehicle in each hour to the output file path.
 
            :return: None
            """
@@ -249,15 +253,14 @@ class GridModeler:
             + str(self.transactionStartHour.sum().sum())
             + " transactions"
         )
-        self.transactionStartHour.columns = self.transactionStartHour.columns.astype(
-            int
-        )
+        self.transactionStartHour.columns =\
+            self.transactionStartHour.columns.astype(int)
         return self.transactionStartHour
 
     def writeOutTransactionStartHour(self, transactionHours):
         """
-           Function to write out the transaction start hour for each vehicle in each hour to the output
-           file path.
+           Function to write out the transaction start hour for each vehicle in
+           each hour to the output file path.
 
            :return: None
            """
@@ -265,8 +268,9 @@ class GridModeler:
 
     def calcGrid(self, grid: str):
         """
-        Wrapper function for grid assignment. The number of iterations for assignGridViaProbabilities() and
-        transactionStartHour() and seed for reproduction of random numbers can be specified here.
+        Wrapper function for grid assignment. The number of iterations for
+        assignGridViaProbabilities() and transactionStartHour() and seed for
+        reproduction of random numbers can be specified here.
         """
         if grid == "simple":
             self.assignGridViaPurposes()
@@ -296,7 +300,7 @@ class GridModeler:
 
 
 if __name__ == "__main__":
-    datasetID = "MiD17"
+    datasetID = "KiD"
     basePath = Path(__file__).parent.parent
     configNames = (
         "globalConfig",
@@ -309,9 +313,12 @@ if __name__ == "__main__":
     )
     configDict = loadConfigDict(configNames, basePath=basePath)
 
-    vpData = ParseMiD(
-        configDict=configDict, datasetID=datasetID, loadEncrypted=False
-    )
+    if datasetID == "MiD17":
+        vpData = ParseMiD(configDict=configDict, datasetID=datasetID)
+    elif datasetID == "KiD":
+        vpData = ParseKiD(configDict=configDict, datasetID=datasetID)
+    elif datasetID == "VF":
+        vpData = ParseVF(configDict=configDict, datasetID=datasetID)
     vpData.process()
 
     vpg = GridModeler(configDict=configDict, datasetID=datasetID)
