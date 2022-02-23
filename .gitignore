@@ -25,3 +25,5 @@ vencopy/config/localPathConfig.yaml
 # Fabia
 /.vscode/
 /docs/_build/
+*.code-workspace
+

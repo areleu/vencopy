@@ -78,12 +78,18 @@ Links
    software/inputOutput
    software/codestyle
 
+.. toctree::
+   :caption: Research
+   :hidden:
+   :maxdepth: 1
+
+   research/projects
+   research/publications
 
 .. toctree::
    :caption: Contribution
    :hidden:
    :maxdepth: 1
 
-   contribution/publications
    contribution/releaseTimeline
    contribution/howToContribute
