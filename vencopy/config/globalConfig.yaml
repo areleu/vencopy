@@ -30,6 +30,7 @@ files:
         householdsDataRaw: MiD2017_Regional_Haushalte.csv
         personsDataRaw: MiD2017_Regional_Personen.csv
         tripsDataRaw: MiD2017_Regional_Wege.dta
+        filteredDataset: outputDatasetDataParsers
         purposesProcessed: inputProfiles_Purpose  # inputProfiles_Purpose_RUNLABEL_MiD17.csv
         inputDataDriveProfiles: inputProfiles_Drive  # inputProfiles_Drive_RUNLABEL_MiD17.csv
         inputDataPlugProfiles: inputProfiles_Plug  # inputProfiles_Plug_RUNLABEL_MiD17.csv
@@ -41,6 +42,7 @@ files:
         householdsDataRaw: MiD2008_PUF_Haushalte.dta
         personDataRaw: MiD2008_PUF_Personen.dta
         tripsDataRaw: MiD2008_PUF_Wege.dta
+        filteredDataset: outputDatasetDataParsers
         tripsProcessedOld: MiD_procCS_caseID-weekday-weight-activity.xlsx
         purposesProcessedOld: MiD_procCS_caseID-weekday-weight-activity.xlsx
         purposesProcessed: inputProfiles_Purpose  # inputProfiles_Purpose_RUNLABEL_MiD08.csv
@@ -52,6 +54,17 @@ files:
         tripsDataRaw: KiD2010-Fahrten-Datei-puf.dta
         vehiclesDataRaw: KiD2010-Fahrzeug-Datei-puf.dta
         # tripsDataRaw: KiD2010_merged.dta
+        filteredDataset: outputDatasetDataParsers
+        purposesProcessed: inputProfiles_Purpose  
+        inputDataDriveProfiles: inputProfiles_Drive  
+        inputDataPlugProfiles: inputProfiles_Plug  
+        output: vencopy
+        flexPlotName: flexProfileComparison
+        transactionStartHour: transactionStartHour
+    VF:
+        tripsDataRaw: MiD2017_Regional_Wege.dta
+        vehiclesDataRaw: tripDataMergedWVehicleData.csv
+        filteredDataset: outputDatasetDataParsers
         purposesProcessed: inputProfiles_Purpose  
         inputDataDriveProfiles: inputProfiles_Drive  
         inputDataPlugProfiles: inputProfiles_Plug  

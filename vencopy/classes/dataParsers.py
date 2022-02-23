@@ -18,6 +18,7 @@ import numpy as np
 import warnings
 from pathlib import Path
 from zipfile import ZipFile
+from vencopy.scripts.globalFunctions import createFileString
 
 
 class DataParser:
@@ -76,6 +77,24 @@ class DataParser:
                 f"from {self.rawDataPath}"
             )
             self.loadData()
+
+    def writeOut(self):
+        """
+        General writeout utility for tripDiaries
+
+        :param globalConfig: global config storing relative paths, filenames and run labels
+        :param dataDrive: Driving distance diary for each survey participant
+        :param dataPurpose: Parking purpose diary for each survey participant
+        :param datasetID: ID used for filenames
+        :return: None
+        """
+        self.data.to_csv(Path(self.localPathConfig['pathAbsolute']['vencoPyRoot']) / self.globalConfig['pathRelative']['parseOutput'] /
+                         createFileString(
+                             globalConfig=self.globalConfig,
+                             fileKey='filteredDataset',
+                             datasetID=self.datasetID))
+        print(f"Filtered dataset written to "
+              f"{createFileString(globalConfig=self.globalConfig, fileKey='filteredDataset', datasetID=self.datasetID)}")
 
     def loadData(self):
         """
@@ -436,6 +455,7 @@ class DataParser:
         """
         self.checkFilterDict(filterDict)
         self.filter(filterDict)
+        self.writeOut()
         print("Generic parsing completed")
 
 
@@ -716,6 +736,7 @@ class ParseMiD(IntermediateParsing):
         self.composeStartAndEndTimestamps()
         self.updateEndTimestamp()
         self.harmonizeVariablesGenericIdNames()
+        self.writeOut()
         print("Parsing MiD dataset completed")
 
 
@@ -743,6 +764,39 @@ class ParseVF(IntermediateParsing):
             loadEncrypted=loadEncrypted,
         )
     
+    def loadData(self):
+        rawDataPathTrips = (
+            Path(self.localPathConfig["pathAbsolute"][self.datasetID])
+            / self.globalConfig["files"][self.datasetID][
+                "tripsDataRaw"
+            ]
+        )
+        rawDataPathVehicles = (
+            Path(self.localPathConfig["pathAbsolute"][self.datasetID])
+            / self.globalConfig["files"][self.datasetID][
+                "vehiclesDataRaw"
+            ]
+        )
+        rawDataTrips = pd.read_stata(
+            rawDataPathTrips,
+            convert_categoricals=False,
+            convert_dates=False,
+            preserve_dtypes=False,
+        )
+        rawDataVehicles = pd.read_stata(
+            rawDataPathVehicles,
+            convert_categoricals=False,
+            convert_dates=False,
+            preserve_dtypes=False,
+        )
+        rawDataVehicles.set_index("k00", inplace=True)
+        rawData = rawDataTrips.join(rawDataVehicles, on="k00")
+        self.rawData = rawData
+        print(
+            f"Finished loading {len(self.rawData)} "
+            f"rows of raw data of type .dta"
+        )
+
     def harmonizeVariables(self):
         """
         Harmonizes the input data variables to match internal VencoPy names
@@ -828,6 +882,7 @@ class ParseVF(IntermediateParsing):
         self.composeStartAndEndTimestamps()
         self.updateEndTimestamp()
         self.harmonizeVariablesGenericIdNames()
+        self.writeOut()
         print("Parsing MiD dataset completed")
 
 
@@ -990,6 +1045,7 @@ class ParseKiD(IntermediateParsing):
         self.composeStartAndEndTimestamps()
         self.updateEndTimestamp()
         self.harmonizeVariablesGenericIdNames()
+        self.writeOut()
         print("Parsing KiD dataset completed")
 
 
@@ -1008,7 +1064,7 @@ if __name__ == "__main__":
     )
     configDict = loadConfigDict(configNames, basePath)
 
-    datasetID = "KiD"  # 'MiD17' # options are MiD08, MiD17, KiD
+    datasetID = "MiD17"  # 'MiD17' # options are MiD08, MiD17, KiD
     if datasetID == "MiD17":
         vpData = ParseMiD(configDict=configDict, datasetID=datasetID)
     elif datasetID == "KiD":

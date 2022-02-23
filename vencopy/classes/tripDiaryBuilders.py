@@ -563,7 +563,7 @@ if __name__ == '__main__':
     from vencopy.classes.dataParsers import ParseMiD, ParseKiD, ParseVF
     from vencopy.scripts.globalFunctions import loadConfigDict
 
-    datasetID = 'KiD'
+    datasetID = 'MiD17'
     basePath = Path(__file__).parent.parent
     configNames = (
         'globalConfig',

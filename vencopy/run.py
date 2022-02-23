@@ -26,7 +26,7 @@ from vencopy.scripts.globalFunctions import loadConfigDict, createOutputFolders
 if __name__ == "__main__":
     # Set dataset and config to analyze, create output folders
     # datasetID options: 'MiD08' - 'MiD17' - 'KiD' - 'VF'
-    datasetID = "MiD17"
+    datasetID = "KiD"
     configNames = (
         "globalConfig",
         "localPathConfig",
@@ -59,7 +59,8 @@ if __name__ == "__main__":
 
     # Grid model application
     vpGrid = GridModeler(configDict=configDict, datasetID=datasetID)
-    vpGrid.calcGrid(grid="probability")
+    # options: simple, probability
+    vpGrid.calcGrid(grid="simple")  
 
     # Evaluate drive and trip purpose profile
     vpEval = Evaluator(
