@@ -766,8 +766,8 @@ class ParseVF(IntermediateParsing):
     
     def loadData(self):
         rawDataPathTrips = (
-            Path(self.localPathConfig["pathAbsolute"][self.datasetID])
-            / self.globalConfig["files"][self.datasetID][
+            Path(self.localPathConfig["pathAbsolute"]["MiD17"])
+            / self.globalConfig["files"]["MiD17"][
                 "tripsDataRaw"
             ]
         )
@@ -783,14 +783,13 @@ class ParseVF(IntermediateParsing):
             convert_dates=False,
             preserve_dtypes=False,
         )
-        rawDataVehicles = pd.read_stata(
+        rawDataVehicles = pd.read_csv(
             rawDataPathVehicles,
-            convert_categoricals=False,
-            convert_dates=False,
-            preserve_dtypes=False,
+            encoding="ISO-8859-1"
         )
-        rawDataVehicles.set_index("k00", inplace=True)
-        rawData = rawDataTrips.join(rawDataVehicles, on="k00")
+        rawDataVehicles = rawDataVehicles.rename(columns={'HP_ID': 'HP_ID_Reg'})
+        rawDataVehicles.set_index("HP_ID_Reg", inplace=True)
+        rawData = rawDataTrips.join(rawDataVehicles, on="HP_ID_Reg")
         self.rawData = rawData
         print(
             f"Finished loading {len(self.rawData)} "

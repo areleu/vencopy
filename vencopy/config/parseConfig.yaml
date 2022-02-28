@@ -46,8 +46,8 @@ dataVariables:
     datasetID: ['MiD08', 'MiD17', 'KiD', 'VF']
     isMIVDriver: ['pkw_f','W_VM_G', 'NA', 'NA']
     hhID: ['hhid', 'H_ID_Reg', 'NA', 'H_ID']
-    vehicleID: [ 'NA', 'NA', 'k00', 'A_ID' ]
-    carSegment: [ 'NA', 'NA', 'NA', 'seg_kba']
+    vehicleID: [ 'NA', 'NA', 'k00', 'A_ID' ]        # Fahrzeug ID
+    carSegment: [ 'NA', 'NA', 'k01', 'seg_kba']     # Fahrzeugart
     drivetrain: ['NA', 'NA', 'NA', 'A_ANTRIEB']
     personID: ['pid', 'P_ID', 'NA', 'P_ID']
     hhPersonID: ['NA','HP_ID_Reg', 'NA','HP_ID']
@@ -70,7 +70,7 @@ dataVariables:
     tripEndMinute: ['en_min', 'W_AZM', 'NA', 'W_AZM']
     tripEndNextDay: ['en_dat', 'W_FOLGETAG', 'NA', 'W_FOLGETAG']
     tripIsIntermodal: ['NA', 'weg_intermod', 'NA', 'NA']
-    weather: ['NA', 'wetter', 'NA', 'NA']
+    weather: ['NA', 'wetter', 'NA', 'wetter']
     #    tripStartLocation: [ 'NA', 'KKZ_SO' ]
     #    tripEndLocation: [ 'NA', 'KKZ_ZO' ]
 

@@ -26,7 +26,7 @@ from vencopy.scripts.globalFunctions import loadConfigDict, createOutputFolders
 if __name__ == "__main__":
     # Set dataset and config to analyze, create output folders
     # datasetID options: 'MiD08' - 'MiD17' - 'KiD' - 'VF'
-    datasetID = "KiD"
+    datasetID = "MiD17"
     configNames = (
         "globalConfig",
         "localPathConfig",
