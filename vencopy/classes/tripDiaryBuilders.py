@@ -187,7 +187,6 @@ class TripDiaryBuilder:
                                            (tripDataWHourlyShares['shareEndHour'] == 0) &
                                            (tripDataWHourlyShares['noOfFullHours'] == 0)), :]
 
-
     # DEPRECATED WILL BE REMOVED IN NEXT PATCH due to one-liner
     def initiateHourDataframe(self, indexCol, nHours: int) -> pd.DataFrame:
         """
@@ -260,7 +259,7 @@ class TripDiaryBuilder:
 
     def assignDriving(self, driveData: pd.DataFrame) -> pd.DataFrame:
         """
-        Assign hours where driveData != 0/NA to 'driving'
+        Assign hours in purposeData where driveData != 0/NA to 'driving'
 
         :param driveData: driving data
         :return: Returns driving data with 'driving' instead of hours having 0/NA
@@ -278,16 +277,27 @@ class TripDiaryBuilder:
         :return: Returns start hour of a parking activity
         """
 
-        if departure.dt.hour == arrival.dt.hour:
-            if arrival.dt.minute >= 30:  # Cases 3, 4, 5
-                startHour = departure.dt.hour + 1  # Cases 3,5
+        # if departure.dt.hour == arrival.dt.hour:
+        #     if arrival.dt.minute >= 30:  # Cases 3, 4, 5
+        #         startHour = departure.dt.hour + 1  # Cases 3,5
+        #     else:  # arrival.minute < 30:
+        #         startHour = departure.dt.hour  # Case 4
+        # else:  # inter-hour trip
+        #     if arrival.minute <= 30:
+        #         startHour = arrival.dt.hour  # Cases 1a and b
+        #     else:  # arrival.minute > 30:
+        #         startHour = arrival.dt.hour + 1  # Cases 2a and b
+        # return startHour
+        if departure.hour == arrival.hour:
+            if arrival.minute >= 30:  # Cases 3, 4, 5
+                startHour = departure.hour + 1  # Cases 3,5
             else:  # arrival.minute < 30:
-                startHour = departure.dt.hour  # Case 4
+                startHour = departure.hour  # Case 4
         else:  # inter-hour trip
             if arrival.minute <= 30:
-                startHour = arrival.dt.hour  # Cases 1a and b
+                startHour = arrival.hour  # Cases 1a and b
             else:  # arrival.minute > 30:
-                startHour = arrival.dt.hour + 1  # Cases 2a and b
+                startHour = arrival.hour + 1  # Cases 2a and b
         return startHour
 
     def determinePurposeStartHour_vec(self, tripData: pd.DataFrame) -> pd.DataFrame:
@@ -299,19 +309,22 @@ class TripDiaryBuilder:
         :return: Returns start hour of a parking activity
         """
 
-        tripData['isEqHour'] = tripData['timestampStart'].dt.hour == tripData['timestampEnd'].dt.hour
-        tripData['startsNextHour'] = tripData['timestampStart'].dt.minute >= 30
-        tripData.loc[(tripData['isEqHour'] & ~tripData['startsNextHour']), 'parkStartHour'] = tripData[
-            'timestampEnd'].dt.hour
-        tripData.loc[(tripData['isEqHour'] & tripData['startsNextHour']), 'parkStartHour'] = tripData[
-                                                                                             'timestampEnd'].dt.hour + 1
-        tripData.loc[(~tripData['isEqHour'] & tripData['startsNextHour']), 'parkStartHour'] = tripData[
-                                                                                              'timestampStart'].dt.hour + 1
-        tripData.loc[(~tripData['isEqHour'] & ~tripData['startsNextHour']), 'parkStartHour'] = tripData[
-            'timestampStart'].dt.hour
-        tripData['parkStartHour'] = tripData['parkStartHour'].astype(int)
+        # Determine end tim
+        tripData['parkStartsNextHour'] = tripData['timestampEnd'].dt.minute >= 30
+        # tripData.loc[(tripData['isEqHour'] & ~tripData['parkStartsNextHour']), 'parkStartHour'] = tripData[
+        #     'timestampEnd'].dt.hour
+        # tripData.loc[(tripData['isEqHour'] & tripData['parkStartsNextHour']), 'parkStartHour'] = tripData[
+        #                                                                                      'timestampEnd'].dt.hour + 1
+        # tripData.loc[(~tripData['isEqHour'] & tripData['parkStartsNextHour']), 'parkStartHour'] = tripData[
+        #                                                                                       'timestampEnd'].dt.hour + 1
+        # tripData.loc[(~tripData['isEqHour'] & ~tripData['parkStartsNextHour']), 'parkStartHour'] = tripData[
+        #     'timestampEnd'].dt.hour
+        tripData.loc[:, 'parkStartHour'] = tripData['timestampEnd'].dt.hour  # Set all parkStartHours to tripEndHour
+        tripData.loc[tripData['parkStartsNextHour'], 'parkStartHour'] += 1
+        tripData['parkStartHourPreviousTrip'] = tripData['parkStartHour'].shift(1, fill_value=0)
         return tripData
 
+    @profile(immediate=True)
     def fillDayPurposes(self, tripData: pd.DataFrame, purposeDataDays: pd.DataFrame) -> pd.DataFrame:
         # FixMe: Ask Ben for performance improvements
         """
@@ -348,7 +361,6 @@ class TripDiaryBuilder:
         #
         #     arrivalIsBelowHalfHour = iSubData['timestampStart'].dt.hour <= 30
 
-        tripData = self.determinePurposeStartHour_vec(tripData=tripData)
 
 
         # Solution 1: use enumerate in order to get rowNumber instead of index and then .iloc below
@@ -361,36 +373,48 @@ class TripDiaryBuilder:
                 minWID = allWIDs.min()  # FIXME perf
                 maxWID = allWIDs.max()  # FIXME perf
 
-            if iRow['tripID'] == minWID:  # First trip, differentiate if trip starts in first half hour or not
+            if iRow['tripID'] == 1:  # Differentiate if trip starts in first half hour or not
+
                 if iRow['timestampStart'].minute <= 30:
-                    # purposeDataDays.loc[hpID, 0:iRow['tripStartHour']] = 'HOME'
-                    # FIXME perf: implement as temporary Series that is at the end of each hhPersonID appended to a list
+                    # purposeDataDays.loc[hpID, 0:iRow['tripStartHour']] = 'HOME'  # FIXME perf
                     purposeDataDays.loc[hpID, range(0, iRow['tripStartHour'])] = 'HOME'
                 else:
                     purposeDataDays.loc[hpID, range(0, iRow['tripStartHour'] + 1)] = 'HOME'
-                if iRow['tripID'] == maxWID:  # First trip = Last trip
+                if iRow['tripID'] == maxWID:
                     if iRow['timestampEnd'].minute <= 30:
                         purposeDataDays.loc[hpID, range(iRow['tripEndHour'], maxHour)] = 'HOME'
                     else:
                         purposeDataDays.loc[hpID, range(iRow['tripEndHour']+1, maxHour)] = 'HOME'
-            # elif iRow['tripID'] == minWID:  # Also first trip but not tripID=1, FIXME can be merged with above code
-            #     if iRow['timestampStart'].minute <= 30:
-            #         purposeDataDays.loc[hpID, range(0, iRow['tripStartHour'])] = 'HOME'
-            #     else:
-            #         purposeDataDays.loc[hpID, range(0, iRow['tripStartHour'] + 1)] = 'HOME'
-            #     if iRow['tripID'] == maxWID:
-            #         purposeDataDays.loc[hpID, range(iRow['tripEndHour'] + 1, maxHour)] = 'HOME'
-            else:  # Other trips than lowest tripID
-                # FIXME Perf implement globally vectorized
-                # purposeHourStart = self.determinePurposeStartHour(tripData.loc[idxOld, 'timestampStart'],
-                #                                                   tripData.loc[idxOld, 'timestampEnd'])  # FIXME perf?
+            elif iRow['tripID'] == minWID:
                 if iRow['timestampStart'].minute <= 30:
-                    hoursBetween = range(iRow['parkStartHour'], iRow['tripStartHour'])
+                    purposeDataDays.loc[hpID, range(0, iRow['tripStartHour'])] = 'HOME'
                 else:
-                    hoursBetween = range(iRow['parkStartHour'], iRow['tripStartHour'] + 1)
+                    purposeDataDays.loc[hpID, range(0, iRow['tripStartHour'] + 1)] = 'HOME'
+                if iRow['tripID'] == maxWID:
+                    purposeDataDays.loc[hpID, range(iRow['tripEndHour'] + 1, maxHour)] = 'HOME'
+            else:
+                purposeHourStart = self.determinePurposeStartHour(tripData.loc[idxOld, 'timestampStart'],
+                                                                  tripData.loc[idxOld, 'timestampEnd'])  # FIXME perf?
+                if iRow['timestampStart'].minute <= 30:
+                    hoursBetween = range(purposeHourStart,
+                                         iRow['tripStartHour'])  # FIXME: case differentiation on arrival hour
+                else:
+                    hoursBetween = range(purposeHourStart,
+                                         iRow['tripStartHour'] + 1)
                 purposeDataDays.loc[hpID, hoursBetween] = tripData.loc[idxOld, 'purposeStr']
 
-                if iRow['tripID'] == maxWID:  # Last trip
+                # NEW PERFORMANCE IMPROVED SNIPPET
+                # if iRow['timestampStart'].minute <= 30:
+                #     purposeDataDays.loc[hpID, range(purposeHourStart,
+                #                                     iRow['tripStartHour'])] = tripData.loc[idxOld, 'purposeStr']
+                #     # hoursBetween = range(purposeHourStart,
+                #     #                      iRow['tripStartHour'])  # FIXME: case differentiation on arrival hour
+                # else:
+                #     # hoursBetween = range(purposeHourStart,
+                #     #                      iRow['tripStartHour'] + 1)
+                #     purposeDataDays.loc[hpID, purposeHourStart:iRow['tripStartHour'] + 1] = tripData.loc[idxOld,
+                #     'purposeStr']
+                if iRow['tripID'] == maxWID:
                     if iRow['timestampEnd'].minute <= 30:
                         purposeDataDays.loc[hpID, range(iRow['tripEndHour'], maxHour)] = 'HOME'
                     else:
@@ -399,6 +423,67 @@ class TripDiaryBuilder:
         return purposeDataDays
 
     @profile(immediate=True)
+    def fillDayPurposes_perf(self, tripData: pd.DataFrame, purposeDataDays: pd.DataFrame) -> pd.DataFrame:
+        """
+        Main purpose diary builder function. Light performance improvements in March 2022-sprint. Also, behavior
+        at HH:30 was adapted. Everything that starts exactly at HH:30 is NOT balanced in hour HH anymore. Thus, the
+        purpose in the first half hour is decisive. E.g. if a trip starts at exactly 7:30, hour 7 is still allocated
+        to parking. If a trip ends at 9:30, hour 9 is allocated to DRIVING.
+
+        :param tripData: data frame holding all the information about individual trip
+        :param purposeDataDays: DataFrame with 24 (hour) columns holding 0s and 'DRIVING' for trip hours (for hours
+               where majority of time is driving)
+        :return: Returns a data frame of individual trip with it's hourly activity or parking purpose
+        """
+        hpID = str()
+        maxWID = int()
+        maxHour = self.globalConfig['numberOfHours']
+        diaryList = []
+        tripData = self.determinePurposeStartHour_vec(tripData=tripData)
+        s = pd.Series(dtype=str)
+
+        for idx, iRow in tripData.iterrows():
+            isSameHPID = hpID == iRow['genericID']
+            if not isSameHPID:  # at next day in the data set
+                diaryList.append(s)
+                s = pd.Series(index=range(0, 24), dtype=str)
+                s.name = iRow['genericID']
+                hpID = iRow['genericID']
+                allWIDs = tripData.loc[tripData['genericID'] == hpID, 'tripID']
+                minWID = allWIDs.min()
+                maxWID = allWIDs.max()
+            purpose = iRow['purposeStr']
+
+            if iRow['tripID'] == minWID:  # For first trip, define parking BEFORE trip
+                if iRow['timestampStart'].minute < 30:  # differentiate if trip starts in first half hour or not
+                    s[range(0, iRow['tripStartHour'])] = 'HOME'
+                else:
+                    s[range(0, iRow['tripStartHour'] + 1)] = 'HOME'
+                if iRow['tripID'] == maxWID:  # First trip = Last trip
+                    if iRow['timestampEnd'].minute < 30:
+                        s[range(iRow['tripEndHour'], maxHour)] = 'HOME'
+                    else:
+                        s[range(iRow['tripEndHour'] + 1, maxHour)] = 'HOME'
+            else:  # Fill purpose BEFORE current trip (purposeOld) for other trips than lowest tripID
+                if iRow['timestampStart'].minute < 30:
+                    hoursBetween = range(iRow['parkStartHourPreviousTrip'], iRow['tripStartHour'])
+                else:
+                    hoursBetween = range(iRow['parkStartHourPreviousTrip'], iRow['tripStartHour'] + 1)
+                s[hoursBetween] = purposeOld
+                if iRow['tripID'] == maxWID:  # Last trip
+                    if iRow['timestampEnd'].minute < 30:
+                        s[range(iRow['tripEndHour'], maxHour)] = 'HOME'
+                    else:
+                        s[range(iRow['tripEndHour'] + 1, maxHour)] = 'HOME'
+
+            idxOld = idx
+            purposeOld = purpose
+
+        diaryList.append(s)
+        purposeDataDays = pd.concat(diaryList, axis=1).T.iloc[1:, :]
+        purposeDataDays.index.name = 'genericID'
+        return purposeDataDays
+
     def tripPurposeAllocation(self):
         """
         Wrapper function for trip purpose allocation. Falsely non-allocated parking purposes are replaced by "HOME".
@@ -407,8 +492,11 @@ class TripDiaryBuilder:
         """
         print('Starting trip purpose diary setup')
         tripPurposesDriving = self.assignDriving(self.tripDistanceDiary)
-        self.tripPurposeDiary = self.fillDayPurposes(tripData=self.tripDataClean, purposeDataDays=tripPurposesDriving)
-        self.tripPurposeDiary.replace({'0.0': 'HOME', 0.0: 'HOME'}, inplace=True)  # Replace remaining non-allocated purposes with HOME
+        oldTripPurpose = self.fillDayPurposes(tripData=self.tripDataClean, purposeDataDays=tripPurposesDriving)
+        oldTripPurpose.replace({'0.0': 'HOME', 0.0: 'HOME'}, inplace=True)  # Replace remaining non-allocated purposes with HOME
+        self.tripPurposeDiary = self.fillDayPurposes_perf(tripData=self.tripDataClean,
+                                                          purposeDataDays=tripPurposesDriving)
+        self.tripPurposeDiary.fillna('DRIVING', inplace=True)
         print('Finished purpose replacements')
         print(f'There are {len(self.tripPurposeDiary)} daily trip diaries.')
 
@@ -421,7 +509,8 @@ class TripDiaryBuilder:
     #         tripDict[ihhpID] = set(idCols.loc[idCols['genericID'] == ihhpID, 'tripID'])
     #     return tripDict
 
-    def writeOut(self, globalConfig: dict, dataDrive: pd.DataFrame, dataPurpose: pd.DataFrame, datasetID: str = 'MiD17'):
+    def writeOut(self, globalConfig: dict, dataDrive: pd.DataFrame, dataPurpose: pd.DataFrame,
+                 datasetID: str = 'MiD17'):
         """
         General writeout utility for tripDiaries
 
@@ -450,7 +539,7 @@ class FillHourValues:
         self.endHour = data['tripEndHour']
         self.distanceEndHour = data['shareEndHour'] * data['tripDistance']
         self.fullHourCols = data.apply(rangeFunction, axis=1)
-        #self.fullHourRange = data['fullHourTripLength'] / data['noOfFullHours']
+        # self.fullHourRange = data['fullHourTripLength'] / data['noOfFullHours']
         self.fullHourRange = data['fullHourTripLength']
 
     def __call__(self, row):

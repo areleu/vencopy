@@ -24,7 +24,7 @@ from vencopy.classes.dataParsers import ParseMiD
 
 
 class GridModeler:
-    def __init__(self, configDict: dict, datasetID: str):
+    def __init__(self, configDict: dict, datasetID: str, gridModel: str):
         """
         Class for modeling individual vehicle connection options dependent on parking purposes. Configurations on
         charging station availabilities can be parametrized in gridConfig. globalConfig and datasetID are needed for
@@ -38,6 +38,7 @@ class GridModeler:
         self.gridConfig = configDict['gridConfig']
         self.flexConfig = configDict['flexConfig']
         self.localPathConfig = configDict['localPathConfig']
+        self.gridModel = gridModel
         self.gridAvailabilitySimple = self.gridConfig['chargingInfrastructureMappings']
         self.gridAvailabilityProb = self.gridConfig['gridAvailabilityDistribution']
         self.inputFileName = createFileString(globalConfig=self.globalConfig, fileKey='purposesProcessed',
@@ -182,17 +183,17 @@ class GridModeler:
            """
         transactionHours.to_csv(self.outputFilePathTransactionStartHour)
 
-    def calcGrid(self, grid: str):
+    def calcGrid(self):
         """
         Wrapper function for grid assignment. The number of iterations for assignGridViaProbabilities() and
         transactionStartHour() and seed for reproduction of random numbers can be specified here.
         """
-        if grid == 'simple':
+        if self.gridModel == 'simple':
             self.assignGridViaPurposes()
-        elif grid == 'probability':
+        elif self.gridModel == 'probability':
             self.assignGridViaProbabilities(setSeed=42)
         else:
-            raise(ValueError(f'Specified grid modeling option {grid} is not implemented. Please choose'
+            raise(ValueError(f'Specified grid modeling option {self.gridModel} is not implemented. Please choose'
                              f'"simple" or "probability"'))
         self.writeOutGridAvailability()
         self.transactionStartHour = self.getTransactionHourStart()

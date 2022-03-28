@@ -324,12 +324,15 @@ class FlexEstimator:
         '''
 
         if model == 'distribution':
-            plugProfiles = plugProfiles * flexConfig['inputDataScalars'][self.datasetID][
+            chargeProfiles = plugProfiles * flexConfig['inputDataScalars'][self.datasetID][
                 'Probability_based_rated_power_of_charging_column']
-        elif model == 'simpleGrid':
-            plugProfiles = plugProfiles * flexConfig['inputDataScalars'][self.datasetID][
+        elif model == 'simple':
+            chargeProfiles = plugProfiles * flexConfig['inputDataScalars'][self.datasetID][
                 'Rated_power_of_charging_column']
-        return plugProfiles
+        else:
+            raise(ValueError(f'Specified grid modeling option {model} is not implemented. Please choose'
+                             f'"simple" or "probability"'))
+        return chargeProfiles
 
     def calcChargeMaxProfiles(self, chargeProfiles: pd.DataFrame, consumptionProfiles: pd.DataFrame, batCap: float,
                               minSOC: float, maxSOC: float, nIter: int, probabilisticPlug: bool,
@@ -627,7 +630,7 @@ class FlexEstimator:
         chargeMinProfiles.drop(labels='newCharge', axis='columns', inplace=True)
         return chargeMinProfiles
 
-    def baseProfileCalculation(self):
+    def baseProfileCalculation(self, gridModel: str = 'simple'):
         """
         Wrapper function for first part of flexibility estimation calculating the six resulting profiles for all
         individual vehicles. The number of iterations for calcChargeMaxProfiles() and calcChargeMinProfiles() can be
@@ -638,7 +641,7 @@ class FlexEstimator:
 
         self.drainProfiles = self.calcDrainProfiles(driveProfiles=self.driveProfiles, flexConfig=self.flexConfig)
         self.chargeProfiles = self.calcChargeProfiles(plugProfiles=self.plugProfiles, flexConfig=self.flexConfig,
-                                                      model='distribution') #model: 'simpleGrid', 'distribution'
+                                                      model=gridModel)  # model: 'simple', 'distribution'
         self.chargeMaxProfiles = self.calcChargeMaxProfiles(chargeProfiles=self.chargeProfiles,
                                                             consumptionProfiles=self.drainProfiles, nIter=10,
                                                             batCap=self.flexConfig['inputDataScalars'][self.datasetID][

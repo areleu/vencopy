@@ -350,6 +350,23 @@ def calcAverageTripDistance(self):
     return self.data.loc[:, 'tripDistance'].mean()
 
 
+# For debugging tripDiary performance optimization
+def replaceTripPurposes(purp_a: pd.DataFrame, purp_b: pd.DataFrame):
+    repl_dict = {'DRIVING': False,
+                 'HOME': True,
+                 'WORK': True,
+                 'SCHOOL': False,
+                 'SHOPPING': True,
+                 'LEISURE': True,
+                 'OTHER': False,
+                 'NA': False}
+    charge_a = purp_a.replace(repl_dict)
+    charge_b = purp_b.replace(repl_dict)
+    print(f'Sum of old trip purpose charging infra is: {charge_a.sum().sum()}')
+    print(f'Sum of new trip purpose charging infra is: {charge_b.sum().sum()}')
+
+
+
 
 
 ### EXPERIMENTAL SANDBOX PART

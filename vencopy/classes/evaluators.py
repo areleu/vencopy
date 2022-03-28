@@ -311,7 +311,7 @@ class Evaluator:
         plt.tight_layout()
         filePlot = pathOutput / Path(
             createFileString(globalConfig=self.globalConfig, datasetID=flexEstimator.datasetID, fileKey='flexPlotName',
-                             manualLabel=filename, filetypeStr='svg'))
+                             manualLabel=filename, filetypeStr='png'))
         if show:
             plt.show()
         if write:
@@ -468,14 +468,14 @@ class Evaluator:
         profiles.boxplot()
         plt.show()
 
-    def plotParkingAndPowers(self, vpGrid):
+    def plotParkingAndPowers(self, vpGrid, write=True):
         """
         Wrapper function to plot parking purpose and charging distribution
         """
-        self.plotParkingPurpose(purposes=vpGrid.purposeData)
-        self.plotParkingPower(charingPower=vpGrid.chargeAvailability)
+        self.plotParkingPurpose(purposes=vpGrid.purposeData, write=write)
+        self.plotParkingPower(charingPower=vpGrid.chargeAvailability, write=write)
 
-    def plotParkingPurpose(self, purposes: pd.DataFrame):
+    def plotParkingPurpose(self, purposes: pd.DataFrame, write: bool):
         """
         :param purposes: Dataframe holding hourly purposes
         """
@@ -509,8 +509,16 @@ class Evaluator:
         ax.yaxis.grid(color='black', linestyle='dashed', alpha=0.3)
         plt.legend(totalTripPurpose.columns, loc='upper center', ncol=len(purposeList))
         plt.show()
+        if write:
+            plt.savefig(Path(self.localPathConfig['pathAbsolute']['vencoPyRoot']) /
+                             self.globalConfig['pathRelative']['evalOutput'] /
+                             createFileString(globalConfig=self.globalConfig,
+                                            fileKey='vencoPyOutput',
+                                            manualLabel='purposeDist',
+                                            filetypeStr='png'),
+                        format='png')
 
-    def plotParkingPower(self, charingPower:pd.DataFrame):
+    def plotParkingPower(self, charingPower: pd.DataFrame, write: bool):
         """
         charingPower: Dataframe holding hourly charging station power
         """
@@ -535,6 +543,14 @@ class Evaluator:
         plt.ylabel('Number of vehicles')
         plt.legend(capacityListStr, loc='upper center', ncol=len(capacityList))
         plt.show()
+        if write:
+            plt.savefig(Path(self.localPathConfig['pathAbsolute']['vencoPyRoot']) /
+                             self.globalConfig['pathRelative']['evalOutput'] /
+                             createFileString(globalConfig=self.globalConfig,
+                                            fileKey='vencoPyOutput',
+                                            manualLabel='powerDist',
+                                            filetypeStr='png'),
+                        format='png')
 
 class chargingTransactionEvaluator:
     def __init__(self, evaluatorConfig: dict, parseData, gridModeler, flexEstimator):

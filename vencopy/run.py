@@ -44,12 +44,12 @@ if __name__ == '__main__':
     vpData = ParseMiD(configDict=configDict, datasetID=datasetID, loadEncrypted=False)
     vpData.process()
 
-    # Trip distance and purpose diary compositions
+    # # Trip distance and purpose diary compositions
     vpTripDiary = TripDiaryBuilder(datasetID=datasetID, configDict=configDict, ParseData=vpData, debug=True)
 
-    # Grid model application
-    vpGrid = GridModeler(configDict=configDict, datasetID=datasetID)
-    vpGrid.calcGrid(grid='probability')
+    # Grid model application regular
+    vpGrid = GridModeler(configDict=configDict, datasetID=datasetID, gridModel='simple')
+    vpGrid.calcGrid()
 
     # Evaluate drive and trip purpose profile
     vpEval = Evaluator(configDict=configDict, parseData=pd.Series(data=vpData, index=[datasetID]))
@@ -59,7 +59,7 @@ if __name__ == '__main__':
 
     # Estimate charging flexibility based on driving profiles and charge connection
     vpFlex = FlexEstimator(configDict=configDict, datasetID=datasetID, ParseData=vpData)
-    vpFlex.baseProfileCalculation()
+    vpFlex.baseProfileCalculation(gridModel=vpGrid.gridModel)
     vpFlex.filter()
     vpFlex.aggregate()
     vpFlex.correct()
