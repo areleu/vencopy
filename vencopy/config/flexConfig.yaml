@@ -19,8 +19,12 @@ inputDataScalars:
         Fuel_consumption_corr: 1.0              # in l/100km, assumption for potential correction after aggregation
         Maximum_SOC: 0.97                       # in %
         Minimum_SOC: 0.03                       # in %
+
+        # FixMe: Currently still needed for normalization of probability-based charge availability profiles,
+        # FixMe: See issue #252
         Rated_power_of_charging_column: 11.0    # kW, input assumption. In future releases this will be specified in gridConfig
-        Probability_based_rated_power_of_charging_column: 1
+
+        Probability_based_rated_power_of_charging_column: 1  # FIXME Should be renamed to something like loss factor
         Is_BEV?: 1                              # 1=BEV, 0=PHEV (not yet tested)
         SoC_plugging_threshold: 0.8
 

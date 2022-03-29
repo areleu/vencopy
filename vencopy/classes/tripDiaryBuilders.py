@@ -268,7 +268,8 @@ class TripDiaryBuilder:
         locationData = locationData.where(locationData == 0, other='DRIVING')
         return locationData
 
-    def determinePurposeStartHour(self, departure, arrival) -> int:
+    # DEPRECATED Will be removed in next release 0.3.X
+    def determinePurposeStartHourOld(self, departure, arrival) -> int:
         """
         Determines the start hour of a parking activity depending on previous trip end time and next trip start time
 
@@ -300,7 +301,7 @@ class TripDiaryBuilder:
                 startHour = arrival.hour + 1  # Cases 2a and b
         return startHour
 
-    def determinePurposeStartHour_vec(self, tripData: pd.DataFrame) -> pd.DataFrame:
+    def determinePurposeStartHour(self, tripData: pd.DataFrame) -> pd.DataFrame:
         """
         Determines the start hour of a parking activity depending on previous trip end time and next trip start time
 
@@ -324,8 +325,8 @@ class TripDiaryBuilder:
         tripData['parkStartHourPreviousTrip'] = tripData['parkStartHour'].shift(1, fill_value=0)
         return tripData
 
-    @profile(immediate=True)
-    def fillDayPurposes(self, tripData: pd.DataFrame, purposeDataDays: pd.DataFrame) -> pd.DataFrame:
+    # DEPRECATED Will be removed in next release 0.3.X
+    def fillDayPurposesOld(self, tripData: pd.DataFrame, purposeDataDays: pd.DataFrame) -> pd.DataFrame:
         # FixMe: Ask Ben for performance improvements
         """
         Main purpose diary builder function. Root of low performance of tripDiaryBuilder. Will be improved in future
@@ -393,8 +394,8 @@ class TripDiaryBuilder:
                 if iRow['tripID'] == maxWID:
                     purposeDataDays.loc[hpID, range(iRow['tripEndHour'] + 1, maxHour)] = 'HOME'
             else:
-                purposeHourStart = self.determinePurposeStartHour(tripData.loc[idxOld, 'timestampStart'],
-                                                                  tripData.loc[idxOld, 'timestampEnd'])  # FIXME perf?
+                purposeHourStart = self.determinePurposeStartHourOld(tripData.loc[idxOld, 'timestampStart'],
+                                                                     tripData.loc[idxOld, 'timestampEnd'])  # FIXME perf?
                 if iRow['timestampStart'].minute <= 30:
                     hoursBetween = range(purposeHourStart,
                                          iRow['tripStartHour'])  # FIXME: case differentiation on arrival hour
@@ -423,7 +424,7 @@ class TripDiaryBuilder:
         return purposeDataDays
 
     @profile(immediate=True)
-    def fillDayPurposes_perf(self, tripData: pd.DataFrame, purposeDataDays: pd.DataFrame) -> pd.DataFrame:
+    def fillDayPurposes(self, tripData: pd.DataFrame, purposeDataDays: pd.DataFrame) -> pd.DataFrame:
         """
         Main purpose diary builder function. Light performance improvements in March 2022-sprint. Also, behavior
         at HH:30 was adapted. Everything that starts exactly at HH:30 is NOT balanced in hour HH anymore. Thus, the
@@ -439,7 +440,7 @@ class TripDiaryBuilder:
         maxWID = int()
         maxHour = self.globalConfig['numberOfHours']
         diaryList = []
-        tripData = self.determinePurposeStartHour_vec(tripData=tripData)
+        tripData = self.determinePurposeStartHour(tripData=tripData)
         s = pd.Series(dtype=str)
 
         for idx, iRow in tripData.iterrows():
@@ -472,9 +473,9 @@ class TripDiaryBuilder:
                 s[hoursBetween] = purposeOld
                 if iRow['tripID'] == maxWID:  # Last trip
                     if iRow['timestampEnd'].minute < 30:
-                        s[range(iRow['tripEndHour'], maxHour)] = 'HOME'
+                        s[range(iRow['tripEndHour'], maxHour)] = purpose
                     else:
-                        s[range(iRow['tripEndHour'] + 1, maxHour)] = 'HOME'
+                        s[range(iRow['tripEndHour'] + 1, maxHour)] = purpose
 
             idxOld = idx
             purposeOld = purpose
@@ -494,8 +495,8 @@ class TripDiaryBuilder:
         tripPurposesDriving = self.assignDriving(self.tripDistanceDiary)
         # oldTripPurpose = self.fillDayPurposes(tripData=self.tripDataClean, purposeDataDays=tripPurposesDriving)
         # oldTripPurpose.replace({'0.0': 'HOME', 0.0: 'HOME'}, inplace=True)  # Replace remaining non-allocated purposes with HOME
-        self.tripPurposeDiary = self.fillDayPurposes_perf(tripData=self.tripDataClean,
-                                                          purposeDataDays=tripPurposesDriving)
+        self.tripPurposeDiary = self.fillDayPurposes(tripData=self.tripDataClean,
+                                                     purposeDataDays=tripPurposesDriving)
         self.tripPurposeDiary.fillna('DRIVING', inplace=True)
         print('Finished purpose replacements')
         print(f'There are {len(self.tripPurposeDiary)} daily trip diaries.')

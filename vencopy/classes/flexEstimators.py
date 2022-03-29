@@ -313,6 +313,7 @@ class FlexEstimator:
 
         return driveProfiles * flexConfig['inputDataScalars'][self.datasetID]['Electric_consumption'] / float(100)
 
+    # FIXME Get rid of the whole function? This is being checked in gridModeler.calcGrid()
     def calcChargeProfiles(self, plugProfiles: pd.DataFrame, flexConfig, model: str) -> pd.DataFrame:
         '''
         Calculates the maximum possible charge power based on the plug profile assuming the charge column power
@@ -323,14 +324,14 @@ class FlexEstimator:
         :return: Returns scaled plugProfile in the same format as plugProfiles.
         '''
 
-        if model == 'distribution':
+        if model in ['simple', 'probability']:
             chargeProfiles = plugProfiles * flexConfig['inputDataScalars'][self.datasetID][
                 'Probability_based_rated_power_of_charging_column']
-        elif model == 'simple':
-            chargeProfiles = plugProfiles * flexConfig['inputDataScalars'][self.datasetID][
-                'Rated_power_of_charging_column']
+        # elif model == 'simple':
+        #     chargeProfiles = plugProfiles * flexConfig['inputDataScalars'][self.datasetID][
+        #         'Rated_power_of_charging_column']
         else:
-            raise(ValueError(f'Specified grid modeling option {model} is not implemented. Please choose'
+            raise(ValueError(f'Specified grid modeling option {model} is not implemented. Please choose '
                              f'"simple" or "probability"'))
         return chargeProfiles
 

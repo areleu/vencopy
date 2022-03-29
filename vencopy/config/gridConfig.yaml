@@ -22,6 +22,8 @@ chargingInfrastructureMappings:  # Simple grid model: Explicit mapping given for
     'OTHER': False
     'NA': False
 
+ratedPowerSimple: 11
+
 # MOVE TO GRID MODELER TUTORIAL to show implementation of discrete mapping in probabilities
 # gridAvailabilityProbability:  # Grid model 2: Probabilities given for each location aka trip purpose and capacity
 ##   PURPOSE:

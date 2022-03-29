@@ -298,7 +298,7 @@ def wavg(data, avg_name, weight_name):
 
 def determinePurposeHourRange(self, departure, arrival):
     tripDuration = arrival - departure
-    startHour = self.determinePurposeStartHour(departure, tripDuration)
+    startHour = self.determinePurposeStartHourOld(departure, tripDuration)
     return range(startHour, self.endHour)
 
 

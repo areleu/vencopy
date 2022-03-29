@@ -72,6 +72,7 @@ class GridModeler:
         print(f'Starting with charge connection replacement of location purposes')
         self.chargeAvailability = self.purposeData.replace(self.gridAvailabilitySimple)
         self.chargeAvailability = (~(self.chargeAvailability != True))
+        self.chargeAvailability = self.chargeAvailability * self.gridConfig['ratedPowerSimple']
         print('Grid connection assignment complete')
 
     def assignGridViaProbabilities(self, setSeed: int):
@@ -219,8 +220,8 @@ if __name__ == '__main__':
     vpData = ParseMiD(configDict=configDict, datasetID=datasetID, loadEncrypted=False)
     vpData.process()
 
-    vpg = GridModeler(configDict=configDict, datasetID=datasetID)
-    vpg.calcGrid(grid='simple')
+    vpg = GridModeler(configDict=configDict, datasetID=datasetID, gridModel='simple')
+    vpg.calcGrid()
 
     vpEval = Evaluator(configDict=configDict, parseData=pd.Series(data=vpData, index=[datasetID]))
     vpEval.plotParkingAndPowers(vpGrid=vpg)
