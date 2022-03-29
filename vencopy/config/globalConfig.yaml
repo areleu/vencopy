@@ -65,7 +65,7 @@ files:
     flexPlotName: flexProfileComparison
 
 labels:
-    runLabel: perfOpt
+    runLabel: perfOpt_lastPurpose
     technologyLabel: BEV
     outputFileName: vencopy
     strAdd:

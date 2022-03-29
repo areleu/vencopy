@@ -492,8 +492,8 @@ class TripDiaryBuilder:
         """
         print('Starting trip purpose diary setup')
         tripPurposesDriving = self.assignDriving(self.tripDistanceDiary)
-        oldTripPurpose = self.fillDayPurposes(tripData=self.tripDataClean, purposeDataDays=tripPurposesDriving)
-        oldTripPurpose.replace({'0.0': 'HOME', 0.0: 'HOME'}, inplace=True)  # Replace remaining non-allocated purposes with HOME
+        # oldTripPurpose = self.fillDayPurposes(tripData=self.tripDataClean, purposeDataDays=tripPurposesDriving)
+        # oldTripPurpose.replace({'0.0': 'HOME', 0.0: 'HOME'}, inplace=True)  # Replace remaining non-allocated purposes with HOME
         self.tripPurposeDiary = self.fillDayPurposes_perf(tripData=self.tripDataClean,
                                                           purposeDataDays=tripPurposesDriving)
         self.tripPurposeDiary.fillna('DRIVING', inplace=True)
