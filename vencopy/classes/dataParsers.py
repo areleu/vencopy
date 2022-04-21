@@ -64,6 +64,7 @@ class DataParser:
         self.rawDataPath = filepath
         self.rawData = None
         self.data = None
+        self.activities = None
         self.filterDict = {}
         print("Generic file parsing properties set up")
         if loadEncrypted:
@@ -89,13 +90,25 @@ class DataParser:
         :param datasetID: ID used for filenames
         :return: None
         """
-        self.data.to_csv(Path(self.localPathConfig['pathAbsolute']['vencoPyRoot']) / self.globalConfig['pathRelative']['parseOutput'] /
-                         createFileString(
-                             globalConfig=self.globalConfig,
-                             fileKey='filteredDataset',
-                             datasetID=self.datasetID))
-        print(f"Filtered dataset written to "
-              f"{createFileString(globalConfig=self.globalConfig, fileKey='filteredDataset', datasetID=self.datasetID)}")
+        self.data.to_csv(
+            Path(self.localPathConfig['pathAbsolute']['vencoPyRoot']) / self.globalConfig[
+                'pathRelative']['parseOutput'] /
+            createFileString(
+                globalConfig=self.globalConfig,
+                fileKey='filteredDataset',
+                datasetID=self.datasetID))
+        print(
+            (
+                'Filtered dataset written to '
+                + str(
+                    createFileString(
+                        globalConfig=self.globalConfig,
+                        fileKey='filteredDataset',
+                        datasetID=self.datasetID,
+                    )
+                )
+            )
+        )
 
     def loadData(self):
         """
@@ -450,12 +463,48 @@ class DataParser:
             f"percent of the original data"
         )
 
-    def process(self, filterDict):
+    def addParkingRows(self):
+        self.activities = pd.concat([self.data]*2).sort_index(ignore_index=True)
+        self.activities['parkID'] = self.activities['tripID']
+        self.activities.loc[range(0, len(self.activities), 2), 'tripID'] = pd.NA
+        self.activities.loc[range(1, len(self.activities), 2), 'parkID'] = pd.NA
+
+        self.activities['hhpid_prev'] = self.activities['hhPersonID'].shift(fill_value=0)
+        self.activities['isFirstActivity'] = self.activities['hhpid_prev'] != self.activities['hhPersonID']
+
+        self.activities['hhpid_next'] = self.activities['hhPersonID'].shift(-1, fill_value=0)
+        self.activities['isLastActivity'] = self.activities['hhpid_next'] != self.activities['hhPersonID']
+
+        newIndex = self.activities.index[self.activities.isLastActivity]
+        dfAdd = self.activities.loc[newIndex, :]
+        dfAdd['tripID'] = pd.NA
+        self.activities.loc[newIndex, 'isLastActivity'] = False
+        dfAdd['parkID'] = self.activities.loc[newIndex, 'tripID'] + 1
+        self.activities = pd.concat([self.activities, dfAdd]).sort_index()
+
+        self.activities['colFromIndex'] = self.activities.index
+        self.activities = self.activities.sort_values(by=['colFromIndex', 'tripID'])
+
+        self.activities.drop(columns=[
+            'isMIVDriver', 'tripStartClock', 'tripEndClock', 'tripStartYear', 'tripStartMonth',
+            'tripStartWeek', 'tripStartHour', 'tripStartMinute', 'tripEndHour', 'tripEndMinute', 'hhpid_prev',
+            'hhpid_next', 'colFromIndex'], inplace=True)
+
+        # FIXME: Setting timestamps
+        # FIXME: Checking for trips across day-limit
+
+        indexNoMultiDays = ~((self.activities['isLastActivity']) & (self.activities['tripEndNextDay']))
+        self.activities = self.activities.loc[indexNoMultiDays, :]
+
+        print('Dummy print')
+
+    def process(self, filterDict: dict):
         """
         Wrapper function for harmonising and filtering the dataset.
         """
         self.checkFilterDict(filterDict)
         self.filter(filterDict)
+        self.addParkingRows()
         self.writeOut()
         print("Generic parsing completed")
 
@@ -737,6 +786,7 @@ class ParseMiD(IntermediateParsing):
         self.composeStartAndEndTimestamps()
         self.updateEndTimestamp()
         self.harmonizeVariablesGenericIdNames()
+        self.addParkingRows()
         self.writeOut()
         print("Parsing MiD dataset completed")
 
@@ -1072,7 +1122,7 @@ if __name__ == '__main__':
     )
     configDict = loadConfigDict(configNames, basePath)
 
-    datasetID = "VF"  # 'MiD17' # options are MiD08, MiD17, KiD
+    datasetID = "MiD17"  # options are MiD08, MiD17, KiD
     if datasetID == "MiD17":
         vpData = ParseMiD(configDict=configDict, datasetID=datasetID)
     elif datasetID == "KiD":
