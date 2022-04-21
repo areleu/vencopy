@@ -490,11 +490,40 @@ class DataParser:
             'tripStartWeek', 'tripStartHour', 'tripStartMinute', 'tripEndHour', 'tripEndMinute', 'hhpid_prev',
             'hhpid_next', 'colFromIndex'], inplace=True)
 
-        # FIXME: Setting timestamps
-        # FIXME: Checking for trips across day-limit
+        # Checking for trips across day-limit and removing parking activities
+        indexMulti = (self.activities['isLastActivity'] & self.activities['tripEndNextDay'])
+        indexMulti = indexMulti.loc[indexMulti]
+        self.activities.loc[indexMulti.index, 'isLastActivity'] = True
+        self.activities = self.activities.reset_index()
+        indexMultiDayActivity = (self.activities['isLastActivity'] &
+                                 self.activities['tripEndNextDay'] &
+                                 self.activities['parkID'])
+        self.activities = self.activities.loc[~indexMultiDayActivity, :]
 
-        indexNoMultiDays = ~((self.activities['isLastActivity']) & (self.activities['tripEndNextDay']))
-        self.activities = self.activities.loc[indexNoMultiDays, :]
+        # Setting timestamps
+        parkingActNoLast = (self.activities['parkID'].fillna(0).astype(bool) & ~self.activities[
+            'isLastActivity'] & ~self.activities['isFirstActivity'])
+        parkingActNoLast = parkingActNoLast.loc[parkingActNoLast]
+
+        # Updating park end timestamps
+        set_ts = self.activities.loc[parkingActNoLast.index + 1, 'timestampStart']
+        set_ts.index = self.activities.loc[parkingActNoLast.index, 'timestampEnd'].index
+        self.activities.loc[parkingActNoLast.index, 'timestampEnd'] = set_ts
+        
+        # Updating park start timestamps
+        set_ts = self.activities.loc[parkingActNoLast.index - 1, 'timestampEnd']
+        set_ts.index = self.activities.loc[parkingActNoLast.index, 'timestampStart'].index
+        self.activities.loc[parkingActNoLast.index, 'timestampStart'] = set_ts
+
+        # Updating park start timestamps for first activity
+        self.activities.loc[self.activities['parkID'] == 1, 'timestampStart'] = self.activities.loc[
+            self.activities['parkID'] == 1, 'timestampStart'].apply(lambda x: x.replace(hour=0, minute=0))
+
+        # Updating park end timestamps for last activity
+        idxActs = self.activities['parkID'].fillna(0).astype(bool) & self.activities['isLastActivity']
+        self.activities.loc[idxActs, 'timestampEnd'] = self.activities.loc[idxActs, 'timestampEnd'].apply(
+            lambda x: x.replace(hour=0, minute=0) + pd.Timedelta(1, 'd')
+        )
 
         print('Dummy print')
 
