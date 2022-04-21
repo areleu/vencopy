@@ -18,9 +18,13 @@ chargingInfrastructureMappings:  # Simple grid model: Explicit mapping given for
     'WORK': True
     'SCHOOL': False
     'SHOPPING': True
-    'LEISURE': True
+    'LEISURE': False
     'OTHER': False
     'NA': False
+    # KiD additional purposes below
+    'PEOPLE_MOBILITY': False
+    'TRANSPORT': False
+    'SERVICES': False
 
 ratedPowerSimple: 11
 

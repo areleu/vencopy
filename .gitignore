@@ -26,4 +26,3 @@ vencopy/config/localPathConfig.yaml
 /.vscode/
 /docs/_build/
 *.code-workspace
-
