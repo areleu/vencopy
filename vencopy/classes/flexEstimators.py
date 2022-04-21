@@ -407,7 +407,7 @@ class FlexEstimator:
 
     # FIXME Get rid of the whole function? This is being checked in gridModeler.calcGrid()
     def calcChargeProfiles(self, plugProfiles: pd.DataFrame, flexConfig, model: str) -> pd.DataFrame:
-        '''
+        """
         Calculates the maximum possible charge power based on the plug profile assuming the charge column power
         given in the scalar input data file (so far under Panschluss).
 
@@ -462,7 +462,7 @@ class FlexEstimator:
                  single-profile SOC max values for each hour in each profile.
         """
 
-        print(f"Starting with iterative chargeMax calculation")
+        print("Starting with iterative chargeMax calculation")
         chargeMaxProfiles = (
             chargeProfiles.copy()
         )  # absolute battery fill in kWh

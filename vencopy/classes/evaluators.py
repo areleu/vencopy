@@ -447,8 +447,6 @@ class Evaluator:
         if write:
             fig.savefig(filePlot)
 
-    def separateLinePlots(self, profileDictList: list, flexEstimator, show=True,
-                          write=True, ylabel=[], ylim=[], filenames=[]):
     def separateLinePlots(
         self,
         profileDictList: list,
