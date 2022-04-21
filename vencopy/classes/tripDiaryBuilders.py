@@ -310,7 +310,7 @@ class TripDiaryBuilder:
         elif row['tripEndNextDay']:
             lst = [iC for iC in range(0, row['tripEndHour'])]
             ret = lst + [iC for iC in range(row['tripStartHour'] + 1, nHours)]
-            if row['tripStartHour'] == nHours-1 and row['tripEndHour'] == 0:
+            if row['tripStartHour'] == nHours - 1 and row['tripEndHour'] == 0:
                 ret = None
             return ret
         else:
@@ -454,8 +454,6 @@ class TripDiaryBuilder:
         #
         #     arrivalIsBelowHalfHour = iSubData['timestampStart'].dt.hour <= 30
 
-
-
         # Solution 1: use enumerate in order to get rowNumber instead of index and then .iloc below
         # Solution 2: Rename columns
         for idx, iRow in tripData.iterrows():
@@ -482,7 +480,7 @@ class TripDiaryBuilder:
                     if iRow['timestampEnd'].minute <= 30:
                         purposeDataDays.loc[hpID, range(iRow['tripEndHour'], maxHour)] = 'HOME'
                     else:
-                        purposeDataDays.loc[hpID, range(iRow['tripEndHour']+1, maxHour)] = 'HOME'
+                        purposeDataDays.loc[hpID, range(iRow['tripEndHour'] + 1, maxHour)] = 'HOME'
             elif iRow['tripID'] == minWID:
                 if iRow['timestampStart'].minute <= 30:
                     purposeDataDays.loc[hpID, range(0, iRow['tripStartHour'])] = 'HOME'
@@ -491,8 +489,9 @@ class TripDiaryBuilder:
                 if iRow['tripID'] == maxWID:
                     purposeDataDays.loc[hpID, range(iRow['tripEndHour'] + 1, maxHour)] = 'HOME'
             else:
-                purposeHourStart = self.determinePurposeStartHourOld(tripData.loc[idxOld, 'timestampStart'],
-                                                                     tripData.loc[idxOld, 'timestampEnd'])  # FIXME perf?
+                purposeHourStart = self.determinePurposeStartHourOld(
+                    tripData.loc[idxOld, 'timestampStart'],
+                    tripData.loc[idxOld, 'timestampEnd'])  # FIXME perf?
                 if iRow['timestampStart'].minute <= 30:
                     hoursBetween = range(purposeHourStart,
                                          iRow['tripStartHour'])  # FIXME: case differentiation on arrival hour

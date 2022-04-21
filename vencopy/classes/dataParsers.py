@@ -5,8 +5,9 @@ __email__ = "Niklas.Wulff@dlr.de"
 __birthdate__ = "31.12.2019"
 __status__ = "dev"  # options are: dev, test, prod
 
+
 # ----- imports & packages ------
-if __package__ is None or __package__ == "":
+if __package__ is None or __package__ == '':
     import sys
     from os import path
 
@@ -1055,7 +1056,8 @@ class ParseKiD(IntermediateParsing):
         print("Parsing KiD dataset completed")
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
+
     from vencopy.scripts.globalFunctions import loadConfigDict
 
     basePath = Path(__file__).parent.parent
