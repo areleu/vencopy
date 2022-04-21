@@ -62,7 +62,7 @@ files:
         flexPlotName: flexProfileComparison
         transactionStartHour: transactionStartHour
     VF:
-        tripsDataRaw: MiD2017_Regional_Wege.dta
+        tripsDataRaw: MiD2017_Wege.dta
         vehiclesDataRaw: tripDataMergedWVehicleData.csv
         filteredDataset: outputDatasetDataParsers
         purposesProcessed: inputProfiles_Purpose  

@@ -190,7 +190,7 @@ class DataParser:
             f"Specified datasetIDs are {availableDatasetIDs}"
         )
         return datasetID
-    
+
     def harmonizeVariables(self):
         """
         Harmonizes the input data variables to match internal VencoPy names
@@ -650,7 +650,7 @@ class ParseMiD(IntermediateParsing):
             datasetID=datasetID,
             loadEncrypted=loadEncrypted,
         )
-    
+
     def harmonizeVariables(self):
         """
         Harmonizes the input data variables to match internal VencoPy names
@@ -763,11 +763,15 @@ class ParseVF(IntermediateParsing):
             datasetID=datasetID,
             loadEncrypted=loadEncrypted,
         )
-    
+
     def loadData(self):
+        """
+        rawDataPathTrip, unlike for other MiD classes is taken from the MiD B1 dataset
+        rawDataPathVehicles is an internal dataset from VF
+        """
         rawDataPathTrips = (
-            Path(self.localPathConfig["pathAbsolute"]["MiD17"])
-            / self.globalConfig["files"]["MiD17"][
+            Path(self.localPathConfig["pathAbsolute"][self.datasetID])
+            / self.globalConfig["files"][self.datasetID][
                 "tripsDataRaw"
             ]
         )
@@ -777,19 +781,22 @@ class ParseVF(IntermediateParsing):
                 "vehiclesDataRaw"
             ]
         )
+
         rawDataTrips = pd.read_stata(
             rawDataPathTrips,
             convert_categoricals=False,
             convert_dates=False,
             preserve_dtypes=False,
         )
+
         rawDataVehicles = pd.read_csv(
             rawDataPathVehicles,
             encoding="ISO-8859-1"
         )
-        rawDataVehicles = rawDataVehicles.rename(columns={'HP_ID': 'HP_ID_Reg'})
-        rawDataVehicles.set_index("HP_ID_Reg", inplace=True)
-        rawData = rawDataTrips.join(rawDataVehicles, on="HP_ID_Reg")
+        rawDataVehicles = rawDataVehicles.drop(columns=['Unnamed: 0'])
+        rawDataVehicles = rawDataVehicles.drop_duplicates(subset=['HP_ID'], keep='first')
+        rawDataVehicles.set_index("HP_ID", inplace=True)
+        rawData = rawDataTrips.join(rawDataVehicles, on="HP_ID", rsuffix="VF")
         self.rawData = rawData
         print(
             f"Finished loading {len(self.rawData)} "
@@ -1063,7 +1070,7 @@ if __name__ == "__main__":
     )
     configDict = loadConfigDict(configNames, basePath)
 
-    datasetID = "MiD17"  # 'MiD17' # options are MiD08, MiD17, KiD
+    datasetID = "VF"  # 'MiD17' # options are MiD08, MiD17, KiD
     if datasetID == "MiD17":
         vpData = ParseMiD(configDict=configDict, datasetID=datasetID)
     elif datasetID == "KiD":
