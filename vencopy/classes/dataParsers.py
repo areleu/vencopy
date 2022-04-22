@@ -509,7 +509,7 @@ class DataParser:
         set_ts = self.activities.loc[parkingActNoLast.index + 1, 'timestampStart']
         set_ts.index = self.activities.loc[parkingActNoLast.index, 'timestampEnd'].index
         self.activities.loc[parkingActNoLast.index, 'timestampEnd'] = set_ts
-        
+                
         # Updating park start timestamps
         set_ts = self.activities.loc[parkingActNoLast.index - 1, 'timestampEnd']
         set_ts.index = self.activities.loc[parkingActNoLast.index, 'timestampStart'].index
@@ -517,13 +517,16 @@ class DataParser:
 
         # Updating park start timestamps for first activity
         self.activities.loc[self.activities['parkID'] == 1, 'timestampStart'] = self.activities.loc[
-            self.activities['parkID'] == 1, 'timestampStart'].apply(lambda x: x.replace(hour=0, minute=0))
+            self.activities['parkID'] == 1, 'timestampStart'].apply(lambda x: x.replace(hour=0, minute=0))  # Q to Ben: Why does vectorized replace of timestamp hour and minute not work?
 
         # Updating park end timestamps for last activity
         idxActs = self.activities['parkID'].fillna(0).astype(bool) & self.activities['isLastActivity']
         self.activities.loc[idxActs, 'timestampEnd'] = self.activities.loc[idxActs, 'timestampEnd'].apply(
             lambda x: x.replace(hour=0, minute=0) + pd.Timedelta(1, 'd')
         )
+
+        # FIXME Also adjust end timestamp of last activity trips
+        idxActs = self.activities['tripID'].fillna(0).astype(bool) & self.activities['isLastActivity']
 
         print('Dummy print')
 
