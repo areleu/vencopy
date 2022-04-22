@@ -466,6 +466,7 @@ class DataParser:
     def __overlapPeriods(self, data, period):
         dat = data.copy()
         dat['isSameHHAsPrevTrip'] = dat['hhPersonID'] == dat['hhPersonID'].shift(period)
+        dat.loc[dat['tripEndNextDay'], 'tripEndHour'] = dat.loc[dat['tripEndNextDay'], 'tripEndHour'] + 24
         dat['tripStartsAfterPrevTrip'] = ((dat['tripStartHour'] > dat['tripEndHour'].shift(period)) | (
             (dat['tripStartHour'] == dat['tripEndHour'].shift(period)) & (dat['tripStartMinute'] >= dat[
                 'tripEndMinute'].shift(period))))
@@ -546,8 +547,9 @@ class DataParser:
 
         # Updating park start timestamps for first activity
         # Q to Ben: Why does vectorized replace of timestamp hour and minute not work?
-        self.activities.loc[self.activities['parkID'] == 1, 'timestampStart'] = self.activities.loc[self.activities[
-            'parkID'] == 1, 'timestampEnd'].apply(lambda x: x.replace(hour=0, minute=0))
+        idxActs = self.activities['parkID'].fillna(0).astype(bool) & self.activities['isFirstActivity']
+        self.activities.loc[idxActs, 'timestampStart'] = self.activities.loc[idxActs, 'timestampEnd'].apply(
+            lambda x: x.replace(hour=0, minute=0))
 
         # Updating park end timestamps for last activity
         idxActs = self.activities['parkID'].fillna(0).astype(bool) & self.activities['isLastActivity']
