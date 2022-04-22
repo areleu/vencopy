@@ -307,48 +307,41 @@ class DataParser:
 
         :return: None
         """
-        print(
-            f"Starting filtering, applying "
-            f"{len(self.returnDictBottomKeys(self.filterDict))} filters."
-        )
-        ret = pd.DataFrame(index=self.data.index)
-        # Future releases: as discussed before we could indeed work here with
-        # a plug and pray approach.
-        # we would need to introduce a filter manager and a folder structure
-        # where to look for filters.
-        # this is very similar code than the one from ioproc. If we want to go
-        # down this route we should
-        # take inspiration from the code there. It was not easy to get i
-        # right in the first place. This
-        # might be easy to code but hard to implement correctly.
+
+        print(f'Starting filtering, applying {len(self.returnDictBottomKeys(filterDict))} filters.')
+        simpleFilter = pd.DataFrame(index=self.data.index)
+        sophFilter = pd.DataFrame(index=self.data.index)
+        # Future releases: as discussed before we could indeed work here with a plug and pray approach.
+        #  we would need to introduce a filter manager and a folder structure where to look for filters.
+        #  this is very similar code than the one from ioproc. If we want to go down this route we should
+        #  take inspiration from the code there. It was not easy to get it right in the first place. This
+        #  might be easy to code but hard to implement correctly.
+
+        # Simple filters checking single columns for specified values
         for iKey, iVal in filterDict.items():
-            if iKey == "include" and iVal:
-                ret = ret.join(self.setIncludeFilter(iVal, self.data.index))
-            elif iKey == "exclude" and iVal:
-                ret = ret.join(self.setExcludeFilter(iVal, self.data.index))
-            elif iKey == "greaterThan" and iVal:
-                ret = ret.join(
-                    self.setGreaterThanFilter(iVal, self.data.index)
-                )
-            elif iKey == "smallerThan" and iVal:
-                ret = ret.join(
-                    self.setSmallerThanFilter(iVal, self.data.index)
-                )
-            elif iKey not in [
-                "include",
-                "exclude",
-                "greaterThan",
-                "smallerThan",
-            ]:
-                warnings.warn(
-                    f"A filter dictionary was defined in the "
-                    f"parseConfig with an unknown filtering key."
-                    f"Current filtering keys comprise include, "
-                    f"exclude, smallerThan and greaterThan."
-                    f"Continuing with ignoring the dictionary {iKey}"
-                )
-        self.data = self.data[ret.all(axis="columns")]
-        self.filterAnalysis(ret)
+            if iKey == 'include' and iVal:
+                simpleFilter = simpleFilter.join(self.setIncludeFilter(iVal, self.data.index))
+            elif iKey == 'exclude' and iVal:
+                simpleFilter = simpleFilter.join(self.setExcludeFilter(iVal, self.data.index))
+            elif iKey == 'greaterThan' and iVal:
+                simpleFilter = simpleFilter.join(self.setGreaterThanFilter(iVal, self.data.index))
+            elif iKey == 'smallerThan' and iVal:
+                simpleFilter = simpleFilter.join(self.setSmallerThanFilter(iVal, self.data.index))
+            elif iKey not in ['include', 'exclude', 'greaterThan', 'smallerThan']:
+                warnings.warn(f'A filter dictionary was defined in the parseConfig with an unknown filtering key.'
+                              f'Current filtering keys comprise include, exclude, smallerThan and greaterThan.'
+                              f'Continuing with ignoring the dictionary {iKey}')
+
+        # Application of simple value-based filters
+        self.dataSimple = self.data[simpleFilter.all(axis='columns')]
+
+        # More sophisticated filtering functions
+        sophFilter = sophFilter.join(self.__filterInconsistentSpeedTrips())
+        sophFilter = sophFilter.join(self.__filterOverlappingTrips())
+
+        # Application of sophisticated filters
+        self.data = self.dataSimple[sophFilter.all(axis='columns')]
+        self.filterAnalysis(simpleFilter.join(sophFilter))
 
     def setIncludeFilter(
         self, includeFilterDict: dict, dataIndex
@@ -440,28 +433,62 @@ class DataParser:
                 )
         return smallerThanFilterCols
 
+    def __filterInconsistentSpeedTrips(self):
+        """
+        Filter out trips with inconsistent average speed. These trips are mainly trips where survey participant
+        responses suggest that participants were travelling for the entire time they took for the whole purpose
+        (driving and parking) and not just for the real travel.
+
+        :return: None
+        """
+
+        # FIXME Add timestamp comparison instead of or additionally to variable "travel time",
+        #  look at hhPersonID 80628472
+        self.data['averageSpeed'] = self.data['tripDistance'] / (self.data['travelTime'] / 60)
+        return self.data['averageSpeed'] > self.parseConfig['filterDicts']['speedThreshold']
+
+    def __filterOverlappingTrips(self):
+        """
+        Filter out trips that have same hhPersonID as previous trip but overlap with previous trip.
+
+        :return:
+        """
+        periods = 7
+        lst = []
+        for p in range(1, periods + 1):
+            ser = self.__overlapPeriods(self.data, period=p)
+            ser.name = ser.name + f' p={p}'
+            lst.append(ser)
+        ret = pd.concat(lst, axis=1).all(axis=1)
+        ret.name = 'noOverlapPrevTrips'
+        return ret
+
+    def __overlapPeriods(self, data, period):
+        dat = data.copy()
+        dat['isSameHHAsPrevTrip'] = dat['hhPersonID'] == dat['hhPersonID'].shift(period)
+        dat['tripStartsAfterPrevTrip'] = ((dat['tripStartHour'] > dat['tripEndHour'].shift(period)) | (
+            (dat['tripStartHour'] == dat['tripEndHour'].shift(period)) & (dat['tripStartMinute'] >= dat[
+                'tripEndMinute'].shift(period))))
+        dat['tripDoesNotOverlap'] = ~(dat['isSameHHAsPrevTrip'] & ~dat['tripStartsAfterPrevTrip'])
+        return dat['tripDoesNotOverlap']
+
     def filterAnalysis(self, filterData: pd.DataFrame):
         """
-        Function supplies some aggregate info of the data after filtering
-        to the user Function does not change any class attributes
+        Function supplies some aggregate info of the data after filtering to the user Function does not change any
+        class attributes
 
         :param filterData:
         :return: None
         """
-        lenData = sum(filterData.all(axis="columns"))
+
+        lenData = sum(filterData.all(axis='columns'))
         boolDict = {iCol: sum(filterData[iCol]) for iCol in filterData}
-        print(
-            f"The following values were taken into account after filtering:"
-            f"{pprint.pprint(boolDict)}"
-        )
-        print(
-            f"All filters combined yielded a total of {lenData} rows, "
-            f"wwhich were taken into account"
-        )
-        print(
-            f"This corresponds to {lenData / len(filterData)* 100}"
-            f"percent of the original data"
-        )
+        print('The following values were taken into account after simple threshold filtering:')
+        pprint.pprint(boolDict)
+        # print(f'{filterData["averageSpeed"].sum()} trips have plausible average speeds')
+        # print(f'{(~filterData["tripDoesNotOverlap"]).sum()} trips overlap and were thus filtered out')
+        print(f"All filters combined yielded that a total of {lenData} trips are taken into account")
+        print(f'This corresponds to {lenData / len(filterData)* 100} percent of the original data')
 
     def addParkingRows(self):
         self.activities = pd.concat([self.data]*2).sort_index(ignore_index=True)
@@ -518,8 +545,9 @@ class DataParser:
         self.activities.loc[parkingActwoFirst.index, 'timestampStart'] = set_ts
 
         # Updating park start timestamps for first activity
+        # Q to Ben: Why does vectorized replace of timestamp hour and minute not work?
         self.activities.loc[self.activities['parkID'] == 1, 'timestampStart'] = self.activities.loc[self.activities[
-            'parkID'] == 1, 'timestampEnd'].apply(lambda x: x.replace(hour=0, minute=0))  # Q to Ben: Why does vectorized replace of timestamp hour and minute not work?
+            'parkID'] == 1, 'timestampEnd'].apply(lambda x: x.replace(hour=0, minute=0))
 
         # Updating park end timestamps for last activity
         idxActs = self.activities['parkID'].fillna(0).astype(bool) & self.activities['isLastActivity']
@@ -532,7 +560,6 @@ class DataParser:
         # idxActs = self.activities['tripID'].fillna(0).astype(bool) & self.activities['isLastActivity']
 
         # Add timedelta column
-
         self.activities['timedelta'] = self.activities['timestampEnd'] - self.activities['timestampStart']
 
         print('Dummy print')
