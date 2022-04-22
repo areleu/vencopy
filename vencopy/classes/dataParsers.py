@@ -501,19 +501,21 @@ class DataParser:
         self.activities = self.activities.loc[~indexMultiDayActivity, :]
 
         # Setting timestamps
-        parkingActNoLast = (self.activities['parkID'].fillna(0).astype(bool) & ~self.activities[
-            'isLastActivity'] & ~self.activities['isFirstActivity'])
-        parkingActNoLast = parkingActNoLast.loc[parkingActNoLast]
+        self.activities = self.activities.reset_index()
+        parkingAct = self.activities['parkID'].fillna(0).astype(bool)
+        parkingAct = parkingAct.loc[parkingAct]
+        parkingActwoLast = parkingAct.iloc[:-1]
+        parkingActwoFirst = parkingAct.iloc[1:]
 
         # Updating park end timestamps
-        set_ts = self.activities.loc[parkingActNoLast.index + 1, 'timestampStart']
-        set_ts.index = self.activities.loc[parkingActNoLast.index, 'timestampEnd'].index
-        self.activities.loc[parkingActNoLast.index, 'timestampEnd'] = set_ts
-                
+        set_ts = self.activities.loc[parkingActwoLast.index + 1, 'timestampStart']
+        set_ts.index = self.activities.loc[parkingActwoLast.index, 'timestampEnd'].index
+        self.activities.loc[parkingActwoLast.index, 'timestampEnd'] = set_ts
+
         # Updating park start timestamps
-        set_ts = self.activities.loc[parkingActNoLast.index - 1, 'timestampEnd']
-        set_ts.index = self.activities.loc[parkingActNoLast.index, 'timestampStart'].index
-        self.activities.loc[parkingActNoLast.index, 'timestampStart'] = set_ts
+        set_ts = self.activities.loc[parkingActwoFirst.index - 1, 'timestampEnd']
+        set_ts.index = self.activities.loc[parkingActwoFirst.index, 'timestampStart'].index
+        self.activities.loc[parkingActwoFirst.index, 'timestampStart'] = set_ts
 
         # Updating park start timestamps for first activity
         self.activities.loc[self.activities['parkID'] == 1, 'timestampStart'] = self.activities.loc[
