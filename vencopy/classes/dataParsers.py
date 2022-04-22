@@ -233,16 +233,15 @@ class DataParser:
         :return: Dictionary with internal names as keys and raw data column
                  names as values.
         """
-        if datasetID in dictRaw["datasetID"]:
-            listIndex = dictRaw["datasetID"].index(datasetID)
-            return {val[listIndex]: key for (key, val) in dictRaw.items()}
-        else:
+        if datasetID not in dictRaw["datasetID"]:
             raise ValueError(
                 f"Data set {datasetID} not specified in"
                 f"parseConfig variable dictionary."
             )
+        listIndex = dictRaw["datasetID"].index(datasetID)
+        return {val[listIndex]: key for (key, val) in dictRaw.items()}
 
-    def returnDictBottomValues(self, baseDict: dict, lst: list = []) -> list:
+    def returnDictBottomValues(self, baseDict: dict, lst: list = None) -> list:
         """
         Returns a list of all dictionary values of the last dictionary level
         (the bottom) of baseDict. The parameter
@@ -252,14 +251,15 @@ class DataParser:
         :param lst: empty list, is used as interface to next recursion
         :return: Returns a list with all the bottom dictionary values
         """
+        if lst is None:
+            lst = []
         # iKey not used in returndictBottomValues but used in checkFilterDict
         # to have lists
         for iKey, iVal in baseDict.items():
             if isinstance(iVal, dict):
                 lst = self.returnDictBottomValues(iVal, lst)
-            else:
-                if iVal is not None:
-                    lst.append(iVal)
+            elif iVal is not None:
+                lst.append(iVal)
         return lst
 
     def checkFilterDict(self, filterDict):
@@ -293,9 +293,8 @@ class DataParser:
         for iKey, iVal in baseDict.items():
             if isinstance(iVal, dict):
                 lst = self.returnDictBottomKeys(iVal, lst)
-            else:
-                if iVal is not None:
-                    lst.append(iKey)
+            elif iVal is not None:
+                lst.append(iKey)
         return lst
 
     def filter(self, filterDict: dict = None):
@@ -563,8 +562,8 @@ class DataParser:
 
         # Add timedelta column
         self.activities['timedelta'] = self.activities['timestampEnd'] - self.activities['timestampStart']
-
-        print('Dummy print')
+        print(f'Finished activity composition with {self.activities["tripID"].fillna(0).astype(bool).sum()} trips '
+              f'and {self.activities["parkID"].fillna(0).astype(bool).sum()} parking activites')
 
     def process(self, filterDict: dict):
         """
@@ -612,9 +611,10 @@ class IntermediateParsing(DataParser):
             self.datasetID
         )
         variables = [
-            val[listIndex] if not val[listIndex] == "NA" else "NA"
+            val[listIndex] if val[listIndex] != "NA" else "NA"
             for key, val in self.parseConfig["dataVariables"].items()
         ]
+
         variables.remove(self.datasetID)
         self.removeNA(variables)
         return variables
@@ -652,7 +652,7 @@ class IntermediateParsing(DataParser):
 
         :return: No returns, operates only on the class instance
         """
-        if self.datasetID == "MiD17" or self.datasetID == "MiD08":
+        if self.datasetID in ["MiD17", "MiD08"]:
             dat = self.data
             self.data = dat.loc[
                 (dat["tripStartClock"] <= dat["tripEndClock"])
@@ -1007,8 +1007,9 @@ class ParseVF(IntermediateParsing):
         self.composeStartAndEndTimestamps()
         self.updateEndTimestamp()
         self.harmonizeVariablesGenericIdNames()
+        self.addParkingRows()
         self.writeOut()
-        print("Parsing MiD dataset completed")
+        print("Parsing VF dataset completed")
 
 
 class ParseKiD(IntermediateParsing):
@@ -1170,6 +1171,7 @@ class ParseKiD(IntermediateParsing):
         self.composeStartAndEndTimestamps()
         self.updateEndTimestamp()
         self.harmonizeVariablesGenericIdNames()
+        self.addParkingRows()
         self.writeOut()
         print("Parsing KiD dataset completed")
 
