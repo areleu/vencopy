@@ -519,7 +519,8 @@ class DataParser:
 
         # Updating park start timestamps for first activity
         self.activities.loc[self.activities['parkID'] == 1, 'timestampStart'] = self.activities.loc[self.activities[
-            'parkID'] == 1, 'timestampEnd'].apply(lambda x: x.replace(hour=0, minute=0))  # Q to Ben: Why does vectorized replace of timestamp hour and minute not work?
+            'parkID'] == 1, 'timestampEnd'].apply(lambda x: x.replace(hour=0, minute=0))  
+        # Q to Ben: Why does vectorized replace of timestamp hour and minute not work?
 
         # Updating park end timestamps for last activity
         idxActs = self.activities['parkID'].fillna(0).astype(bool) & self.activities['isLastActivity']
