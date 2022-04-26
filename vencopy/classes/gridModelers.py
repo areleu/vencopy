@@ -104,7 +104,7 @@ class GridModeler:
         
         :return: None
         """
-        self.activities.chargingPower = self.chargeAvailability
+        self.activities['chargingPower'] = self.chargeAvailability
 
 
     def calcGrid(self):
@@ -148,4 +148,4 @@ if __name__ == "__main__":
         vpData = ParseVF(configDict=configDict, datasetID=datasetID)
     vpData.process()
 
-    vpGrid = GridModeler(configDict=configDict, datasetID=datasetID, activities=vpData, gridModel='probability')
+    vpGrid = GridModeler(configDict=configDict, datasetID=datasetID, activities=vpData, gridModel='simple')
