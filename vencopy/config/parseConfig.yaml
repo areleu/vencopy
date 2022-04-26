@@ -193,6 +193,7 @@ filterDicts:
         greaterThan:
         smallerThan:
             tripDistance: [1000]
+    speedThreshold: 10 # Trips with an average speed below this threshold are being filtered out
 
     #    tripData = tripData.loc[(tripData['tripStartClock'] <= tripData['tripEndClock']) |
     #    (tripData['tripEndNextDay'] == 1), :]  # departure must be before arrival or the trip must end the following day
