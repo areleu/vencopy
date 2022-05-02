@@ -43,7 +43,7 @@ class GridModeler:
 
         :return: None
         """
-        print(f'Starting with charge connection replacement of location purposes')
+        print('Starting with charge connection replacement of location purposes')
         self.chargeAvailability = self.activities.purposeStr.replace(self.gridAvailabilitySimple)
         self.chargeAvailability = (~(self.chargeAvailability != True)) #FIXME: why?
         self.chargeAvailability = self.chargeAvailability * self.gridConfig['ratedPowerSimple']
