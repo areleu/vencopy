@@ -274,8 +274,7 @@ class DataParser:
             isinstance(val, list)
             for val in self.returnDictBottomValues(self.filterDict)
         ), (
-            "All values in filter dictionaries "
-            "have to be lists, but are not"
+            "All values in filter dictionaries have to be lists, but are not"
         )
 
     def returnDictBottomKeys(self, baseDict: dict, lst: list = None) -> list:
