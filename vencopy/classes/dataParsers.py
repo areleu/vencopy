@@ -546,7 +546,8 @@ class DataParser:
         # Updating park start timestamps for first activity
         # Q to Ben: Why does vectorized replace of timestamp hour and minute not work?
         idxActs = self.activities['parkID'].fillna(0).astype(bool) & self.activities['isFirstActivity']
-        self.activities.loc[idxActs, 'timestampStart'] = self.activities.loc[idxActs, 'timestampEnd'].apply(lambda x: x.replace(hour=0, minute=0))
+        self.activities.loc[idxActs, 'timestampStart'] = self.activities.loc[idxActs,
+                                                                             'timestampEnd'].apply(lambda x: x.replace(hour=0, minute=0))
 
         # Updating park end timestamps for last activity
         idxActs = self.activities['parkID'].fillna(0).astype(bool) & self.activities['isLastActivity']
@@ -853,6 +854,7 @@ class ParseMiD(IntermediateParsing):
         self.updateEndTimestamp()
         self.harmonizeVariablesGenericIdNames()
         self.addParkingRows()
+        self.addContTripID()
         self.writeOut()
         print("Parsing MiD dataset completed")
 
