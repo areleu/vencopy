@@ -854,7 +854,6 @@ class ParseMiD(IntermediateParsing):
         self.updateEndTimestamp()
         self.harmonizeVariablesGenericIdNames()
         self.addParkingRows()
-        self.addContTripID()
         self.writeOut()
         print("Parsing MiD dataset completed")
 

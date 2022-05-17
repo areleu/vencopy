@@ -68,28 +68,26 @@ class FlexEstimator:
 
         # Calculate max battery start and end of all first activities
         firstActs = self.calcMaxBatFirstAct()
-        actTemp = [firstActs]
+        actTemp = firstActs
 
         # Start and end for all trips and parkings in between
+        # FIXME: Provide all previous trip/park data not just the last one
         setActs = range(1, self.activities['parkID'].max())
         for act in setActs:
             tripRows = (self.activities['tripID'] == act) & (~self.isFirstAct)  # & ~self.isLastAct  probably not needed
             parkRows = (self.activities['parkID'] == act) & (~self.isFirstAct)  # & ~self.isLastAct
             tripActs = self.activities.loc[tripRows, :]
             parkActs = self.activities.loc[parkRows, :]
+            prevTripActs = actTemp.loc[~actTemp['tripID'].isna(), :]
+            prevParkActs = actTemp.loc[~actTemp['parkID'].isna(), :]
             if act == 1:
                 tripActsRes = self.calcMaxBatLevTrip(actID=act, tripActs=tripActs, prevParkActs=firstActs)
                 parkActsRes = None
             else:
                 parkActsRes = self.calcMaxBatLevPark(actID=act, parkActs=parkActs, prevTripActs=prevTripActs)
-                tripActsRes = self.calcMaxBatLevTrip(actID=act, tripActs=tripActs, prevParkActs=parkActsRes),
+                tripActsRes = self.calcMaxBatLevTrip(actID=act, tripActs=tripActs, prevParkActs=prevParkActs),
 
-            actTemp.extend(
-                (
-                    tripActsRes,
-                    parkActsRes,
-                )
-            )
+            actTemp = pd.concat([actTemp, tripActsRes, parkActsRes])
             prevTripActs = tripActsRes
 
         # Last trip (last parking was assigned above)
