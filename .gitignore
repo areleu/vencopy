@@ -1,7 +1,7 @@
 # PyCharm project setup (.idea), jupyter notebook folders and precompiled bytecode (__pycache__)
 /.idea/
 *__pycache__/
-*/.ipynb_checkpoints/*
+.ipynb_checkpoints
 
 # Package building related folders
 /vencopy.egg-info
