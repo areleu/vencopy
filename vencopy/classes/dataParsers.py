@@ -507,16 +507,18 @@ class DataParser:
         self.activities.loc[newIndex, 'isLastActivity'] = False
         dfAdd['parkID'] = self.activities.loc[newIndex, 'tripID'] + 1
         self.activities = pd.concat([self.activities, dfAdd]).sort_index()
+        # self.activities.reset_index(inplace=True)
 
         self.activities['colFromIndex'] = self.activities.index
         self.activities = self.activities.sort_values(by=['colFromIndex', 'tripID'])
 
+        # Clean-up of temporary redundant columns
         self.activities.drop(columns=[
             'isMIVDriver', 'tripStartClock', 'tripEndClock', 'tripStartYear', 'tripStartMonth',
             'tripStartWeek', 'tripStartHour', 'tripStartMinute', 'tripEndHour', 'tripEndMinute', 'hhpid_prev',
             'hhpid_next', 'colFromIndex'], inplace=True)
 
-        # Checking for trips across day-limit and removing parking activities
+        # Checking for trips across day-limit and removing respective parking activities
         indexMulti = (self.activities['isLastActivity'] & self.activities['tripEndNextDay'])
         indexMulti = indexMulti.loc[indexMulti]
         self.activities.loc[indexMulti.index, 'isLastActivity'] = True
@@ -546,8 +548,8 @@ class DataParser:
         # Updating park start timestamps for first activity
         # Q to Ben: Why does vectorized replace of timestamp hour and minute not work?
         idxActs = self.activities['parkID'].fillna(0).astype(bool) & self.activities['isFirstActivity']
-        self.activities.loc[idxActs, 'timestampStart'] = self.activities.loc[idxActs,
-                                                                             'timestampEnd'].apply(lambda x: x.replace(hour=0, minute=0))
+        self.activities.loc[idxActs, 'timestampStart'] = self.activities.loc[
+            idxActs, 'timestampEnd'].apply(lambda x: x.replace(hour=0, minute=0))
 
         # Updating park end timestamps for last activity
         idxActs = self.activities['parkID'].fillna(0).astype(bool) & self.activities['isLastActivity']
@@ -555,7 +557,7 @@ class DataParser:
             lambda x: x.replace(hour=0, minute=0) + pd.Timedelta(1, 'd')
         )
 
-        # FIXME Optionally adjust end timestamp of last activity trips, add additional trips before first parking
+        # FIXME: Optionally adjust end timestamp of last activity trips, add additional trips before first parking
         # in the future if needed
         # idxActs = self.activities['tripID'].fillna(0).astype(bool) & self.activities['isLastActivity']
 
