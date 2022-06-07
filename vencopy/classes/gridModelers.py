@@ -76,7 +76,6 @@ class GridModeler:
         self.activities = pd.concat(newActivities)
         print('Grid connection assignment complete')
 
-
     def calcGrid(self):
         """
         Wrapper function for grid assignment. The number of iterations for
@@ -88,6 +87,9 @@ class GridModeler:
             self.appendGridAvailability()
         elif self.gridModel == 'probability':
             self.assignGridViaProbabilities(setSeed=42)
+            # FIXME: add condition that charging at home in the morning has the same rated capacity as in the evening
+            # FIXME: if first and/or last parking ar at home, reiterate the home distribution (or separate home from
+            # the main function)
         else:
             raise(ValueError(f'Specified grid modeling option {self.gridModel} is not implemented. Please choose'
                              f'"simple" or "probability"'))
