@@ -55,30 +55,33 @@ class GridModeler:
         :return: Returns a dataFrame holding charging capacity for each trip
                  assigned with probability distribution
         """
-        newActivities = []
+        activitiesNoHome = []
         print('Starting with charge connection replacement of location purposes')
         for purpose in self.activities.purposeStr.unique():
-            subset = self.activities.loc[self.activities.purposeStr == purpose].copy()
-            power = list((self.gridConfig["gridAvailabilityDistribution"][purpose]).keys())
-            probability = list(self.gridConfig["gridAvailabilityDistribution"][purpose].values())
-            urng = np.random.default_rng(setSeed)  # universal non-uniform non random number
-            rng = DiscreteAliasUrn(probability, random_state=urng)
-            self.chargeAvailability = rng.rvs(len(subset))
-            self.chargeAvailability = [power[i] for i in self.chargeAvailability]
-            subset.loc[:, ("chargingPower")] = self.chargeAvailability
-            newActivities.append(subset)
-        self.activities = pd.concat(newActivities).reset_index(drop=True)
-        self.activities = self.correctHomeProbabilityDistribution(setSeed=42)
+            if purpose == "HOME":
+                activitiesHome = self.homeProbabilityDistribution(setSeed=42)
+            else:
+                subset = self.activities.loc[self.activities.purposeStr == purpose].copy()
+                power = list((self.gridConfig["gridAvailabilityDistribution"][purpose]).keys())
+                probability = list(self.gridConfig["gridAvailabilityDistribution"][purpose].values())
+                urng = np.random.default_rng(setSeed)  # universal non-uniform random number
+                rng = DiscreteAliasUrn(probability, random_state=urng)
+                self.chargeAvailability = rng.rvs(len(subset))
+                self.chargeAvailability = [power[i] for i in self.chargeAvailability]
+                subset.loc[:, ("chargingPower")] = self.chargeAvailability
+                activitiesNoHome.append(subset)
+        activitiesNoHome = pd.concat(activitiesNoHome).reset_index(drop=True)
+        dataframes = [activitiesHome, activitiesNoHome]
+        self.activities = pd.concat(dataframes).reset_index(drop=True)
         print('Grid connection assignment complete')
 
-    def correctHomeProbabilityDistribution(self, setSeed: int):
+    def homeProbabilityDistribution(self, setSeed: int):
         # adds condition that charging at home in the morning has the same rated capacity as in the evening
         # if first and/or last parking ar at home, instead of reiterating the home distribution (or separate home from
         # the main function) it assign the home charging probability based on unique household IDs instead of
         # dataset entries -> each HH always has same rated power
         purpose = "HOME"
         homeActivities = self.activities.loc[self.activities.purposeStr == purpose].copy()
-        homeActivities = homeActivities.drop(columns="chargingPower")
         households = homeActivities[['hhID']].reset_index(drop=True)
         households = households.drop_duplicates(subset="hhID").copy()  # 73850 unique HH
         power = list((self.gridConfig["gridAvailabilityDistribution"][purpose]).keys())
@@ -90,9 +93,7 @@ class GridModeler:
         households.loc[:, ("chargingPower")] = self.chargeAvailability
         households.set_index("hhID", inplace=True)
         homeActivities = homeActivities.join(households, on="hhID")
-        self.activities = self.activities[self.activities.purposeStr != "HOME"]
-        frames = [self.activities, homeActivities]
-        self.activities = pd.concat(frames).reset_index(drop=True)
+        return homeActivities
 
     def calcGrid(self):
         """
@@ -135,4 +136,4 @@ if __name__ == "__main__":
         vpData = ParseVF(configDict=configDict, datasetID=datasetID)
     vpData.process()
 
-    vpGrid = GridModeler(configDict=configDict, datasetID=datasetID, activities=vpData, gridModel='simple')
+    vpGrid = GridModeler(configDict=configDict, datasetID=datasetID, activities=vpData, gridModel='probability')
