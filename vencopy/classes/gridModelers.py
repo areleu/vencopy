@@ -36,15 +36,15 @@ class GridModeler:
 
     def assignGridViaPurposes(self):
         """
-        Method to translate hourly purpose profiles into hourly profiles of
+        Method to translate purpose profiles into hourly profiles of
         true/false giving the charging station
-        availability in each hour for each individual vehicle.
+        availability for each individual vehicle.
 
         :return: None
         """
         print('Starting with charge connection replacement of location purposes')
         self.chargeAvailability = self.activities.purposeStr.replace(self.gridAvailabilitySimple)
-        self.chargeAvailability = (~(self.chargeAvailability != True))  # FIXME: why?
+        # self.chargeAvailability = (~(self.chargeAvailability != True))  # check condition if not, needed?
         self.chargeAvailability = self.chargeAvailability * self.gridConfig['ratedPowerSimple']
         self.activities['chargingPower'] = self.chargeAvailability
         print('Grid connection assignment complete')
@@ -83,7 +83,7 @@ class GridModeler:
         households = households.drop_duplicates(subset="hhID").copy()  # 73850 unique HH
         power = list((self.gridConfig["gridAvailabilityDistribution"][purpose]).keys())
         probability = list(self.gridConfig["gridAvailabilityDistribution"][purpose].values())
-        urng = np.random.default_rng(setSeed)  # universal non-uniform non random number
+        urng = np.random.default_rng(setSeed)  # universal non-uniform random number
         rng = DiscreteAliasUrn(probability, random_state=urng)
         self.chargeAvailability = rng.rvs(len(households))
         self.chargeAvailability = [power[i] for i in self.chargeAvailability]
@@ -135,4 +135,4 @@ if __name__ == "__main__":
         vpData = ParseVF(configDict=configDict, datasetID=datasetID)
     vpData.process()
 
-    vpGrid = GridModeler(configDict=configDict, datasetID=datasetID, activities=vpData, gridModel='probability')
+    vpGrid = GridModeler(configDict=configDict, datasetID=datasetID, activities=vpData, gridModel='simple')
