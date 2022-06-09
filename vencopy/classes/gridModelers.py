@@ -46,14 +46,8 @@ class GridModeler:
         self.chargeAvailability = self.activities.purposeStr.replace(self.gridAvailabilitySimple)
         self.chargeAvailability = (~(self.chargeAvailability != True))  # FIXME: why?
         self.chargeAvailability = self.chargeAvailability * self.gridConfig['ratedPowerSimple']
-        print('Grid connection assignment complete')
-
-    def appendGridAvailability(self):
-        """
-        Function to write out the boolean charging station availability for
-        each vehicle in each hour to the output file path.
-        """
         self.activities['chargingPower'] = self.chargeAvailability
+        print('Grid connection assignment complete')
 
     def assignGridViaProbabilities(self, setSeed: int):
         """
@@ -73,8 +67,32 @@ class GridModeler:
             self.chargeAvailability = [power[i] for i in self.chargeAvailability]
             subset.loc[:, ("chargingPower")] = self.chargeAvailability
             newActivities.append(subset)
-        self.activities = pd.concat(newActivities)
+        self.activities = pd.concat(newActivities).reset_index(drop=True)
+        self.activities = self.correctHomeProbabilityDistribution(setSeed=42)
         print('Grid connection assignment complete')
+
+    def correctHomeProbabilityDistribution(self, setSeed: int):
+        # adds condition that charging at home in the morning has the same rated capacity as in the evening
+        # if first and/or last parking ar at home, instead of reiterating the home distribution (or separate home from
+        # the main function) it assign the home charging probability based on unique household IDs instead of
+        # dataset entries -> each HH always has same rated power
+        purpose = "HOME"
+        homeActivities = self.activities.loc[self.activities.purposeStr == purpose].copy()
+        homeActivities = homeActivities.drop(columns="chargingPower")
+        households = homeActivities[['hhID']].reset_index(drop=True)
+        households = households.drop_duplicates(subset="hhID").copy()  # 73850 unique HH
+        power = list((self.gridConfig["gridAvailabilityDistribution"][purpose]).keys())
+        probability = list(self.gridConfig["gridAvailabilityDistribution"][purpose].values())
+        urng = np.random.default_rng(setSeed)  # universal non-uniform non random number
+        rng = DiscreteAliasUrn(probability, random_state=urng)
+        self.chargeAvailability = rng.rvs(len(households))
+        self.chargeAvailability = [power[i] for i in self.chargeAvailability]
+        households.loc[:, ("chargingPower")] = self.chargeAvailability
+        households.set_index("hhID", inplace=True)
+        homeActivities = homeActivities.join(households, on="hhID")
+        self.activities = self.activities[self.activities.purposeStr != "HOME"]
+        frames = [self.activities, homeActivities]
+        self.activities = pd.concat(frames).reset_index(drop=True)
 
     def calcGrid(self):
         """
@@ -84,15 +102,13 @@ class GridModeler:
         """
         if self.gridModel == 'simple':
             self.assignGridViaPurposes()
-            self.appendGridAvailability()
         elif self.gridModel == 'probability':
-            self.assignGridViaProbabilities(setSeed=42)
-            # FIXME: add condition that charging at home in the morning has the same rated capacity as in the evening
-            # FIXME: if first and/or last parking ar at home, reiterate the home distribution (or separate home from
-            # the main function)
+            seed = 42
+            self.assignGridViaProbabilities(setSeed=seed)
         else:
             raise(ValueError(f'Specified grid modeling option {self.gridModel} is not implemented. Please choose'
                              f'"simple" or "probability"'))
+
 
 if __name__ == "__main__":
 
