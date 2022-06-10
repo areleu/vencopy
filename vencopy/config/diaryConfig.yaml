@@ -9,5 +9,6 @@
 
 # This config holds all relative paths and filenames for tripDiaryBuilders.py
 
+Time_Delta: 10
 
 
