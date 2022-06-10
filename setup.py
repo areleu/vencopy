@@ -30,7 +30,7 @@ setup(
     author='Niklas Wulff',
     author_email='niklas.wulff@dlr.de',
     license='BSD 3-clause',
-    packages=['vencopy', 'vencopy.classes', 'vencopy.scripts'],
+    packages=['vencopy', 'vencopy.core', 'vencopy.utils'],
     package_data={'': dataFilePaths},
     install_requires=['pandas >= 1.1.1, <= 1.2.5',
                       'ruamel.yaml',

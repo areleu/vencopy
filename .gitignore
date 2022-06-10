@@ -22,7 +22,7 @@ make.bat
 # files with local paths
 vencopy/config/localPathConfig.yaml
 
-# Fabia
+# VS-Code
 /.vscode/
 /docs/_build/
 *.code-workspace

@@ -12,15 +12,12 @@ import seaborn as sns
 from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
-from vencopy.scripts.globalFunctions import (
+from vencopy.utils.globalFunctions import (
     createFileString,
     calculateWeightedAverage,
     mergeDataToWeightsAndDays,
     writeProfilesToCSV,
 )
-
-# from classes.flexEstimators import FlexEstimator
-
 
 class Evaluator:
     def __init__(
@@ -861,8 +858,8 @@ class chargingTransactionEvaluator:
 
 
 if __name__ == "__main__":
-    from vencopy.classes.dataParsers import DataParser
-    from vencopy.scripts.globalFunctions import loadConfigDict
+    from vencopy.core.dataParsers import DataParser
+    from vencopy.utils.globalFunctions import loadConfigDict
 
     configNames = (
         "globalConfig",

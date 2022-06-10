@@ -113,8 +113,8 @@ class timeDiscretizer:
         elif isinstance(quot, int):
             raise(Warning(f'Specified resolution does not fit into a day, There are {quotDay} intervals in a day'))
         else:
-            raise(ValueError(f'Specified resolution is not a multiple of the pre specified quantum {self.quantum}.
-                             You specified {interval}'))
+            raise(ValueError(f'Specified resolution is not a multiple of the pre specified quantum {self.quantum}.'
+                             f'You specified {interval}'))
 
     def createTimeList(self):
         return list(pd.timedelta_range(start='00:00', end='23:59', freq=f'{self.nQPerDT}T'))

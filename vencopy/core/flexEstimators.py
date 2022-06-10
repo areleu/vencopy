@@ -14,7 +14,6 @@ if __package__ is None or __package__ == "":
     sys.path.append(path.dirname(path.dirname(path.dirname(__file__))))
 
 import pandas as pd
-import numpy as np
 from pathlib import Path
 from profilehooks import profile
 from vencopy.core.dataParsers import ParseMiD, ParseVF, ParseKiD

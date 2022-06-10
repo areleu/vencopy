@@ -8,7 +8,7 @@ include LICENSE
 include setup.py
 
 # Include the data files
-include ./vencopy/classes
+include ./vencopy/core
 include ./vencopy/config
-include ./vencopy/scripts
+include ./vencopy/utils
 include ./vencopy/tutorials

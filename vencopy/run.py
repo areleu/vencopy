@@ -16,12 +16,12 @@ if __package__ is None or __package__ == "":
 
 import pandas as pd
 from pathlib import Path
-from vencopy.classes.dataParsers import ParseMiD, ParseKiD, ParseVF
-from vencopy.classes.diaryBuilders import diaryBuilder
-from vencopy.classes.gridModelers import GridModeler
-from vencopy.classes.flexEstimators import FlexEstimator
-from vencopy.classes.evaluators import Evaluator
-from vencopy.scripts.globalFunctions import loadConfigDict, createOutputFolders
+from vencopy.core.dataParsers import ParseMiD, ParseKiD, ParseVF
+from vencopy.core.diaryBuilders import diaryBuilder
+from vencopy.core.gridModelers import GridModeler
+from vencopy.core.flexEstimators import FlexEstimator
+from vencopy.core.evaluators import Evaluator
+from vencopy.utils.globalFunctions import loadConfigDict, createOutputFolders
 
 if __name__ == "__main__":
     # Set dataset and config to analyze, create output folders

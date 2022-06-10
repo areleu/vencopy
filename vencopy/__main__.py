@@ -70,6 +70,3 @@ def updateLocalPathCfg(newVPRoot: pathlib.Path):
 
 if __name__ == '__main__':
     create()
-
-
-
