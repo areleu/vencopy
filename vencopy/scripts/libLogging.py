@@ -39,4 +39,3 @@ def logit(f):
         return ret  # added this line myself since variable ret wasn't used before
     return wrapper
 
-

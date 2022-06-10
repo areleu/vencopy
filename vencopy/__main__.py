@@ -47,7 +47,7 @@ def setupFolders(src: pathlib.Path, trg: pathlib.Path, tutorials: bool):
     """
     os.mkdir(trg / 'output')
     os.mkdir(trg / 'output' / 'dataParser')
-    os.mkdir(trg / 'output' / 'tripDiaryBuilder')
+    os.mkdir(trg / 'output' / 'diaryBuilder')
     os.mkdir(trg / 'output' / 'gridModeler')
     os.mkdir(trg / 'output' / 'flexEstimator')
     os.mkdir(trg / 'output' / 'evaluator')

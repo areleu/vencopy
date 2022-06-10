@@ -62,11 +62,9 @@ class FlexEstimator:
     @profile(immediate=True)
     def batteryLevelMax(self):
         """
-
         Calculate the maximum battery level at the beginning and end of each activity. This represents the case of
         vehicle users always connecting when charging is available and charging as soon as possible as fast as possible
         until the maximum battery capacity is reached.
-
         """
 
         # SUPPOSEDLY DEPRECATED GENERALIZED APPROACH
@@ -248,7 +246,7 @@ class FlexEstimator:
         The calculated battery levels only suffice for the trips and thus describe a technical lower level for
         each activity. This function is called looping through the parking activities from largest to smallest.
         The column "minOvershoot" describes electricity volume that can be charged beyond the given battery
-        capacity. 
+        capacity.
 
         Args:
             actID (int): _description_

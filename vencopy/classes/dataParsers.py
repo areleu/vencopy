@@ -1186,7 +1186,7 @@ if __name__ == '__main__':
         "globalConfig",
         "localPathConfig",
         "parseConfig",
-        "tripConfig",
+        "diaryConfig",
         "gridConfig",
         "flexConfig",
         "evaluatorConfig",

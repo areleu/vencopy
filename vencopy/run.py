@@ -17,7 +17,7 @@ if __package__ is None or __package__ == "":
 import pandas as pd
 from pathlib import Path
 from vencopy.classes.dataParsers import ParseMiD, ParseKiD, ParseVF
-from vencopy.classes.tripDiaryBuilders import TripDiaryBuilder
+from vencopy.classes.diaryBuilders import diaryBuilder
 from vencopy.classes.gridModelers import GridModeler
 from vencopy.classes.flexEstimators import FlexEstimator
 from vencopy.classes.evaluators import Evaluator
@@ -31,7 +31,7 @@ if __name__ == "__main__":
         "globalConfig",
         "localPathConfig",
         "parseConfig",
-        "tripConfig",
+        "diaryConfig",
         "gridConfig",
         "flexConfig",
         "evaluatorConfig",
@@ -50,7 +50,7 @@ if __name__ == "__main__":
     vpData.process()
 
     # # Trip distance and purpose diary compositions
-    vpTripDiary = TripDiaryBuilder(
+    vpDiary = diaryBuilder(
         datasetID=datasetID,
         configDict=configDict,
         ParseData=vpData,
