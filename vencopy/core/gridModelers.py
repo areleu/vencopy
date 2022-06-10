@@ -17,8 +17,8 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 from scipy.stats.sampling import DiscreteAliasUrn
-from vencopy.scripts.globalFunctions import loadConfigDict
-from vencopy.classes.dataParsers import ParseMiD, ParseKiD, ParseVF
+from vencopy.utils.globalFunctions import loadConfigDict
+from vencopy.core.dataParsers import ParseMiD, ParseKiD, ParseVF
 
 
 class GridModeler:
@@ -113,7 +113,7 @@ class GridModeler:
 
 if __name__ == "__main__":
 
-    from vencopy.scripts.globalFunctions import loadConfigDict
+    from vencopy.utils.globalFunctions import loadConfigDict
 
     datasetID = "MiD17"
     basePath = Path(__file__).parent.parent

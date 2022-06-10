@@ -17,7 +17,7 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 from profilehooks import profile
-from vencopy.classes.dataParsers import ParseMiD, ParseVF, ParseKiD
+from vencopy.core.dataParsers import ParseMiD, ParseVF, ParseKiD
 
 
 class FlexEstimator:
@@ -310,7 +310,7 @@ class FlexEstimator:
 
 
 if __name__ == "__main__":
-    from vencopy.scripts.globalFunctions import loadConfigDict
+    from vencopy.utils.globalFunctions import loadConfigDict
     basePath = Path(__file__).parent.parent
     configNames = ('globalConfig', 'localPathConfig', 'parseConfig', 'tripConfig', 'gridConfig', 'flexConfig',
                    'evaluatorConfig')

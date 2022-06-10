@@ -13,8 +13,8 @@ if __package__ is None or __package__ == '':
 
 import pandas as pd
 from pathlib import Path
-from vencopy.scripts.globalFunctions import loadConfigDict
-from vencopy.classes.dataParsers import ParseMiD, ParseKiD, ParseVF
+from vencopy.utils.globalFunctions import loadConfigDict
+from vencopy.core.dataParsers import ParseMiD, ParseKiD, ParseVF
 
 
 class DiaryBuilder:
@@ -214,7 +214,7 @@ class FillHourValues:
 
 if __name__ == '__main__':
 
-    from vencopy.scripts.globalFunctions import loadConfigDict
+    from vencopy.utils.globalFunctions import loadConfigDict
 
     datasetID = "MiD17"
     basePath = Path(__file__).parent.parent

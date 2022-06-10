@@ -19,7 +19,7 @@ import numpy as np
 import warnings
 from pathlib import Path
 from zipfile import ZipFile
-from vencopy.scripts.globalFunctions import createFileString
+from vencopy.utils.globalFunctions import createFileString
 
 
 class DataParser:
@@ -1179,7 +1179,7 @@ class ParseKiD(IntermediateParsing):
 
 if __name__ == '__main__':
 
-    from vencopy.scripts.globalFunctions import loadConfigDict
+    from vencopy.utils.globalFunctions import loadConfigDict
 
     basePath = Path(__file__).parent.parent
     configNames = (
