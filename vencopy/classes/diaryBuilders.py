@@ -193,7 +193,6 @@ class FillHourValues:
 
 
 if __name__ == '__main__':
-<<<<<<< HEAD
 
     from vencopy.scripts.globalFunctions import loadConfigDict
 
@@ -219,8 +218,3 @@ if __name__ == '__main__':
     vpData.process()
 
     vpDiary = DiaryBuilder(configDict=configDict, activities=vpData, debug=False)
-=======
-    # from vencopy.classes.dataParsers import ParseMiD, ParseKiD, ParseVF
-    # from vencopy.scripts.globalFunctions import loadConfigDict
-    print('Thi si seeee end')
->>>>>>> bbef82dc9e8236552c75bac26282689fccaa3de3
