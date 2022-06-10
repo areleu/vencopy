@@ -28,10 +28,10 @@ class DiaryBuilder:
             self.activties = self.activties.loc[0:2000, :]
         else:
             self.activties = activities.data
-        distributedActivities = TimeDiscretiser(self.deltaTime, self.activties, method="distribute")
+        distributedActivities = TimeDiscretizer(self.deltaTime, self.activties, method="distribute")
         # FIXME: check column names
         drain = distributedActivities(distributedActivities, column="drain")
-        selectedActivities = TimeDiscretiser(self.deltaTime, self.activties, method="distribute")
+        selectedActivities = TimeDiscretizer(self.deltaTime, self.activties, method="distribute")
         # FIXME: check column names
         chargingPower = selectedActivities(distributedActivities, column="chargingPower")
         minBatteryLevel = selectedActivities(distributedActivities, column="minBatLev")
@@ -50,7 +50,7 @@ class DiaryBuilder:
         # dataDay = self.activities.drop('tripID', axis=1)
         # return dataDay
 
-class timeDiscretiser:
+class timeDiscretizer:
     def __init__(self, activities: pd.Series, ts: pd.DataFrame, column: str, dt: pd.TimeDelta, method: str):
         """Class for discretization of activities to fixed temporal resolution. Act is
         a pandas Series with a unique ID in the index, ts is a pandas dataframe with two 
