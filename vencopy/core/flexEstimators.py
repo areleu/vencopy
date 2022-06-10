@@ -305,13 +305,11 @@ class FlexEstimator:
         self.batteryLevelMax()
         self.uncontrolledCharging()
         self.batteryLevelMin()
-        print('is this really the FE boundary?')
-
 
 if __name__ == "__main__":
     from vencopy.utils.globalFunctions import loadConfigDict
     basePath = Path(__file__).parent.parent
-    configNames = ('globalConfig', 'localPathConfig', 'parseConfig', 'tripConfig', 'gridConfig', 'flexConfig',
+    configNames = ('globalConfig', 'localPathConfig', 'parseConfig', 'diaryConfig', 'gridConfig', 'flexConfig',
                    'evaluatorConfig')
     configDict = loadConfigDict(configNames, basePath)
 
