@@ -50,6 +50,7 @@ class DiaryBuilder:
         # dataDay = self.activities.drop('tripID', axis=1)
         # return dataDay
 
+
 class timeDiscretizer:
     def __init__(self, activities: pd.Series, ts: pd.DataFrame, column: str, dt: pd.TimeDelta, method: str):
         """Class for discretization of activities to fixed temporal resolution. Act is
@@ -85,7 +86,7 @@ class timeDiscretizer:
 
         self.quantum = pd.TimeDelta(value=1, unit='min')
         self.dt = dt  # e.g. 15 min
-        self.nQPerDT = dt / self.quantum
+        self.nQPerDT = self.nQPerInterval(self.dt, self.quantum)
 
         self.timeList = self.createTimeList()  # list of all time intervals
         self.weights = None
@@ -104,8 +105,19 @@ class timeDiscretizer:
 
         # FIXME: Change TS to slot
 
+    def nQPerInterval(interval: pd.Timedelta, quantum=pd.Timedelta):
+        quot = interval / quantum
+        quotDay = pd.Timedelta(freq='D') / interval
+        if isinstance(quot, int) and isinstance(quotDay, int):
+            return quot
+        elif isinstance(quot, int):
+            raise(Warning(f'Specified resolution does not fit into a day, There are {quotDay} intervals in a day'))
+        else:
+            raise(ValueError(f'Specified resolution is not a multiple of the pre specified quantum {self.quantum}.
+                             You specified {interval}'))
+
     def createTimeList(self):
-        pass
+        return list(pd.timedelta_range(start='00:00', end='23:59', freq=f'{self.nQPerDT}T'))
 
     def __calcTimeQuantumShare(self, quantumLength: pd.TimeDelta):
         pass
