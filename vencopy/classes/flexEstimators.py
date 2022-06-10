@@ -150,7 +150,7 @@ class FlexEstimator:
             self.isTrip, 'maxBatteryLevelStart'] - firstAct.loc[self.isTrip, 'drain']
         firstAct.loc[self.isTrip, 'maxBatteryLevelEnd'] = firstAct.loc[
             self.isTrip, 'maxBatteryLevelEnd_unlimited'].where(firstAct.loc[
-                self.isTrip, 'maxBatteryLevelEnd_unlimited'] >= 0, other=0)
+                self.isTrip, 'maxBatteryLevelEnd_unlimited'] >= self.lowerBatLev, other=self.lowerBatLev)
         firstAct.loc[self.isTrip, 'residualNeed'] = firstAct.loc[
             self.isTrip, 'maxBatteryLevelEnd_unlimited'].where(firstAct.loc[
                 self.isTrip, 'maxBatteryLevelEnd_unlimited'] < 0, other=0)
@@ -189,7 +189,7 @@ class FlexEstimator:
             multiIdxTrip, 'maxBatteryLevelStart'] - tripActsIdx.loc[multiIdxTrip, 'drain']
         tripActsIdx.loc[multiIdxTrip, 'maxBatteryLevelEnd'] = tripActsIdx.loc[
             multiIdxTrip, 'maxBatteryLevelEnd_unlimited'].where(tripActsIdx.loc[
-                multiIdxTrip, 'maxBatteryLevelEnd_unlimited'] >= 0, other=0)
+                multiIdxTrip, 'maxBatteryLevelEnd_unlimited'] >= self.lowerBatLev, other=self.lowerBatLev)
         tripActsIdx.loc[multiIdxTrip, 'maxResidualNeed'] = tripActsIdx.loc[
             multiIdxTrip, 'maxBatteryLevelEnd_unlimited'].where(tripActsIdx.loc[
                 multiIdxTrip, 'maxBatteryLevelEnd_unlimited'] < 0, other=0)
@@ -293,7 +293,7 @@ class FlexEstimator:
         self.activities.loc[lastTripIdx, 'maxBatteryLevelEnd'] = theoBatLev.where(theoBatLev >= 0, other=0)
 
     def uncontrolledCharging(self):
-        self.activities.loc[~self.activities['tripID'].isna(), 'uncontrolledCharge'] = self.activities[
+        self.activities.loc[~self.activities['parkID'].isna(), 'uncontrolledCharge'] = self.activities[
             'maxBatteryLevelEnd'] - self.activities['maxBatteryLevelStart']
 
     def auxFuelNeed(self):
