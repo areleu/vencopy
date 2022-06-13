@@ -17,19 +17,20 @@ import pandas as pd
 from pathlib import Path
 from profilehooks import profile
 from vencopy.core.dataParsers import ParseMiD, ParseVF, ParseKiD
+from vencopy.core.gridModelers import GridModeler
+
 
 
 class FlexEstimator:
     def __init__(
         self,
         configDict: dict,
-        activityData: pd.DataFrame,
+        activities: pd.DataFrame,
     ):
         self.flexConfig = configDict['flexConfig']
         self.upperBatLev = self.flexConfig['Battery_capacity'] * self.flexConfig['Maximum_SOC']
         self.lowerBatLev = self.flexConfig['Battery_capacity'] * self.flexConfig['Minimum_SOC']
-        self.activitiesIn = activityData
-        self.activities = self.activitiesIn.copy()
+        self.activities = activities.copy()
         self.isTrip = self.activities['tripID'].fillna(0).astype(bool)
         self.isPark = self.activities['parkID'].fillna(0).astype(bool)
         self.isFirstAct = self.activities['isFirstActivity'].fillna(0).astype(bool)
@@ -40,7 +41,7 @@ class FlexEstimator:
                          'maxResidualNeed', 'minResidualNeed', 'maxOvershoot', 'minOvershoot']] = None
 
         # Dummy column to be able to work with numbers, get rid of this later
-        self.activities.loc[self.isPark, 'ratedPower'] = 11
+        # self.activities.loc[self.isPark, 'ratedPower'] = 11
 
     def addNextAndPrevIDs(self):
         self.activities.loc[~self.activities['tripID'].isna(), 'actID'] = self.activities['tripID']
@@ -55,7 +56,7 @@ class FlexEstimator:
 
     # FIXME: Could not be tested yet, replace 'ratedPower' by charging station capacity column
     def maxChargeVolumePerParkingAct(self):
-        self.activities.loc[self.isPark, 'maxChargeVolume'] = self.activities.loc[self.isPark, 'ratedPower'] * \
+        self.activities.loc[self.isPark, 'maxChargeVolume'] = self.activities.loc[self.isPark, 'chargingPower'] * \
             self.activities.loc[self.isPark, 'timedelta'] / pd.Timedelta('1 hour')
 
     @profile(immediate=True)
@@ -305,9 +306,11 @@ class FlexEstimator:
         self.batteryLevelMax()
         self.uncontrolledCharging()
         self.batteryLevelMin()
+        print("Technical flexibility estimation ended")
 
 if __name__ == "__main__":
     from vencopy.utils.globalFunctions import loadConfigDict
+
     basePath = Path(__file__).parent.parent
     configNames = ('globalConfig', 'localPathConfig', 'parseConfig', 'diaryConfig', 'gridConfig', 'flexConfig',
                    'evaluatorConfig')
@@ -321,5 +324,9 @@ if __name__ == "__main__":
     elif datasetID == "VF":
         vpData = ParseVF(configDict=configDict, datasetID=datasetID)
     vpData.process()
-    vpFlex = FlexEstimator(configDict=configDict, activityData=vpData.activities)
+
+    vpGrid = GridModeler(configDict=configDict, datasetID=datasetID, activities=vpData.activities, gridModel='simple')
+    vpGrid.calcGrid()
+
+    vpFlex = FlexEstimator(configDict=configDict, activities=vpGrid.activities)
     vpFlex.estimateTechnicalFlexibility()
