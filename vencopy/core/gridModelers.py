@@ -94,7 +94,7 @@ class GridModeler:
         homeActivities = homeActivities.join(households, on="hhID")
         return homeActivities
 
-    def calcGrid(self):
+    def assignGrid(self):
         """
         Wrapper function for grid assignment. The number of iterations for
         assignGridViaProbabilities() and transactionStartHour() and seed for
@@ -136,4 +136,4 @@ if __name__ == "__main__":
     vpData.process()
 
     vpGrid = GridModeler(configDict=configDict, datasetID=datasetID, activities=vpData.activities, gridModel='probability')
-    vpGrid.calcGrid()
+    vpGrid.assignGrid()

@@ -322,7 +322,7 @@ if __name__ == "__main__":
     vpData.process()
 
     vpGrid = GridModeler(configDict=configDict, datasetID=datasetID, activities=vpData.activities, gridModel='simple')
-    vpGrid.calcGrid()
+    vpGrid.assignGrid()
 
     vpFlex = FlexEstimator(configDict=configDict, activities=vpGrid.activities)
     vpFlex.estimateTechnicalFlexibility()
