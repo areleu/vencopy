@@ -15,6 +15,8 @@ import pandas as pd
 from pathlib import Path
 from vencopy.utils.globalFunctions import loadConfigDict
 from vencopy.core.dataParsers import ParseMiD, ParseKiD, ParseVF
+from vencopy.core.gridModelers import GridModeler
+from vencopy.core.flexEstimators import FlexEstimator
 
 
 class DiaryBuilder:
@@ -23,65 +25,56 @@ class DiaryBuilder:
         self.globalConfig = configDict['globalConfig']
         self.localPathConfig = configDict['localPathConfig']
         self.datasetID = datasetID
-        self.deltaTime = self.diaryConfig['TimeDelta']
+        self.deltaTime = configDict['diaryConfig']['TimeDelta']
         if debug:
-            self.activties = self.activties.loc[0:2000, :]
+            self.activities = activities.loc[0:2000, :]
         else:
-            self.activties = activities.data
-        distributedActivities = TimeDiscretizer(self.deltaTime, self.activties, method="distribute")
+            self.activities = activities.copy()
+        # self.distributedActivtiesSeries = self.activities.loc[:, 'drain']
+        # self.selectedActivtiesSeries = self.activities.loc[:, 'chargingPower']
+        distributedActivities = TimeDiscretizer(
+            activities=self.activities, dt=self.deltaTime, method="distribute")
+        self.drain = distributedActivities.discretise(distributedActivities, column="drain")
+        selectedActivities = TimeDiscretizer(
+            activities=self.activities, dt=self.deltaTime, method="distribute")
         # FIXME: check column names
-        drain = distributedActivities(distributedActivities, column="drain")
-        selectedActivities = TimeDiscretizer(self.deltaTime, self.activties, method="distribute")
-        # FIXME: check column names
-        chargingPower = selectedActivities(distributedActivities, column="chargingPower")
-        minBatteryLevel = selectedActivities(distributedActivities, column="minBatLev")
-        maxBatteryLevel = selectedActivities(distributedActivities, column="maxBatLev")
-        self.activties = self.mergeTrips()
+        self.chargingPower = selectedActivities.discretise(distributedActivities, column="chargingPower")
+        # self.minBatteryLevel = selectedActivities.discretise(distributedActivities, column="minBatLev")
+        # self.maxBatteryLevel = selectedActivities.discretise(distributedActivities, column="maxBatLev")
 
-    def mergeTrips(self):
+
+class TimeDiscretizer:
+    def __init__(self, activities: pd.Series, dt, method: str):
         """
-        Merge multiple individual trips into one diary consisting of multiple trips
-
-        :param activities: Input trip data with specified time resolution
-        :return: Merged trips diaries
-        """
-        print("Merging trips")
-        # dataDay = self.activities.groupby(['genericID']).sum()
-        # dataDay = self.activities.drop('tripID', axis=1)
-        # return dataDay
-
-
-class timeDiscretizer:
-    def __init__(self, activities: pd.Series, ts: pd.DataFrame, column: str, dt: pd.TimeDelta, method: str):
-        """Class for discretization of activities to fixed temporal resolution. Act is
-        a pandas Series with a unique ID in the index, ts is a pandas dataframe with two 
-        columns: timestampStart and timestampEnd, dt is a pandas TimeDelta object 
-        specifying the fixed resolution that the discretization should output. Method 
+        Class for discretization of activities to fixed temporal resolution. Act is
+        a pandas Series with a unique ID in the index, ts is a pandas dataframe with two
+        columns: timestampStart and timestampEnd, dt is a pandas TimeDelta object
+        specifying the fixed resolution that the discretization should output. Method
         specifies how the discretization should be carried out. 'Distribute' assumes
-        act provides a divisible variable (energy, distance etc.) and distributes this 
+        act provides a divisible variable (energy, distance etc.) and distributes this
         depending on the time share of the activity within the respective time interval.
-        'Select' assumes an undivisible variable such as power is given and selects 
-        the values for the given timestamps. For now: If start or end timestamp of an 
-        activity exactly hits the middle of a time interval (dt/2), the value is allocated 
+        'Select' assumes an undivisible variable such as power is given and selects
+        the values for the given timestamps. For now: If start or end timestamp of an
+        activity exactly hits the middle of a time interval (dt/2), the value is allocated
         if its ending but not if its starting (value set to 0). For dt=30 min, a parking
         activity ending at 9:15 with a charging availability of 11 kW, 11 kW will be assigned
         to the last slot (9:00-9:30) whereas if it had started at 7:45, the slot (7:30-8:00)
         is set to 0 kW.
-        The quantum is the shortest possible time interval for the discretizer, hard 
+        The quantum is the shortest possible time interval for the discretizer, hard
         coded in the init and given as a pandas.TimeDelta. Thus if 1 minute is selected
-        discretization down to resolutions of seconds are not possible. 
+        discretization down to resolutions of seconds are not possible.
 
         Args:
             act (pd.Series): _description_
             column (str): String specifying the column of the activities data set that should be discretized
             dt (pd.TimeDelta): _description_
-            method (str): The discretization method. Must be one of 'distribute' or 'select'. 
+            method (str): The discretization method. Must be one of 'distribute' or 'select'.
         """
-        self.act = act
+        self.act = activities
 
         # TBD if we wanna do it this way
-        self.start = act['timestampStart']
-        self.end = act['timestampEnd']
+        self.start = self.act['timestampStart']
+        self.end = self.act['timestampEnd']
         self.method = method
 
         self.quantum = pd.TimeDelta(value=1, unit='min')
@@ -119,7 +112,7 @@ class timeDiscretizer:
     def createTimeList(self):
         return list(pd.timedelta_range(start='00:00', end='23:59', freq=f'{self.nQPerDT}T'))
 
-    def __calcTimeQuantumShare(self, quantumLength: pd.TimeDelta):
+    def __calcTimeQuantumShare(self, quantumLength):
         pass
 
     def discreteStructure(self, dt):
@@ -178,14 +171,31 @@ class timeDiscretizer:
     def isLastTSNotFull(self):
         pass
 
-    def isTSRelevant(self, timedelta: pd.TimeDelta):
+    def isTSRelevant(self, timedelta):
         return timedelta / self.quantum >= self.nQPerDT / 2
 
     def allocate(self):
         pass
 
-    def discretize(col: str):
+    def discretise(col: str):
         pass
+
+    def mergeTrips(self):
+        """
+        Merge multiple individual trips into one diary consisting of multiple trips
+
+        :param activities: Input trip data with specified time resolution
+        :return: Merged trips diaries
+        """
+        print("Merging trips")
+        # dataDay = self.activities.groupby(['genericID']).sum()
+        # dataDay = self.activities.drop('tripID', axis=1)
+        # return dataDay
+
+    def createDiaries(self):
+        self.mergeTrips()
+        print(f'Diary creation completed. There are {len(self.activities)} diries')
+
 
 
 class FillHourValues:
@@ -237,4 +247,11 @@ if __name__ == '__main__':
         vpData = ParseVF(configDict=configDict, datasetID=datasetID)
     vpData.process()
 
-    vpDiary = DiaryBuilder(configDict=configDict, activities=vpData, debug=False)
+    vpGrid = GridModeler(configDict=configDict, datasetID=datasetID, activities=vpData.activities, gridModel='simple')
+    vpGrid.assignGrid()
+
+    vpFlex = FlexEstimator(configDict=configDict, activities=vpGrid.activities)
+    vpFlex.estimateTechnicalFlexibility()
+
+    vpDiary = DiaryBuilder(configDict=configDict, activities=vpFlex.activities, debug=False)
+    vpDiary.createDiaries()
