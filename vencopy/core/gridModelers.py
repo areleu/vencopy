@@ -28,11 +28,10 @@ class GridModeler:
         self.flexConfig = configDict['flexConfig']
         self.localPathConfig = configDict['localPathConfig']
         self.gridModel = gridModel
-        self.activities = activities.data
+        self.activities = activities
         self.gridAvailabilitySimple = self.gridConfig['chargingInfrastructureMappings']
         self.gridAvailabilityProb = self.gridConfig['gridAvailabilityDistribution']
         self.chargeAvailability = None
-        self.calcGrid()
 
     def assignGridViaPurposes(self):
         """
@@ -136,4 +135,5 @@ if __name__ == "__main__":
         vpData = ParseVF(configDict=configDict, datasetID=datasetID)
     vpData.process()
 
-    vpGrid = GridModeler(configDict=configDict, datasetID=datasetID, activities=vpData, gridModel='probability')
+    vpGrid = GridModeler(configDict=configDict, datasetID=datasetID, activities=vpData.activities, gridModel='probability')
+    vpGrid.calcGrid()
