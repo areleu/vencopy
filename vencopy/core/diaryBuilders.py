@@ -116,8 +116,7 @@ class TimeDiscretizer:
         pass
 
     def discreteStructure(self, dt):
-        self.discrete = pd.DataFrame(index=self.act.index,
-                                     columns=self.timeList)
+        self.discrete = pd.DataFrame(index=self.act.index, columns=self.timeList)
 
     def calcNFullTS(self):
         self.act['delta'] = self.act['timestampEnd'] - self.act['timestampStart']

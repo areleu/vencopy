@@ -55,7 +55,7 @@ class FlexEstimator:
         self.activities.loc[self.isPark, 'maxChargeVolume'] = self.activities.loc[self.isPark, 'chargingPower'] * \
             self.activities.loc[self.isPark, 'timedelta'] / pd.Timedelta('1 hour')
 
-    @profile(immediate=True)
+    # @profile(immediate=True)
     def batteryLevelMax(self):
         """
         Calculate the maximum battery level at the beginning and end of each activity. This represents the case of
@@ -99,7 +99,7 @@ class FlexEstimator:
 
         self.activities = actTemp.sort_values(by=['hhPersonID', 'actID', 'parkID'])
 
-    @profile(immediate=True)
+    # @profile(immediate=True)
     def batteryLevelMin(self):
         """
         Calculate the minimum battery level at the beginning and end of each activity. This represents the case of
@@ -277,16 +277,16 @@ class FlexEstimator:
         return parkActsIdx.reset_index()
 
     # DEPRECATED
-    def calcMaxBatLastAct(self):
-        """Calculate maximum battery levels for all last activities be it parking or trips
-        """
-        lastTripIdx = (self.isTrip) & (self.isLastAct)
-        lastTripIdx = lastTripIdx.loc[lastTripIdx].index
-        self.activities.loc[lastTripIdx, 'maxBatteryLevelStart'] = self.activities.loc[lastTripIdx - 1,
-                                                                                       'maxBatteryLevelEnd']
-        theoBatLev = self.activities.loc[lastTripIdx, 'maxBatteryLevelStart'] - self.activities.loc[lastTripIdx,
-                                                                                                    'drain']
-        self.activities.loc[lastTripIdx, 'maxBatteryLevelEnd'] = theoBatLev.where(theoBatLev >= 0, other=0)
+    # def calcMaxBatLastAct(self):
+    #     """Calculate maximum battery levels for all last activities be it parking or trips
+    #     """
+    #     lastTripIdx = (self.isTrip) & (self.isLastAct)
+    #     lastTripIdx = lastTripIdx.loc[lastTripIdx].index
+    #     self.activities.loc[lastTripIdx, 'maxBatteryLevelStart'] = self.activities.loc[lastTripIdx - 1,
+    #                                                                                    'maxBatteryLevelEnd']
+    #     theoBatLev = self.activities.loc[lastTripIdx, 'maxBatteryLevelStart'] - self.activities.loc[lastTripIdx,
+    #                                                                                                 'drain']
+    #     self.activities.loc[lastTripIdx, 'maxBatteryLevelEnd'] = theoBatLev.where(theoBatLev >= 0, other=0)
 
     def uncontrolledCharging(self):
         self.activities.loc[~self.activities['parkID'].isna(), 'uncontrolledCharge'] = self.activities[
