@@ -40,9 +40,6 @@ class FlexEstimator:
                          'minBatteryLevelEnd', 'maxBatteryLevelEnd_unlimited', 'minBatteryLevelEnd_unlimited',
                          'maxResidualNeed', 'minResidualNeed', 'maxOvershoot', 'minOvershoot']] = None
 
-        # Dummy column to be able to work with numbers, get rid of this later
-        # self.activities.loc[self.isPark, 'ratedPower'] = 11
-
     def addNextAndPrevIDs(self):
         self.activities.loc[~self.activities['tripID'].isna(), 'actID'] = self.activities['tripID']
         self.activities.loc[~self.activities['parkID'].isna(), 'actID'] = self.activities['parkID']
@@ -54,7 +51,6 @@ class FlexEstimator:
     def drain(self):
         self.activities['drain'] = self.activities['tripDistance'] * self.flexConfig['Electric_consumption'] / 100
 
-    # FIXME: Could not be tested yet, replace 'ratedPower' by charging station capacity column
     def maxChargeVolumePerParkingAct(self):
         self.activities.loc[self.isPark, 'maxChargeVolume'] = self.activities.loc[self.isPark, 'chargingPower'] * \
             self.activities.loc[self.isPark, 'timedelta'] / pd.Timedelta('1 hour')
