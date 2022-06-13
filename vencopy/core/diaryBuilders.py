@@ -71,10 +71,6 @@ class TimeDiscretizer:
             method (str): The discretization method. Must be one of 'distribute' or 'select'.
         """
         self.act = activities
-
-        # TBD if we wanna do it this way
-        self.start = self.act['timestampStart']
-        self.end = self.act['timestampEnd']
         self.method = method
 
         self.quantum = pd.TimeDelta(value=1, unit='min')
@@ -85,26 +81,30 @@ class TimeDiscretizer:
         self.weights = None
 
         # Column definitions
-        self.act['delta'] = None
-        self.act['nFullTS'] = None  # FIXME: switch TS to time intervals
+        self.act['delta'] = self.act['timestampEnd'] - self.act['timestampStart']
+
         self.act['nQFirst'] = None
         self.act['nQLast'] = None
-        self.act['wFullTS'] = None  # FIXME: Maybe not needed
+        self.act['nFullSlots'] = None
+        self.act['nQFull'] = None
+        self.__calcTimeQuantumShares()
+
         self.act['wFirstTS'] = None
         self.act['wLastTS'] = None
         self.act['valFullTS'] = None
         self.act['valFirstTS'] = None
         self.act['valLastTS'] = None
 
-        # FIXME: Change TS to slot
-
-    def nQPerInterval(interval: pd.Timedelta, quantum=pd.Timedelta):
+    def nQPerInterval(self, interval: pd.Timedelta, quantum=pd.Timedelta):
+        # Check if interval is an even multiple of quantum
         quot = interval / quantum
+
+        # Check if a full number of intervals fits into one day
         quotDay = pd.Timedelta(freq='D') / interval
         if isinstance(quot, int) and isinstance(quotDay, int):
             return quot
         elif isinstance(quot, int):
-            raise(Warning(f'Specified resolution does not fit into a day, There are {quotDay} intervals in a day'))
+            raise(ValueError(f'Specified resolution does not fit into a day, There are {quotDay} intervals in a day'))
         else:
             raise(ValueError(f'Specified resolution is not a multiple of the pre specified quantum {self.quantum}.'
                              f'You specified {interval}'))
@@ -112,29 +112,39 @@ class TimeDiscretizer:
     def createTimeList(self):
         return list(pd.timedelta_range(start='00:00', end='23:59', freq=f'{self.nQPerDT}T'))
 
-    def __calcTimeQuantumShare(self, quantumLength):
-        pass
-
     def discreteStructure(self, dt):
         self.discrete = pd.DataFrame(index=self.act.index, columns=self.timeList)
 
+    def getFirstSlot(self):
+        tsStart = self.act['timestampStart'].apply(lambda x: pd.Timestamp(year=x.year, month=x.month, day=x.day))
+        self.act['dailyTimeDeltaStart'] = self.act['timestampStart'] - tsStart
+        diff = self.act['dailyTimeDeltaStart'].apply(lambda x: x - self.timeList.to_series())
+
+    def getLastSlot(self):
+        tsEnd = self.act['timestampEnd'].apply(lambda x: pd.Timestamp(year=x.year, month=x.month, day=x.day))
+        self.act['dailyTimeDeltaEnd'] = self.act['timestampEnd'] - tsEnd
+
+    def __calcTimeQuantumShares(self, quantumLength: pd.TimeDelta):
+        self.act['nQFirst'] = self.calcFirstSlotQuants()
+        self.act['nQLast'] = self.calcLastSlotQuants()
+        self.act['nQFirst'] = self.calcNFullSlots()
+
+    def calcFirstSlotQuants():
+        pass
+
     def calcNFullTS(self):
-        self.act['delta'] = self.act['timestampEnd'] - self.act['timestampStart']
-        self.act['nFullTS'] = int(self.act['delta'] / self.act['dt'])  # FIXME: round
+        # FIXME: Correct after first and last slot shares are calculated
+        self.act['nFullSlots'] = int(self.act['delta'] / self.act['dt'])  # FIXME: round
 
     def calcWeights(self):
-        self.act['wFullTS'] = self.calculateFullTSWeight()  # FIXME: Probably not needed
-        self.act['wFirstTS'] = self.calculateFirstTSWeight()
-        self.act['wLastTS'] = self.calculateLastTSWeight()
-        self.weights = self.act.loc[:, ['wFullTS', 'wFirstTS', 'wLastTS']]
+        self.act['wFirstSlot'] = self.calculateFirstSlotWeight()
+        self.act['wLastSlot'] = self.calculateLastSlotWeight()
+        self.weights = self.act.loc[:, ['wFullSlots', 'wFirstSlot', 'wLastSlot']]
 
-    def calcFullTSWeight(self):
+    def calcFirstSlotsWeight(self):
         pass
 
-    def calcFirstTSWeight(self):
-        pass
-
-    def calcLastTSWeight(self):
+    def calcLastSlotWeight(self):
         pass
 
     def calcAbsoluteTSValue(self):
@@ -147,30 +157,30 @@ class TimeDiscretizer:
                 f'Specified method {self.method} is not implemented please specify "distribute" or "select".'))
 
     def valueDistribute(self):
-        wSum = self.act['wFullTS'] * self.act['nFullTS'] + self.act['wFirstTS'] + self.act['wLastTS']
+        wSum = self.act['wFullSlots'] * self.act['nFullSlots'] + self.act['wFirstSlot'] + self.act['wLastSlot']
         val = self.act['value']
-        self.act['valfullTS'] = self.act['wFullTS'] / wSum * val
-        self.act['valfirstTS'] = self.act['wFirstTS'] * val
-        self.act['vallastTS'] = self.act['wLastTS'] * val
+        self.act['valfullSlots'] = self.act['wFullSlot'] / wSum * val
+        self.act['valfirstSlot'] = self.act['wFirstSlot'] * val
+        self.act['vallastSlot'] = self.act['wLastSlot'] * val
 
     def valueSelect(self):
-        self.act['valFullTS'] = self.act['value']
-        if self.firstTSNotFull():  # FIXME: make firstTSNotFull part of another checking function
-            self.act['valFirstTS'] = self.act['value']
+        self.act['valFullSlots'] = self.act['value']
+        if self.firstSlotNotFull():  # FIXME: make firstSlotNotFull part of another checking function
+            self.act['valFirstSlot'] = self.act['value']
         else:
-            self.act['valFirstTS'] = 0
-        if self.lastTSNotFull():
-            self.act['valLastTS'] = self.act['value']
+            self.act['valFirstSlot'] = 0
+        if self.lastSlotNotFull():
+            self.act['valLastSlot'] = self.act['value']
         else:
-            self.act['valLastTS'] = 0
+            self.act['valLastSlot'] = 0
 
-    def isFirstTSNotFull(self):
+    def isFirstSlotNotFull(self):
         pass
 
-    def isLastTSNotFull(self):
+    def isLastSlotNotFull(self):
         pass
 
-    def isTSRelevant(self, timedelta):
+    def isSlotRelevant(self, timedelta):
         return timedelta / self.quantum >= self.nQPerDT / 2
 
     def allocate(self):
@@ -194,7 +204,6 @@ class TimeDiscretizer:
     def createDiaries(self):
         self.mergeTrips()
         print(f'Diary creation completed. There are {len(self.activities)} diries')
-
 
 
 class FillHourValues:
