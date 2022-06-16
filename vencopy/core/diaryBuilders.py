@@ -34,13 +34,14 @@ class DiaryBuilder:
             self.activities = activities.copy()
         distributedActivities = TimeDiscretiser(
             activities=self.activities, dt=self.deltaTime, method="distribute")
-        self.drain = distributedActivities.discretise(distributedActivities, column="drain")
-        self.uncontrolledCharge = distributedActivities.discretise(distributedActivities, column="uncontrolledCharge")
-        # self.minBatteryLevel = distributedActivities.discretise(distributedActivities, column="minBatLev")
-        # self.maxBatteryLevel = distributedActivities.discretise(distributedActivities, column="maxBatLev")
+        self.drain = distributedActivities.discretise(column="drain")
+        # self.uncontrolledCharge = distributedActivities.discretise(distributedActivities, column="uncontrolledCharge")
+        # self.auxiliaryFuel = distributedActivities.discretise(distributedActivities, column="auxFuel")
         selectedActivities = TimeDiscretiser(
             activities=self.activities, dt=self.deltaTime, method="select")
         self.chargingPower = selectedActivities.discretise(distributedActivities, column="chargingPower")
+        # self.minBatteryLevel = selectedActivities.discretise(distributedActivities, column="minBatLev")
+        # self.maxBatteryLevel = selectedActivities.discretise(distributedActivities, column="maxBatLev")
 
 
 
@@ -75,7 +76,6 @@ class TimeDiscretiser:
         self.method = method
         self.quantum = pd.Timedelta(value=1, unit='min')
         self.dt = pd.Timedelta(value=dt, unit='min')  # e.g. 15 min
-        self.nTimeSlots = self.nSlotsPerInterval(interval=self.dt)
         # list of all time intervals
         # idx = pd.DatetimeIndex(start='00:00:00', end='23:59:00', freq=f'{self.nTimeSlots}T')
         # FIXME: right way to create list? do we want timedelta or datetime?
@@ -84,38 +84,47 @@ class TimeDiscretiser:
         # Column definitions
         # FIXME: drop days count in delta? only keep HH:MM:SS?
         self.activities['delta'] = self.activities['timestampEnd'] - self.activities['timestampStart']
+        self.activities['nQuants'] = None
         self.activities['nQFirst'] = None
         self.activities['nQLast'] = None
         self.activities['nFullSlots'] = None
         self.activities['nPartialSlots'] = None
         self.activities['nQFull'] = None
-        self.calcTimeQuantumShares()
         self.activities['wFirstTS'] = None
         self.activities['wLastTS'] = None
         self.activities['valFullTS'] = None
         self.activities['valFirstTS'] = None
         self.activities['valLastTS'] = None
+        self.identifySlots()
+        self.allocate()
+
+    
+    def identifySlots(self):
+        self.nTimeSlots = self.nSlotsPerInterval(interval=self.dt)
+        self.calcTimeQuantumShares()
+
 
     def nSlotsPerInterval(self, interval: pd.Timedelta):
-        # Check if interval is an integer multiple of quantum
-        # the minimum resolution is 1 min, case for resolution below 1 min
-        if interval.seconds/60 < self.quantum.seconds/60:
-            raise(ValueError(f'The specified resolution is not a multiple of {self.quantum} minute, '
-                             f'which is the minmum possible resolution'))
-        # Check if an integer number of intervals fits into one day (15 min equals 96 intervals)
-        quot = (interval.seconds/3600/24)
-        quotDay = pd.Timedelta(value=24, unit='h') / interval
-        if ((1/quot) % int(1/quot) == 0):  # or (quot % int(1) == 0):
-            return quotDay
-        else:
-            raise(ValueError(f'The specified resolution does not fit into a day.'
-                             f'There cannot be {quotDay} finite intervals in a day'))
+            # Check if interval is an integer multiple of quantum
+            # the minimum resolution is 1 min, case for resolution below 1 min
+            if interval.seconds/60 < self.quantum.seconds/60:
+                raise(ValueError(f'The specified resolution is not a multiple of {self.quantum} minute, '
+                                 f'which is the minmum possible resolution'))
+            # Check if an integer number of intervals fits into one day (15 min equals 96 intervals)
+            quot = (interval.seconds/3600/24)
+            quotDay = pd.Timedelta(value=24, unit='h') / interval
+            if ((1/quot) % int(1/quot) == 0):  # or (quot % int(1) == 0):
+                return quotDay
+            else:
+                raise(ValueError(f'The specified resolution does not fit into a day.'
+                                 f'There cannot be {quotDay} finite intervals in a day'))
 
+    
     def calcTimeQuantumShares(self):
         self.activities['nSlots'] = (self.activities['delta'] / self.dt)
+        self.activities['nFullSlots'] = self.calcNFullSlots()
         # self.activities['nQFirst'] = self.calcFirstSlotQuants()
         # self.activities['nQLast'] = self.calcLastSlotQuants()
-        # self.activities['nQFirst'] = self.calcNFullSlots()
         # self.activities = self.calcShare()
 
     def calcFirstSlotQuants():  # needed?
@@ -135,7 +144,7 @@ class TimeDiscretiser:
         #         self.activities['nPartialSlots'][i] = round((self.activities['delta'][i] / self.dt),2)
         # return self.activities
 
-    def discretise(activities, column: str):
+    def discretise(self, activities, column: str):
         self.discreteStructure()
         # add all other funtions that are not called in the init
         self.allocate()
