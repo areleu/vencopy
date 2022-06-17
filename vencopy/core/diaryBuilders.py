@@ -11,8 +11,7 @@ if __package__ is None or __package__ == '':
     from os import path
     sys.path.append(path.dirname(path.dirname(path.dirname(__file__))))
 
-import math
-
+import numpy as np
 import pandas as pd
 from pathlib import Path
 from vencopy.utils.globalFunctions import loadConfigDict
@@ -29,19 +28,19 @@ class DiaryBuilder:
         self.datasetID = datasetID
         self.deltaTime = configDict['diaryConfig']['TimeDelta']
         if debug:
-            self.activities = activities.loc[0:2000, :]
+            self.activities = activities.loc[0:20, :]
         else:
             self.activities = activities.copy()
         distributedActivities = TimeDiscretiser(
             activities=self.activities, dt=self.deltaTime, method="distribute")
         self.drain = distributedActivities.discretise(column="drain")
-        # self.uncontrolledCharge = distributedActivities.discretise(distributedActivities, column="uncontrolledCharge")
-        # self.auxiliaryFuel = distributedActivities.discretise(distributedActivities, column="auxFuel")
+        self.uncontrolledCharge = distributedActivities.discretise(distributedActivities, column="uncontrolledCharge")
+        self.auxiliaryFuel = distributedActivities.discretise(distributedActivities, column="auxFuel")
         selectedActivities = TimeDiscretiser(
             activities=self.activities, dt=self.deltaTime, method="select")
         self.chargingPower = selectedActivities.discretise(distributedActivities, column="chargingPower")
-        # self.minBatteryLevel = selectedActivities.discretise(distributedActivities, column="minBatLev")
-        # self.maxBatteryLevel = selectedActivities.discretise(distributedActivities, column="maxBatLev")
+        self.minBatteryLevel = selectedActivities.discretise(distributedActivities, column="minBatLev")
+        self.maxBatteryLevel = selectedActivities.discretise(distributedActivities, column="maxBatLev")
 
 
 
@@ -79,78 +78,44 @@ class TimeDiscretiser:
         # list of all time intervals
         # idx = pd.DatetimeIndex(start='00:00:00', end='23:59:00', freq=f'{self.nTimeSlots}T')
         # FIXME: right way to create list? do we want timedelta or datetime?
-        self.timeList = list(pd.timedelta_range(start='00:00:00', end='23:59:00', freq=f'{self.nTimeSlots}T'))  
-        self.weights = None
+        self.nTimeSlots = int(self.nSlotsPerInterval(interval=self.dt))
+        self.timeList = list(range(self.nTimeSlots))
+        # self.timeList = list(pd.timedelta_range(start='00:00:00', end='23:59:00', freq=f'{self.nTimeSlots}T'))  
         # Column definitions
         # FIXME: drop days count in delta? only keep HH:MM:SS?
         self.activities['delta'] = self.activities['timestampEnd'] - self.activities['timestampStart']
-        self.activities['nQuants'] = None
-        self.activities['nQFirst'] = None
-        self.activities['nQLast'] = None
+        self.activities['nQuantaPerSlot'] = None
+        self.activities['valQuantum'] = None
         self.activities['nFullSlots'] = None
         self.activities['nPartialSlots'] = None
-        self.activities['nQFull'] = None
-        self.activities['wFirstTS'] = None
-        self.activities['wLastTS'] = None
-        self.activities['valFullTS'] = None
-        self.activities['valFirstTS'] = None
-        self.activities['valLastTS'] = None
+        self.activities['nQuantaFullSlot'] = None
+        self.activities['nQuantLast'] = None
+        # self.activities['nQFirst'] = None
+        self.activities['valFullSlot'] = None
+        self.activities['valLastSLot'] = None
+        # self.activities['valFirstSlot'] = None
         self.identifySlots()
-        self.allocate()
-
-    
-    def identifySlots(self):
-        self.nTimeSlots = self.nSlotsPerInterval(interval=self.dt)
-        self.calcTimeQuantumShares()
+        # self.allocate()
 
 
     def nSlotsPerInterval(self, interval: pd.Timedelta):
-            # Check if interval is an integer multiple of quantum
-            # the minimum resolution is 1 min, case for resolution below 1 min
-            if interval.seconds/60 < self.quantum.seconds/60:
-                raise(ValueError(f'The specified resolution is not a multiple of {self.quantum} minute, '
-                                 f'which is the minmum possible resolution'))
-            # Check if an integer number of intervals fits into one day (15 min equals 96 intervals)
-            quot = (interval.seconds/3600/24)
-            quotDay = pd.Timedelta(value=24, unit='h') / interval
-            if ((1/quot) % int(1/quot) == 0):  # or (quot % int(1) == 0):
-                return quotDay
-            else:
-                raise(ValueError(f'The specified resolution does not fit into a day.'
-                                 f'There cannot be {quotDay} finite intervals in a day'))
+        # Check if interval is an integer multiple of quantum
+        # the minimum resolution is 1 min, case for resolution below 1 min
+        if interval.seconds/60 < self.quantum.seconds/60:
+            raise(ValueError(f'The specified resolution is not a multiple of {self.quantum} minute, '
+                             f'which is the minmum possible resolution'))
+        # Check if an integer number of intervals fits into one day (15 min equals 96 intervals)
+        quot = (interval.seconds/3600/24)
+        quotDay = pd.Timedelta(value=24, unit='h') / interval
+        if ((1/quot) % int(1/quot) == 0):  # or (quot % int(1) == 0):
+            return quotDay
+        else:
+            raise(ValueError(f'The specified resolution does not fit into a day.'
+                             f'There cannot be {quotDay} finite intervals in a day'))
 
-    
-    def calcTimeQuantumShares(self):
-        self.activities['nSlots'] = (self.activities['delta'] / self.dt)
-        self.activities['nFullSlots'] = self.calcNFullSlots()
-        # self.activities['nQFirst'] = self.calcFirstSlotQuants()
-        # self.activities['nQLast'] = self.calcLastSlotQuants()
-        # self.activities = self.calcShare()
 
-    def calcFirstSlotQuants():  # needed?
-        # number of quants for slot
+    def identifySlots(self):
         pass
-
-    def calcLastSlotQuants():  # needed?
-        pass
-
-    def calcNFullSlots(self):
-        self.activities['nFullSlots'] = math.floor(self.activities['delta'] / self.dt)
-        # FIXME: Correct after first and last slot shares are calculated
-        # for i in range(len(self.activities)):
-        #     if ((self.activities['delta'][i] / self.dt).is_integer()):
-        #         self.activities['nFullSlots'][i] = (self.activities['delta'][i] / self.dt)
-        #     else:
-        #         self.activities['nPartialSlots'][i] = round((self.activities['delta'][i] / self.dt),2)
-        # return self.activities
-
-    def discretise(self, activities, column: str):
-        self.discreteStructure()
-        # add all other funtions that are not called in the init
-        self.allocate()
-
-    def discreteStructure(self, dt):
-        self.discrete = pd.DataFrame(index=self.activities.index, columns=self.timeList)
 
     def getFirstSlot(self):
         tsStart = self.activities['timestampStart'].apply(lambda x: pd.Timestamp(year=x.year, month=x.month, day=x.day))
@@ -161,16 +126,16 @@ class TimeDiscretiser:
         tsEnd = self.activities['timestampEnd'].apply(lambda x: pd.Timestamp(year=x.year, month=x.month, day=x.day))
         self.activities['dailyTimeDeltaEnd'] = self.activities['timestampEnd'] - tsEnd
 
-    def calcWeights(self):
-        self.activities['wFirstSlot'] = self.calculateFirstSlotWeight()
-        self.activities['wLastSlot'] = self.calculateLastSlotWeight()
-        self.weights = self.activities.loc[:, ['wFullSlots', 'wFirstSlot', 'wLastSlot']]
 
-    def calcFirstSlotsWeight(self):
-        pass
+    def discretise(self, column: str):
+        self.columnToDiscretise = column
+        self.discreteStructure()
+        # add all other funtions that are not called in the init
+        self.allocate()
 
-    def calcLastSlotWeight(self):
-        pass
+
+    def discreteStructure(self):
+        self.discrete = pd.DataFrame(index=self.activities.index, columns=self.timeList)
 
     def allocate(self):
         # wrapper for method:
@@ -183,31 +148,64 @@ class TimeDiscretiser:
                 f'Specified method {self.method} is not implemented please specify "distribute" or "select".'))
 
     def valueDistribute(self):
-        wSum = self.activities['wFullSlots'] * self.activities['nFullSlots'] + self.activities['wFirstSlot'] + self.activities['wLastSlot']
-        val = self.activities['value']
-        self.activities['valfullSlots'] = self.activities['wFullSlot'] / wSum * val
-        self.activities['valfirstSlot'] = self.activities['wFirstSlot'] * val
-        self.activities['vallastSlot'] = self.activities['wLastSlot'] * val
+        self.activities['nSlots'] = self.activities['delta'] / self.dt
+        self.activities['nFullSlots'] = np.floor(self.activities['nSlots'])
+        self.activities['nPartialSlots'] = np.ceil((self.activities['nSlots'])-self.activities['nFullSlots'])
+        self.activities['nQuanta'] = (self.activities['delta'] / np.timedelta64(1, 'm')) / (self.quantum.seconds/60)
+        self.activities['valQuantum'] = self.activities[self.columnToDiscretise] / self.activities['nQuanta']
+        self.activities['valFullSlot'] = (self.activities['valQuantum'] * (self.dt.seconds/60)).round(6)
+        self.activities['valLastSlot'] = (self.activities[self.columnToDiscretise] - (self.activities['valFullSlot']*self.activities['nFullSlots'])).round(6)
+        # wSum = self.activities['wFullSlots'] * self.activities['nFullSlots'] + self.activities['wFirstSlot'] + self.activities['wLastSlot']
 
     def valueSelect(self):
-        self.activities['valFullSlots'] = self.activities['value']
-        if self.firstSlotNotFull():  # FIXME: make firstSlotNotFull part of another checking function
-            self.activities['valFirstSlot'] = self.activities['value']
-        else:
-            self.activities['valFirstSlot'] = 0
-        if self.lastSlotNotFull():
-            self.activities['valLastSlot'] = self.activities['value']
-        else:
-            self.activities['valLastSlot'] = 0
+        self.activities['valFullSlot'] = self.activities[self.columnToDiscretise]
+        self.activities['valLastSLot'] = self.activities[self.columnToDiscretise]
+        # self.activities['valFullSlots'] = self.activities['value']
+        # if self.firstSlotNotFull():  # FIXME: make firstSlotNotFull part of another checking function
+        #     self.activities['valFirstSlot'] = self.activities['value']
+        # else:
+        #     self.activities['valFirstSlot'] = 0
+        # if self.lastSlotNotFull():
+        #     self.activities['valLastSlot'] = self.activities['value']
+        # else:
+        #     self.activities['valLastSlot'] = 0
 
-    def isFirstSlotNotFull(self):
-        pass
+    # def calcTimeQuantumShares(self):
+    #     self.activities['nSlots'] = (self.activities['delta'] / self.dt)
+    #     self.activities['nFullSlots'] = self.calcNFullSlots()
+    #     # self.activities['nQFirst'] = self.calcFirstSlotQuants()
+    #     # self.activities['nQLast'] = self.calcLastSlotQuants()
+    #     # self.activities = self.calcShare()
+ 
+    # def calcFirstSlotQuants():  # needed?
+    #     # number of quants for slot
+    #     pass
 
-    def isLastSlotNotFull(self):
-        pass
+    # def calcLastSlotQuants():  # needed?
+    #     pass
 
-    def isSlotRelevant(self, timedelta):
-        return timedelta / self.quantum >= self.nQPerDT / 2
+    # def calcNFullSlots(self):
+    #     self.activities['nFullSlots'] = np.floor(self.activities['delta'] / self.dt)
+
+    # def calcWeights(self):
+    #     self.activities['wFirstSlot'] = self.calculateFirstSlotWeight()
+    #     self.activities['wLastSlot'] = self.calculateLastSlotWeight()
+    #     self.weights = self.activities.loc[:, ['wFullSlots', 'wFirstSlot', 'wLastSlot']]
+
+    # def calcFirstSlotsWeight(self):
+    #     pass
+
+    # def calcLastSlotWeight(self):
+    #     pass
+ 
+    # def isFirstSlotNotFull(self):
+    #     pass
+ 
+    # def isLastSlotNotFull(self):
+    #     pass
+
+    # def isSlotRelevant(self, timedelta):
+    #     return timedelta / self.quantum >= self.nQPerDT / 2
 
     
 
@@ -220,7 +218,7 @@ class TimeDiscretiser:
         """
         print("Merging single dataframe entries into vehicle trip diaries.")
         # dataDay = self.activities.groupby(['genericID']).sum()
-        # dataDay = self.activities.drop('tripID', axis=1)
+        # dataDay = self.activities.drop(['tripID','parkID'], axis=1)
         # return dataDay
 
     def createDiaries(self):
@@ -283,5 +281,5 @@ if __name__ == '__main__':
     vpFlex = FlexEstimator(configDict=configDict, activities=vpGrid.activities)
     vpFlex.estimateTechnicalFlexibility()
 
-    vpDiary = DiaryBuilder(configDict=configDict, activities=vpFlex.activities, debug=False)
+    vpDiary = DiaryBuilder(configDict=configDict, activities=vpFlex.activities, debug=True)
     vpDiary.createDiaries()
