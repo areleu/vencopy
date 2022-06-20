@@ -43,7 +43,6 @@ class DiaryBuilder:
         self.maxBatteryLevel = selectedActivities.discretise(distributedActivities, column="maxBatLev")
 
 
-
 class TimeDiscretiser:
     def __init__(self, activities, dt, method: str):
         """
@@ -78,9 +77,8 @@ class TimeDiscretiser:
         # list of all time intervals
         # idx = pd.DatetimeIndex(start='00:00:00', end='23:59:00', freq=f'{self.nTimeSlots}T')
         # FIXME: right way to create list? do we want timedelta or datetime?
-        self.nTimeSlots = int(self.nSlotsPerInterval(interval=self.dt))
-        self.timeList = list(range(self.nTimeSlots))
-        # self.timeList = list(pd.timedelta_range(start='00:00:00', end='23:59:00', freq=f'{self.nTimeSlots}T'))  
+        self.timeList = list(pd.timedelta_range(start='00:00:00', end='23:59:00', freq=f'{self.nTimeSlots}T'))
+        self.weights = None
         # Column definitions
         # FIXME: drop days count in delta? only keep HH:MM:SS?
         self.activities['delta'] = self.activities['timestampEnd'] - self.activities['timestampStart']
@@ -94,9 +92,23 @@ class TimeDiscretiser:
         self.activities['valFullSlot'] = None
         self.activities['valLastSLot'] = None
         # self.activities['valFirstSlot'] = None
+        self.discrete = self.discreteStructure()
         self.identifySlots()
         # self.allocate()
 
+    def identifySlots(self):
+        self.nTimeSlots = self.nSlotsPerInterval(interval=self.dt)
+        self.activities['firstSlot'] = self.getFirstSlot()
+        self.activities['lastSlot'] = self.getLastSlot()
+
+        self.calcTimeQuantumShares()
+
+    def identifyFirstSlot(self):
+        """ Identifies the discretized first timeslot for the given interval (dt) for each activity in the dataset
+        based on the starting timestamp. The first slot is identified by the closes discrete timestamp to the starting
+        timestamp. If two timestamps are exactly the same time away, the first one is chosen. 
+        """
+        half = self.dt / 2
 
     def nSlotsPerInterval(self, interval: pd.Timedelta):
         # Check if interval is an integer multiple of quantum
@@ -113,19 +125,54 @@ class TimeDiscretiser:
             raise(ValueError(f'The specified resolution does not fit into a day.'
                              f'There cannot be {quotDay} finite intervals in a day'))
 
+    def calcTimeQuantumShares(self):
+        self.activities['nSlots'] = (self.activities['delta'] / self.dt)
+        self.activities['nFullSlots'] = self.calcNFullSlots()
+        # self.activities['nQFirst'] = self.calcFirstSlotQuants()
+        # self.activities['nQLast'] = self.calcLastSlotQuants()
+        # self.activities = self.calcShare()
 
     def identifySlots(self):
         pass
 
-    def getFirstSlot(self):
-        tsStart = self.activities['timestampStart'].apply(lambda x: pd.Timestamp(year=x.year, month=x.month, day=x.day))
-        self.activities['dailyTimeDeltaStart'] = self.activities['timestampStart'] - tsStart
-        diff = self.activities['dailyTimeDeltaStart'].apply(lambda x: x - self.timeList.to_series())
+    def calcLastSlotQuants():  # needed?
+        pass
 
+    def calcNFullSlots(self):
+        self.activities['nFullSlots'] = math.floor(self.activities['delta'] / self.dt)
+        # FIXME: Correct after first and last slot shares are calculated
+        # for i in range(len(self.activities)):
+        #     if ((self.activities['delta'][i] / self.dt).is_integer()):
+        #         self.activities['nFullSlots'][i] = (self.activities['delta'][i] / self.dt)
+        #     else:
+        #         self.activities['nPartialSlots'][i] = round((self.activities['delta'][i] / self.dt),2)
+        # return self.activities
+
+    def discretise(self, activities, column: str):
+        self.discreteStructure()
+        # add all other funtions that are not called in the init
+        self.allocate()
+
+    def discreteStructure(self):
+        self.discrete = pd.DataFrame(index=self.activities.index, columns=range(len(self.timeList)))
+
+    def getFirstSlot(self):
+        dayStart = self.activities['timestampStart'].apply(
+            lambda x: pd.Timestamp(year=x.year, month=x.month, day=x.day))
+        self.activities['dailyTimeDeltaStart'] = self.activities['timestampStart'] - dayStart
+        diff = self.activities['dailyTimeDeltaStart'].apply(lambda x: x - self.timeList.to_series())
+        return diff.apply(min)
+
+    # Most likely DEPRECATED
     def getLastSlot(self):
-        tsEnd = self.activities['timestampEnd'].apply(lambda x: pd.Timestamp(year=x.year, month=x.month, day=x.day))
+        tsEnd = self.activities['firstSlot'].apply(lambda x: pd.Timestamp(year=x.year, month=x.month, day=x.day))
         self.activities['dailyTimeDeltaEnd'] = self.activities['timestampEnd'] - tsEnd
 
+    # Most likely DEPRECATED
+    def calcWeights(self):
+        self.activities['wFirstSlot'] = self.calculateFirstSlotWeight()
+        self.activities['wLastSlot'] = self.calculateLastSlotWeight()
+        self.weights = self.activities.loc[:, ['wFullSlots', 'wFirstSlot', 'wLastSlot']]
 
     def discretise(self, column: str):
         self.columnToDiscretise = column
@@ -226,7 +273,7 @@ class TimeDiscretiser:
         print(f'Diary creation completed. There are {len(self.activities)} diaries')
 
 
-class FillHourValues: # re use in distribute()
+class FillHourValues:  # re use in distribute()
     def __init__(self, data, rangeFunction):
         self.startHour = data['tripStartHour']
         self.distanceStartHour = data['shareStartHour'] * data['tripDistance']
@@ -276,6 +323,8 @@ if __name__ == '__main__':
     vpData.process()
 
     vpGrid = GridModeler(configDict=configDict, datasetID=datasetID, activities=vpData.activities, gridModel='simple')
+    # vpGrid = GridModeler(configDict=configDict, datasetID=datasetID, activities=vpData.activities.iloc[:1000,:], 
+    #                     gridModel='simple')
     vpGrid.assignGrid()
 
     vpFlex = FlexEstimator(configDict=configDict, activities=vpGrid.activities)
