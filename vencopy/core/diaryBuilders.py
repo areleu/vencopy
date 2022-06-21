@@ -33,14 +33,14 @@ class DiaryBuilder:
             self.activities = activities.copy()
         distributedActivities = TimeDiscretiser(
             activities=self.activities, dt=self.deltaTime, method="distribute")
-        self.drain = distributedActivities.discretise(column="drain")
-        self.uncontrolledCharge = distributedActivities.discretise(distributedActivities, column="uncontrolledCharge")
-        self.auxiliaryFuel = distributedActivities.discretise(distributedActivities, column="auxFuel")
+        # self.drain = distributedActivities.discretise(column="drain")
+        self.uncontrolledCharge = distributedActivities.discretise(column="uncontrolledCharge")
+        self.residualNeed = distributedActivities.discretise(column="residualNeed") # in elec terms kWh elec
         selectedActivities = TimeDiscretiser(
             activities=self.activities, dt=self.deltaTime, method="select")
-        self.chargingPower = selectedActivities.discretise(distributedActivities, column="chargingPower")
-        self.minBatteryLevel = selectedActivities.discretise(distributedActivities, column="minBatLev")
-        self.maxBatteryLevel = selectedActivities.discretise(distributedActivities, column="maxBatLev")
+        self.chargingPower = selectedActivities.discretise(column="chargingPower")
+        self.minBatteryLevel = selectedActivities.discretise(column="minBatLev")
+        self.maxBatteryLevel = selectedActivities.discretise(column="maxBatLev")
 
 
 
@@ -84,15 +84,15 @@ class TimeDiscretiser:
         # Column definitions
         # FIXME: drop days count in delta? only keep HH:MM:SS?
         self.activities['delta'] = self.activities['timestampEnd'] - self.activities['timestampStart']
-        self.activities['nQuantaPerSlot'] = None
+        # self.activities['nQuantaPerSlot'] = None
         self.activities['valQuantum'] = None
         self.activities['nFullSlots'] = None
         self.activities['nPartialSlots'] = None
-        self.activities['nQuantaFullSlot'] = None
-        self.activities['nQuantLast'] = None
+        # self.activities['nQuantaFullSlot'] = None
+        # self.activities['nQuantLast'] = None
         # self.activities['nQFirst'] = None
         self.activities['valFullSlot'] = None
-        self.activities['valLastSLot'] = None
+        self.activities['valLastSlot'] = None
         # self.activities['valFirstSlot'] = None
         self.identifySlots()
         # self.allocate()
@@ -129,16 +129,32 @@ class TimeDiscretiser:
 
     def discretise(self, column: str):
         self.columnToDiscretise = column
+        self.datasetCleanup()
         self.discreteStructure()
-        # add all other funtions that are not called in the init
+        # add all other functions that are not called in the init
         self.allocate()
+        self.columnToDiscretise = None
+        # self.identifySlots()
+
+    def datasetCleanup(self):
+        if self.columnToDiscretise == 'drain':
+            pass
+        elif self.columnToDiscretise == 'uncontrolledCharge':
+            # remove all rows with tripID
+            self.activities = self.activities[self.activities['uncontrolledCharge'].notna()]
+        elif self.columnToDiscretise == 'residualNeed':
+            # pad NaN with 0
+            self.activities['residualNeed'] = self.activities['residualNeed'].fillna(0)
+        else:
+            return self.activities
 
 
     def discreteStructure(self):
-        self.discrete = pd.DataFrame(index=self.activities.index, columns=self.timeList)
+        self.discretedStructure = pd.DataFrame(index=self.activities.index, columns=self.timeList)
 
     def allocate(self):
         # wrapper for method:
+        self.calculateNumberSlotsAndQuanta()
         if self.method == 'distribute':
             self.valueDistribute()
         elif self.method == 'select':
@@ -147,12 +163,14 @@ class TimeDiscretiser:
             raise(ValueError(
                 f'Specified method {self.method} is not implemented please specify "distribute" or "select".'))
 
-    def valueDistribute(self):
+    def calculateNumberSlotsAndQuanta(self):
         self.activities['nSlots'] = self.activities['delta'] / self.dt
         self.activities['nFullSlots'] = np.floor(self.activities['nSlots'])
         self.activities['nPartialSlots'] = np.ceil((self.activities['nSlots'])-self.activities['nFullSlots'])
-        self.activities['nQuanta'] = (self.activities['delta'] / np.timedelta64(1, 'm')) / (self.quantum.seconds/60)
-        self.activities['valQuantum'] = self.activities[self.columnToDiscretise] / self.activities['nQuanta']
+        self.activities['nQuantaPerActivity'] = (self.activities['delta'] / np.timedelta64(1, 'm')) / (self.quantum.seconds/60)
+
+    def valueDistribute(self):
+        self.activities['valQuantum'] = self.activities[self.columnToDiscretise] / self.activities['nQuantaPerActivity']
         self.activities['valFullSlot'] = (self.activities['valQuantum'] * (self.dt.seconds/60)).round(6)
         self.activities['valLastSlot'] = (self.activities[self.columnToDiscretise] - (self.activities['valFullSlot']*self.activities['nFullSlots'])).round(6)
         # wSum = self.activities['wFullSlots'] * self.activities['nFullSlots'] + self.activities['wFirstSlot'] + self.activities['wLastSlot']
@@ -281,5 +299,5 @@ if __name__ == '__main__':
     vpFlex = FlexEstimator(configDict=configDict, activities=vpGrid.activities)
     vpFlex.estimateTechnicalFlexibility()
 
-    vpDiary = DiaryBuilder(configDict=configDict, activities=vpFlex.activities, debug=True)
+    vpDiary = DiaryBuilder(configDict=configDict, activities=vpFlex.activities, debug=False)
     vpDiary.createDiaries()
