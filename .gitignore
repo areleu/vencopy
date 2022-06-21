@@ -23,6 +23,6 @@ make.bat
 vencopy/config/localPathConfig.yaml
 
 # VS-Code
-/.vscode/
+.vscode
 /docs/_build/
 *.code-workspace
