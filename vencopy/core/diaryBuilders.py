@@ -74,6 +74,7 @@ class TimeDiscretiser:
         self.method = method
         self.quantum = pd.Timedelta(value=1, unit='min')
         self.dt = pd.Timedelta(value=dt, unit='min')  # e.g. 15 min
+        self.nTimeSlots = self.nSlotsPerInterval(interval=self.dt)
         # list of all time intervals
         # idx = pd.DatetimeIndex(start='00:00:00', end='23:59:00', freq=f'{self.nTimeSlots}T')
         # FIXME: right way to create list? do we want timedelta or datetime?
@@ -97,19 +98,19 @@ class TimeDiscretiser:
         # self.allocate()
 
     def identifySlots(self):
-        self.nTimeSlots = self.nSlotsPerInterval(interval=self.dt)
+        # self.nTimeSlots = self.nSlotsPerInterval(interval=self.dt)
         self.activities['firstSlot'] = self.getFirstSlot()
         self.activities['lastSlot'] = self.getLastSlot()
 
         self.calcTimeQuantumShares()
 
-    def identifyFirstSlot(self):
-        """ Identifies the discretized first timeslot for the given interval (dt) for each activity in the dataset
-        based on the starting timestamp. The first slot is identified by the closes discrete timestamp to the starting
-        timestamp. If two timestamps are exactly the same time away, the first one is chosen. 
-        """
-        half = self.dt / 2
-
+    # def identifyFirstSlot(self):
+    #     """ Identifies the discretized first timeslot for the given interval (dt) for each activity in the dataset
+    #     based on the starting timestamp. The first slot is identified by the closes discrete timestamp to the starting
+    #     timestamp. If two timestamps are exactly the same time away, the first one is chosen. 
+    #     """
+    #     half = self.dt / 2
+ 
     def nSlotsPerInterval(self, interval: pd.Timedelta):
         # Check if interval is an integer multiple of quantum
         # the minimum resolution is 1 min, case for resolution below 1 min
@@ -196,8 +197,8 @@ class TimeDiscretiser:
             return self.activities
 
 
-    def discreteStructure(self):
-        self.discretedStructure = pd.DataFrame(index=self.activities.index, columns=self.timeList)
+    # def discreteStructure(self):
+    #    self.discretedStructure = pd.DataFrame(index=self.activities.index, columns=self.timeList)
 
     def allocate(self):
         # wrapper for method:
@@ -217,9 +218,10 @@ class TimeDiscretiser:
         self.activities['nQuantaPerActivity'] = (self.activities['delta'] / np.timedelta64(1, 'm')) / (self.quantum.seconds/60)
 
     def valueDistribute(self):
+        # FIXME: division by zero with very small numbers
         self.activities['valQuantum'] = self.activities[self.columnToDiscretise] / self.activities['nQuantaPerActivity']
         self.activities['valFullSlot'] = (self.activities['valQuantum'] * (self.dt.seconds/60)).round(6)
-        self.activities['valLastSlot'] = (self.activities[self.columnToDiscretise] - (self.activities['valFullSlot']*self.activities['nFullSlots'])).round(6)
+        self.activities['valLastSlot'] = (self.activities[self.columnToDiscretise] - (self.activities['valFullSlot'] * self.activities['nFullSlots'])).round(6)
         # wSum = self.activities['wFullSlots'] * self.activities['nFullSlots'] + self.activities['wFirstSlot'] + self.activities['wLastSlot']
 
     def valueSelect(self):
@@ -269,8 +271,8 @@ class TimeDiscretiser:
     # def isLastSlotNotFull(self):
     #     pass
 
-    # def isSlotRelevant(self, timedelta):
-    #     return timedelta / self.quantum >= self.nQPerDT / 2
+    def isSlotRelevant(self, timedelta):
+        return timedelta / self.quantum >= self.nQPerDT / 2
 
     
 
