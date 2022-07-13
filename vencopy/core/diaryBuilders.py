@@ -21,7 +21,7 @@ from vencopy.core.flexEstimators import FlexEstimator
 
 
 class DiaryBuilder:
-    def __init__(self, configDict: dict, activities: pd.DataFrame, debug: bool = False):
+    def __init__(self, configDict: dict, activities: pd.DataFrame, debug: bool = True):
         self.diaryConfig = configDict['diaryConfig']
         self.globalConfig = configDict['globalConfig']
         self.localPathConfig = configDict['localPathConfig']
@@ -33,7 +33,7 @@ class DiaryBuilder:
             self.activities = activities.copy()
         distributedActivities = TimeDiscretiser(
             activities=self.activities, dt=self.deltaTime, method="distribute")
-        # self.drain = distributedActivities.discretise(column="drain")
+        self.drain = distributedActivities.discretise(column="drain")
         self.uncontrolledCharge = distributedActivities.discretise(column="uncontrolledCharge")
         self.residualNeed = distributedActivities.discretise(column="residualNeed") # in elec terms kWh elec
         selectedActivities = TimeDiscretiser(
@@ -75,42 +75,8 @@ class TimeDiscretiser:
         self.quantum = pd.Timedelta(value=1, unit='min')
         self.dt = pd.Timedelta(value=dt, unit='min')  # e.g. 15 min
         self.nTimeSlots = self.nSlotsPerInterval(interval=self.dt)
-        # list of all time intervals
-        # idx = pd.DatetimeIndex(start='00:00:00', end='23:59:00', freq=f'{self.nTimeSlots}T')
-        # FIXME: right way to create list? do we want timedelta or datetime?
         self.timeList = list(pd.timedelta_range(start='00:00:00', end='23:59:00', freq=f'{self.nTimeSlots}T'))
-        self.weights = None
-        # Column definitions
-        # FIXME: drop days count in delta? only keep HH:MM:SS?
-        self.activities['delta'] = self.activities['timestampEnd'] - self.activities['timestampStart']
-        # self.activities['nQuantaPerSlot'] = None
-        self.activities['valQuantum'] = None
-        self.activities['nFullSlots'] = None
-        self.activities['nPartialSlots'] = None
-        # self.activities['nQuantaFullSlot'] = None
-        # self.activities['nQuantLast'] = None
-        # self.activities['nQFirst'] = None
-        self.activities['valFullSlot'] = None
-        self.activities['valLastSlot'] = None
-        # self.activities['valFirstSlot'] = None
-        self.discrete = self.discreteStructure()
-        self.identifySlots()
-        # self.allocate()
 
-    def identifySlots(self):
-        # self.nTimeSlots = self.nSlotsPerInterval(interval=self.dt)
-        self.activities['firstSlot'] = self.getFirstSlot()
-        self.activities['lastSlot'] = self.getLastSlot()
-
-        self.calcTimeQuantumShares()
-
-    # def identifyFirstSlot(self):
-    #     """ Identifies the discretized first timeslot for the given interval (dt) for each activity in the dataset
-    #     based on the starting timestamp. The first slot is identified by the closes discrete timestamp to the starting
-    #     timestamp. If two timestamps are exactly the same time away, the first one is chosen. 
-    #     """
-    #     half = self.dt / 2
- 
     def nSlotsPerInterval(self, interval: pd.Timedelta):
         # Check if interval is an integer multiple of quantum
         # the minimum resolution is 1 min, case for resolution below 1 min
@@ -126,65 +92,16 @@ class TimeDiscretiser:
             raise(ValueError(f'The specified resolution does not fit into a day.'
                              f'There cannot be {quotDay} finite intervals in a day'))
 
-    def calcTimeQuantumShares(self):
-        self.activities['nSlots'] = (self.activities['delta'] / self.dt)
-        self.activities['nFullSlots'] = self.calcNFullSlots()
-        # self.activities['nQFirst'] = self.calcFirstSlotQuants()
-        # self.activities['nQLast'] = self.calcLastSlotQuants()
-        # self.activities = self.calcShare()
-
-    def identifySlots(self):
-        pass
-
-    def calcLastSlotQuants():  # needed?
-        pass
-
-    def calcNFullSlots(self):
-        self.activities['nFullSlots'] = math.floor(self.activities['delta'] / self.dt)
-        # FIXME: Correct after first and last slot shares are calculated
-        # for i in range(len(self.activities)):
-        #     if ((self.activities['delta'][i] / self.dt).is_integer()):
-        #         self.activities['nFullSlots'][i] = (self.activities['delta'][i] / self.dt)
-        #     else:
-        #         self.activities['nPartialSlots'][i] = round((self.activities['delta'][i] / self.dt),2)
-        # return self.activities
-
-    def discretise(self, activities, column: str):
-        self.discreteStructure()
-        # add all other funtions that are not called in the init
-        self.allocate()
-
-    def discreteStructure(self):
-        self.discrete = pd.DataFrame(index=self.activities.index, columns=range(len(self.timeList)))
-
-    def getFirstSlot(self):
-        dayStart = self.activities['timestampStart'].apply(
-            lambda x: pd.Timestamp(year=x.year, month=x.month, day=x.day))
-        self.activities['dailyTimeDeltaStart'] = self.activities['timestampStart'] - dayStart
-        diff = self.activities['dailyTimeDeltaStart'].apply(lambda x: x - self.timeList.to_series())
-        return diff.apply(min)
-
-    # Most likely DEPRECATED
-    def getLastSlot(self):
-        tsEnd = self.activities['firstSlot'].apply(lambda x: pd.Timestamp(year=x.year, month=x.month, day=x.day))
-        self.activities['dailyTimeDeltaEnd'] = self.activities['timestampEnd'] - tsEnd
-
-    # Most likely DEPRECATED
-    def calcWeights(self):
-        self.activities['wFirstSlot'] = self.calculateFirstSlotWeight()
-        self.activities['wLastSlot'] = self.calculateLastSlotWeight()
-        self.weights = self.activities.loc[:, ['wFullSlots', 'wFirstSlot', 'wLastSlot']]
-
-    def discretise(self, column: str):
-        self.columnToDiscretise = column
-        self.datasetCleanup()
-        self.discreteStructure()
-        # add all other functions that are not called in the init
-        self.allocate()
-        self.columnToDiscretise = None
-        # self.identifySlots()
-
     def datasetCleanup(self):
+        # timestamp start and end, unique ID, column to discretise - get read of additional columns
+        # FIXME: add function to save other columns in a separate df or on disk
+        necessaryColumns = ['tripID', 'timestampStart', 'timestampEnd', 'genericID',
+                            'parkID', 'isFirstActivity', 'isLastActivity', 'timedelta',
+                            'actID', 'nextActID', 'prevActID'] + [self.columnToDiscretise]
+        self.activities = self.activities[necessaryColumns]
+        self.correctValues()
+
+    def correctValues(self):
         if self.columnToDiscretise == 'drain':
             pass
         elif self.columnToDiscretise == 'uncontrolledCharge':
@@ -196,13 +113,12 @@ class TimeDiscretiser:
         else:
             return self.activities
 
+    def createDiscretisedStructure(self):
+        self.discreteData = pd.DataFrame(index=self.activities.index, columns=range(len(self.timeList)))
 
-    # def discreteStructure(self):
-    #    self.discretedStructure = pd.DataFrame(index=self.activities.index, columns=self.timeList)
-
-    def allocate(self):
+    def identifyBinShares(self):  # calculate value share
+        self.calculateValueBinsAndQuanta()
         # wrapper for method:
-        self.calculateNumberSlotsAndQuanta()
         if self.method == 'distribute':
             self.valueDistribute()
         elif self.method == 'select':
@@ -211,110 +127,69 @@ class TimeDiscretiser:
             raise(ValueError(
                 f'Specified method {self.method} is not implemented please specify "distribute" or "select".'))
 
-    def calculateNumberSlotsAndQuanta(self):
+    def calculateValueBinsAndQuanta(self):
+        self.activities['delta'] = self.activities['timestampEnd'] - self.activities['timestampStart']
         self.activities['nSlots'] = self.activities['delta'] / self.dt
         self.activities['nFullSlots'] = np.floor(self.activities['nSlots'])
         self.activities['nPartialSlots'] = np.ceil((self.activities['nSlots'])-self.activities['nFullSlots'])
         self.activities['nQuantaPerActivity'] = (self.activities['delta'] / np.timedelta64(1, 'm')) / (self.quantum.seconds/60)
 
     def valueDistribute(self):
-        # FIXME: division by zero with very small numbers
         self.activities['valQuantum'] = self.activities[self.columnToDiscretise] / self.activities['nQuantaPerActivity']
         self.activities['valFullSlot'] = (self.activities['valQuantum'] * (self.dt.seconds/60)).round(6)
         self.activities['valLastSlot'] = (self.activities[self.columnToDiscretise] - (self.activities['valFullSlot'] * self.activities['nFullSlots'])).round(6)
-        # wSum = self.activities['wFullSlots'] * self.activities['nFullSlots'] + self.activities['wFirstSlot'] + self.activities['wLastSlot']
 
     def valueSelect(self):
         self.activities['valFullSlot'] = self.activities[self.columnToDiscretise]
         self.activities['valLastSLot'] = self.activities[self.columnToDiscretise]
-        # self.activities['valFullSlots'] = self.activities['value']
-        # if self.firstSlotNotFull():  # FIXME: make firstSlotNotFull part of another checking function
-        #     self.activities['valFirstSlot'] = self.activities['value']
-        # else:
-        #     self.activities['valFirstSlot'] = 0
-        # if self.lastSlotNotFull():
-        #     self.activities['valLastSlot'] = self.activities['value']
-        # else:
-        #     self.activities['valLastSlot'] = 0
 
-    # def calcTimeQuantumShares(self):
-    #     self.activities['nSlots'] = (self.activities['delta'] / self.dt)
-    #     self.activities['nFullSlots'] = self.calcNFullSlots()
-    #     # self.activities['nQFirst'] = self.calcFirstSlotQuants()
-    #     # self.activities['nQLast'] = self.calcLastSlotQuants()
-    #     # self.activities = self.calcShare()
- 
-    # def calcFirstSlotQuants():  # needed?
-    #     # number of quants for slot
-    #     pass
+    def identifySharedEventInBin(self):
+        # binsTouched (startTimes info + lenght of activity) based on event timestamp
+        self.identifyFirstBin()
+        self.identifyLastBin()
+        self.overlappingEvents()
 
-    # def calcLastSlotQuants():  # needed?
-    #     pass
+    def identifyFirstBin(self):
+        dayStart = self.activities['timestampStart'].apply(
+            lambda x: pd.Timestamp(year=x.year, month=x.month, day=x.day))
+        timeStart = self.activities['timestampStart'].dt.time('%H:%M')
+        # self.activities['dailyTimeDeltaStart'] = self.activities['timestampStart'] - dayStart
+        diff = timeStart.apply(lambda x: x - self.timeList.to_series())
 
-    # def calcNFullSlots(self):
-    #     self.activities['nFullSlots'] = np.floor(self.activities['delta'] / self.dt)
+        diff = self.activities['dailyTimeDeltaStart'].apply(lambda x: x - self.timeList.to_series())
+        return diff.apply(min)
 
-    # def calcWeights(self):
-    #     self.activities['wFirstSlot'] = self.calculateFirstSlotWeight()
-    #     self.activities['wLastSlot'] = self.calculateLastSlotWeight()
-    #     self.weights = self.activities.loc[:, ['wFullSlots', 'wFirstSlot', 'wLastSlot']]
+    def identifyLastBin(self):
+        tsEnd = self.activities['firstSlot'].apply(lambda x: pd.Timestamp(year=x.year, month=x.month, day=x.day))
+        self.activities['dailyTimeDeltaEnd'] = self.activities['timestampEnd'] - tsEnd
 
-    # def calcFirstSlotsWeight(self):
-    #     pass
+    def overlappingEvents(self):
+        pass
 
-    # def calcLastSlotWeight(self):
-    #     pass
- 
-    # def isFirstSlotNotFull(self):
-    #     pass
- 
-    # def isLastSlotNotFull(self):
-    #     pass
-
-    def isSlotRelevant(self, timedelta):
-        return timedelta / self.quantum >= self.nQPerDT / 2
-
+    def isNeighbouringEvent(self):
+        # function of currentEvent, nextEvent, depending on how many bins are overlapping, collect bin to be filled in dictionary
+        # differentiate between partial and complete bin, algo should be able to treat from 1 to n values per bin
+        # list of tuples with current value of bin and current share
+        pass
     
+    def allocate(self):
+        # strategies on how to treat overlapping bins
+        # start allocation always with full bin
+        pass
 
-    def mergeTrips(self):
-        """
-        Merge multiple individual trips into one diary consisting of multiple trips
+    def allocateBinShares(self):
+        self.identifySharedEventInBin()
+        self.isNeighbouringEvent()
+        self.allocate()
+        pass
 
-        :param activities: Input trip data with specified time resolution
-        :return: Merged trips diaries
-        """
-        print("Merging single dataframe entries into vehicle trip diaries.")
-        # dataDay = self.activities.groupby(['genericID']).sum()
-        # dataDay = self.activities.drop(['tripID','parkID'], axis=1)
-        # return dataDay
-
-    def createDiaries(self):
-        self.mergeTrips()
-        print(f'Diary creation completed. There are {len(self.activities)} diaries')
-
-
-class FillHourValues:  # re use in distribute()
-    def __init__(self, data, rangeFunction):
-        self.startHour = data['tripStartHour']
-        self.distanceStartHour = data['shareStartHour'] * data['tripDistance']
-        self.endHour = data['tripEndHour']
-        self.distanceEndHour = data['shareEndHour'] * data['tripDistance']
-        self.fullHourCols = data.apply(rangeFunction, axis=1)
-        # self.fullHourRange = data['fullHourTripLength'] / data['noOfFullHours']
-        self.fullHourRange = data['fullHourTripLength']
-
-    def __call__(self, row):
-        idx = row.name
-        # if np.isnan(row[self.startHour[idx]]):
-        row[self.startHour[idx]] = self.distanceStartHour[idx]
-        # else:
-        #    row[self.startHour[idx]] = row[self.startHour[idx]] + self.distanceStartHour[idx]
-
-        if self.endHour[idx] != self.startHour[idx]:
-            row[self.endHour[idx]] = self.distanceEndHour[idx]
-        if isinstance(self.fullHourCols[idx], (range, list)):
-            row[self.fullHourCols[idx]] = self.fullHourRange[idx] / len(self.fullHourCols[idx])
-        return row
+    def discretise(self, column: str):
+        self.columnToDiscretise = column
+        self.datasetCleanup()
+        self.createDiscretisedStructure()
+        self.identifyBinShares()
+        self.allocateBinShares()
+        self.columnToDiscretise = None
 
 
 if __name__ == '__main__':
@@ -343,8 +218,6 @@ if __name__ == '__main__':
     vpData.process()
 
     vpGrid = GridModeler(configDict=configDict, datasetID=datasetID, activities=vpData.activities, gridModel='simple')
-    # vpGrid = GridModeler(configDict=configDict, datasetID=datasetID, activities=vpData.activities.iloc[:1000,:], 
-    #                     gridModel='simple')
     vpGrid.assignGrid()
 
     vpFlex = FlexEstimator(configDict=configDict, activities=vpGrid.activities)
