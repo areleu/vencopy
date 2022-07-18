@@ -78,7 +78,8 @@ class TimeDiscretiser:
         # list of all time intervals
         # idx = pd.DatetimeIndex(start='00:00:00', end='23:59:00', freq=f'{self.nTimeSlots}T')
         # FIXME: right way to create list? do we want timedelta or datetime?
-        self.timeList = list(pd.timedelta_range(start='00:00:00', end='23:59:00', freq=f'{self.nTimeSlots}T'))
+        start = '00:00:00'
+        self.timeList = list(pd.timedelta_range(start=start, end=str(start + self.dt *self.nTimeSlots), freq=f'{self.dt}T'))
         self.weights = None
         # Column definitions
         # FIXME: drop days count in delta? only keep HH:MM:SS?

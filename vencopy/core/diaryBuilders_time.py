@@ -151,13 +151,9 @@ class TimeDiscretiser:
 
     def identifySharedEventInBin(self):
         # binsTouched (startTimes info + lenght of activity) based on event timestamp
-        self.correctTimestamp()
         self.identifyBins()
         self.isNeighbouringEvent()
 
-    def correctTimestamp():
-        pass
-    
     def identifyBins(self):
         # self.nTimeSlots = self.nSlotsPerInterval(interval=self.dt)
         self.identifyFirstBin()
@@ -206,7 +202,7 @@ class TimeDiscretiser:
         pass
 
     def allocateBinShares(self):
-        # self.overlappingEvents()  # identify shared events in bin and handle them
+        self.overlappingEvents()  # identify shared events in bin and handle them
         self.allocate()
 
     def writeOut():
