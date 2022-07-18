@@ -35,10 +35,11 @@ class DiaryBuilder:
         distributedActivities = TimeDiscretiser(
             activities=self.activities, dt=self.deltaTime, method="distribute")
         self.drain = distributedActivities.discretise(column="drain")
+        # add writeOut after .discretise
         self.uncontrolledCharge = distributedActivities.discretise(column="uncontrolledCharge")
-        self.residualNeed = distributedActivities.discretise(column="residualNeed") # in elec terms kWh elec
+        # self.residualNeed = distributedActivities.discretise(column="residualNeed") # in elec terms kWh elec
         selectedActivities = TimeDiscretiser(
-            activities=self.activities, dt=self.deltaTime, method="select")
+             activities=self.activities, dt=self.deltaTime, method="select")
         self.chargingPower = selectedActivities.discretise(column="chargingPower")
         self.minBatteryLevel = selectedActivities.discretise(column="minBatLev")
         self.maxBatteryLevel = selectedActivities.discretise(column="maxBatLev")
@@ -105,8 +106,12 @@ class TimeDiscretiser:
                             'parkID', 'isFirstActivity', 'isLastActivity', 'timedelta',
                             'actID', 'nextActID', 'prevActID'] + [self.columnToDiscretise]
         self.activities = self.activities[necessaryColumns]
-        self.correctValues()
+        self.correctDataset()
 
+    def correctDataset(self):
+        self.correctValues()
+        self.correctTimestamp()
+        
     def correctValues(self):
         if self.columnToDiscretise == 'drain':
             pass
@@ -119,10 +124,15 @@ class TimeDiscretiser:
         else:
             return self.activities
 
+    def correctTimestamp(self):
+        self.activities['timestampStartCorrected'] = self.activities['timestampStart'].dt.round(f'{self.dt}min')
+        self.activities['timestampEndCorrected'] = self.activities['timestampEnd'].dt.round(f'{self.dt}min')
+
     def createDiscretisedStructure(self):
         self.discreteData = pd.DataFrame(index=self.activities.index, columns=range(len(list(self.timeIndex))))
 
     def identifyBinShares(self):  # calculate value share
+        self.identifyBins()
         self.calculateValueBinsAndQuanta()
         # wrapper for method:
         if self.method == 'distribute':
@@ -134,39 +144,30 @@ class TimeDiscretiser:
                 f'Specified method {self.method} is not implemented please specify "distribute" or "select".'))
 
     def calculateValueBinsAndQuanta(self):
-        self.activities['delta'] = self.activities['timestampEnd'] - self.activities['timestampStart']
-        self.activities['nSlots'] = self.activities['delta'] / (pd.Timedelta(value=self.dt, unit='min'))
-        self.activities['nFullSlots'] = np.floor(self.activities['nSlots'])
-        self.activities['nPartialSlots'] = np.ceil((self.activities['nSlots'])-self.activities['nFullSlots'])
-        self.activities['nQuantaPerActivity'] = (self.activities['delta'] / np.timedelta64(1, 'm')) / (self.quantum.seconds/60)
+        self.activities['activityDuration'] = (self.activities['timestampEndCorrected']-self.activities['timestampStartCorrected'])
+        self.activities['nBins'] = self.activities['activityDuration'].dt.seconds/60/self.dt
+        # self.activities['nSlots'] = self.activities['delta'] / (pd.Timedelta(value=self.dt, unit='min'))
+        # self.activities['nFullSlots'] = np.floor(self.activities['nSlots'])
+        # self.activities['nPartialSlots'] = np.ceil((self.activities['nSlots'])-self.activities['nFullSlots'])
+        # self.activities['nQuantaPerActivity'] = (self.activities['delta'] / np.timedelta64(1, 'm')) / (self.quantum.seconds/60)
 
     def valueDistribute(self):
-        self.activities['valQuantum'] = self.activities[self.columnToDiscretise] / self.activities['nQuantaPerActivity']
-        self.activities['valFullSlot'] = (self.activities['valQuantum'] * ((pd.Timedelta(value=self.dt, unit='min')).seconds/60)).round(6)
-        self.activities['valLastSlot'] = (self.activities[self.columnToDiscretise] - (self.activities['valFullSlot'] * self.activities['nFullSlots'])).round(6)
+        self.activities['valPerBin'] = self.activities[self.columnToDiscretise] / self.activities['nBins']
+        # self.activities['valQuantum'] = self.activities[self.columnToDiscretise] / self.activities['nQuantaPerActivity']
+        # self.activities['valFullSlot'] = (self.activities['valQuantum'] * ((pd.Timedelta(value=self.dt, unit='min')).seconds/60)).round(6)
 
     def valueSelect(self):
         self.activities['valFullSlot'] = self.activities[self.columnToDiscretise]
         self.activities['valLastSLot'] = self.activities[self.columnToDiscretise]
 
-    def identifySharedEventInBin(self):
-        # binsTouched (startTimes info + lenght of activity) based on event timestamp
-        self.correctTimestamp()
-        self.identifyBins()
-        self.isNeighbouringEvent()
-
-    def correctTimestamp():
-        pass
-    
     def identifyBins(self):
-        # self.nTimeSlots = self.nSlotsPerInterval(interval=self.dt)
         self.identifyFirstBin()
         self.identifyLastBin()
 
     def identifyFirstBin(self):
-        self.activities['timestampStart'] = self.activities['timestampStart'].apply(lambda x : pd.to_datetime(str(x)))
-        dayStart = self.activities['timestampStart'].apply(lambda x: pd.Timestamp(year=x.year, month=x.month, day=x.day))
-        self.activities['dailyTimeDeltaStart'] = self.activities['timestampStart'] - dayStart
+        self.activities['timestampStartCorrected'] = self.activities['timestampStartCorrected'].apply(lambda x : pd.to_datetime(str(x)))
+        dayStart = self.activities['timestampStartCorrected'].apply(lambda x: pd.Timestamp(year=x.year, month=x.month, day=x.day))
+        self.activities['dailyTimeDeltaStart'] = self.activities['timestampStartCorrected'] - dayStart
         self.activities['startTimeFromMidnightSeconds'] = self.activities['dailyTimeDeltaStart'].apply(lambda x: x.seconds)
         bins = pd.DataFrame({'index': self.timeDelta})
         bins.drop(bins.tail(1).index, inplace=True) # remove last element, which is zero        
@@ -176,8 +177,8 @@ class TimeDiscretiser:
         self.activities['firstBin'] = self.activities['startTimeFromMidnightSeconds'].apply(lambda x: np.argmax(x < self.binFromMidnightSeconds)-1)
 
     def identifyLastBin(self):
-        dayEnd = self.activities['timestampEnd'].apply(lambda x: pd.Timestamp(year=x.year, month=x.month, day=x.day))
-        self.activities['dailyTimeDeltaEnd'] = self.activities['timestampEnd'] - dayEnd
+        dayEnd = self.activities['timestampEndCorrected'].apply(lambda x: pd.Timestamp(year=x.year, month=x.month, day=x.day))
+        self.activities['dailyTimeDeltaEnd'] = self.activities['timestampEndCorrected'] - dayEnd
         # Option 1
         # activitiesLength = self.activities['timedelta'].apply(lambda x: x.seconds)
         # self.activities['endTimeFromMidnightSeconds'] = self.activities['startTimeFromMidnightSeconds'] + activitiesLength
@@ -185,32 +186,19 @@ class TimeDiscretiser:
         # self.activities['endTimeFromMidnightSeconds'] = self.activities['dailyTimeDeltaEnd'].apply(lambda x: x.seconds)
         # self.activities['lastBin'] = self.activities['endTimeFromMidnightSeconds'].apply(lambda x: np.argmax(x < self.binFromMidnightSeconds)-1)
         # Option 3
-        self.activities['lastBin'] = self.activities['firstBin'] + self.activities['nFullSlots']
-
-    def isNeighbouringEvent(self):
-        # compare end bin event i with start bin event i+1
-        # check by grouping through genericID
-        for i in range(len(self.activities)):
-            self.activities['isNeighbouringEvent'] = np.where(self.activities['lastBin'][i] < self.activities['firstBin'][i+1])
-
-    def overlappingEvents(self):
-        # function to handle overlapping bin i.e. where self.activities['isNeighbouringEvent'] == False
-        # function of currentEvent, nextEvent, depending on how many bins are overlapping, collect bin to be filled in dictionary
-        # differentiate between partial and complete bin, algo should be able to treat from 1 to n values per bin
-        # list of tuples with current value of bin and current share
-        pass
- 
-    def allocate(self):
-        # strategies on how to treat overlapping bins
-        # start allocation always with full bin
-        pass
+        self.activities['lastBin'] = self.activities['firstBin'] + self.activities['nBins'] - 1
 
     def allocateBinShares(self):
-        # self.overlappingEvents()  # identify shared events in bin and handle them
-        self.allocate()
-
-    def writeOut():
+        self.overlappingEvents()  # identify shared events in bin and handle them
+        # self.dropNoLengthEvents()
+        # self.allocate()
         pass
+
+    def overlappingEvents(self):
+        pass
+
+    def dropNoLengthEvents(self):
+        self.activities.drop(self.activities[self.activities.timestampStartCorrected == self.activities.timestampEndCorrected])
 
 
     def discretise(self, column: str):
@@ -219,7 +207,6 @@ class TimeDiscretiser:
         self.createDiscretisedStructure()
         self.identifyBinShares()
         self.allocateBinShares()
-        self.writeOut()
         self.columnToDiscretise = None
 
 
@@ -255,4 +242,4 @@ if __name__ == '__main__':
     vpFlex.estimateTechnicalFlexibility()
 
     vpDiary = DiaryBuilder(configDict=configDict, activities=vpFlex.activities, debug=False)
-    vpDiary.createDiaries()
+    # vpDiary.createDiaries()

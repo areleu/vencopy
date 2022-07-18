@@ -202,6 +202,7 @@ class TimeDiscretiser:
         pass
 
     def allocateBinShares(self):
+        self.identifySharedEventInBin()
         self.overlappingEvents()  # identify shared events in bin and handle them
         self.allocate()
 
