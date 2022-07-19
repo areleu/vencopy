@@ -129,11 +129,11 @@ class TimeDiscretiser:
         self.activities['timestampEndCorrected'] = self.activities['timestampEnd'].dt.round(f'{self.dt}min')
 
     def createDiscretisedStructure(self):
-        self.discreteData = pd.DataFrame(index=self.activities.index, columns=range(len(list(self.timeIndex))))
+        self.discreteData = pd.DataFrame(index=self.activities.genericID.unique(), columns=range(len(list(self.timeIndex))))
 
     def identifyBinShares(self):  # calculate value share
-        self.identifyBins()
         self.calculateValueBinsAndQuanta()
+        self.identifyBins()
         # wrapper for method:
         if self.method == 'distribute':
             self.valueDistribute()
@@ -145,7 +145,7 @@ class TimeDiscretiser:
 
     def calculateValueBinsAndQuanta(self):
         self.activities['activityDuration'] = (self.activities['timestampEndCorrected']-self.activities['timestampStartCorrected'])
-        self.activities['nBins'] = self.activities['activityDuration'].dt.seconds/60/self.dt
+        self.activities['nBins'] = self.activities['activityDuration'] / (pd.Timedelta(value=self.dt, unit='min'))
         # self.activities['nSlots'] = self.activities['delta'] / (pd.Timedelta(value=self.dt, unit='min'))
         # self.activities['nFullSlots'] = np.floor(self.activities['nSlots'])
         # self.activities['nPartialSlots'] = np.ceil((self.activities['nSlots'])-self.activities['nFullSlots'])
@@ -157,8 +157,9 @@ class TimeDiscretiser:
         # self.activities['valFullSlot'] = (self.activities['valQuantum'] * ((pd.Timedelta(value=self.dt, unit='min')).seconds/60)).round(6)
 
     def valueSelect(self):
-        self.activities['valFullSlot'] = self.activities[self.columnToDiscretise]
-        self.activities['valLastSLot'] = self.activities[self.columnToDiscretise]
+        self.activities['valPerBin'] = self.activities[self.columnToDiscretise]
+        # self.activities['valFullSlot'] = self.activities[self.columnToDiscretise]
+        # self.activities['valLastSLot'] = self.activities[self.columnToDiscretise]
 
     def identifyBins(self):
         self.identifyFirstBin()
@@ -190,16 +191,19 @@ class TimeDiscretiser:
 
     def allocateBinShares(self):
         self.overlappingEvents()  # identify shared events in bin and handle them
-        # self.dropNoLengthEvents()
-        # self.allocate()
-        pass
-
-    def overlappingEvents(self):
-        pass
+        self.allocate()
 
     def dropNoLengthEvents(self):
-        self.activities.drop(self.activities[self.activities.timestampStartCorrected == self.activities.timestampEndCorrected])
+        self.activities.drop(self.activities[self.activities.timestampStartCorrected == self.activities.timestampEndCorrected].index)
 
+    def overlappingEvents(self):
+        self.dropNoLengthEvents()
+
+    def allocate(self):
+        for id in self.activities.genericID.unique():
+            vehicleSubset = self.activities[self.activities.genericID == id].reset_index(drop=True)
+            for irow in range(len(vehicleSubset)):
+                self.discreteData.at[id, vehicleSubset.loc[irow, 'firstBin']:(vehicleSubset.loc[irow, 'lastBin']+1)] = vehicleSubset.loc[irow, 'valPerBin']
 
     def discretise(self, column: str):
         self.columnToDiscretise = column
