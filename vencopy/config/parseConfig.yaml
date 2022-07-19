@@ -70,6 +70,15 @@ dataVariables:
     tripEndNextDay: ["en_dat", "W_FOLGETAG", "NA", "W_FOLGETAG"]
     tripIsIntermodal: ["NA", "weg_intermod", "NA", "NA"]
     weather: ["NA", "wetter", "NA", "wetter"]
+    economicStatus: ["NA", "oek_status", "NA", "oek_status"]
+    hhType: ["NA", "hhtyp", "NA", "hhtyp"] # Gebäudetyp detailliert
+    hhStatus: ["NA", "haustyp", "NA", "haustyp"] 
+    hpAge: ["NA", "HP_ALTER", "NA", "HP_ALTER"]
+    hpJob: ["NA", "HP_BKAT", "NA", "HP_BKAT"]
+    bundesland: ["NA", "BLAND", "NA", "BLAND"]
+    areaType: ["NA", "SKTYP", "NA", "SKTYP"]
+    garage: ["NA", "garage", "NA", "garage"]
+
     #    tripStartLocation: [ 'NA', 'KKZ_SO' ]
     #    tripEndLocation: [ 'NA', 'KKZ_ZO' ]
 
@@ -100,6 +109,14 @@ inputDTypes:
         tripEndNextDay: "bool"
         tripIsIntermodal: "int"
         weather: "int"
+        economicStatus: "int"
+        hhType: "int"
+        hhStatus: "int"
+        hpAge: "int"
+        hpJob: "int"
+        bundesland: "int"
+        areaType: "int"
+        garage: "int"
     MiD08:
         isMIVDriver: "bool"
         hhPersonID: "int"

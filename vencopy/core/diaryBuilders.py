@@ -15,10 +15,10 @@ import datetime
 import numpy as np
 import pandas as pd
 from pathlib import Path
-from vencopy.utils.globalFunctions import loadConfigDict
 from vencopy.core.dataParsers import ParseMiD, ParseKiD, ParseVF
 from vencopy.core.gridModelers import GridModeler
 from vencopy.core.flexEstimators import FlexEstimator
+from vencopy.utils.globalFunctions import loadConfigDict, createFileString
 
 
 class DiaryBuilder:
@@ -34,9 +34,9 @@ class DiaryBuilder:
             self.activities = activities.copy()
         distributedActivities = TimeDiscretiser(
             activities=self.activities, dt=self.deltaTime, method="distribute")
-        self.drain = distributedActivities.discretise(column="drain")
+        # self.drain = distributedActivities.discretise(column="drain")
         # add writeOut after .discretise
-        self.uncontrolledCharge = distributedActivities.discretise(column="uncontrolledCharge")
+        # self.uncontrolledCharge = distributedActivities.discretise(column="uncontrolledCharge")
         # self.residualNeed = distributedActivities.discretise(column="residualNeed") # in elec terms kWh elec
         selectedActivities = TimeDiscretiser(
              activities=self.activities, dt=self.deltaTime, method="select")
@@ -152,6 +152,8 @@ class TimeDiscretiser:
         # self.activities['nQuantaPerActivity'] = (self.activities['delta'] / np.timedelta64(1, 'm')) / (self.quantum.seconds/60)
 
     def valueDistribute(self):
+        # FIXME: add edge case treatment for nBins == 0 (happens in uncontrolled Charge)
+        # FIXME: add quick fix for drain profile, where tripID == NaN, drain = 0 
         self.activities['valPerBin'] = self.activities[self.columnToDiscretise] / self.activities['nBins']
         # self.activities['valQuantum'] = self.activities[self.columnToDiscretise] / self.activities['nQuantaPerActivity']
         # self.activities['valFullSlot'] = (self.activities['valQuantum'] * ((pd.Timedelta(value=self.dt, unit='min')).seconds/60)).round(6)
@@ -205,12 +207,26 @@ class TimeDiscretiser:
             for irow in range(len(vehicleSubset)):
                 self.discreteData.at[id, vehicleSubset.loc[irow, 'firstBin']:(vehicleSubset.loc[irow, 'lastBin']+1)] = vehicleSubset.loc[irow, 'valPerBin']
 
+
+    def writeOut(self):
+        self.data.to_csv(
+            Path(self.localPathConfig['pathAbsolute']['vencoPyRoot']) / self.globalConfig[
+                'pathRelative']['parseOutput'] /
+            createFileString(
+                globalConfig=self.globalConfig,
+                fileKey='filteredDataset',
+                datasetID=self.datasetID))
+        print(('Filtered dataset written to ' + str(createFileString(globalConfig=self.globalConfig,
+                                                                     fileKey='filteredDataset',
+                                                                     datasetID=self.datasetID,))))
+
     def discretise(self, column: str):
         self.columnToDiscretise = column
         self.datasetCleanup()
         self.createDiscretisedStructure()
         self.identifyBinShares()
         self.allocateBinShares()
+        # self.writeOut()
         self.columnToDiscretise = None
 
 

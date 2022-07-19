@@ -23,13 +23,7 @@ from vencopy.utils.globalFunctions import createFileString
 
 
 class DataParser:
-    def __init__(
-        self,
-        configDict: dict,
-        datasetID: str,
-        fpInZip=None,
-        loadEncrypted=False,
-    ):
+    def __init__(self, configDict: dict, datasetID: str, fpInZip=None, loadEncrypted=False,):
         """
         Basic class for parsing a mobility survey trip data set. Currently both
         German travel surveys MiD 2008 and MiD 2017 are pre-configured and one
@@ -82,7 +76,7 @@ class DataParser:
 
     def writeOut(self):
         """
-        General writeout utility for tripDiaries
+        General writeout utility
 
         :param globalConfig: global config storing relative paths, filenames and run labels
         :param dataDrive: Driving distance diary for each survey participant
