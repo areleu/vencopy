@@ -51,10 +51,8 @@ class DataParser:
         self.localPathConfig = configDict["localPathConfig"]
         self.globalConfig = configDict["globalConfig"]
         self.datasetID = self.checkDatasetID(datasetID, self.parseConfig)
-        filepath = (
-            Path(self.localPathConfig["pathAbsolute"][self.datasetID])
-            / self.globalConfig["files"][self.datasetID]["tripsDataRaw"]
-        )
+        filepath = (Path(self.localPathConfig["pathAbsolute"][self.datasetID])
+                    / self.globalConfig["files"][self.datasetID]["tripsDataRaw"])
         self.rawDataPath = filepath
         self.rawData = None
         self.data = None
@@ -62,16 +60,10 @@ class DataParser:
         self.filterDict = {}
         print("Generic file parsing properties set up")
         if loadEncrypted:
-            print(
-                f"Starting to retrieve encrypted data file"
-                f"from {self.rawDataPath}"
-            )
+            print(f"Starting to retrieve encrypted data file from {self.rawDataPath}")
             self.loadEncryptedData(pathToZip=filepath, pathInZip=fpInZip)
         else:
-            print(
-                f"Starting to retrieve local data file"
-                f"from {self.rawDataPath}"
-            )
+            print(f"Starting to retrieve local data file from {self.rawDataPath}")
             self.loadData()
 
     def writeOut(self):
@@ -129,14 +121,10 @@ class DataParser:
             self.rawData = pd.read_csv(self.rawDataPath)
         else:
             Exception(
-                f"Data type {self.rawDataPath.suffix} not yet specified."
-                f"Available types so far are .dta and .csv"
-            )
+                f"Data type {self.rawDataPath.suffix} not yet specified. Available types so far are .dta and .csv")
 
-        print(
-            f"Finished loading {len(self.rawData)} rows of raw data"
-            f"of type {self.rawDataPath.suffix}"
-        )
+        print(f"Finished loading {len(self.rawData)} rows of raw data of type {self.rawDataPath.suffix}")
+
 
     def loadEncryptedData(self, pathToZip, pathInZip):
         """

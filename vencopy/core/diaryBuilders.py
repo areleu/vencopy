@@ -34,8 +34,7 @@ class DiaryBuilder:
             self.activities = activities.copy()
         distributedActivities = TimeDiscretiser(
             activities=self.activities, dt=self.deltaTime, method="distribute")
-        # self.drain = distributedActivities.discretise(column="drain")
-        # add writeOut after .discretise
+        self.drain = distributedActivities.discretise(column="drain")
         # self.uncontrolledCharge = distributedActivities.discretise(column="uncontrolledCharge")
         # self.residualNeed = distributedActivities.discretise(column="residualNeed") # in elec terms kWh elec
         selectedActivities = TimeDiscretiser(
@@ -199,6 +198,7 @@ class TimeDiscretiser:
         self.activities.drop(self.activities[self.activities.timestampStartCorrected == self.activities.timestampEndCorrected].index)
 
     def overlappingEvents(self):
+        # stategy if time resolution high enough so that event becomes negligible
         self.dropNoLengthEvents()
 
     def allocate(self):
@@ -226,6 +226,7 @@ class TimeDiscretiser:
         self.createDiscretisedStructure()
         self.identifyBinShares()
         self.allocateBinShares()
+        # FIXME: add wirte out
         # self.writeOut()
         self.columnToDiscretise = None
 
