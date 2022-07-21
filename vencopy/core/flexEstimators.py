@@ -296,12 +296,18 @@ class FlexEstimator:
         self.activities['auxiliaryFuelNeed'] = self.activities['residualNeed'] * self.flexConfig[
             'Fuel_consumption'] / self.flexConfig['Electric_consumption']
 
+    def correctDrain(self):
+        # set drain values to zero where tripID == NaN (e.g. where car is parked)
+        self.activities.loc[self.activities['tripID'].isna(), 'drain'] = 0
+
+
     def estimateTechnicalFlexibility(self):
         self.drain()
         self.maxChargeVolumePerParkingAct()
         self.batteryLevelMax()
         self.uncontrolledCharging()
         self.batteryLevelMin()
+        self.correctDrain()
         print("Technical flexibility estimation ended")
 
 if __name__ == "__main__":
