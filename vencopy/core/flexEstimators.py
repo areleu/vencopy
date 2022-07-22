@@ -15,12 +15,9 @@ if __package__ is None or __package__ == "":
 
 import pandas as pd
 from pathlib import Path
-from profilehooks import profile
 from vencopy.core.dataParsers import ParseMiD, ParseVF, ParseKiD
 from vencopy.core.gridModelers import GridModeler
-from vencopy.utils.globalFunctions import loadConfigDict, createFileString, writeOut
-
-
+from vencopy.utils.globalFunctions import loadConfigDict, writeOut
 
 
 class FlexEstimator:
@@ -300,7 +297,6 @@ class FlexEstimator:
     def correctDrain(self):
         # set drain values to zero where tripID == NaN (e.g. where car is parked)
         self.activities.loc[self.activities['tripID'].isna(), 'drain'] = 0
-
 
     def estimateTechnicalFlexibility(self):
         self.drain()

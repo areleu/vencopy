@@ -111,12 +111,9 @@ class GridModeler:
                              f'"simple" or "probability"'))
         writeOut(dataset=self.activities, outputFolder='gridOutput', fileKey='outputGridModeler',
                  datasetID=self.datasetID, localPathConfig=self.localPathConfig, globalConfig=self.globalConfig)
-       
 
 
 if __name__ == "__main__":
-
-    from vencopy.utils.globalFunctions import loadConfigDict
 
     datasetID = "MiD17"
     basePath = Path(__file__).parent.parent
@@ -132,12 +129,13 @@ if __name__ == "__main__":
     configDict = loadConfigDict(configNames, basePath=basePath)
 
     if datasetID == "MiD17":
-        vpData = ParseMiD(configDict=configDict, datasetID=datasetID)
+        vpData = ParseMiD(configDict=configDict, datasetID=datasetID, debug=False)
     elif datasetID == "KiD":
-        vpData = ParseKiD(configDict=configDict, datasetID=datasetID)
+        vpData = ParseKiD(configDict=configDict, datasetID=datasetID, debug=False)
     elif datasetID == "VF":
-        vpData = ParseVF(configDict=configDict, datasetID=datasetID)
+        vpData = ParseVF(configDict=configDict, datasetID=datasetID, debug=False)
     vpData.process()
 
-    vpGrid = GridModeler(configDict=configDict, datasetID=datasetID, activities=vpData.activities, gridModel='probability')
+    vpGrid = GridModeler(
+        configDict=configDict, datasetID=datasetID, activities=vpData.activities, gridModel='probability')
     vpGrid.assignGrid()

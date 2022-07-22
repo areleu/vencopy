@@ -19,7 +19,7 @@ import numpy as np
 import warnings
 from pathlib import Path
 from zipfile import ZipFile
-from vencopy.utils.globalFunctions import loadConfigDict, createFileString, writeOut
+from vencopy.utils.globalFunctions import loadConfigDict, writeOut
 
 
 class DataParser:
@@ -65,12 +65,8 @@ class DataParser:
         else:
             print(f"Starting to retrieve local data file from {self.rawDataPath}")
             self.loadData()
-        if debug:
-            self.rawData = self.rawData.loc[0:200, :]
-        else:
-            self.rawData = self.rawData.copy()
+        self.rawData = self.rawData.loc[0:200, :] if debug else self.rawData.copy()
 
-    
     def loadData(self):
         """
         Loads data specified in self.rawDataPath and stores it in self.rawData.
@@ -111,7 +107,7 @@ class DataParser:
         with ZipFile(pathToZip) as myzip:
             if ".dta" in pathInZip:
                 self.rawData = pd.read_stata(myzip.open(
-                    pathInZip,pwd=bytes(self.parseConfig["encryptionPW"], encoding="utf-8"),),
+                    pathInZip, pwd=bytes(self.parseConfig["encryptionPW"], encoding="utf-8"),),
                     convert_categoricals=False, convert_dates=False, preserve_dtypes=False,)
             else:  # if '.csv' in pathInZip:
                 self.rawData = pd.read_csv(
@@ -126,7 +122,6 @@ class DataParser:
                 )
 
         print(f"Finished loading {len(self.rawData)} rows of raw data of type {self.rawDataPath.suffix}")
-
 
     def checkDatasetID(self, datasetID: str, parseConfig: dict) -> str:
         """
@@ -570,9 +565,9 @@ class IntermediateParsing(DataParser):
         :param variables: List of variables of the mobility dataset
         :return: Returns a list with non NA values
         """
-        vars = [iVar.upper() for iVar in variables]
+        ivars = [iVar.upper() for iVar in variables]
         counter = 0
-        for idx, iVar in enumerate(vars):
+        for idx, iVar in enumerate(ivars):
             if iVar == "NA":
                 del variables[idx - counter]
                 counter += 1
@@ -607,7 +602,7 @@ class IntermediateParsing(DataParser):
             # self.data = dat.loc[pd.to_datetime(dat.loc[:, 'tripStartHour'])
             # <= pd.to_datetime(dat.loc[:,
             # 'tripEndHour']) | (dat['tripEndNextDay'] == 1), :]
-            filter = (
+            filters = (
                 (
                     self.data.loc[:, "tripStartHour"]
                     == self.data.loc[:, "tripEndHour"]
@@ -619,7 +614,7 @@ class IntermediateParsing(DataParser):
                 & (self.data.loc[:, "tripEndNextDay"])
             )
 
-            self.data = self.data.loc[~filter, :]
+            self.data = self.data.loc[~filters, :]
 
     def addStrColumnFromVariable(self, colName: str, varName: str):
         """
@@ -689,7 +684,7 @@ class IntermediateParsing(DataParser):
 
 
 class ParseMiD(IntermediateParsing):
-    def __init__(self, configDict: dict, datasetID: str, loadEncrypted=False):
+    def __init__(self, configDict: dict, datasetID: str, loadEncrypted=False, debug=False):
         """
         Class for parsing MiD data sets. The VencoPy configs globalConfig,
         parseConfig and localPathConfig have to be given on instantiation as
@@ -800,7 +795,7 @@ class ParseMiD(IntermediateParsing):
 
 
 class ParseVF(IntermediateParsing):
-    def __init__(self, configDict: dict, datasetID: str, loadEncrypted=False):
+    def __init__(self, configDict: dict, datasetID: str, loadEncrypted=False, debug=False):
         """
         Class for parsing MiD data sets. The VencoPy configs globalConfig,
         parseConfig and localPathConfig have to be given on instantiation as
@@ -950,7 +945,7 @@ class ParseVF(IntermediateParsing):
 
 
 class ParseKiD(IntermediateParsing):
-    def __init__(self, configDict: dict, datasetID: str, loadEncrypted=False):
+    def __init__(self, configDict: dict, datasetID: str, loadEncrypted=False, debug=False):
         """
         Inherited data class to differentiate between abstract interfaces such
         as vencopy internal variable namings and data set specific functions
@@ -1130,9 +1125,9 @@ if __name__ == '__main__':
 
     datasetID = "MiD17"  # options are MiD08, MiD17, KiD
     if datasetID == "MiD17":
-        vpData = ParseMiD(configDict=configDict, datasetID=datasetID)
+        vpData = ParseMiD(configDict=configDict, datasetID=datasetID, debug=False)
     elif datasetID == "KiD":
-        vpData = ParseKiD(configDict=configDict, datasetID=datasetID)
+        vpData = ParseKiD(configDict=configDict, datasetID=datasetID, debug=False)
     elif datasetID == "VF":
-        vpData = ParseVF(configDict=configDict, datasetID=datasetID)
+        vpData = ParseVF(configDict=configDict, datasetID=datasetID, debug=False)
     vpData.process()
