@@ -95,6 +95,10 @@ class GridModeler:
         homeActivities = homeActivities.join(households, on="hhID")
         return homeActivities
 
+    def writeOutput(self):
+        writeOut(dataset=self.activities, outputFolder='gridOutput', fileKey='outputGridModeler',
+                 datasetID=self.datasetID, localPathConfig=self.localPathConfig, globalConfig=self.globalConfig)
+
     def assignGrid(self):
         """
         Wrapper function for grid assignment. The number of iterations for
@@ -109,23 +113,14 @@ class GridModeler:
         else:
             raise(ValueError(f'Specified grid modeling option {self.gridModel} is not implemented. Please choose'
                              f'"simple" or "probability"'))
-        writeOut(dataset=self.activities, outputFolder='gridOutput', fileKey='outputGridModeler',
-                 datasetID=self.datasetID, localPathConfig=self.localPathConfig, globalConfig=self.globalConfig)
 
 
 if __name__ == "__main__":
 
     datasetID = "MiD17"
     basePath = Path(__file__).parent.parent
-    configNames = (
-        "globalConfig",
-        "localPathConfig",
-        "parseConfig",
-        "diaryConfig",
-        "gridConfig",
-        "flexConfig",
-        "evaluatorConfig",
-    )
+    configNames = ("globalConfig", "localPathConfig", "parseConfig", "diaryConfig",
+                   "gridConfig", "flexConfig", "evaluatorConfig")
     configDict = loadConfigDict(configNames, basePath=basePath)
 
     if datasetID == "MiD17":
@@ -139,3 +134,4 @@ if __name__ == "__main__":
     vpGrid = GridModeler(
         configDict=configDict, datasetID=datasetID, activities=vpData.activities, gridModel='probability')
     vpGrid.assignGrid()
+    # vpGrid.writeOutput()

@@ -28,14 +28,18 @@ class DiaryBuilder:
         self.datasetID = datasetID
         self.activities = activities
         self.deltaTime = configDict['diaryConfig']['TimeDelta']
-        distributedActivities = TimeDiscretiser(activities=self.activities, dt=self.deltaTime, method="distribute")
-        self.drain = distributedActivities.discretise(column="drain")
-        self.uncontrolledCharge = distributedActivities.discretise(column="uncontrolledCharge")
-        # self.residualNeed = distributedActivities.discretise(column="residualNeed") # in elec terms kWh elec
-        selectedActivities = TimeDiscretiser(activities=self.activities, dt=self.deltaTime, method="select")
-        self.chargingPower = selectedActivities.discretise(column="chargingPower")
-        self.minBatteryLevel = selectedActivities.discretise(column="minBatLev")
-        self.maxBatteryLevel = selectedActivities.discretise(column="maxBatLev")
+        self.__distributedActivities = TimeDiscretiser(
+            activities=self.activities, dt=self.deltaTime, method="distribute")
+        self.__selectedActivities = TimeDiscretiser(
+            activities=self.activities, dt=self.deltaTime, method="select")
+
+    def createDiaries(self):
+        self.drain = self.__distributedActivities.discretise(column="drain")
+        self.uncontrolledCharge = self.__distributedActivities.discretise(column="uncontrolledCharge")
+        # self.residualNeed = self.__distributedActivities.discretise(column="residualNeed") # in elec terms kWh elec
+        self.chargingPower = self.__selectedActivities.discretise(column="chargingPower")
+        self.minBatteryLevel = self.__selectedActivities.discretise(column="minBatLev")
+        self.maxBatteryLevel = self.__selectedActivities.discretise(column="maxBatLev")
 
 
 class TimeDiscretiser:
@@ -65,18 +69,18 @@ class TimeDiscretiser:
             dt (pd.TimeDelta): _description_
             method (str): The discretisation method. Must be one of 'distribute' or 'select'.
         """
-        self.activities = activities
+        # self.activities = activities
         self.datasetID = datasetID
         self.localPathConfig = configDict['localPathConfig']
         self.globalConfig = configDict['globalConfig']
         self.method = method
         self.quantum = pd.Timedelta(value=1, unit='min')
         self.dt = dt  # e.g. 15 min
-        self.nTimeSlots = self.nSlotsPerInterval(interval=pd.Timedelta(value=self.dt, unit='min'))
+        self.nTimeSlots = self._nSlotsPerInterval(interval=pd.Timedelta(value=self.dt, unit='min'))
         self.timeDelta = (pd.timedelta_range(start='00:00:00', end='24:00:00', freq=f'{self.dt}T'))
         self.timeIndex = list(self.timeDelta)
 
-    def nSlotsPerInterval(self, interval: pd.Timedelta):
+    def _nSlotsPerInterval(self, interval: pd.Timedelta):
         # Check if interval is an integer multiple of quantum
         # the minimum resolution is 1 min, case for resolution below 1 min
         if interval.seconds/60 < self.quantum.seconds/60:
@@ -91,9 +95,8 @@ class TimeDiscretiser:
             raise(ValueError(f'The specified resolution does not fit into a day.'
                              f'There cannot be {quotDay} finite intervals in a day'))
 
-    def datasetCleanup(self):
+    def _datasetCleanup(self):
         # timestamp start and end, unique ID, column to discretise - get read of additional columns
-        # FIXME: add function to save other columns in a separate df or on disk
         necessaryColumns = ['tripID', 'timestampStart', 'timestampEnd', 'genericID',
                             'parkID', 'isFirstActivity', 'isLastActivity', 'timedelta',
                             'actID', 'nextActID', 'prevActID'] + [self.columnToDiscretise]
@@ -213,7 +216,6 @@ class TimeDiscretiser:
         self.dropNoLengthEvents()
 
     def allocate(self):
-        # TODO: move to wrapper createDiaries() ?
         for id in self.activities.genericID.unique():
             vehicleSubset = self.activities[self.activities.genericID == id].reset_index(drop=True)
             for irow in range(len(vehicleSubset)):
@@ -221,31 +223,29 @@ class TimeDiscretiser:
                     vehicleSubset.loc[irow, 'lastBin']+1)] = vehicleSubset.loc[irow, 'valPerBin']
                 return self.discreteData
 
-    def discretise(self, column: str):
+    def discretise(self, activities, column: str):
         self.columnToDiscretise = column
-        self.datasetCleanup()
+        self.activities = activities
+        self._datasetCleanup()
         self.createDiscretisedStructure()
         self.identifyBinShares()
         self.allocateBinShares()
-        writeOut(dataset=self.discreteData, outputFolder='diaryOutput', datasetID=self.datasetID,
-                 fileKey=(f'outputDiaryBuilder{self.columnToDiscretise}'), localPathConfig=self.localPathConfig,
-                 globalConfig=self.globalConfig)
+        # move writeOut in separate method like in other classes
+        # writeOut(dataset=self.discreteData, outputFolder='diaryOutput', datasetID=self.datasetID,
+        #          fileKey=(f'outputDiaryBuilder{self.columnToDiscretise}'), localPathConfig=self.localPathConfig,
+        #          globalConfig=self.globalConfig)
+        dfToReturn = self.activities
         self.columnToDiscretise = None
+        self.activities = None
+        return dfToReturn
 
 
 if __name__ == '__main__':
 
     datasetID = "MiD17"
     basePath = Path(__file__).parent.parent
-    configNames = (
-        "globalConfig",
-        "localPathConfig",
-        "parseConfig",
-        "diaryConfig",
-        "gridConfig",
-        "flexConfig",
-        "evaluatorConfig",
-    )
+    configNames = ("globalConfig", "localPathConfig", "parseConfig", "diaryConfig",
+                   "gridConfig", "flexConfig", "evaluatorConfig")
     configDict = loadConfigDict(configNames, basePath=basePath)
 
     if datasetID == "MiD17":
@@ -263,4 +263,4 @@ if __name__ == '__main__':
     vpFlex.estimateTechnicalFlexibility()
 
     vpDiary = DiaryBuilder(configDict=configDict, activities=vpFlex.activities)
-    # vpDiary.createDiaries() # merge trips of same vehicle now contained in allocate()
+    vpDiary.createDiaries()

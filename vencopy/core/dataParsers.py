@@ -189,8 +189,7 @@ class DataParser:
         """
         if lst is None:
             lst = []
-        # iKey not used in returndictBottomValues but used in checkFilterDict
-        # to have lists
+        # iKey not used in returndictBottomValues but used in checkFilterDict to have lists
         for iKey, iVal in baseDict.items():
             if isinstance(iVal, dict):
                 lst = self.returnDictBottomValues(iVal, lst)
@@ -207,11 +206,8 @@ class DataParser:
         :return: None
         """
         assert all(
-            isinstance(val, list)
-            for val in self.returnDictBottomValues(self.filterDict)
-        ), (
-            "All values in filter dictionaries have to be lists, but are not"
-        )
+            isinstance(val, list) for val in self.returnDictBottomValues(self.filterDict)
+            ), ("All values in filter dictionaries have to be lists, but are not")
 
     def returnDictBottomKeys(self, baseDict: dict, lst: list = None) -> list:
         """
@@ -241,7 +237,6 @@ class DataParser:
 
         :return: None
         """
-
         print(f'Starting filtering, applying {len(self.returnDictBottomKeys(filterDict))} filters.')
         simpleFilter = pd.DataFrame(index=self.data.index)
         sophFilter = pd.DataFrame(index=self.data.index)
@@ -277,9 +272,7 @@ class DataParser:
         self.data = self.dataSimple[sophFilter.all(axis='columns')]
         self.filterAnalysis(simpleFilter.join(sophFilter))
 
-    def setIncludeFilter(
-        self, includeFilterDict: dict, dataIndex
-    ) -> pd.DataFrame:
+    def setIncludeFilter(self, includeFilterDict: dict, dataIndex) -> pd.DataFrame:
         """
         Read-in function for include filter dict from parseConfig.yaml
 
@@ -289,16 +282,12 @@ class DataParser:
         :return: Returns a data frame with individuals using car
                 as a mode of transport
         """
-        incFilterCols = pd.DataFrame(
-            index=dataIndex, columns=includeFilterDict.keys()
-        )
+        incFilterCols = pd.DataFrame(index=dataIndex, columns=includeFilterDict.keys())
         for incCol, incElements in includeFilterDict.items():
             incFilterCols[incCol] = self.data[incCol].isin(incElements)
         return incFilterCols
 
-    def setExcludeFilter(
-        self, excludeFilterDict: dict, dataIndex
-    ) -> pd.DataFrame:
+    def setExcludeFilter(self, excludeFilterDict: dict, dataIndex) -> pd.DataFrame:
         """
         Read-in function for exclude filter dict from parseConfig.yaml
 
@@ -307,9 +296,7 @@ class DataParser:
         :param dataIndex: Index for the data frame
         :return: Returns a filtered data frame with exclude filters
         """
-        exclFilterCols = pd.DataFrame(
-            index=dataIndex, columns=excludeFilterDict.keys()
-        )
+        exclFilterCols = pd.DataFrame(index=dataIndex, columns=excludeFilterDict.keys())
         for excCol, excElements in excludeFilterDict.items():
             exclFilterCols[excCol] = ~self.data[excCol].isin(excElements)
         return exclFilterCols
@@ -323,25 +310,15 @@ class DataParser:
         :param dataIndex: Index for the data frame
         :return:
         """
-        greaterThanFilterCols = pd.DataFrame(
-            index=dataIndex, columns=greaterThanFilterDict.keys()
-        )
+        greaterThanFilterCols = pd.DataFrame(index=dataIndex, columns=greaterThanFilterDict.keys())
         for greaterCol, greaterElements in greaterThanFilterDict.items():
-            greaterThanFilterCols[greaterCol] = (
-                self.data[greaterCol] >= greaterElements.pop()
-            )
+            greaterThanFilterCols[greaterCol] = (self.data[greaterCol] >= greaterElements.pop())
             if len(greaterElements) > 0:
-                warnings.warn(
-                    f"You specified more than one value as lower "
-                    f"limit for filtering column {greaterCol}."
-                    f"Only considering the last element given "
-                    f"in the parseConfig."
-                )
+                warnings.warn(f"You specified more than one value as lower limit for filtering column {greaterCol}."
+                              f"Only considering the last element given in the parseConfig.")
         return greaterThanFilterCols
 
-    def setSmallerThanFilter(
-        self, smallerThanFilterDict: dict, dataIndex
-    ) -> pd.DataFrame:
+    def setSmallerThanFilter(self, smallerThanFilterDict: dict, dataIndex) -> pd.DataFrame:
         """
         Read-in function for smallerThan filter dict from parseConfig.yaml
 
@@ -351,20 +328,12 @@ class DataParser:
         :return: Returns a data frame of trips covering
                  a distance of less than 1000 km
         """
-        smallerThanFilterCols = pd.DataFrame(
-            index=dataIndex, columns=smallerThanFilterDict.keys()
-        )
+        smallerThanFilterCols = pd.DataFrame(index=dataIndex, columns=smallerThanFilterDict.keys())
         for smallerCol, smallerElements in smallerThanFilterDict.items():
-            smallerThanFilterCols[smallerCol] = (
-                self.data[smallerCol] <= smallerElements.pop()
-            )
+            smallerThanFilterCols[smallerCol] = (self.data[smallerCol] <= smallerElements.pop())
             if len(smallerElements) > 0:
-                warnings.warn(
-                    f"You specified more than one value as upper "
-                    f"limit for filtering column {smallerCol}."
-                    f"Only considering the last element given "
-                    f"in the parseConfig."
-                )
+                warnings.warn(f"You specified more than one value as upper limit for filtering column {smallerCol}."
+                              f"Only considering the last element given in the parseConfig.")
         return smallerThanFilterCols
 
     def __filterInconsistentSpeedTrips(self):
@@ -375,7 +344,6 @@ class DataParser:
 
         :return: None
         """
-
         # FIXME Add timestamp comparison instead of or additionally to variable "travel time",
         #  look at hhPersonID 80628472
         self.data['averageSpeed'] = self.data['tripDistance'] / (self.data['travelTime'] / 60)
@@ -415,7 +383,6 @@ class DataParser:
         :param filterData:
         :return: None
         """
-
         lenData = sum(filterData.all(axis='columns'))
         boolDict = {iCol: sum(filterData[iCol]) for iCol in filterData}
         print('The following values were taken into account after simple threshold filtering:')
@@ -502,16 +469,15 @@ class DataParser:
         print(f'Finished activity composition with {self.activities["tripID"].fillna(0).astype(bool).sum()} trips '
               f'and {self.activities["parkID"].fillna(0).astype(bool).sum()} parking activites')
 
-    def process(self, filterDict: dict):
+    def process(self):
         """
         Wrapper function for harmonising and filtering the dataset.
         """
-        self.checkFilterDict(filterDict)
-        self.filter(filterDict)
-        self.addParkingRows()
+        raise NotImplementedError('Implement process method for DataParser.')
+
+    def writeOutput(self):
         writeOut(dataset=self.activities, outputFolder='diaryOutput', fileKey='outputDataParser',
                  datasetID=self.datasetID, localPathConfig=self.localPathConfig, globalConfig=self.globalConfig)
-        print("Generic parsing completed")
 
 
 class IntermediateParsing(DataParser):
@@ -789,8 +755,6 @@ class ParseMiD(IntermediateParsing):
         self.updateEndTimestamp()
         self.harmonizeVariablesGenericIdNames()
         self.addParkingRows()
-        writeOut(dataset=self.activities, outputFolder='diaryOutput', fileKey='outputDataParser',
-                 datasetID=self.datasetID, localPathConfig=self.localPathConfig, globalConfig=self.globalConfig)
         print("Parsing MiD dataset completed")
 
 
@@ -939,8 +903,6 @@ class ParseVF(IntermediateParsing):
         self.updateEndTimestamp()
         self.harmonizeVariablesGenericIdNames()
         self.addParkingRows()
-        writeOut(dataset=self.activities, outputFolder='diaryOutput', fileKey='outputDataParser',
-                 datasetID=self.datasetID, localPathConfig=self.localPathConfig, globalConfig=self.globalConfig)
         print("Parsing VF dataset completed")
 
 
@@ -1004,36 +966,20 @@ class ParseKiD(IntermediateParsing):
         # tripStartYear, tripStartMonth, tripStartDay
         # from tripStartClock retrieve tripStartHour, tripStartMinute
         # from tripEndClock retrieve tripEndHour, tripEndMinute
-        self.data["tripStartDate"] = pd.to_datetime(
-            self.data["tripStartDate"], format="%d.%m.%Y"
-        )
+        self.data["tripStartDate"] = pd.to_datetime(self.data["tripStartDate"], format="%d.%m.%Y")
         self.data["tripStartYear"] = self.data["tripStartDate"].dt.year
         self.data["tripStartMonth"] = self.data["tripStartDate"].dt.month
         self.data["tripStartDay"] = self.data["tripStartDate"].dt.day
         self.data["tripStartWeekday"] = self.data["tripStartDate"].dt.weekday
-        self.data["tripStartWeek"] = (
-            self.data["tripStartDate"].dt.isocalendar().week
-        )
-        self.data["tripStartHour"] = pd.to_datetime(
-            self.data["tripStartClock"], format="%H:%M"
-        ).dt.hour
-        self.data["tripStartMinute"] = pd.to_datetime(
-            self.data["tripStartClock"], format="%H:%M"
-        ).dt.minute
-        self.data["tripEndHour"] = pd.to_datetime(
-            self.data["tripEndClock"], format="%H:%M"
-        ).dt.hour
-        self.data["tripEndMinute"] = pd.to_datetime(
-            self.data["tripEndClock"], format="%H:%M"
-        ).dt.minute
+        self.data["tripStartWeek"] = (self.data["tripStartDate"].dt.isocalendar().week)
+        self.data["tripStartHour"] = pd.to_datetime(self.data["tripStartClock"], format="%H:%M").dt.hour
+        self.data["tripStartMinute"] = pd.to_datetime(self.data["tripStartClock"], format="%H:%M").dt.minute
+        self.data["tripEndHour"] = pd.to_datetime(self.data["tripEndClock"], format="%H:%M").dt.hour
+        self.data["tripEndMinute"] = pd.to_datetime(self.data["tripEndClock"], format="%H:%M").dt.minute
         if weekday:
-            self.addStrColumnFromVariable(
-                colName="weekdayStr", varName="tripStartWeekday"
-            )
+            self.addStrColumnFromVariable(colName="weekdayStr", varName="tripStartWeekday")
         if purpose:
-            self.addStrColumnFromVariable(
-                colName="purposeStr", varName="tripPurpose"
-            )
+            self.addStrColumnFromVariable(colName="purposeStr", varName="tripPurpose")
 
     def convertTypes(self):
         """
@@ -1080,13 +1026,9 @@ class ParseKiD(IntermediateParsing):
 
     def excludeHours(self):
         """
-        Removes trips where both start and end trip time are missing
+        Removes trips where both start and end trip time are missing.
         """
-        self.data = self.data.loc[
-            (self.data["tripStartClock"] != "-1:-1")
-            & (self.data["tripEndClock"] != "-1:-1"),
-            :,
-        ]
+        self.data = self.data.loc[(self.data["tripStartClock"] != "-1:-1") & (self.data["tripEndClock"] != "-1:-1"), :]
 
     def process(self):
         """
@@ -1104,23 +1046,14 @@ class ParseKiD(IntermediateParsing):
         self.updateEndTimestamp()
         self.harmonizeVariablesGenericIdNames()
         self.addParkingRows()
-        writeOut(dataset=self.activities, outputFolder='diaryOutput', fileKey='outputDataParser',
-                 datasetID=self.datasetID, localPathConfig=self.localPathConfig, globalConfig=self.globalConfig)
         print("Parsing KiD dataset completed")
 
 
 if __name__ == '__main__':
 
     basePath = Path(__file__).parent.parent
-    configNames = (
-        "globalConfig",
-        "localPathConfig",
-        "parseConfig",
-        "diaryConfig",
-        "gridConfig",
-        "flexConfig",
-        "evaluatorConfig",
-    )
+    configNames = ("globalConfig", "localPathConfig", "parseConfig", "diaryConfig",
+                   "gridConfig", "flexConfig", "evaluatorConfig")
     configDict = loadConfigDict(configNames, basePath)
 
     datasetID = "MiD17"  # options are MiD08, MiD17, KiD
@@ -1131,3 +1064,4 @@ if __name__ == '__main__':
     elif datasetID == "VF":
         vpData = ParseVF(configDict=configDict, datasetID=datasetID, debug=False)
     vpData.process()
+    # vpData.writeOutput()
