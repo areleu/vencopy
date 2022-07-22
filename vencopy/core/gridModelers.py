@@ -34,7 +34,7 @@ class GridModeler:
         self.gridAvailabilityProb = self.gridConfig['gridAvailabilityDistribution']
         self.chargeAvailability = None
 
-    def assignGridViaPurposes(self):
+    def _assignGridViaPurposes(self):
         """
         Method to translate purpose profiles into hourly profiles of
         true/false giving the charging station
@@ -49,7 +49,7 @@ class GridModeler:
         self.activities['chargingPower'] = self.chargeAvailability
         print('Grid connection assignment complete')
 
-    def assignGridViaProbabilities(self, setSeed: int):
+    def _assignGridViaProbabilities(self, setSeed: int):
         """
         :param setSeed: Seed for reproducing random number
         :return: Returns a dataFrame holding charging capacity for each trip
@@ -59,7 +59,7 @@ class GridModeler:
         print('Starting with charge connection replacement of location purposes')
         for purpose in self.activities.purposeStr.unique():
             if purpose == "HOME":
-                activitiesHome = self.homeProbabilityDistribution(setSeed=42)
+                activitiesHome = self._homeProbabilityDistribution(setSeed=42)
             else:
                 subset = self.activities.loc[self.activities.purposeStr == purpose].copy()
                 power = list((self.gridConfig["gridAvailabilityDistribution"][purpose]).keys())
@@ -75,7 +75,7 @@ class GridModeler:
         self.activities = pd.concat(dataframes).reset_index(drop=True)
         print('Grid connection assignment complete')
 
-    def homeProbabilityDistribution(self, setSeed: int):
+    def _homeProbabilityDistribution(self, setSeed: int):
         # adds condition that charging at home in the morning has the same rated capacity as in the evening
         # if first and/or last parking ar at home, instead of reiterating the home distribution (or separate home from
         # the main function) it assign the home charging probability based on unique household IDs instead of
@@ -106,10 +106,10 @@ class GridModeler:
         reproduction of random numbers can be specified here.
         """
         if self.gridModel == 'simple':
-            self.assignGridViaPurposes()
+            self._assignGridViaPurposes()
         elif self.gridModel == 'probability':
             seed = 42
-            self.assignGridViaProbabilities(setSeed=seed)
+            self._assignGridViaProbabilities(setSeed=seed)
         else:
             raise(ValueError(f'Specified grid modeling option {self.gridModel} is not implemented. Please choose'
                              f'"simple" or "probability"'))
