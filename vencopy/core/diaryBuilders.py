@@ -22,23 +22,17 @@ from vencopy.utils.globalFunctions import loadConfigDict, createFileString, writ
 
 
 class DiaryBuilder:
-    def __init__(self, configDict: dict, activities: pd.DataFrame, debug: bool = True):
+    def __init__(self, configDict: dict, activities: pd.DataFrame):
         self.diaryConfig = configDict['diaryConfig']
         self.globalConfig = configDict['globalConfig']
         self.localPathConfig = configDict['localPathConfig']
         self.datasetID = datasetID
         self.deltaTime = configDict['diaryConfig']['TimeDelta']
-        if debug:
-            self.activities = activities.loc[0:20, :]
-        else:
-            self.activities = activities.copy()
-        distributedActivities = TimeDiscretiser(
-            activities=self.activities, dt=self.deltaTime, method="distribute")
+        distributedActivities = TimeDiscretiser(activities=self.activities, dt=self.deltaTime, method="distribute")
         # self.drain = distributedActivities.discretise(column="drain")
         self.uncontrolledCharge = distributedActivities.discretise(column="uncontrolledCharge")
         # self.residualNeed = distributedActivities.discretise(column="residualNeed") # in elec terms kWh elec
-        selectedActivities = TimeDiscretiser(
-             activities=self.activities, dt=self.deltaTime, method="select")
+        selectedActivities = TimeDiscretiser(activities=self.activities, dt=self.deltaTime, method="select")
         self.chargingPower = selectedActivities.discretise(column="chargingPower")
         self.minBatteryLevel = selectedActivities.discretise(column="minBatLev")
         self.maxBatteryLevel = selectedActivities.discretise(column="maxBatLev")
@@ -241,11 +235,11 @@ if __name__ == '__main__':
     configDict = loadConfigDict(configNames, basePath=basePath)
 
     if datasetID == "MiD17":
-        vpData = ParseMiD(configDict=configDict, datasetID=datasetID)
+        vpData = ParseMiD(configDict=configDict, datasetID=datasetID, debug=False)
     elif datasetID == "KiD":
-        vpData = ParseKiD(configDict=configDict, datasetID=datasetID)
+        vpData = ParseKiD(configDict=configDict, datasetID=datasetID, debug=False)
     elif datasetID == "VF":
-        vpData = ParseVF(configDict=configDict, datasetID=datasetID)
+        vpData = ParseVF(configDict=configDict, datasetID=datasetID, debug=False)
     vpData.process()
 
     vpGrid = GridModeler(configDict=configDict, datasetID=datasetID, activities=vpData.activities, gridModel='simple')
@@ -254,5 +248,5 @@ if __name__ == '__main__':
     vpFlex = FlexEstimator(configDict=configDict, datasetID=datasetID, activities=vpGrid.activities)
     vpFlex.estimateTechnicalFlexibility()
 
-    vpDiary = DiaryBuilder(configDict=configDict, activities=vpFlex.activities, debug=True)
+    vpDiary = DiaryBuilder(configDict=configDict, activities=vpFlex.activities)
     # vpDiary.createDiaries() # merge trips of same vehicle now contained in allocate()

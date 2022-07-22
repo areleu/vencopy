@@ -23,7 +23,7 @@ from vencopy.utils.globalFunctions import loadConfigDict, createFileString, writ
 
 
 class DataParser:
-    def __init__(self, configDict: dict, datasetID: str, fpInZip=None, loadEncrypted=False,):
+    def __init__(self, configDict: dict, datasetID: str, fpInZip=None, loadEncrypted=False, debug=False):
         """
         Basic class for parsing a mobility survey trip data set. Currently both
         German travel surveys MiD 2008 and MiD 2017 are pre-configured and one
@@ -65,37 +65,12 @@ class DataParser:
         else:
             print(f"Starting to retrieve local data file from {self.rawDataPath}")
             self.loadData()
+        if debug:
+            self.rawData = self.rawData.loc[0:200, :]
+        else:
+            self.rawData = self.rawData.copy()
 
-    def writeOut(self):
-        """
-        General writeout utility
-
-        :param globalConfig: global config storing relative paths, filenames and run labels
-        :param dataDrive: Driving distance diary for each survey participant
-        :param dataPurpose: Parking purpose diary for each survey participant
-        :param datasetID: ID used for filenames
-        :return: None
-        """
-        self.data.to_csv(
-            Path(self.localPathConfig['pathAbsolute']['vencoPyRoot']) / self.globalConfig[
-                'pathRelative']['parseOutput'] /
-            createFileString(
-                globalConfig=self.globalConfig,
-                fileKey='filteredDataset',
-                datasetID=self.datasetID))
-        print(
-            (
-                'Filtered dataset written to '
-                + str(
-                    createFileString(
-                        globalConfig=self.globalConfig,
-                        fileKey='filteredDataset',
-                        datasetID=self.datasetID,
-                    )
-                )
-            )
-        )
-
+    
     def loadData(self):
         """
         Loads data specified in self.rawDataPath and stores it in self.rawData.
@@ -109,22 +84,16 @@ class DataParser:
         # file even as the ending matches) readable for the user?
         # Should we have a manual error treatment here?
         if self.rawDataPath.suffix == ".dta":
-            self.rawData = pd.read_stata(
-                self.rawDataPath,
-                convert_categoricals=False,
-                convert_dates=False,
-                preserve_dtypes=False,
-            )
-
+            self.rawData = pd.read_stata(self.rawDataPath, convert_categoricals=False, convert_dates=False,
+                                         preserve_dtypes=False)
         # This has not been tested before the beta release
         elif self.rawDataPath.suffix == ".csv":
             self.rawData = pd.read_csv(self.rawDataPath)
         else:
             Exception(
                 f"Data type {self.rawDataPath.suffix} not yet specified. Available types so far are .dta and .csv")
-
         print(f"Finished loading {len(self.rawData)} rows of raw data of type {self.rawDataPath.suffix}")
-
+        return self.rawData
 
     def loadEncryptedData(self, pathToZip, pathInZip):
         """
@@ -141,17 +110,9 @@ class DataParser:
         """
         with ZipFile(pathToZip) as myzip:
             if ".dta" in pathInZip:
-                self.rawData = pd.read_stata(
-                    myzip.open(
-                        pathInZip,
-                        pwd=bytes(
-                            self.parseConfig["encryptionPW"], encoding="utf-8"
-                        ),
-                    ),
-                    convert_categoricals=False,
-                    convert_dates=False,
-                    preserve_dtypes=False,
-                )
+                self.rawData = pd.read_stata(myzip.open(
+                    pathInZip,pwd=bytes(self.parseConfig["encryptionPW"], encoding="utf-8"),),
+                    convert_categoricals=False, convert_dates=False, preserve_dtypes=False,)
             else:  # if '.csv' in pathInZip:
                 self.rawData = pd.read_csv(
                     myzip.open(
@@ -164,10 +125,8 @@ class DataParser:
                     decimal=",",
                 )
 
-        print(
-            f"Finished loading {len(self.rawData)}"
-            f"rows of raw data of type {self.rawDataPath.suffix}"
-        )
+        print(f"Finished loading {len(self.rawData)} rows of raw data of type {self.rawDataPath.suffix}")
+
 
     def checkDatasetID(self, datasetID: str, parseConfig: dict) -> str:
         """
@@ -555,7 +514,8 @@ class DataParser:
         self.checkFilterDict(filterDict)
         self.filter(filterDict)
         self.addParkingRows()
-        self.writeOut()
+        writeOut(dataset=self.activities, outputFolder='diaryOutput', fileKey='outputDataParser',
+                 datasetID=self.datasetID, localPathConfig=self.localPathConfig, globalConfig=self.globalConfig)
         print("Generic parsing completed")
 
 
@@ -746,11 +706,7 @@ class ParseMiD(IntermediateParsing):
                               file. For this, a possword has to be
                               specified in parseConfig['PW'].
         """
-        super().__init__(
-            configDict=configDict,
-            datasetID=datasetID,
-            loadEncrypted=loadEncrypted,
-        )
+        super().__init__(configDict=configDict, datasetID=datasetID, loadEncrypted=loadEncrypted)
 
     def harmonizeVariables(self):
         """

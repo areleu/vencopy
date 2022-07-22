@@ -27,6 +27,8 @@ class FlexEstimator:
     def __init__(self, configDict: dict, datasetID: str, activities: pd.DataFrame):
         self.datasetID = datasetID
         self.flexConfig = configDict['flexConfig']
+        self.globalConfig = configDict['globalConfig']
+        self.localPathConfig = configDict['localPathConfig']
         self.upperBatLev = self.flexConfig['Battery_capacity'] * self.flexConfig['Maximum_SOC']
         self.lowerBatLev = self.flexConfig['Battery_capacity'] * self.flexConfig['Minimum_SOC']
         self.activities = activities.copy()
