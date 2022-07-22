@@ -19,7 +19,7 @@ import numpy as np
 import warnings
 from pathlib import Path
 from zipfile import ZipFile
-from vencopy.utils.globalFunctions import createFileString
+from vencopy.utils.globalFunctions import loadConfigDict, createFileString, writeOut
 
 
 class DataParser:
@@ -838,7 +838,8 @@ class ParseMiD(IntermediateParsing):
         self.updateEndTimestamp()
         self.harmonizeVariablesGenericIdNames()
         self.addParkingRows()
-        self.writeOut()
+        writeOut(dataset=self.activities, outputFolder='diaryOutput', fileKey='outputDataParser',
+                 datasetID=self.datasetID, localPathConfig=self.localPathConfig, globalConfig=self.globalConfig)
         print("Parsing MiD dataset completed")
 
 
@@ -860,11 +861,7 @@ class ParseVF(IntermediateParsing):
                               file. For this, a possword has to be
                               specified in parseConfig['PW'].
         """
-        super().__init__(
-            configDict=configDict,
-            datasetID=datasetID,
-            loadEncrypted=loadEncrypted,
-        )
+        super().__init__(configDict=configDict, datasetID=datasetID, loadEncrypted=loadEncrypted)
 
     def loadData(self):
         """
@@ -991,7 +988,8 @@ class ParseVF(IntermediateParsing):
         self.updateEndTimestamp()
         self.harmonizeVariablesGenericIdNames()
         self.addParkingRows()
-        self.writeOut()
+        writeOut(dataset=self.activities, outputFolder='diaryOutput', fileKey='outputDataParser',
+                 datasetID=self.datasetID, localPathConfig=self.localPathConfig, globalConfig=self.globalConfig)
         print("Parsing VF dataset completed")
 
 
@@ -1155,13 +1153,12 @@ class ParseKiD(IntermediateParsing):
         self.updateEndTimestamp()
         self.harmonizeVariablesGenericIdNames()
         self.addParkingRows()
-        self.writeOut()
+        writeOut(dataset=self.activities, outputFolder='diaryOutput', fileKey='outputDataParser',
+                 datasetID=self.datasetID, localPathConfig=self.localPathConfig, globalConfig=self.globalConfig)
         print("Parsing KiD dataset completed")
 
 
 if __name__ == '__main__':
-
-    from vencopy.utils.globalFunctions import loadConfigDict
 
     basePath = Path(__file__).parent.parent
     configNames = (

@@ -17,7 +17,7 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 from scipy.stats.sampling import DiscreteAliasUrn
-from vencopy.utils.globalFunctions import loadConfigDict
+from vencopy.utils.globalFunctions import loadConfigDict, writeOut
 from vencopy.core.dataParsers import ParseMiD, ParseKiD, ParseVF
 
 
@@ -27,6 +27,7 @@ class GridModeler:
         self.gridConfig = configDict['gridConfig']
         self.flexConfig = configDict['flexConfig']
         self.localPathConfig = configDict['localPathConfig']
+        self.datasetID = datasetID
         self.gridModel = gridModel
         self.activities = activities
         self.gridAvailabilitySimple = self.gridConfig['chargingInfrastructureMappings']
@@ -108,6 +109,9 @@ class GridModeler:
         else:
             raise(ValueError(f'Specified grid modeling option {self.gridModel} is not implemented. Please choose'
                              f'"simple" or "probability"'))
+        writeOut(dataset=self.activities, outputFolder='gridOutput', fileKey='outputGridModeler',
+                 datasetID=self.datasetID, localPathConfig=self.localPathConfig, globalConfig=self.globalConfig)
+       
 
 
 if __name__ == "__main__":

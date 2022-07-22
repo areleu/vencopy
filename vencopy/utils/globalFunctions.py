@@ -117,3 +117,11 @@ def writeProfilesToCSV(profileDictOut, globalConfig: dict, localPathConfig: dict
         for iName, iProf in profileDictOut.items():
             iProf.to_csv(Path(localPathConfig['pathAbsolute']['vencoPyRoot']) / globalConfig['pathRelative']['flexOutput'] /
                          Path(f'vencopy_{iName}_{datasetID}.csv'), header=True)
+
+
+def writeOut(dataset, outputFolder, fileKey, datasetID, localPathConfig, globalConfig):
+    dataset.to_csv(Path(localPathConfig['pathAbsolute']['vencoPyRoot']) / globalConfig['pathRelative'][outputFolder] /
+                        createFileString(globalConfig=globalConfig, fileKey=fileKey, datasetID=datasetID))
+    print(('Dataset written to ' + str(createFileString(globalConfig=globalConfig,
+                                                        fileKey=fileKey,
+                                                        datasetID=datasetID))))

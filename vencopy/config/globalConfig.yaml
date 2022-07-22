@@ -12,7 +12,7 @@
 pathRelative:
     plots: ./output/evaluator/
     parseOutput: ./output/dataParser/
-    diaryOutput: ./output/tripDiaryBuilder/
+    diaryOutput: ./output/diaryBuilder/
     gridOutput: ./output/gridModeler/
     flexOutput: ./output/flexEstimator/
     evalOutput: ./output/evaluator/
@@ -30,7 +30,11 @@ files:
         householdsDataRaw: MiD2017_Regional_Haushalte.csv
         personsDataRaw: MiD2017_Regional_Personen.csv
         tripsDataRaw: MiD2017_Regional_Wege.dta
-        filteredDataset: outputDatasetDataParsers
+        outputDataParser: vencopyOutputDataParser
+        outputGridModeler: vencopyOutputGridModeler
+        outputFlexEstimator: vencopyOutputFlexEstimator
+        outputDiaryBuilder: vencopyOutputDiaryBuilder
+        filteredDataset: filteredDataset
         purposesProcessed: inputProfiles_Purpose  # inputProfiles_Purpose_RUNLABEL_MiD17.csv
         inputDataDriveProfiles: inputProfiles_Drive  # inputProfiles_Drive_RUNLABEL_MiD17.csv
         inputDataPlugProfiles: inputProfiles_Plug  # inputProfiles_Plug_RUNLABEL_MiD17.csv

@@ -18,7 +18,7 @@ from pathlib import Path
 from vencopy.core.dataParsers import ParseMiD, ParseKiD, ParseVF
 from vencopy.core.gridModelers import GridModeler
 from vencopy.core.flexEstimators import FlexEstimator
-from vencopy.utils.globalFunctions import loadConfigDict, createFileString
+from vencopy.utils.globalFunctions import loadConfigDict, createFileString, writeOut
 
 
 class DiaryBuilder:
@@ -34,8 +34,8 @@ class DiaryBuilder:
             self.activities = activities.copy()
         distributedActivities = TimeDiscretiser(
             activities=self.activities, dt=self.deltaTime, method="distribute")
-        self.drain = distributedActivities.discretise(column="drain")
-        # self.uncontrolledCharge = distributedActivities.discretise(column="uncontrolledCharge")
+        # self.drain = distributedActivities.discretise(column="drain")
+        self.uncontrolledCharge = distributedActivities.discretise(column="uncontrolledCharge")
         # self.residualNeed = distributedActivities.discretise(column="residualNeed") # in elec terms kWh elec
         selectedActivities = TimeDiscretiser(
              activities=self.activities, dt=self.deltaTime, method="select")
@@ -72,16 +72,16 @@ class TimeDiscretiser:
             method (str): The discretisation method. Must be one of 'distribute' or 'select'.
         """
         self.activities = activities
+        self.datasetID = datasetID
+        self.localPathConfig = configDict['localPathConfig']
+        self.globalConfig = configDict['globalConfig']
         self.method = method
         self.quantum = pd.Timedelta(value=1, unit='min')
         self.dt = dt  # e.g. 15 min
         self.nTimeSlots = self.nSlotsPerInterval(interval=pd.Timedelta(value=self.dt, unit='min'))
         self.timeDelta = (pd.timedelta_range(start='00:00:00', end='24:00:00', freq=f'{self.dt}T'))
         self.timeIndex = list(self.timeDelta)
-        # self.createTimeIndex()
 
-    # def createTimeIndex(self):
-    #     pass
 
     def nSlotsPerInterval(self, interval: pd.Timedelta):
         # Check if interval is an integer multiple of quantum
@@ -110,6 +110,7 @@ class TimeDiscretiser:
     def correctDataset(self):
         self.correctValues()
         self.correctTimestamp()
+        self.moveTripEndNextDay()
         
     def correctValues(self):
         if self.columnToDiscretise == 'drain':
@@ -126,6 +127,9 @@ class TimeDiscretiser:
     def correctTimestamp(self):
         self.activities['timestampStartCorrected'] = self.activities['timestampStart'].dt.round(f'{self.dt}min')
         self.activities['timestampEndCorrected'] = self.activities['timestampEnd'].dt.round(f'{self.dt}min')
+
+    def moveTripEndNextDay(self):
+        pass
 
     def createDiscretisedStructure(self):
         self.discreteData = pd.DataFrame(index=self.activities.genericID.unique(), columns=range(len(list(self.timeIndex))))
@@ -152,7 +156,6 @@ class TimeDiscretiser:
 
     def valueDistribute(self):
         # FIXME: add edge case treatment for nBins == 0 (happens in uncontrolled Charge)
-        # FIXME: add quick fix for drain profile, where tripID == NaN, drain = 0 
         self.activities['valPerBin'] = self.activities[self.columnToDiscretise] / self.activities['nBins']
         # self.activities['valQuantum'] = self.activities[self.columnToDiscretise] / self.activities['nQuantaPerActivity']
         # self.activities['valFullSlot'] = (self.activities['valQuantum'] * ((pd.Timedelta(value=self.dt, unit='min')).seconds/60)).round(6)
@@ -202,23 +205,13 @@ class TimeDiscretiser:
         self.dropNoLengthEvents()
 
     def allocate(self):
+        # TODO: move to wrapper createDiaries() ?
         for id in self.activities.genericID.unique():
             vehicleSubset = self.activities[self.activities.genericID == id].reset_index(drop=True)
             for irow in range(len(vehicleSubset)):
                 self.discreteData.at[id, vehicleSubset.loc[irow, 'firstBin']:(vehicleSubset.loc[irow, 'lastBin']+1)] = vehicleSubset.loc[irow, 'valPerBin']
+                return self.discreteData
 
-
-    def writeOut(self):
-        self.data.to_csv(
-            Path(self.localPathConfig['pathAbsolute']['vencoPyRoot']) / self.globalConfig[
-                'pathRelative']['parseOutput'] /
-            createFileString(
-                globalConfig=self.globalConfig,
-                fileKey='filteredDataset',
-                datasetID=self.datasetID))
-        print(('Filtered dataset written to ' + str(createFileString(globalConfig=self.globalConfig,
-                                                                     fileKey='filteredDataset',
-                                                                     datasetID=self.datasetID,))))
 
     def discretise(self, column: str):
         self.columnToDiscretise = column
@@ -226,14 +219,13 @@ class TimeDiscretiser:
         self.createDiscretisedStructure()
         self.identifyBinShares()
         self.allocateBinShares()
-        # FIXME: add wirte out
-        # self.writeOut()
+        writeOut(dataset=self.discreteData, outputFolder='diaryOutput', datasetID=self.datasetID,
+                 fileKey=(f'outputDiaryBuilder{self.columnToDiscretise}'), localPathConfig=self.localPathConfig,
+                 globalConfig=self.globalConfig)
         self.columnToDiscretise = None
 
 
 if __name__ == '__main__':
-
-    from vencopy.utils.globalFunctions import loadConfigDict
 
     datasetID = "MiD17"
     basePath = Path(__file__).parent.parent
@@ -259,8 +251,8 @@ if __name__ == '__main__':
     vpGrid = GridModeler(configDict=configDict, datasetID=datasetID, activities=vpData.activities, gridModel='simple')
     vpGrid.assignGrid()
 
-    vpFlex = FlexEstimator(configDict=configDict, activities=vpGrid.activities)
+    vpFlex = FlexEstimator(configDict=configDict, datasetID=datasetID, activities=vpGrid.activities)
     vpFlex.estimateTechnicalFlexibility()
 
-    vpDiary = DiaryBuilder(configDict=configDict, activities=vpFlex.activities, debug=False)
-    # vpDiary.createDiaries()
+    vpDiary = DiaryBuilder(configDict=configDict, activities=vpFlex.activities, debug=True)
+    # vpDiary.createDiaries() # merge trips of same vehicle now contained in allocate()

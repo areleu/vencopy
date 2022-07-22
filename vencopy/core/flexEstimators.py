@@ -18,15 +18,14 @@ from pathlib import Path
 from profilehooks import profile
 from vencopy.core.dataParsers import ParseMiD, ParseVF, ParseKiD
 from vencopy.core.gridModelers import GridModeler
+from vencopy.utils.globalFunctions import loadConfigDict, createFileString, writeOut
+
 
 
 
 class FlexEstimator:
-    def __init__(
-        self,
-        configDict: dict,
-        activities: pd.DataFrame,
-    ):
+    def __init__(self, configDict: dict, datasetID: str, activities: pd.DataFrame):
+        self.datasetID = datasetID
         self.flexConfig = configDict['flexConfig']
         self.upperBatLev = self.flexConfig['Battery_capacity'] * self.flexConfig['Maximum_SOC']
         self.lowerBatLev = self.flexConfig['Battery_capacity'] * self.flexConfig['Minimum_SOC']
@@ -308,10 +307,12 @@ class FlexEstimator:
         self.uncontrolledCharging()
         self.batteryLevelMin()
         self.correctDrain()
+        writeOut(dataset=self.activities, outputFolder='flexOutput', fileKey='outputFlexEstimator',
+                 datasetID=self.datasetID, localPathConfig=self.localPathConfig, globalConfig=self.globalConfig)
         print("Technical flexibility estimation ended")
 
+
 if __name__ == "__main__":
-    from vencopy.utils.globalFunctions import loadConfigDict
 
     basePath = Path(__file__).parent.parent
     configNames = ('globalConfig', 'localPathConfig', 'parseConfig', 'diaryConfig', 'gridConfig', 'flexConfig',
@@ -330,5 +331,5 @@ if __name__ == "__main__":
     vpGrid = GridModeler(configDict=configDict, datasetID=datasetID, activities=vpData.activities, gridModel='simple')
     vpGrid.assignGrid()
 
-    vpFlex = FlexEstimator(configDict=configDict, activities=vpGrid.activities)
+    vpFlex = FlexEstimator(configDict=configDict, datasetID=datasetID, activities=vpGrid.activities)
     vpFlex.estimateTechnicalFlexibility()
