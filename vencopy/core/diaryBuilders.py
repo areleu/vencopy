@@ -29,18 +29,18 @@ class DiaryBuilder:
         self.datasetID = datasetID
         self.activities = activities
         self.deltaTime = configDict['diaryConfig']['TimeDelta']
-        self.__distributedActivities = TimeDiscretiser(
+        self.distributedActivities = TimeDiscretiser(
             activities=self.activities, dt=self.deltaTime, method="distribute")
-        self.__selectedActivities = TimeDiscretiser(
+        self.selectedActivities = TimeDiscretiser(
             activities=self.activities, dt=self.deltaTime, method="select")
 
     def createDiaries(self):
-        self.drain = self.__distributedActivities.discretise(column="drain")
-        self.uncontrolledCharge = self.__distributedActivities.discretise(column="uncontrolledCharge")
-        # self.residualNeed = self.__distributedActivities.discretise(column="residualNeed") # in elec terms kWh elec
-        self.chargingPower = self.__selectedActivities.discretise(column="chargingPower")
-        self.minBatteryLevel = self.__selectedActivities.discretise(column="minBatLev")
-        self.maxBatteryLevel = self.__selectedActivities.discretise(column="maxBatLev")
+        # self.drain = self.distributedActivities.discretise(column="drain")
+        self.uncontrolledCharge = self.distributedActivities.discretise(column="uncontrolledCharge")
+        # self.residualNeed = self.distributedActivities.discretise(column="residualNeed") # in elec terms kWh elec
+        # self.chargingPower = self.selectedActivities.discretise(column="chargingPower")
+        # self.minBatteryLevel = self.selectedActivities.discretise(column="minBatLev")
+        # self.maxBatteryLevel = self.selectedActivities.discretise(column="maxBatLev")
 
 
 class TimeDiscretiser:
@@ -70,11 +70,12 @@ class TimeDiscretiser:
             dt (pd.TimeDelta): _description_
             method (str): The discretisation method. Must be one of 'distribute' or 'select'.
         """
-        # self.activities = activities
+        self.activities = activities
         self.datasetID = datasetID
+        self.method = method
+        self.oneActivity = None
         self.localPathConfig = configDict['localPathConfig']
         self.globalConfig = configDict['globalConfig']
-        self.method = method
         self.quantum = pd.Timedelta(value=1, unit='min')
         self.dt = dt  # e.g. 15 min
         self.nTimeSlots = self._nSlotsPerInterval(interval=pd.Timedelta(value=self.dt, unit='min'))
@@ -101,83 +102,85 @@ class TimeDiscretiser:
         necessaryColumns = ['tripID', 'timestampStart', 'timestampEnd', 'genericID',
                             'parkID', 'isFirstActivity', 'isLastActivity', 'timedelta',
                             'actID', 'nextActID', 'prevActID'] + [self.columnToDiscretise]
-        self.activities = self.activities[necessaryColumns]
-        self.correctDataset()
+        self.oneActivity = self.activities[necessaryColumns].copy()
+        self._correctDataset()
 
-    def correctDataset(self):
-        self.correctValues()
-        self.correctTimestamp()
-        self.moveTripEndNextDay()
+    def _correctDataset(self):
+        self._correctValues()
+        self._correctTimestamp()
+        self._moveTripEndNextDay()
 
-    def correctValues(self):
+    def _correctValues(self):
         if self.columnToDiscretise == 'drain':
             pass
         elif self.columnToDiscretise == 'uncontrolledCharge':
             # remove all rows with tripID
-            self.activities = self.activities[self.activities['uncontrolledCharge'].notna()]
+            self.oneActivity = self.oneActivity[self.oneActivity['uncontrolledCharge'].notna()]
+            # FIXME: instead of removing rows with tripID, assign 0 to rows with tripID
         elif self.columnToDiscretise == 'residualNeed':
             # pad NaN with 0
-            self.activities['residualNeed'] = self.activities['residualNeed'].fillna(0)
-        else:
-            return self.activities
+            self.oneActivity['residualNeed'] = self.oneActivity['residualNeed'].fillna(0)
+        return self.oneActivity
 
-    def correctTimestamp(self):
-        self.activities['timestampStartCorrected'] = self.activities['timestampStart'].dt.round(f'{self.dt}min')
-        self.activities['timestampEndCorrected'] = self.activities['timestampEnd'].dt.round(f'{self.dt}min')
+    def _correctTimestamp(self):
+        self.oneActivity['timestampStartCorrected'] = self.oneActivity['timestampStart'].dt.round(f'{self.dt}min')
+        self.oneActivity['timestampEndCorrected'] = self.oneActivity['timestampEnd'].dt.round(f'{self.dt}min')
 
-    def moveTripEndNextDay(self):
+    def _moveTripEndNextDay(self):
         pass
 
-    def createDiscretisedStructure(self):
+    def _createDiscretisedStructure(self):
         self.discreteData = pd.DataFrame(
-            index=self.activities.genericID.unique(), columns=range(len(list(self.timeIndex))))
+            index=self.oneActivity.genericID.unique(), columns=range(len(list(self.timeIndex))))
 
-    def identifyBinShares(self):  # calculate value share
-        self.calculateValueBinsAndQuanta()
-        self.identifyBins()
+    def _identifyBinShares(self):  # calculate value share
+        self._calculateValueBinsAndQuanta()
+        self._identifyBins()
         # wrapper for method:
         if self.method == 'distribute':
-            self.valueDistribute()
+            self._valueDistribute()
         elif self.method == 'select':
-            self.valueSelect()
+            self._valueSelect()
         else:
             raise(ValueError(
                 f'Specified method {self.method} is not implemented please specify "distribute" or "select".'))
 
-    def calculateValueBinsAndQuanta(self):
-        self.activities['activityDuration'] = (
-            self.activities['timestampEndCorrected']-self.activities['timestampStartCorrected'])
-        self.activities['nBins'] = self.activities['activityDuration'] / (pd.Timedelta(value=self.dt, unit='min'))
+    def _calculateValueBinsAndQuanta(self):
+        self.oneActivity['activityDuration'] = (
+            self.oneActivity['timestampEndCorrected']-self.oneActivity['timestampStartCorrected'])
+        # remove rows with activitsDuration = 0 which cause division by zero in nBins calculation
+        self.oneActivity = self.oneActivity[self.oneActivity['activityDuration'] != pd.Timedelta(value=0, unit='min')]
+        self.oneActivity['nBins'] = self.oneActivity['activityDuration'] / (pd.Timedelta(value=self.dt, unit='min'))
         # self.activities['nSlots'] = self.activities['delta'] / (pd.Timedelta(value=self.dt, unit='min'))
         # self.activities['nFullSlots'] = np.floor(self.activities['nSlots'])
         # self.activities['nPartialSlots'] = np.ceil((self.activities['nSlots'])-self.activities['nFullSlots'])
         # self.activities['nQuantaPerActivity'] = (
         #       self.activities['delta'] / np.timedelta64(1, 'm')) / (self.quantum.seconds/60)
 
-    def valueDistribute(self):
+    def _valueDistribute(self):
         # FIXME: add edge case treatment for nBins == 0 (happens in uncontrolled Charge)
-        self.activities['valPerBin'] = self.activities[self.columnToDiscretise] / self.activities['nBins']
+        self.oneActivity['valPerBin'] = self.oneActivity[self.columnToDiscretise] / self.oneActivity['nBins']
         # self.activities['valQuantum'] = (
         #           self.activities[self.columnToDiscretise] / self.activities['nQuantaPerActivity'])
         # self.activities['valFullSlot'] = (self.activities['valQuantum'] * ((
         #           pd.Timedelta(value=self.dt, unit='min')).seconds/60)).round(6)
 
-    def valueSelect(self):
-        self.activities['valPerBin'] = self.activities[self.columnToDiscretise]
+    def _valueSelect(self):
+        self.oneActivity['valPerBin'] = self.oneActivity[self.columnToDiscretise]
         # self.activities['valFullSlot'] = self.activities[self.columnToDiscretise]
         # self.activities['valLastSLot'] = self.activities[self.columnToDiscretise]
 
-    def identifyBins(self):
-        self.identifyFirstBin()
-        self.identifyLastBin()
+    def _identifyBins(self):
+        self._identifyFirstBin()
+        self._identifyLastBin()
 
-    def identifyFirstBin(self):
-        self.activities['timestampStartCorrected'] = self.activities['timestampStartCorrected'].apply(
+    def _identifyFirstBin(self):
+        self.oneActivity['timestampStartCorrected'] = self.oneActivity['timestampStartCorrected'].apply(
             lambda x: pd.to_datetime(str(x)))
-        dayStart = self.activities['timestampStartCorrected'].apply(
+        dayStart = self.oneActivity['timestampStartCorrected'].apply(
             lambda x: pd.Timestamp(year=x.year, month=x.month, day=x.day))
-        self.activities['dailyTimeDeltaStart'] = self.activities['timestampStartCorrected'] - dayStart
-        self.activities['startTimeFromMidnightSeconds'] = self.activities['dailyTimeDeltaStart'].apply(
+        self.oneActivity['dailyTimeDeltaStart'] = self.oneActivity['timestampStartCorrected'] - dayStart
+        self.oneActivity['startTimeFromMidnightSeconds'] = self.oneActivity['dailyTimeDeltaStart'].apply(
             lambda x: x.seconds)
         bins = pd.DataFrame({'index': self.timeDelta})
         bins.drop(bins.tail(1).index, inplace=True)  # remove last element, which is zero
@@ -185,13 +188,13 @@ class TimeDiscretiser:
         # self.activities['firstBin'] = self.activities['startTimeFromMidnightSeconds'].apply(
         # lambda x: np.where(x >= self.binFromMidnightSeconds)[0][-1])
         # more efficient below (edge case of value bigger than any bin, index will be -1)
-        self.activities['firstBin'] = self.activities['startTimeFromMidnightSeconds'].apply(
+        self.oneActivity['firstBin'] = self.oneActivity['startTimeFromMidnightSeconds'].apply(
             lambda x: np.argmax(x < self.binFromMidnightSeconds)-1)
 
-    def identifyLastBin(self):
-        dayEnd = self.activities['timestampEndCorrected'].apply(
+    def _identifyLastBin(self):
+        dayEnd = self.oneActivity['timestampEndCorrected'].apply(
             lambda x: pd.Timestamp(year=x.year, month=x.month, day=x.day))
-        self.activities['dailyTimeDeltaEnd'] = self.activities['timestampEndCorrected'] - dayEnd
+        self.oneActivity['dailyTimeDeltaEnd'] = self.oneActivity['timestampEndCorrected'] - dayEnd
         # Option 1
         # activitiesLength = self.activities['timedelta'].apply(lambda x: x.seconds)
         # self.activities['endTimeFromMidnightSeconds'] =
@@ -202,43 +205,42 @@ class TimeDiscretiser:
         # self.activities['lastBin'] = self.activities['endTimeFromMidnightSeconds'].apply(
         #                 lambda x: np.argmax(x < self.binFromMidnightSeconds)-1)
         # Option 3
-        self.activities['lastBin'] = self.activities['firstBin'] + self.activities['nBins'] - 1
+        self.oneActivity['lastBin'] = self.oneActivity['firstBin'] + self.oneActivity['nBins'] - 1
 
-    def allocateBinShares(self):
-        self.overlappingEvents()  # identify shared events in bin and handle them
-        self.allocate()
+    def _allocateBinShares(self):
+        self._overlappingEvents()  # identify shared events in bin and handle them
+        self._allocate()
 
-    def dropNoLengthEvents(self):
-        self.activities.drop(
-            self.activities[self.activities.timestampStartCorrected == self.activities.timestampEndCorrected].index)
+    def _dropNoLengthEvents(self):
+        self.oneActivity.drop(
+            self.oneActivity[self.oneActivity.timestampStartCorrected == self.oneActivity.timestampEndCorrected].index)
 
-    def overlappingEvents(self):
+    def _overlappingEvents(self):
         # stategy if time resolution high enough so that event becomes negligible
-        self.dropNoLengthEvents()
+        self._dropNoLengthEvents()
 
-    def allocate(self):
-        for id in self.activities.genericID.unique():
-            vehicleSubset = self.activities[self.activities.genericID == id].reset_index(drop=True)
+    def _allocate(self):
+        for id in self.oneActivity.genericID.unique():
+            vehicleSubset = self.oneActivity[self.oneActivity.genericID == id].reset_index(drop=True)
             for irow in range(len(vehicleSubset)):
                 self.discreteData.at[id, vehicleSubset.loc[irow, 'firstBin']:(
                     vehicleSubset.loc[irow, 'lastBin']+1)] = vehicleSubset.loc[irow, 'valPerBin']
                 return self.discreteData
 
-    def discretise(self, activities, column: str):
+    def discretise(self, column: str):
         self.columnToDiscretise = column
-        self.activities = activities
+        print(f"starting to discretise {self.columnToDiscretise}.")
         self._datasetCleanup()
-        self.createDiscretisedStructure()
-        self.identifyBinShares()
-        self.allocateBinShares()
+        self._createDiscretisedStructure()
+        self._identifyBinShares()
+        self._allocateBinShares()
         # move writeOut in separate method like in other classes
         # writeOut(dataset=self.discreteData, outputFolder='diaryOutput', datasetID=self.datasetID,
         #          fileKey=(f'outputDiaryBuilder{self.columnToDiscretise}'), localPathConfig=self.localPathConfig,
         #          globalConfig=self.globalConfig)
-        dfToReturn = self.activities
+        print(f"Discretisation finished for {self.columnToDiscretise}.")
         self.columnToDiscretise = None
-        self.activities = None
-        return dfToReturn
+        return self.discreteData
 
 
 if __name__ == '__main__':
@@ -250,7 +252,7 @@ if __name__ == '__main__':
     configDict = loadConfigDict(configNames, basePath=basePath)
 
     if datasetID == "MiD17":
-        vpData = ParseMiD(configDict=configDict, datasetID=datasetID, debug=False)
+        vpData = ParseMiD(configDict=configDict, datasetID=datasetID, debug=True)
     elif datasetID == "KiD":
         vpData = ParseKiD(configDict=configDict, datasetID=datasetID, debug=False)
     elif datasetID == "VF":

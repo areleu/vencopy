@@ -67,7 +67,7 @@ class DataParser:
         else:
             print(f"Starting to retrieve local data file from {self.rawDataPath}")
             self.loadData()
-        self.rawData = self.rawData.loc[0:200, :] if debug else self.rawData.copy()
+        self.rawData = self.rawData.loc[0:2000, :] if debug else self.rawData.copy()
 
     def loadData(self):
         """
@@ -267,7 +267,7 @@ class DataParser:
         self.dataSimple = self.data[simpleFilter.all(axis='columns')]
 
         # More sophisticated filtering functions
-        sophFilter = sophFilter.join(self.__filterInconsistentSpeedTrips())
+        sophFilter = sophFilter.join(self._filterInconsistentSpeedTrips())
         sophFilter = sophFilter.join(self.__filterOverlappingTrips())
 
         # Application of sophisticated filters
@@ -338,7 +338,7 @@ class DataParser:
                               f"Only considering the last element given in the parseConfig.")
         return smallerThanFilterCols
 
-    def __filterInconsistentSpeedTrips(self):
+    def _filterInconsistentSpeedTrips(self):
         """
         Filter out trips with inconsistent average speed. These trips are mainly trips where survey participant
         responses suggest that participants were travelling for the entire time they took for the whole purpose
@@ -346,7 +346,7 @@ class DataParser:
 
         :return: None
         """
-        # FIXME Add timestamp comparison instead of or additionally to variable "travel time",
+        # FIXME: Add timestamp comparison instead of or additionally to variable "travel time",
         #  look at hhPersonID 80628472
         self.data['averageSpeed'] = self.data['tripDistance'] / (self.data['travelTime'] / 60)
         return self.data['averageSpeed'] > self.parseConfig['filterDicts']['speedThreshold']
