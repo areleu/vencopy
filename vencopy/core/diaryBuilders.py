@@ -35,12 +35,14 @@ class DiaryBuilder:
             activities=self.activities, dt=self.deltaTime, method="select")
 
     def createDiaries(self):
-        # self.drain = self.distributedActivities.discretise(column="drain")
-        self.uncontrolledCharge = self.distributedActivities.discretise(column="uncontrolledCharge")
-        # self.residualNeed = self.distributedActivities.discretise(column="residualNeed") # in elec terms kWh elec
+        self.drain = self.distributedActivities.discretise(column="drain")
+        # self.uncontrolledCharge = self.distributedActivities.discretise(column="uncontrolledCharge")
+        # # # self.residualNeed = self.distributedActivities.discretise(column="residualNeed") # in elec terms kWh elec
         # self.chargingPower = self.selectedActivities.discretise(column="chargingPower")
-        # self.minBatteryLevel = self.selectedActivities.discretise(column="minBatLev")
-        # self.maxBatteryLevel = self.selectedActivities.discretise(column="maxBatLev")
+        # self.maxBatteryLevel = self.selectedActivities.discretise(column="maxBatteryLevelStart")
+        # # # self.maxBatteryLevelEnd = self.selectedActivities.discretise(column="maxBatteryLevelEnd")
+        # self.minBatteryLevel = self.selectedActivities.discretise(column="minBatteryLevelStart")
+        # # # self.minBatteryLevelEnd = self.selectedActivities.discretise(column="minBatteryLevelEnd")
 
 
 class TimeDiscretiser:
@@ -108,6 +110,7 @@ class TimeDiscretiser:
     def _correctDataset(self):
         self._correctValues()
         self._correctTimestamp()
+        # FIXME: need of a recheck that timstampStart(t) == timestampEnd(t-1)?
         self._moveTripEndNextDay()
 
     def _correctValues(self):
@@ -115,8 +118,9 @@ class TimeDiscretiser:
             pass
         elif self.columnToDiscretise == 'uncontrolledCharge':
             # remove all rows with tripID
-            self.oneActivity = self.oneActivity[self.oneActivity['uncontrolledCharge'].notna()]
-            # FIXME: instead of removing rows with tripID, assign 0 to rows with tripID
+            # self.oneActivity = self.oneActivity[self.oneActivity['uncontrolledCharge'].notna()]
+            # instead of removing rows with tripID, assign 0 to rows with tripID
+            self.oneActivity['uncontrolledCharge'] = self.oneActivity['uncontrolledCharge'].fillna(0)
         elif self.columnToDiscretise == 'residualNeed':
             # pad NaN with 0
             self.oneActivity['residualNeed'] = self.oneActivity['residualNeed'].fillna(0)
@@ -149,7 +153,9 @@ class TimeDiscretiser:
         self.oneActivity['activityDuration'] = (
             self.oneActivity['timestampEndCorrected']-self.oneActivity['timestampStartCorrected'])
         # remove rows with activitsDuration = 0 which cause division by zero in nBins calculation
-        self.oneActivity = self.oneActivity[self.oneActivity['activityDuration'] != pd.Timedelta(value=0, unit='min')]
+        # self.oneActivity = self.oneActivity[self.oneActivity['activityDuration'] != pd.Timedelta(value=0, unit='min')]
+        self.oneActivity = self.oneActivity.drop(
+            self.oneActivity[self.oneActivity.timestampStartCorrected == self.oneActivity.timestampEndCorrected].index)
         self.oneActivity['nBins'] = self.oneActivity['activityDuration'] / (pd.Timedelta(value=self.dt, unit='min'))
         # self.activities['nSlots'] = self.activities['delta'] / (pd.Timedelta(value=self.dt, unit='min'))
         # self.activities['nFullSlots'] = np.floor(self.activities['nSlots'])
@@ -158,7 +164,7 @@ class TimeDiscretiser:
         #       self.activities['delta'] / np.timedelta64(1, 'm')) / (self.quantum.seconds/60)
 
     def _valueDistribute(self):
-        # FIXME: add edge case treatment for nBins == 0 (happens in uncontrolled Charge)
+        # FIXME: add double check for edge case treatment for nBins == 0 (happens in uncontrolled Charge)
         self.oneActivity['valPerBin'] = self.oneActivity[self.columnToDiscretise] / self.oneActivity['nBins']
         # self.activities['valQuantum'] = (
         #           self.activities[self.columnToDiscretise] / self.activities['nQuantaPerActivity'])
@@ -206,38 +212,47 @@ class TimeDiscretiser:
         #                 lambda x: np.argmax(x < self.binFromMidnightSeconds)-1)
         # Option 3
         self.oneActivity['lastBin'] = self.oneActivity['firstBin'] + self.oneActivity['nBins'] - 1
+        # FIXME: more elegant way for lastBin +1 if lastActivity = True -> +1 ?
+        self.oneActivity.loc[self.oneActivity['isLastActivity'] == True, 'lastBin'] = (
+            self.oneActivity.loc[self.oneActivity['isLastActivity'] == True, 'lastBin'] + 1)
 
     def _allocateBinShares(self):
         self._overlappingEvents()  # identify shared events in bin and handle them
         self._allocate()
 
-    def _dropNoLengthEvents(self):
-        self.oneActivity.drop(
-            self.oneActivity[self.oneActivity.timestampStartCorrected == self.oneActivity.timestampEndCorrected].index)
+    # def _dropNoLengthEvents(self):
+    # moved before nBins calculation
+    #     self.oneActivity.drop(
+    #         self.oneActivity[self.oneActivity.timestampStartCorrected
+    #         == self.oneActivity.timestampEndCorrected].index)
 
     def _overlappingEvents(self):
-        # stategy if time resolution high enough so that event becomes negligible
-        self._dropNoLengthEvents()
+        pass
+        # stategy if time resolution high enough so that event becomes negligible (now in calculateValueBinsAndQuanta)
+        # self._dropNoLengthEvents()
+        # define other strategies to treat overlapping events here
 
     def _allocate(self):
         for id in self.oneActivity.genericID.unique():
             vehicleSubset = self.oneActivity[self.oneActivity.genericID == id].reset_index(drop=True)
             for irow in range(len(vehicleSubset)):
-                self.discreteData.at[id, vehicleSubset.loc[irow, 'firstBin']:(
-                    vehicleSubset.loc[irow, 'lastBin']+1)] = vehicleSubset.loc[irow, 'valPerBin']
-                return self.discreteData
+                self.discreteData.loc[id, (vehicleSubset.loc[irow, 'firstBin']):(
+                    vehicleSubset.loc[irow, 'lastBin'])] = vehicleSubset.loc[irow, 'valPerBin']
+        return self.discreteData
+
+    def _writeOutput(self):
+        writeOut(dataset=self.discreteData, outputFolder='diaryOutput', datasetID=self.datasetID,
+                 fileKey=('outputDiaryBuilder'), manualLabel=str(self.columnToDiscretise),
+                 localPathConfig=self.localPathConfig, globalConfig=self.globalConfig)
 
     def discretise(self, column: str):
         self.columnToDiscretise = column
-        print(f"starting to discretise {self.columnToDiscretise}.")
+        print(f"Starting to discretise {self.columnToDiscretise}.")
         self._datasetCleanup()
         self._createDiscretisedStructure()
         self._identifyBinShares()
         self._allocateBinShares()
-        # move writeOut in separate method like in other classes
-        # writeOut(dataset=self.discreteData, outputFolder='diaryOutput', datasetID=self.datasetID,
-        #          fileKey=(f'outputDiaryBuilder{self.columnToDiscretise}'), localPathConfig=self.localPathConfig,
-        #          globalConfig=self.globalConfig)
+        self._writeOutput()
         print(f"Discretisation finished for {self.columnToDiscretise}.")
         self.columnToDiscretise = None
         return self.discreteData
@@ -248,11 +263,11 @@ if __name__ == '__main__':
     datasetID = "MiD17"
     basePath = Path(__file__).parent.parent
     configNames = ("globalConfig", "localPathConfig", "parseConfig", "diaryConfig",
-                   "gridConfig", "flexConfig", "evaluatorConfig")
+                   "gridConfig", "flexConfig", "aggregatorConfig", "evaluatorConfig")
     configDict = loadConfigDict(configNames, basePath=basePath)
 
     if datasetID == "MiD17":
-        vpData = ParseMiD(configDict=configDict, datasetID=datasetID, debug=True)
+        vpData = ParseMiD(configDict=configDict, datasetID=datasetID, debug=False)
     elif datasetID == "KiD":
         vpData = ParseKiD(configDict=configDict, datasetID=datasetID, debug=False)
     elif datasetID == "VF":

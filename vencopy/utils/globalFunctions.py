@@ -40,14 +40,13 @@ def createOutputFolders(configDict: dict):
     mainDir = 'output'
     if not os.path.exists(Path(root / mainDir)):
         os.mkdir(Path(root / mainDir))
-        
-    subDirs =  ('dataParser', 'diaryBuilder', 'gridModeler', 'flexEstimator', 'evaluator')
+    subDirs = ('dataParser', 'diaryBuilder', 'gridModeler', 'flexEstimator', 'evaluator')
     for subDir in subDirs:
         if not os.path.exists(Path(root / mainDir / subDir)):
             os.mkdir(Path(root / mainDir / subDir))
 
 
-def createFileString(globalConfig: dict, fileKey: str, datasetID: str=None, manualLabel: str = '',
+def createFileString(globalConfig: dict, fileKey: str, datasetID: str, manualLabel: str = '',
                      filetypeStr: str = 'csv'):
     """
     Generic method used for fileString compilation throughout the VencoPy framework. This method does not write any
@@ -119,9 +118,10 @@ def writeProfilesToCSV(profileDictOut, globalConfig: dict, localPathConfig: dict
                          Path(f'vencopy_{iName}_{datasetID}.csv'), header=True)
 
 
-def writeOut(dataset, outputFolder, fileKey, datasetID, localPathConfig, globalConfig):
+def writeOut(dataset, outputFolder, fileKey, manualLabel, datasetID, localPathConfig, globalConfig):
     dataset.to_csv(Path(localPathConfig['pathAbsolute']['vencoPyRoot']) / globalConfig['pathRelative'][outputFolder] /
-                        createFileString(globalConfig=globalConfig, fileKey=fileKey, datasetID=datasetID))
+                   createFileString(globalConfig=globalConfig, manualLabel=manualLabel, fileKey=fileKey,
+                                    datasetID=datasetID))
     print(('Dataset written to ' + str(createFileString(globalConfig=globalConfig,
                                                         fileKey=fileKey,
                                                         datasetID=datasetID))))

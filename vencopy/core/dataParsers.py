@@ -67,7 +67,7 @@ class DataParser:
         else:
             print(f"Starting to retrieve local data file from {self.rawDataPath}")
             self.loadData()
-        self.rawData = self.rawData.loc[0:2000, :] if debug else self.rawData.copy()
+        self.rawData = self.rawData.loc[0:20, :] if debug else self.rawData.copy()
 
     def loadData(self):
         """
@@ -478,7 +478,7 @@ class DataParser:
         raise NotImplementedError('Implement process method for DataParser.')
 
     def writeOutput(self):
-        writeOut(dataset=self.activities, outputFolder='diaryOutput', fileKey='outputDataParser',
+        writeOut(dataset=self.activities, outputFolder='diaryOutput', fileKey='outputDataParser', manualLabel='',
                  datasetID=self.datasetID, localPathConfig=self.localPathConfig, globalConfig=self.globalConfig)
 
 
@@ -890,6 +890,9 @@ class ParseVF(IntermediateParsing):
             endsFollowingDay, "timestampEnd"
         ] + pd.offsets.Day(1)
 
+    def copyOverTripNextDay(self):
+        pass
+
     def process(self):
         """
         Wrapper function for harmonising and filtering the dataset.
@@ -903,6 +906,7 @@ class ParseVF(IntermediateParsing):
         self.addStrColumns()
         self.composeStartAndEndTimestamps()
         self.updateEndTimestamp()
+        # self.copyOverTripNextDay()
         self.harmonizeVariablesGenericIdNames()
         self.addParkingRows()
         print("Parsing VF dataset completed")
@@ -1055,7 +1059,7 @@ if __name__ == '__main__':
 
     basePath = Path(__file__).parent.parent
     configNames = ("globalConfig", "localPathConfig", "parseConfig", "diaryConfig",
-                   "gridConfig", "flexConfig", "evaluatorConfig")
+                   "gridConfig", "flexConfig", "aggregatorConfig", "evaluatorConfig")
     configDict = loadConfigDict(configNames, basePath)
 
     datasetID = "MiD17"  # options are MiD08, MiD17, KiD

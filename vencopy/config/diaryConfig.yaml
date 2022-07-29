@@ -7,7 +7,7 @@
 # __birthdate__ = '2019-02-12'
 # __status__ = 'prod'  # options are: dev, test, prod
 
-# This config holds all relative paths and filenames for tripDiaryBuilders.py
+# This config holds all relative paths and filenames for diaryBuilders.py
 
 TimeDelta: 15
 

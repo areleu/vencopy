@@ -277,7 +277,7 @@ class FlexEstimator:
         self.activities.loc[self.activities['tripID'].isna(), 'drain'] = 0
 
     def writeOutput(self):
-        writeOut(dataset=self.activities, outputFolder='flexOutput', fileKey='outputFlexEstimator',
+        writeOut(dataset=self.activities, outputFolder='flexOutput', fileKey='outputFlexEstimator', manualLabel='',
                  datasetID=self.datasetID, localPathConfig=self.localPathConfig, globalConfig=self.globalConfig)
 
     def estimateTechnicalFlexibility(self):
@@ -294,7 +294,7 @@ if __name__ == "__main__":
 
     basePath = Path(__file__).parent.parent
     configNames = ("globalConfig", "localPathConfig", "parseConfig", "diaryConfig",
-                   "gridConfig", "flexConfig", "evaluatorConfig")
+                   "gridConfig", "flexConfig", "aggregatorConfig", "evaluatorConfig")
     configDict = loadConfigDict(configNames, basePath)
 
     datasetID = "MiD17"  # options are MiD08, MiD17, KiD
@@ -311,4 +311,4 @@ if __name__ == "__main__":
 
     vpFlex = FlexEstimator(configDict=configDict, datasetID=datasetID, activities=vpGrid.activities)
     vpFlex.estimateTechnicalFlexibility()
-    # vpFlex.writeOutput()
+    vpFlex.writeOutput()
