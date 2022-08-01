@@ -18,25 +18,39 @@ from pathlib import Path
 from vencopy.core.dataParsers import ParseMiD, ParseKiD, ParseVF
 from vencopy.core.gridModelers import GridModeler
 from vencopy.core.flexEstimators import FlexEstimator
-from vencopy.core.flexEstimators import DiaryBuilder
+from vencopy.core.diaryBuilders import DiaryBuilder
 from vencopy.utils.globalFunctions import loadConfigDict  # , writeOut
 
 
 class ProfileAggregator():
-    def __init__(self, configDict: dict, activities: pd.DataFrame, profiles: list):
+    def __init__(self, configDict: dict, datasetID: str, activities: pd.DataFrame, profiles: list, cluster=False):
         self.aggregatorConfig = configDict['aggregatorConfig']
         self.globalConfig = configDict['globalConfig']
         self.localPathConfig = configDict['localPathConfig']
         self.datasetID = datasetID
         self.activities = activities
         self.profiles = profiles
+        self.clusterBool = cluster
         self.nClusters = self.aggregatorConfig['clustering']['nClusters']
+        self.clusterHH()
 
-    def pickProfiles(self):
+    def selectInputFeatures(self):
         # read from disk or from previous class
-        data_dir = ''
-        self.drain = pd.read_csv(data_dir + '', index_col='Unnamed: 1')
-        # self.drain = vpDiary.drain
+        self.datasetCleanup()
+        self.dropDuplicateHH()
+
+    def datasetCleanup(self):
+        # timestamp start and end, unique ID, column to discretise - get read of additional columns
+        necessaryColumns = ['genericID', 'oek_status', 'SKTYP', 'BLAND']
+        self.activities = self.activities[necessaryColumns].copy()
+
+    def dropDuplicateHH(self):
+        if self.datasetID == 'MiD':
+            self.activities.drop_duplicates(subset=['genericID'])
+
+    def clusterHH(self):
+        self.selectInputFeatures()
+        self.cluster()
 
     def cluster(self):
         pass
@@ -48,8 +62,7 @@ class ProfileAggregator():
         pass
 
     def createProfile(self):
-        self.readProfiles()
-        self.cluster()
+
         self.createWeeklyProfiles()
         self.createAnnualProfiles()
 
@@ -69,23 +82,26 @@ if __name__ == '__main__':
                    "gridConfig", "flexConfig", "aggregatorConfig", "evaluatorConfig")
     configDict = loadConfigDict(configNames, basePath=basePath)
 
-    if datasetID == "MiD17":
-        vpData = ParseMiD(configDict=configDict, datasetID=datasetID, debug=True)
-    elif datasetID == "KiD":
-        vpData = ParseKiD(configDict=configDict, datasetID=datasetID, debug=False)
-    elif datasetID == "VF":
-        vpData = ParseVF(configDict=configDict, datasetID=datasetID, debug=False)
-    vpData.process()
+    # if datasetID == "MiD17":
+    #     vpData = ParseMiD(configDict=configDict, datasetID=datasetID, debug=True)
+    # elif datasetID == "KiD":
+    #     vpData = ParseKiD(configDict=configDict, datasetID=datasetID, debug=False)
+    # elif datasetID == "VF":
+    #     vpData = ParseVF(configDict=configDict, datasetID=datasetID, debug=False)
+    # vpData.process()
 
-    vpGrid = GridModeler(configDict=configDict, datasetID=datasetID, activities=vpData.activities, gridModel='simple')
-    vpGrid.assignGrid()
+    # vpGrid = GridModeler(configDict=configDict, datasetID=datasetID, activities=vpData.activities, gridModel='simple')
+    # vpGrid.assignGrid()
 
-    vpFlex = FlexEstimator(configDict=configDict, datasetID=datasetID, activities=vpGrid.activities)
-    vpFlex.estimateTechnicalFlexibility()
+    # vpFlex = FlexEstimator(configDict=configDict, datasetID=datasetID, activities=vpGrid.activities)
+    # vpFlex.estimateTechnicalFlexibility()
 
-    vpDiary = DiaryBuilder(configDict=configDict, activities=vpFlex.activities)
-    vpDiary.createDiaries()
+    # vpDiary = DiaryBuilder(configDict=configDict, datasetID=datasetID, activities=vpFlex.activities)
+    # vpDiary.createDiaries()
 
     profiles = ("drain")
-    vpProfile = ProfileAggregator(configDict=configDict, activities=vpFlex.activities, profiles=profiles)
-    vpProfile.createProfiles()
+    activities = pd.read_csv('C:\\work\\VencoPy\\vencopy_internal\\vencopy\\vencopy\\output\\flexEstimator\\vencopyOutputFlexEstimator_DEBUG_MiD17_clusters.csv')
+    # vpProfile = ProfileAggregator(configDict=configDict, activities=vpFlex.activities, profiles=profiles)
+    vpProfile = ProfileAggregator(configDict=configDict, datasetID=datasetID,
+                                  activities=activities, profiles=profiles, cluster=True)
+    vpProfile.createTimeseries()

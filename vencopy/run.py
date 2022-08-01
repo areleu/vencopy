@@ -14,78 +14,51 @@ if __package__ is None or __package__ == "":
 
     sys.path.append(path.dirname(path.dirname(__file__)))
 
-import pandas as pd
 from pathlib import Path
 from vencopy.core.dataParsers import ParseMiD, ParseKiD, ParseVF
-from vencopy.core.diaryBuilders import diaryBuilder
+from vencopy.core.diaryBuilders import DiaryBuilder
 from vencopy.core.gridModelers import GridModeler
 from vencopy.core.flexEstimators import FlexEstimator
-from vencopy.core.evaluators import Evaluator
+from vencopy.core.profileAggregators import ProfileAggregator
+# from vencopy.core.evaluators import Evaluator
 from vencopy.utils.globalFunctions import loadConfigDict, createOutputFolders
 
 if __name__ == "__main__":
     # Set dataset and config to analyze, create output folders
     # datasetID options: 'MiD08' - 'MiD17' - 'KiD' - 'VF'
     datasetID = "MiD17"
-    configNames = (
-        "globalConfig",
-        "localPathConfig",
-        "parseConfig",
-        "diaryConfig",
-        "gridConfig",
-        "flexConfig",
-        "evaluatorConfig",
-    )
-    basePath = Path(__file__).parent
-    configDict = loadConfigDict(configNames, basePath)
+    basePath = Path(__file__).parent.parent
+    configNames = ("globalConfig", "localPathConfig", "parseConfig", "diaryConfig",
+                   "gridConfig", "flexConfig", "aggregatorConfig", "evaluatorConfig")
+    configDict = loadConfigDict(configNames, basePath=basePath)
     createOutputFolders(configDict=configDict)
 
-    # Parsing datasets
     if datasetID == "MiD17":
-        vpData = ParseMiD(configDict=configDict, datasetID=datasetID)
+        vpData = ParseMiD(configDict=configDict, datasetID=datasetID, debug=True)
     elif datasetID == "KiD":
-        vpData = ParseKiD(configDict=configDict, datasetID=datasetID)
+        vpData = ParseKiD(configDict=configDict, datasetID=datasetID, debug=False)
     elif datasetID == "VF":
-        vpData = ParseVF(configDict=configDict, datasetID=datasetID)
+        vpData = ParseVF(configDict=configDict, datasetID=datasetID, debug=False)
     vpData.process()
 
-    # # Trip distance and purpose diary compositions
-    vpDiary = diaryBuilder(
-        datasetID=datasetID,
-        configDict=configDict,
-        ParseData=vpData,
-        debug=True,
-    )
+    vpGrid = GridModeler(configDict=configDict, datasetID=datasetID, activities=vpData.activities, gridModel='simple')
+    vpGrid.assignGrid()
 
-    # Grid model application regular
-    vpGrid = GridModeler(configDict=configDict, datasetID=datasetID, gridModel='simple')
-    vpGrid.calcGrid()
+    vpFlex = FlexEstimator(configDict=configDict, datasetID=datasetID, activities=vpGrid.activities)
+    vpFlex.estimateTechnicalFlexibility()
+
+    vpDiary = DiaryBuilder(configDict=configDict, datasetID=datasetID, activities=vpFlex.activities)
+    vpDiary.createDiaries()
+
+    profiles = ("drain")
+    vpProfile = ProfileAggregator(configDict=configDict, datasetID=datasetID,
+                                  activities=vpDiary.activities, profiles=profiles, cluster=True)
+    vpProfile.createTimeseries()
 
     # Evaluate drive and trip purpose profile
-    vpEval = Evaluator(
-        configDict=configDict,
-        parseData=pd.Series(data=vpData, index=[datasetID]),
-    )
-    vpEval.plotParkingAndPowers(vpGrid=vpGrid)
-    vpEval.hourlyAggregates = vpEval.calcVariableSpecAggregates(
-        by=["tripStartWeekday"]
-    )
-    vpEval.plotAggregates()
+    # vpEval = Evaluator(configDict=configDict, parseData=pd.Series(data=vpData, index=[datasetID]))
+    # vpEval.plotParkingAndPowers(vpGrid=vpGrid)
+    # vpEval.hourlyAggregates = vpEval.calcVariableSpecAggregates(by=["tripStartWeekday"])
+    # vpEval.plotAggregates()
 
-    # Estimate charging flexibility based on driving profiles
-    # # and charge connection
-    vpFlex = FlexEstimator(
-        configDict=configDict, datasetID=datasetID, ParseData=vpData
-    )
-    vpFlex.baseProfileCalculation(gridModel=vpGrid.gridModel)
-    vpFlex.filter()
-    vpFlex.aggregate()
-    vpFlex.correct()
-    vpFlex.normalize()
-    vpFlex.writeOut()
-    print(
-        f"Total absolute electricity charged in uncontrolled charging: "
-        f"{vpFlex.chargeProfilesUncontrolled.sum().sum()} based on "
-        f"{datasetID}"
-    )
-    vpEval.plotProfiles(flexEstimator=vpFlex)
+    # vpEval.plotProfiles(flexEstimator=vpFlex)

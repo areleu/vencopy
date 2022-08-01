@@ -22,7 +22,7 @@ from vencopy.utils.globalFunctions import loadConfigDict, writeOut
 
 
 class DiaryBuilder:
-    def __init__(self, configDict: dict, activities: pd.DataFrame):
+    def __init__(self, configDict: dict, datasetID: str, activities: pd.DataFrame):
         self.diaryConfig = configDict['diaryConfig']
         self.globalConfig = configDict['globalConfig']
         self.localPathConfig = configDict['localPathConfig']
@@ -73,11 +73,11 @@ class TimeDiscretiser:
             method (str): The discretisation method. Must be one of 'distribute' or 'select'.
         """
         self.activities = activities
-        self.datasetID = datasetID
+        # self.datasetID = datasetID
         self.method = method
         self.oneActivity = None
-        self.localPathConfig = configDict['localPathConfig']
-        self.globalConfig = configDict['globalConfig']
+        # self.localPathConfig = configDict['localPathConfig']
+        # self.globalConfig = configDict['globalConfig']
         self.quantum = pd.Timedelta(value=1, unit='min')
         self.dt = dt  # e.g. 15 min
         self.nTimeSlots = self._nSlotsPerInterval(interval=pd.Timedelta(value=self.dt, unit='min'))
@@ -252,7 +252,7 @@ class TimeDiscretiser:
         self._createDiscretisedStructure()
         self._identifyBinShares()
         self._allocateBinShares()
-        self._writeOutput()
+        # self._writeOutput()
         print(f"Discretisation finished for {self.columnToDiscretise}.")
         self.columnToDiscretise = None
         return self.discreteData
@@ -280,5 +280,5 @@ if __name__ == '__main__':
     vpFlex = FlexEstimator(configDict=configDict, datasetID=datasetID, activities=vpGrid.activities)
     vpFlex.estimateTechnicalFlexibility()
 
-    vpDiary = DiaryBuilder(configDict=configDict, activities=vpFlex.activities)
+    vpDiary = DiaryBuilder(configDict=configDict, datasetID=datasetID, activities=vpFlex.activities)
     vpDiary.createDiaries()
