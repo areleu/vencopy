@@ -11,14 +11,14 @@ if __package__ is None or __package__ == '':
     from os import path
     sys.path.append(path.dirname(path.dirname(path.dirname(__file__))))
 
-import datetime
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
-from pathlib import Path
-from vencopy.utils.globalFunctions import loadConfigDict
-from vencopy.core.dataParsers import ParseMiD, ParseKiD, ParseVF
-from vencopy.core.gridModelers import GridModeler
+from vencopy.core.dataParsers import ParseKiD, ParseMiD, ParseVF
 from vencopy.core.flexEstimators import FlexEstimator
+from vencopy.core.gridModelers import GridModeler
+from vencopy.utils.globalFunctions import loadConfigDict
 
 
 class DiaryBuilder:
@@ -36,7 +36,7 @@ class DiaryBuilder:
             activities=self.activities, dt=self.deltaTime, method="distribute")
         self.drain = distributedActivities.discretise(column="drain")
         self.uncontrolledCharge = distributedActivities.discretise(column="uncontrolledCharge")
-        self.residualNeed = distributedActivities.discretise(column="residualNeed") # in elec terms kWh elec
+        self.residualNeed = distributedActivities.discretise(column="residualNeed")  # in elec terms kWh elec
         selectedActivities = TimeDiscretiser(
             activities=self.activities, dt=self.deltaTime, method="select")
         self.chargingPower = selectedActivities.discretise(column="chargingPower")
@@ -138,12 +138,17 @@ class TimeDiscretiser:
         self.activities['nSlots'] = self.activities['delta'] / (pd.Timedelta(value=self.dt, unit='min'))
         self.activities['nFullSlots'] = np.floor(self.activities['nSlots'])
         self.activities['nPartialSlots'] = np.ceil((self.activities['nSlots'])-self.activities['nFullSlots'])
-        self.activities['nQuantaPerActivity'] = (self.activities['delta'] / np.timedelta64(1, 'm')) / (self.quantum.seconds/60)
+        self.activities['nQuantaPerActivity'] = (
+            self.activities['delta'] / np.timedelta64(1, 'm')) / (self.quantum.seconds/60)
 
     def valueDistribute(self):
-        self.activities['valQuantum'] = self.activities[self.columnToDiscretise] / self.activities['nQuantaPerActivity']
-        self.activities['valFullSlot'] = (self.activities['valQuantum'] * ((pd.Timedelta(value=self.dt, unit='min')).seconds/60)).round(6)
-        self.activities['valLastSlot'] = (self.activities[self.columnToDiscretise] - (self.activities['valFullSlot'] * self.activities['nFullSlots'])).round(6)
+        self.activities['valQuantum'] = (
+            self.activities[self.columnToDiscretise] / self.activities['nQuantaPerActivity'])
+        self.activities['valFullSlot'] = (
+            self.activities['valQuantum'] * ((pd.Timedelta(value=self.dt, unit='min')).seconds/60)).round(6)
+        self.activities['valLastSlot'] = (
+            self.activities[self.columnToDiscretise] - (
+                self.activities['valFullSlot'] * self.activities['nFullSlots'])).round(6)
 
     def valueSelect(self):
         self.activities['valFullSlot'] = self.activities[self.columnToDiscretise]
@@ -160,26 +165,33 @@ class TimeDiscretiser:
         self.identifyLastBin()
 
     def identifyFirstBin(self):
-        self.activities['timestampStart'] = self.activities['timestampStart'].apply(lambda x : pd.to_datetime(str(x)))
-        dayStart = self.activities['timestampStart'].apply(lambda x: pd.Timestamp(year=x.year, month=x.month, day=x.day))
+        self.activities['timestampStart'] = self.activities['timestampStart'].apply(lambda x: pd.to_datetime(str(x)))
+        dayStart = self.activities['timestampStart'].apply(
+            lambda x: pd.Timestamp(year=x.year, month=x.month, day=x.day))
         self.activities['dailyTimeDeltaStart'] = self.activities['timestampStart'] - dayStart
-        self.activities['startTimeFromMidnightSeconds'] = self.activities['dailyTimeDeltaStart'].apply(lambda x: x.seconds)
+        self.activities['startTimeFromMidnightSeconds'] = (
+            self.activities['dailyTimeDeltaStart'].apply(lambda x: x.seconds))
         bins = pd.DataFrame({'index': self.timeDelta})
-        bins.drop(bins.tail(1).index, inplace=True) # remove last element, which is zero        
+        bins.drop(bins.tail(1).index, inplace=True)  # remove last element, which is zero
         self.binFromMidnightSeconds = bins['index'].apply(lambda x: x.seconds)
-        # self.activities['firstBin'] = self.activities['startTimeFromMidnightSeconds'].apply(lambda x: np.where(x >= self.binFromMidnightSeconds)[0][-1])
+        # self.activities['firstBin'] = self.activities['startTimeFromMidnightSeconds'].apply(
+        # lambda x: np.where(x >= self.binFromMidnightSeconds)[0][-1])
         # more efficient below (edge case of value bigger than any bin, index will be -1)
-        self.activities['firstBin'] = self.activities['startTimeFromMidnightSeconds'].apply(lambda x: np.argmax(x < self.binFromMidnightSeconds)-1)
+        self.activities['firstBin'] = self.activities['startTimeFromMidnightSeconds'].apply(
+            lambda x: np.argmax(x < self.binFromMidnightSeconds)-1)
 
     def identifyLastBin(self):
         dayEnd = self.activities['timestampEnd'].apply(lambda x: pd.Timestamp(year=x.year, month=x.month, day=x.day))
         self.activities['dailyTimeDeltaEnd'] = self.activities['timestampEnd'] - dayEnd
         # Option 1
         # activitiesLength = self.activities['timedelta'].apply(lambda x: x.seconds)
-        # self.activities['endTimeFromMidnightSeconds'] = self.activities['startTimeFromMidnightSeconds'] + activitiesLength
+        # self.activities['endTimeFromMidnightSeconds'] = (
+        # self.activities['startTimeFromMidnightSeconds'] + activitiesLength)
         # Option 2
-        # self.activities['endTimeFromMidnightSeconds'] = self.activities['dailyTimeDeltaEnd'].apply(lambda x: x.seconds)
-        # self.activities['lastBin'] = self.activities['endTimeFromMidnightSeconds'].apply(lambda x: np.argmax(x < self.binFromMidnightSeconds)-1)
+        # self.activities['endTimeFromMidnightSeconds'] = (
+        # self.activities['dailyTimeDeltaEnd'].apply(lambda x: x.seconds))
+        # self.activities['lastBin'] = (
+        # self.activities['endTimeFromMidnightSeconds'].apply(lambda x: np.argmax(x < self.binFromMidnightSeconds)-1))
         # Option 3
         self.activities['lastBin'] = self.activities['firstBin'] + self.activities['nFullSlots']
 
@@ -187,15 +199,17 @@ class TimeDiscretiser:
         # compare end bin event i with start bin event i+1
         # check by grouping through genericID
         for i in range(len(self.activities)):
-            self.activities['isNeighbouringEvent'] = np.where(self.activities['lastBin'][i] < self.activities['firstBin'][i+1])
+            self.activities['isNeighbouringEvent'] = np.where(
+                self.activities['lastBin'][i] < self.activities['firstBin'][i+1])
 
     def overlappingEvents(self):
         # function to handle overlapping bin i.e. where self.activities['isNeighbouringEvent'] == False
-        # function of currentEvent, nextEvent, depending on how many bins are overlapping, collect bin to be filled in dictionary
+        # function of currentEvent, nextEvent, depending on how many bins are overlapping,
+        # collect bin to be filled in dictionary
         # differentiate between partial and complete bin, algo should be able to treat from 1 to n values per bin
         # list of tuples with current value of bin and current share
         pass
- 
+
     def allocate(self):
         # strategies on how to treat overlapping bins
         # start allocation always with full bin
@@ -209,7 +223,6 @@ class TimeDiscretiser:
     def writeOut():
         pass
 
-
     def discretise(self, column: str):
         self.columnToDiscretise = column
         self.datasetCleanup()
@@ -221,8 +234,6 @@ class TimeDiscretiser:
 
 
 if __name__ == '__main__':
-
-    from vencopy.utils.globalFunctions import loadConfigDict
 
     datasetID = "MiD17"
     basePath = Path(__file__).parent.parent

@@ -13,10 +13,10 @@ if __package__ is None or __package__ == "":
 
     sys.path.append(path.dirname(path.dirname(path.dirname(__file__))))
 
-import pandas as pd
 from pathlib import Path
 
-from vencopy.core.dataParsers import ParseMiD, ParseVF, ParseKiD
+import pandas as pd
+from vencopy.core.dataParsers import ParseKiD, ParseMiD, ParseVF
 from vencopy.core.gridModelers import GridModeler
 from vencopy.utils.globalFunctions import loadConfigDict, writeOut
 

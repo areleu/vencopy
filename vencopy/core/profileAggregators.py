@@ -11,28 +11,36 @@ if __package__ is None or __package__ == '':
     from os import path
     sys.path.append(path.dirname(path.dirname(path.dirname(__file__))))
 
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
-
-from pathlib import Path
-from vencopy.core.dataParsers import ParseMiD, ParseKiD, ParseVF
-from vencopy.core.gridModelers import GridModeler
-from vencopy.core.flexEstimators import FlexEstimator
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
+from vencopy.core.dataParsers import ParseKiD, ParseMiD, ParseVF
 from vencopy.core.diaryBuilders import DiaryBuilder
-from vencopy.utils.globalFunctions import loadConfigDict  # , writeOut
+from vencopy.core.flexEstimators import FlexEstimator
+from vencopy.core.gridModelers import GridModeler
+from vencopy.utils.globalFunctions import loadConfigDict, writeOut
 
 
 class ProfileAggregator():
-    def __init__(self, configDict: dict, datasetID: str, activities: pd.DataFrame, profiles: list, cluster=False):
+    def __init__(self, configDict: dict, datasetID: str, activities: pd.DataFrame, profiles, cluster=False):
         self.aggregatorConfig = configDict['aggregatorConfig']
         self.globalConfig = configDict['globalConfig']
         self.localPathConfig = configDict['localPathConfig']
         self.datasetID = datasetID
         self.activities = activities
+        self.activitiesNoDuplicates = None
         self.profiles = profiles
         self.clusterBool = cluster
         self.nClusters = self.aggregatorConfig['clustering']['nClusters']
         self.clusterHH()
+        self.drain = profiles.drain
+        self.uncontrolledCharge = profiles.uncontrolledCharge
+        self.chargingPower = profiles.chargingPower
+        self.maxBatteryLevel = profiles.maxBatteryLevel
+        self.minBatteryLevel = profiles.minBatteryLevel
 
     def selectInputFeatures(self):
         # read from disk or from previous class
@@ -41,37 +49,66 @@ class ProfileAggregator():
 
     def datasetCleanup(self):
         # timestamp start and end, unique ID, column to discretise - get read of additional columns
-        necessaryColumns = ['genericID', 'oek_status', 'SKTYP', 'BLAND']
-        self.activities = self.activities[necessaryColumns].copy()
+        necessaryColumns = ['genericID', 'economicStatus', 'areaType', 'bundesland']
+        self.activitiesNoDuplicates = self.activities[necessaryColumns].copy()
 
     def dropDuplicateHH(self):
-        if self.datasetID == 'MiD':
-            self.activities.drop_duplicates(subset=['genericID'])
+        if self.datasetID == 'MiD17':
+            self.activitiesNoDuplicates = self.activitiesNoDuplicates.drop_duplicates(subset=['genericID']).reset_index()
+
+    def standardiseInputFeatures(self):
+        self.features = self.activitiesNoDuplicates[["economicStatus", "areaType"]].to_numpy()
+        # self.labels = self.activities[["genericID"]].to_numpy()
+        scaler = StandardScaler()
+        self.scaledFeatures = scaler.fit_transform(self.features)
+
+
 
     def clusterHH(self):
         self.selectInputFeatures()
-        self.cluster()
+        self.standardiseInputFeatures()
+        # self.cluster()
+        # self.appendClusters()
 
-    def cluster(self):
-        pass
+    def appendClusters(self):
+        # labels later result of clustering
+        # dummy labels
+        labels = pd.DataFrame(np.random.randint(0, 10, size=(len(self.activitiesNoDuplicates), 1)))
+        labels['genericID'] = self.activitiesNoDuplicates['genericID'].copy()
+        for id in labels.genericID.unique():
+            idSubset = self.activities[self.activities.genericID == id].reset_index(drop=True)
+            for irow in range(len(self.activities)):
+                self.activities.loc[irow, (idSubset.loc[irow, 'genericID'])] = labels.loc[id, 0]
+
+
+
+
+
 
     def createWeeklyProfiles(self):
-        pass
+        if self.clusterBool == True:
+            print('Aggregating profiles based on clustering of household specific characteristics.')
+            # use join()
+            similarGenericIDs = None
+        else:
+            print('Aggregating all profiles to fleet level based on day of the week.')
+
 
     def createAnnualProfiles(self):
         pass
 
-    def createProfile(self):
-
-        self.createWeeklyProfiles()
-        self.createAnnualProfiles()
+    def _writeOutput(self):
+        writeOut(dataset=self.profile, outputFolder='profileAggregator', datasetID=self.datasetID,
+                 fileKey=('outputProfileAggregator'), manualLabel=str(self.profile),
+                 localPathConfig=self.localPathConfig, globalConfig=self.globalConfig)
 
     def createTimeseries(self):
-        self.drain = self.drain.createProfile(column="drain")
-        # self.uncontrolledCharge = self.uncontrolledCharge.createProfile(column="uncontrolledCharge")
-        # self.residualNeed = self.residualNeed.createProfile(column="residualNeed")
-        # self.maxBatteryLevel = self.maxBatteryLevel.createProfile(column="maxBatteryLevel")
-        # self.minBatteryLevel = self.minBatteryLevel.createProfile(column="minBatteryLevel")
+        profiles = (self.drain, self.uncontrolledCharge, self.chargingPower, self.maxBatteryLevel, self.minBatteryLevel)
+        for iprofile in profiles:
+            self.profile = iprofile
+            self.createWeeklyProfiles()
+            self.createAnnualProfiles()
+            self._writeOutput()
 
 
 if __name__ == '__main__':
@@ -82,26 +119,27 @@ if __name__ == '__main__':
                    "gridConfig", "flexConfig", "aggregatorConfig", "evaluatorConfig")
     configDict = loadConfigDict(configNames, basePath=basePath)
 
-    # if datasetID == "MiD17":
-    #     vpData = ParseMiD(configDict=configDict, datasetID=datasetID, debug=True)
-    # elif datasetID == "KiD":
-    #     vpData = ParseKiD(configDict=configDict, datasetID=datasetID, debug=False)
-    # elif datasetID == "VF":
-    #     vpData = ParseVF(configDict=configDict, datasetID=datasetID, debug=False)
-    # vpData.process()
+    if datasetID == "MiD17":
+        vpData = ParseMiD(configDict=configDict, datasetID=datasetID, debug=True)
+    elif datasetID == "KiD":
+        vpData = ParseKiD(configDict=configDict, datasetID=datasetID, debug=False)
+    elif datasetID == "VF":
+        vpData = ParseVF(configDict=configDict, datasetID=datasetID, debug=False)
+    vpData.process()
 
-    # vpGrid = GridModeler(configDict=configDict, datasetID=datasetID, activities=vpData.activities, gridModel='simple')
-    # vpGrid.assignGrid()
+    vpGrid = GridModeler(configDict=configDict, datasetID=datasetID, activities=vpData.activities, gridModel='simple')
+    vpGrid.assignGrid()
 
-    # vpFlex = FlexEstimator(configDict=configDict, datasetID=datasetID, activities=vpGrid.activities)
-    # vpFlex.estimateTechnicalFlexibility()
+    vpFlex = FlexEstimator(configDict=configDict, datasetID=datasetID, activities=vpGrid.activities)
+    vpFlex.estimateTechnicalFlexibility()
 
     # vpDiary = DiaryBuilder(configDict=configDict, datasetID=datasetID, activities=vpFlex.activities)
     # vpDiary.createDiaries()
 
-    profiles = ("drain")
     activities = pd.read_csv('C:\\work\\VencoPy\\vencopy_internal\\vencopy\\vencopy\\output\\flexEstimator\\vencopyOutputFlexEstimator_DEBUG_MiD17_clusters.csv')
     # vpProfile = ProfileAggregator(configDict=configDict, activities=vpFlex.activities, profiles=profiles)
+    # activities = vpFlex.activities
+
     vpProfile = ProfileAggregator(configDict=configDict, datasetID=datasetID,
-                                  activities=activities, profiles=profiles, cluster=True)
+                                  activities=activities, profiles=activities, cluster=True)
     vpProfile.createTimeseries()

@@ -15,12 +15,11 @@ if __package__ is None or __package__ == '':
 
 import pprint
 import warnings
-
-import pandas as pd
-import numpy as np
-
 from pathlib import Path
 from zipfile import ZipFile
+
+import numpy as np
+import pandas as pd
 from vencopy.utils.globalFunctions import loadConfigDict, writeOut
 
 
@@ -483,7 +482,7 @@ class DataParser:
 
 
 class IntermediateParsing(DataParser):
-    def __init__(self, configDict: dict, datasetID: str, loadEncrypted=False):
+    def __init__(self, configDict: dict, datasetID: str, loadEncrypted=False, debug=False):
         """
         Intermediate parsing class.
 
@@ -495,9 +494,7 @@ class IntermediateParsing(DataParser):
                               file. For this, a possword has to be
                               specified in parseConfig['PW'].
         """
-        super().__init__(
-            configDict, datasetID=datasetID, loadEncrypted=loadEncrypted
-        )
+        super().__init__(configDict, datasetID=datasetID, loadEncrypted=loadEncrypted, debug=debug)
         self.filterDict = self.parseConfig["filterDicts"][self.datasetID]
         self.varDataTypeDict = {}
         self.columns = self.compileVariableList()
@@ -669,7 +666,7 @@ class ParseMiD(IntermediateParsing):
                               file. For this, a possword has to be
                               specified in parseConfig['PW'].
         """
-        super().__init__(configDict=configDict, datasetID=datasetID, loadEncrypted=loadEncrypted)
+        super().__init__(configDict=configDict, datasetID=datasetID, loadEncrypted=loadEncrypted, debug=debug)
 
     def harmonizeVariables(self):
         """

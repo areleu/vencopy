@@ -11,13 +11,13 @@ if __package__ is None or __package__ == '':
     from os import path
     sys.path.append(path.dirname(path.dirname(path.dirname(__file__))))
 
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
-
-from pathlib import Path
-from vencopy.core.dataParsers import ParseMiD, ParseKiD, ParseVF
-from vencopy.core.gridModelers import GridModeler
+from vencopy.core.dataParsers import ParseKiD, ParseMiD, ParseVF
 from vencopy.core.flexEstimators import FlexEstimator
+from vencopy.core.gridModelers import GridModeler
 from vencopy.utils.globalFunctions import loadConfigDict, writeOut
 
 
@@ -36,12 +36,12 @@ class DiaryBuilder:
 
     def createDiaries(self):
         self.drain = self.distributedActivities.discretise(column="drain")
-        # self.uncontrolledCharge = self.distributedActivities.discretise(column="uncontrolledCharge")
+        self.uncontrolledCharge = self.distributedActivities.discretise(column="uncontrolledCharge")
         # # # self.residualNeed = self.distributedActivities.discretise(column="residualNeed") # in elec terms kWh elec
-        # self.chargingPower = self.selectedActivities.discretise(column="chargingPower")
-        # self.maxBatteryLevel = self.selectedActivities.discretise(column="maxBatteryLevelStart")
+        self.chargingPower = self.selectedActivities.discretise(column="chargingPower")
+        self.maxBatteryLevel = self.selectedActivities.discretise(column="maxBatteryLevelStart")
         # # # self.maxBatteryLevelEnd = self.selectedActivities.discretise(column="maxBatteryLevelEnd")
-        # self.minBatteryLevel = self.selectedActivities.discretise(column="minBatteryLevelStart")
+        self.minBatteryLevel = self.selectedActivities.discretise(column="minBatteryLevelStart")
         # # # self.minBatteryLevelEnd = self.selectedActivities.discretise(column="minBatteryLevelEnd")
 
 
@@ -267,7 +267,7 @@ if __name__ == '__main__':
     configDict = loadConfigDict(configNames, basePath=basePath)
 
     if datasetID == "MiD17":
-        vpData = ParseMiD(configDict=configDict, datasetID=datasetID, debug=False)
+        vpData = ParseMiD(configDict=configDict, datasetID=datasetID, debug=True)
     elif datasetID == "KiD":
         vpData = ParseKiD(configDict=configDict, datasetID=datasetID, debug=False)
     elif datasetID == "VF":
