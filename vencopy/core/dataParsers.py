@@ -270,7 +270,7 @@ class DataParser:
         sophFilter = sophFilter.join(self.__filterOverlappingTrips())
 
         # Application of sophisticated filters
-        self.data = self.dataSimple[sophFilter.all(axis='columns')]
+        self.data = self.dataSimple.loc[sophFilter.all(axis='columns'), :]
         self.filterAnalysis(simpleFilter.join(sophFilter))
 
     def setIncludeFilter(self, includeFilterDict: dict, dataIndex) -> pd.DataFrame:
@@ -413,9 +413,9 @@ class DataParser:
         self.activities = pd.concat([self.activities, dfAdd]).sort_index()
         # self.activities.reset_index(inplace=True)
 
-        # set drain values to zero where tripID == NaN (e.g. where car is parked)
+        # Set tripDistance values to zero where tripID == NaN (i.e. for parking activities)
         self.activities.loc[self.activities['tripID'].isna(), 'tripDistance'] = pd.NA
-
+        
         self.activities['colFromIndex'] = self.activities.index
         self.activities = self.activities.sort_values(by=['colFromIndex', 'tripID'])
 
