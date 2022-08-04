@@ -272,10 +272,6 @@ class FlexEstimator:
         self.activities['auxiliaryFuelNeed'] = self.activities['residualNeed'] * self.flexConfig[
             'Fuel_consumption'] / self.flexConfig['Electric_consumption']
 
-    def _correctDrain(self):
-        # set drain values to zero where tripID == NaN (e.g. where car is parked)
-        self.activities.loc[self.activities['tripID'].isna(), 'drain'] = 0
-
     def writeOutput(self):
         writeOut(dataset=self.activities, outputFolder='flexOutput', fileKey='outputFlexEstimator', manualLabel='',
                  datasetID=self.datasetID, localPathConfig=self.localPathConfig, globalConfig=self.globalConfig)
@@ -286,7 +282,6 @@ class FlexEstimator:
         self._batteryLevelMax()
         self._uncontrolledCharging()
         self._batteryLevelMin()
-        self._correctDrain()
         print("Technical flexibility estimation ended")
 
 

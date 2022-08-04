@@ -208,7 +208,7 @@ class DataParser:
         """
         assert all(
             isinstance(val, list) for val in self.returnDictBottomValues(self.filterDict)
-            ), ("All values in filter dictionaries have to be lists, but are not")
+        ), ("All values in filter dictionaries have to be lists, but are not")
 
     def returnDictBottomKeys(self, baseDict: dict, lst: list = None) -> list:
         """
@@ -412,6 +412,9 @@ class DataParser:
         dfAdd['parkID'] = self.activities.loc[newIndex, 'tripID'] + 1
         self.activities = pd.concat([self.activities, dfAdd]).sort_index()
         # self.activities.reset_index(inplace=True)
+
+        # set drain values to zero where tripID == NaN (e.g. where car is parked)
+        self.activities.loc[self.activities['tripID'].isna(), 'tripDistance'] = pd.NA
 
         self.activities['colFromIndex'] = self.activities.index
         self.activities = self.activities.sort_values(by=['colFromIndex', 'tripID'])
