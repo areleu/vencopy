@@ -104,6 +104,7 @@ class TimeDiscretiser:
         necessaryColumns = ['tripID', 'timestampStart', 'timestampEnd', 'genericID',
                             'parkID', 'isFirstActivity', 'isLastActivity', 'timedelta',
                             'actID', 'nextActID', 'prevActID'] + [self.columnToDiscretise]
+        #FIXME: rename self.oneActivity to self.oneProfile
         self.oneActivity = self.activities[necessaryColumns].copy()
         self._correctDataset()
 
@@ -111,11 +112,10 @@ class TimeDiscretiser:
         self._correctValues()
         self._correctTimestamp()
         # FIXME: need of a recheck that timstampStart(t) == timestampEnd(t-1)?
-        self._moveTripEndNextDay()
 
     def _correctValues(self):
         if self.columnToDiscretise == 'drain':
-            pass
+            self.oneActivity['drain'] = self.oneActivity['drain'].fillna(0)
         elif self.columnToDiscretise == 'uncontrolledCharge':
             # remove all rows with tripID
             # self.oneActivity = self.oneActivity[self.oneActivity['uncontrolledCharge'].notna()]
@@ -129,9 +129,6 @@ class TimeDiscretiser:
     def _correctTimestamp(self):
         self.oneActivity['timestampStartCorrected'] = self.oneActivity['timestampStart'].dt.round(f'{self.dt}min')
         self.oneActivity['timestampEndCorrected'] = self.oneActivity['timestampEnd'].dt.round(f'{self.dt}min')
-
-    def _moveTripEndNextDay(self):
-        pass
 
     def _createDiscretisedStructure(self):
         self.discreteData = pd.DataFrame(
@@ -217,6 +214,7 @@ class TimeDiscretiser:
             self.oneActivity.loc[self.oneActivity['isLastActivity'] == True, 'lastBin'] + 1)
 
     def _allocateBinShares(self):
+        # FIXME: rename evets to activities
         self._overlappingEvents()  # identify shared events in bin and handle them
         self._allocate()
 
@@ -238,7 +236,7 @@ class TimeDiscretiser:
             for irow in range(len(vehicleSubset)):
                 self.discreteData.loc[id, (vehicleSubset.loc[irow, 'firstBin']):(
                     vehicleSubset.loc[irow, 'lastBin'])] = vehicleSubset.loc[irow, 'valPerBin']
-        return self.discreteData
+        # return self.discreteData
 
     def _writeOutput(self):
         writeOut(dataset=self.discreteData, outputFolder='diaryOutput', datasetID=self.datasetID,

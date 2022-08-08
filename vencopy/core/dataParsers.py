@@ -66,7 +66,7 @@ class DataParser:
         else:
             print(f"Starting to retrieve local data file from {self.rawDataPath}")
             self.loadData()
-        self.rawData = self.rawData.loc[0:20, :] if debug else self.rawData.copy()
+        self.rawData = self.rawData.loc[0:2000, :] if debug else self.rawData.copy()
 
     def loadData(self):
         """
@@ -415,7 +415,7 @@ class DataParser:
 
         # Set tripDistance values to zero where tripID == NaN (i.e. for parking activities)
         self.activities.loc[self.activities['tripID'].isna(), 'tripDistance'] = pd.NA
-        
+    
         self.activities['colFromIndex'] = self.activities.index
         self.activities = self.activities.sort_values(by=['colFromIndex', 'tripID'])
 
