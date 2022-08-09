@@ -11,6 +11,7 @@ if __package__ is None or __package__ == '':
     from os import path
     sys.path.append(path.dirname(path.dirname(path.dirname(__file__))))
 
+import time
 from pathlib import Path
 
 import numpy as np
@@ -30,9 +31,11 @@ class DiaryBuilder:
         self.activities = activities
         self.deltaTime = configDict['diaryConfig']['TimeDelta']
         self.distributedActivities = TimeDiscretiser(
-            activities=self.activities, dt=self.deltaTime, method="distribute")
+            datasetID=self.datasetID, globalConfig=self.globalConfig,
+            localPathConfig=self.localPathConfig, activities=self.activities, dt=self.deltaTime, method="distribute")
         self.selectedActivities = TimeDiscretiser(
-            activities=self.activities, dt=self.deltaTime, method="select")
+            datasetID=self.datasetID, globalConfig=self.globalConfig,
+            localPathConfig=self.localPathConfig, activities=self.activities, dt=self.deltaTime, method="select")
 
     def createDiaries(self):
         self.drain = self.distributedActivities.discretise(column="drain")
@@ -46,7 +49,7 @@ class DiaryBuilder:
 
 
 class TimeDiscretiser:
-    def __init__(self, activities, dt, method: str):
+    def __init__(self, activities, dt, datasetID, method: str, globalConfig, localPathConfig):
         """
         Class for discretisation of activities to fixed temporal resolution. Act is
         a pandas Series with a unique ID in the index, ts is a pandas dataframe with two
@@ -73,11 +76,11 @@ class TimeDiscretiser:
             method (str): The discretisation method. Must be one of 'distribute' or 'select'.
         """
         self.activities = activities
-        # self.datasetID = datasetID
+        self.datasetID = datasetID
         self.method = method
         self.oneActivity = None
-        # self.localPathConfig = configDict['localPathConfig']
-        # self.globalConfig = configDict['globalConfig']
+        self.localPathConfig = localPathConfig
+        self.globalConfig = globalConfig
         self.quantum = pd.Timedelta(value=1, unit='min')
         self.dt = dt  # e.g. 15 min
         self.nTimeSlots = self._nSlotsPerInterval(interval=pd.Timedelta(value=self.dt, unit='min'))
@@ -258,6 +261,7 @@ class TimeDiscretiser:
 
 if __name__ == '__main__':
 
+    start_time = time.time()
     datasetID = "MiD17"
     basePath = Path(__file__).parent.parent
     configNames = ("globalConfig", "localPathConfig", "parseConfig", "diaryConfig",
@@ -265,7 +269,7 @@ if __name__ == '__main__':
     configDict = loadConfigDict(configNames, basePath=basePath)
 
     if datasetID == "MiD17":
-        vpData = ParseMiD(configDict=configDict, datasetID=datasetID, debug=True)
+        vpData = ParseMiD(configDict=configDict, datasetID=datasetID, debug=False)
     elif datasetID == "KiD":
         vpData = ParseKiD(configDict=configDict, datasetID=datasetID, debug=False)
     elif datasetID == "VF":
@@ -280,3 +284,6 @@ if __name__ == '__main__':
 
     vpDiary = DiaryBuilder(configDict=configDict, datasetID=datasetID, activities=vpFlex.activities)
     vpDiary.createDiaries()
+    
+    elapsed_time = time.time() - start_time
+    print('Elapsed time:', elapsed_time)
