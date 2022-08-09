@@ -107,7 +107,7 @@ class TimeDiscretiser:
         necessaryColumns = ['tripID', 'timestampStart', 'timestampEnd', 'genericID',
                             'parkID', 'isFirstActivity', 'isLastActivity', 'timedelta',
                             'actID', 'nextActID', 'prevActID'] + [self.columnToDiscretise]
-        #FIXME: rename self.oneActivity to self.oneProfile
+        # FIXME: rename self.oneActivity to self.oneProfile
         self.oneActivity = self.activities[necessaryColumns].copy()
         self._correctDataset()
 
@@ -217,8 +217,7 @@ class TimeDiscretiser:
             self.oneActivity.loc[self.oneActivity['isLastActivity'] == True, 'lastBin'] + 1)
 
     def _allocateBinShares(self):
-        # FIXME: rename evets to activities
-        self._overlappingEvents()  # identify shared events in bin and handle them
+        self._overlappingActivities()  # identify shared events in bin and handle them
         self._allocate()
 
     # def _dropNoLengthEvents(self):
@@ -227,7 +226,7 @@ class TimeDiscretiser:
     #         self.oneActivity[self.oneActivity.timestampStartCorrected
     #         == self.oneActivity.timestampEndCorrected].index)
 
-    def _overlappingEvents(self):
+    def _overlappingActivities(self):
         pass
         # stategy if time resolution high enough so that event becomes negligible (now in calculateValueBinsAndQuanta)
         # self._dropNoLengthEvents()
@@ -284,6 +283,6 @@ if __name__ == '__main__':
 
     vpDiary = DiaryBuilder(configDict=configDict, datasetID=datasetID, activities=vpFlex.activities)
     vpDiary.createDiaries()
-    
+
     elapsed_time = time.time() - start_time
     print('Elapsed time:', elapsed_time)

@@ -157,10 +157,15 @@ class ProfileAggregator():
             self.aggregateWeightsAndWeekdays(byColumn="tripStartWeekday")
 
     def aggregateClusters(self):
+        self.clustersProfiles = pd.DataFrame(columns=self.profile.columns, index=range(self.nClusters))
+        necessaryColumns = ['genericID', 'tripWeight', 'cluster']
+        self.activitiesSubset = self.activities[necessaryColumns].copy().drop_duplicates(subset=['genericID']).reset_index(drop=True)
         # for each cluster aggregate based on day of the week and weight
         # create new df where index equals cluster number
-        # self.aggregate()
-        self.aggregateWeightsAndWeekdays()
+        for clusterID in self.activitiesSubset.cluster.unique():
+            self.clusterSubset = self.activitiesSubset[self.activitiesSubset.cluster == clusterID].reset_index(drop=True)
+            # aggregateWeightsAndWeekdays taks which df in input
+            self.aggregateWeightsAndWeekdays()
 
     def aggregateProfileWeights(self, df, weights) -> pd.Series:
         # FIXME: unused function - might be deleted
@@ -216,6 +221,7 @@ class ProfileAggregator():
     def createAnnualProfiles(self):
         indexYear = self.timeIndex / 7 * 365
         self.weeklyProfile = pd.DataFrame(columns=range(len(list(indexYear))))
+        # multiply by 52 weeks and cutoff excessive days
         # input = weeklyProfiles
         # clone over year
 
