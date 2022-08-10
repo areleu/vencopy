@@ -17,6 +17,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
+import numpy as np
 from kneed import KneeLocator
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
@@ -25,7 +26,7 @@ from vencopy.core.dataParsers import ParseKiD, ParseMiD, ParseVF
 from vencopy.core.diaryBuilders import DiaryBuilder
 from vencopy.core.flexEstimators import FlexEstimator
 from vencopy.core.gridModelers import GridModeler
-from vencopy.utils.globalFunctions import loadConfigDict, writeOut
+from vencopy.utils.globalFunctions import loadConfigDict, writeOut, createOutputFolders
 
 
 class ProfileAggregator():
@@ -67,7 +68,6 @@ class ProfileAggregator():
 
     def standardiseInputFeatures(self):
         self.features = self.activitiesNoDuplicates[["economicStatus", "areaType", "bundesland"]].to_numpy()
-        # self.labels = self.activities[["genericID"]].to_numpy()
         scaler = StandardScaler()
         self.scaledFeatures = scaler.fit_transform(self.features)
 
@@ -83,7 +83,7 @@ class ProfileAggregator():
         # self.findOptimalClusterNumber()
 
     def plotClusters(self):
-        plt.style.use("fivethirtyeight")
+        clusterColours = ['#b4d2b1', '#568f8b', '#1d4a60', '#cd7e59', '#ddb247', '#d15252']
         plt.figure(figsize=(8, 8))
         scat = sns.scatterplot("component_1", "component_2", s=50, data=self.activitiesNoDuplicates,
                                hue="predicted_cluster", style="true_label", palette="Set2")
@@ -156,26 +156,32 @@ class ProfileAggregator():
             self.aggregateWeightsAndWeekdays(byColumn="tripStartWeekday")
 
     def aggregateClusters(self):
-        self.clustersProfiles = pd.DataFrame(columns=self.profile.columns, index=range(self.nClusters))
-        necessaryColumns = ['genericID', 'tripWeight', 'cluster']
+        # self.clustersProfiles = pd.DataFrame(columns=self.profile.columns, index=range(self.nClusters))
+        necessaryColumns = ['genericID', 'tripWeight', 'tripStartWeekday', 'cluster']
         self.activitiesSubset = self.activities[necessaryColumns].copy().drop_duplicates(
             subset=['genericID']).reset_index(drop=True)
-        # for each cluster aggregate based on day of the week and weight
-        # create new df where index equals cluster number
+        # loop over clusters to aggregate over weekday and create weekly and annual profiles
         for clusterID in self.activitiesSubset.cluster.unique():
             self.clusterID = clusterID
             self.clusterSubset = (
                 self.activitiesSubset[self.activitiesSubset.cluster == clusterID].reset_index(drop=True))
-            # aggregateWeightsAndWeekdays taks which df in input
-            self.aggregateWeightsAndWeekdays()
+            # aggregateWeightsAndWeekdays takes self.profile and self.activities into account
+            self.aggregateWeightsAndWeekdays(byColumn="tripStartWeekday")
 
     def aggregateWeightsAndWeekdays(self, byColumn: str) -> pd.Series:
         self.weekdayProfiles = pd.DataFrame(columns=self.profile.columns, index=range(1, 8))
         necessaryColumns = ['genericID', 'tripWeight'] + [byColumn]
-        self.activitiesSubset = (
-            self.activities[necessaryColumns].copy().drop_duplicates(subset=['genericID']).reset_index(drop=True))
-        self.profile['genericID'] = self.profile.index
-        self.activitiesWeekday = pd.merge(self.profile, self.activitiesSubset, on='genericID', how='inner')
+        if self.clusterBool:
+            self.clusterSubset = (
+                self.clusterSubset[necessaryColumns].copy().drop_duplicates(subset=['genericID']).reset_index(drop=True))
+            self.profile['genericID'] = self.profile.index
+            self.activitiesWeekday = pd.merge(self.profile, self.clusterSubset, on='genericID', how='inner')
+        else:
+            self.activitiesSubset = (
+                self.activities[necessaryColumns].copy().drop_duplicates(subset=['genericID']).reset_index(drop=True))
+            self.profile['genericID'] = self.profile.index
+            self.activitiesWeekday = pd.merge(self.profile, self.activitiesSubset, on='genericID', how='inner')
+        self.profile.drop('genericID', axis=1, inplace=True)
         self.activitiesWeekday = self.activitiesWeekday.set_index('genericID')
         # Compose weekly profile from 7 separate profiles
         if self.profileName in ('drain', 'uncontrolledCharge', 'chargingPower'):
@@ -185,7 +191,7 @@ class ProfileAggregator():
         self.composeWeeklyProfile()
         self.createAnnualProfiles()
         # for clusters add self.clusterID in writeOutput function
-        # self._writeOutput()
+        self._writeOutput()
 
     def calculateWeightedAverageFlowProfiles(self, byColumn):
         for idate in self.activitiesWeekday[byColumn].unique():
@@ -212,6 +218,13 @@ class ProfileAggregator():
 
     def composeWeeklyProfile(self):
         # input is self.weekdayProfiles
+        # check if any day of the week is not filled, copy line above in that case
+        if self.weekdayProfiles.isna().any(axis=1).any():
+            indexEmptyRow = self.weekdayProfiles[self.weekdayProfiles.isna().any(axis=1)].index - 1 
+            if indexEmptyRow == 7:
+                self.weekdayProfiles.iloc[indexEmptyRow] = self.weekdayProfiles.iloc[indexEmptyRow - 1]
+            else:
+                self.weekdayProfiles.iloc[indexEmptyRow] = self.weekdayProfiles.iloc[indexEmptyRow + 1]
         self.weekdayProfiles.index.name = 'weekday'
         self.weekdayProfiles = self.weekdayProfiles.stack().unstack(0)
         self.weeklyProfile = (
@@ -227,15 +240,18 @@ class ProfileAggregator():
         self.annualProfile.drop(
             self.annualProfile.tail(len(self.annualProfile)-((len(list(self.timeIndex)))-1)*365).index, inplace=True)
 
-
     def _writeOutput(self):
-        # FIXME: string to be passed for profile name
-        writeOut(dataset=self.profile, outputFolder='profileAggregator', datasetID=self.datasetID,
-                 fileKey=('outputProfileAggregator'), manualLabel=str(self.profile),
-                 localPathConfig=self.localPathConfig, globalConfig=self.globalConfig)
+        if self.clusterBool:
+            writeOut(dataset=self.annualProfile, outputFolder='aggregatorOutput', fileKey=('outputProfileAggregator'),
+                     datasetID=self.datasetID, manualLabel=str(self.profileName + '_cluster' + str(self.clusterID)),
+                     localPathConfig=self.localPathConfig, globalConfig=self.globalConfig)
+        else:
+            writeOut(dataset=self.annualProfile, outputFolder='aggregatorOutput', datasetID=self.datasetID,
+                     fileKey=('outputProfileAggregator'), manualLabel=str(self.profileName),
+                     localPathConfig=self.localPathConfig, globalConfig=self.globalConfig)
 
     def createTimeseries(self):
-        # profiles = (vpDiary.drain, self.uncontrolledCharge, self.chargingPower, self.maxBatteryLevel, self.minBatteryLevel)
+        # profiles = (vpDiary.drain, vpDiary.uncontrolledCharge, vpDiary.chargingPower, vpDiary.maxBatteryLevel, vpDiary.minBatteryLevel)
         profiles = (self.drain, self.uncontrolledCharge, self.chargingPower, self.maxBatteryLevel, self.minBatteryLevel)
         profileNames = ('drain', 'uncontrolledCharge', 'chargingPower', 'maxBatteryLevel', 'minBatteryLevel')
         for profile, profileName in itertools.product(profiles, profileNames):
@@ -251,6 +267,7 @@ if __name__ == '__main__':
     configNames = ("globalConfig", "localPathConfig", "parseConfig", "diaryConfig",
                    "gridConfig", "flexConfig", "aggregatorConfig", "evaluatorConfig")
     configDict = loadConfigDict(configNames, basePath=basePath)
+    createOutputFolders(configDict=configDict)
 
     if datasetID == "MiD17":
         vpData = ParseMiD(configDict=configDict, datasetID=datasetID, debug=True)
@@ -274,5 +291,5 @@ if __name__ == '__main__':
     #                               activities=activities, profiles=activities, cluster=True)
 
     vpProfile = ProfileAggregator(configDict=configDict, datasetID=datasetID,
-                                  activities=vpFlex.activities, profiles=vpDiary, cluster=False)
+                                  activities=vpFlex.activities, profiles=vpDiary, cluster=True)
     vpProfile.createTimeseries()

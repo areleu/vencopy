@@ -40,7 +40,7 @@ def createOutputFolders(configDict: dict):
     mainDir = 'output'
     if not os.path.exists(Path(root / mainDir)):
         os.mkdir(Path(root / mainDir))
-    subDirs = ('dataParser', 'diaryBuilder', 'gridModeler', 'flexEstimator', 'evaluator')
+    subDirs = ('dataParser', 'diaryBuilder', 'gridModeler', 'flexEstimator', 'profileAggregator', 'evaluator')
     for subDir in subDirs:
         if not os.path.exists(Path(root / mainDir / subDir)):
             os.mkdir(Path(root / mainDir / subDir))

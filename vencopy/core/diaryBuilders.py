@@ -40,13 +40,12 @@ class DiaryBuilder:
     def createDiaries(self):
         self.drain = self.distributedActivities.discretise(column="drain")
         self.uncontrolledCharge = self.distributedActivities.discretise(column="uncontrolledCharge")
-        # # # self.residualNeed = self.distributedActivities.discretise(column="residualNeed") # in elec terms kWh elec
         self.chargingPower = self.selectedActivities.discretise(column="chargingPower")
         self.maxBatteryLevel = self.selectedActivities.discretise(column="maxBatteryLevelStart")
-        # # # self.maxBatteryLevelEnd = self.selectedActivities.discretise(column="maxBatteryLevelEnd")
         self.minBatteryLevel = self.selectedActivities.discretise(column="minBatteryLevelStart")
-        # # # self.minBatteryLevelEnd = self.selectedActivities.discretise(column="minBatteryLevelEnd")
-
+        # # self.residualNeed = self.distributedActivities.discretise(column="residualNeed") # in elec terms kWh elec
+        # # self.maxBatteryLevelEnd = self.selectedActivities.discretise(column="maxBatteryLevelEnd")
+        # # self.minBatteryLevelEnd = self.selectedActivities.discretise(column="minBatteryLevelEnd")
 
 class TimeDiscretiser:
     def __init__(self, activities, dt, datasetID, method: str, globalConfig, localPathConfig):
@@ -219,6 +218,12 @@ class TimeDiscretiser:
     def _allocateBinShares(self):
         self._overlappingActivities()  # identify shared events in bin and handle them
         self._allocate()
+        self._checkBinValues()
+
+    def _checkBinValues(self):
+        # verify all bins get a value assigned
+        # pad with 0
+        pass
 
     # def _dropNoLengthEvents(self):
     # moved before nBins calculation
@@ -260,7 +265,7 @@ class TimeDiscretiser:
 
 if __name__ == '__main__':
 
-    start_time = time.time()
+    startTime = time.time()
     datasetID = "MiD17"
     basePath = Path(__file__).parent.parent
     configNames = ("globalConfig", "localPathConfig", "parseConfig", "diaryConfig",
@@ -284,5 +289,5 @@ if __name__ == '__main__':
     vpDiary = DiaryBuilder(configDict=configDict, datasetID=datasetID, activities=vpFlex.activities)
     vpDiary.createDiaries()
 
-    elapsed_time = time.time() - start_time
-    print('Elapsed time:', elapsed_time)
+    elapsedTime = time.time() - startTime
+    print('Elapsed time:', elapsedTime)
