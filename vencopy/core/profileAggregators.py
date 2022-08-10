@@ -43,7 +43,6 @@ class ProfileAggregator():
             subset=['genericID']).reset_index(drop=True).set_index('genericID')
         self.clusterBool = cluster
         self.nClusters = self.aggregatorConfig['clustering']['nClusters']
-        # self.clusterHH()
         self.drain = profiles.drain
         self.uncontrolledCharge = profiles.uncontrolledCharge
         self.chargingPower = profiles.chargingPower
@@ -81,7 +80,7 @@ class ProfileAggregator():
         # centroids = kmeans.cluster_centers_
         # iterations = kmeans.n_iter_
         # self.plotClusters()
-        self.findOptimalClusterNumber()
+        # self.findOptimalClusterNumber()
 
     def plotClusters(self):
         plt.style.use("fivethirtyeight")
@@ -140,17 +139,16 @@ class ProfileAggregator():
         self.appendClusters()
 
     def appendClusters(self):
-        # labels = pd.DataFrame(np.random.randint(0, 10, size=(len(self.activitiesNoDuplicates), 1)))
-        # labels['genericID'] = self.activitiesNoDuplicates['genericID'].copy()
-        for genericID in self.activitiesNoDuplicates.genericID.unique():
-            idSubset = self.activities[self.activities.genericID == genericID].reset_index(drop=True)
-            for irow in range(len(self.activities)):
-                self.activities.loc[irow, (
-                    idSubset.loc[irow, 'genericID'])] = self.activitiesNoDuplicates.loc[genericID, 0]
+        self.activities['cluster'] = pd.NA
+        self.activitiesNoDuplicates.set_index('genericID', inplace=True)
+        for genericID in self.activitiesNoDuplicates.index:
+            clusterValue = self.activitiesNoDuplicates.loc[genericID, 'cluster']
+            self.activities.loc[self.activities.genericID == genericID, 'cluster'] = clusterValue
 
     def createWeeklyProfiles(self):
-        # FIXME: move if cluster to createTimeseries()
         if self.clusterBool:
+            self.clusterHH()
+            print(f'Clustered household into {self.nClusters} clusters.')
             print('Aggregating profiles based on clustering of household specific characteristics.')
             self.aggregateClusters()
         else:
@@ -165,18 +163,11 @@ class ProfileAggregator():
         # for each cluster aggregate based on day of the week and weight
         # create new df where index equals cluster number
         for clusterID in self.activitiesSubset.cluster.unique():
+            self.clusterID = clusterID
             self.clusterSubset = (
                 self.activitiesSubset[self.activitiesSubset.cluster == clusterID].reset_index(drop=True))
             # aggregateWeightsAndWeekdays taks which df in input
             self.aggregateWeightsAndWeekdays()
-
-    def aggregateProfileWeights(self, df, weights) -> pd.Series:
-        # FIXME: unused function - might be deleted
-        # profile = self.profile.loc[~self.profile.apply(lambda x: x.isna(), axis=0).any(axis=1), :]
-        # weights = self.ac.loc[profile.index, :]  # Filtering weight data to equate lengths
-        # self.weightedProfile = profile.apply(calculateWeightedAverage, weightCol=weights["tripWeight"])
-        sumWeights = sum(weights.tripWeight)
-        self.weightedProfile = df.apply(lambda x: x * weights.values / sumWeights)
 
     def aggregateWeightsAndWeekdays(self, byColumn: str) -> pd.Series:
         self.weekdayProfiles = pd.DataFrame(columns=self.profile.columns, index=range(1, 8))
@@ -193,6 +184,7 @@ class ProfileAggregator():
             self.calculateWeightedAverageStateProfiles(byColumn=byColumn)
         self.composeWeeklyProfile()
         self.createAnnualProfiles()
+        # for clusters add self.clusterID in writeOutput function
         # self._writeOutput()
 
     def calculateWeightedAverageFlowProfiles(self, byColumn):
@@ -225,14 +217,16 @@ class ProfileAggregator():
         self.weeklyProfile = (
             pd.concat([self.weekdayProfiles[1], self.weekdayProfiles[2], self.weekdayProfiles[3],
                        self.weekdayProfiles[4], self.weekdayProfiles[5], self.weekdayProfiles[6],
-                       self.weekdayProfiles[7]]).reset_index())
+                       self.weekdayProfiles[7]], ignore_index=True))
 
     def createAnnualProfiles(self):
-        indexYear = self.timeIndex / 7 * 365
-        self.annualProfile = pd.DataFrame(columns=range(len(list(indexYear))))
-        # multiply by 52 weeks and cutoff excessive days
-        # input = weeklyProfiles
-        # clone over year
+        startWeekday = 1  # (1: Monday, 7: Sunday)
+        # shift input profiles to the right weekday and start with first bin of chosen weekday
+        self.annualProfile = self.weeklyProfile.iloc[((startWeekday-1)*((len(list(self.timeIndex)))-1)):]
+        self.annualProfile = self.annualProfile.append([self.weeklyProfile]*52, ignore_index=True)
+        self.annualProfile.drop(
+            self.annualProfile.tail(len(self.annualProfile)-((len(list(self.timeIndex)))-1)*365).index, inplace=True)
+
 
     def _writeOutput(self):
         # FIXME: string to be passed for profile name
@@ -241,6 +235,7 @@ class ProfileAggregator():
                  localPathConfig=self.localPathConfig, globalConfig=self.globalConfig)
 
     def createTimeseries(self):
+        # profiles = (vpDiary.drain, self.uncontrolledCharge, self.chargingPower, self.maxBatteryLevel, self.minBatteryLevel)
         profiles = (self.drain, self.uncontrolledCharge, self.chargingPower, self.maxBatteryLevel, self.minBatteryLevel)
         profileNames = ('drain', 'uncontrolledCharge', 'chargingPower', 'maxBatteryLevel', 'minBatteryLevel')
         for profile, profileName in itertools.product(profiles, profileNames):

@@ -38,13 +38,13 @@ class DiaryBuilder:
             localPathConfig=self.localPathConfig, activities=self.activities, dt=self.deltaTime, method="select")
 
     def createDiaries(self):
-        # self.drain = self.distributedActivities.discretise(column="drain")
-        # self.uncontrolledCharge = self.distributedActivities.discretise(column="uncontrolledCharge")
+        self.drain = self.distributedActivities.discretise(column="drain")
+        self.uncontrolledCharge = self.distributedActivities.discretise(column="uncontrolledCharge")
         # # # self.residualNeed = self.distributedActivities.discretise(column="residualNeed") # in elec terms kWh elec
         self.chargingPower = self.selectedActivities.discretise(column="chargingPower")
-        # self.maxBatteryLevel = self.selectedActivities.discretise(column="maxBatteryLevelStart")
+        self.maxBatteryLevel = self.selectedActivities.discretise(column="maxBatteryLevelStart")
         # # # self.maxBatteryLevelEnd = self.selectedActivities.discretise(column="maxBatteryLevelEnd")
-        # self.minBatteryLevel = self.selectedActivities.discretise(column="minBatteryLevelStart")
+        self.minBatteryLevel = self.selectedActivities.discretise(column="minBatteryLevelStart")
         # # # self.minBatteryLevelEnd = self.selectedActivities.discretise(column="minBatteryLevelEnd")
 
 
