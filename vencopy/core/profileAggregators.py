@@ -16,7 +16,6 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import seaborn as sns
-import numpy as np
 import pandas as pd
 from kneed import KneeLocator
 from sklearn.cluster import KMeans
@@ -64,7 +63,8 @@ class ProfileAggregator():
     def dropDuplicateHH(self):
         # FIXME: generalise function by passing df and column
         if self.datasetID == 'MiD17':
-            self.activitiesNoDuplicates = self.activitiesNoDuplicates.drop_duplicates(subset=['genericID']).reset_index()
+            self.activitiesNoDuplicates = (
+                self.activitiesNoDuplicates.drop_duplicates(subset=['genericID']).reset_index())
 
     def standardiseInputFeatures(self):
         self.features = self.activitiesNoDuplicates[["economicStatus", "areaType", "bundesland"]].to_numpy()
@@ -86,7 +86,8 @@ class ProfileAggregator():
     def plotClusters(self):
         plt.style.use("fivethirtyeight")
         plt.figure(figsize=(8, 8))
-        scat = sns.scatterplot("component_1", "component_2", s=50, data=self.activitiesNoDuplicates, hue="predicted_cluster", style="true_label", palette="Set2")
+        scat = sns.scatterplot("component_1", "component_2", s=50, data=self.activitiesNoDuplicates,
+                               hue="predicted_cluster", style="true_label", palette="Set2")
         scat.set_title("Clustering results from TCGA Pan-Cancer\nGene Expression Data")
         plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.0)
         plt.show()
@@ -144,26 +145,28 @@ class ProfileAggregator():
         for genericID in self.activitiesNoDuplicates.genericID.unique():
             idSubset = self.activities[self.activities.genericID == genericID].reset_index(drop=True)
             for irow in range(len(self.activities)):
-                self.activities.loc[irow, (idSubset.loc[irow, 'genericID'])] = self.activitiesNoDuplicates.loc[genericID, 0]
+                self.activities.loc[irow, (
+                    idSubset.loc[irow, 'genericID'])] = self.activitiesNoDuplicates.loc[genericID, 0]
 
     def createWeeklyProfiles(self):
         # FIXME: move if cluster to createTimeseries()
-        if self.clusterBool == True:
+        if self.clusterBool:
             print('Aggregating profiles based on clustering of household specific characteristics.')
             self.aggregateClusters()
         else:
             print('Aggregating all profiles to fleet level based on day of the week.')
-            # self.aggregate()
             self.aggregateWeightsAndWeekdays(byColumn="tripStartWeekday")
 
     def aggregateClusters(self):
         self.clustersProfiles = pd.DataFrame(columns=self.profile.columns, index=range(self.nClusters))
         necessaryColumns = ['genericID', 'tripWeight', 'cluster']
-        self.activitiesSubset = self.activities[necessaryColumns].copy().drop_duplicates(subset=['genericID']).reset_index(drop=True)
+        self.activitiesSubset = self.activities[necessaryColumns].copy().drop_duplicates(
+            subset=['genericID']).reset_index(drop=True)
         # for each cluster aggregate based on day of the week and weight
         # create new df where index equals cluster number
         for clusterID in self.activitiesSubset.cluster.unique():
-            self.clusterSubset = self.activitiesSubset[self.activitiesSubset.cluster == clusterID].reset_index(drop=True)
+            self.clusterSubset = (
+                self.activitiesSubset[self.activitiesSubset.cluster == clusterID].reset_index(drop=True))
             # aggregateWeightsAndWeekdays taks which df in input
             self.aggregateWeightsAndWeekdays()
 
@@ -176,9 +179,10 @@ class ProfileAggregator():
         self.weightedProfile = df.apply(lambda x: x * weights.values / sumWeights)
 
     def aggregateWeightsAndWeekdays(self, byColumn: str) -> pd.Series:
-        self.weekdayProfiles = pd.DataFrame(columns=self.profile.columns, index=range(1,8))
+        self.weekdayProfiles = pd.DataFrame(columns=self.profile.columns, index=range(1, 8))
         necessaryColumns = ['genericID', 'tripWeight'] + [byColumn]
-        self.activitiesSubset = self.activities[necessaryColumns].copy().drop_duplicates(subset=['genericID']).reset_index(drop=True)
+        self.activitiesSubset = (
+            self.activities[necessaryColumns].copy().drop_duplicates(subset=['genericID']).reset_index(drop=True))
         self.profile['genericID'] = self.profile.index
         self.activitiesWeekday = pd.merge(self.profile, self.activitiesSubset, on='genericID', how='inner')
         self.activitiesWeekday = self.activitiesWeekday.set_index('genericID')
@@ -215,12 +219,17 @@ class ProfileAggregator():
         #         profileMax[col] = max(weekdaySubset[col].nsmallest(nProfilesFilter))
 
     def composeWeeklyProfile(self):
-        self.weekdayProfiles.stack()
-        # format based on day of the week
+        # input is self.weekdayProfiles
+        self.weekdayProfiles.index.name = 'weekday'
+        self.weekdayProfiles = self.weekdayProfiles.stack().unstack(0)
+        self.weeklyProfile = (
+            pd.concat([self.weekdayProfiles[1], self.weekdayProfiles[2], self.weekdayProfiles[3],
+                       self.weekdayProfiles[4], self.weekdayProfiles[5], self.weekdayProfiles[6],
+                       self.weekdayProfiles[7]]).reset_index())
 
     def createAnnualProfiles(self):
         indexYear = self.timeIndex / 7 * 365
-        self.weeklyProfile = pd.DataFrame(columns=range(len(list(indexYear))))
+        self.annualProfile = pd.DataFrame(columns=range(len(list(indexYear))))
         # multiply by 52 weeks and cutoff excessive days
         # input = weeklyProfiles
         # clone over year
@@ -268,6 +277,7 @@ if __name__ == '__main__':
     # activities = pd.read_csv('C:\\work\\VencoPy\\vencopy_internal\\vencopy\\vencopy\\output\\flexEstimator\\vencopyOutputFlexEstimator_DEBUG_MiD17_clusters.csv')
     # vpProfile = ProfileAggregator(configDict=configDict, datasetID=datasetID,
     #                               activities=activities, profiles=activities, cluster=True)
+
     vpProfile = ProfileAggregator(configDict=configDict, datasetID=datasetID,
                                   activities=vpFlex.activities, profiles=vpDiary, cluster=False)
     vpProfile.createTimeseries()
