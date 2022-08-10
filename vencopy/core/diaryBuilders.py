@@ -38,13 +38,13 @@ class DiaryBuilder:
             localPathConfig=self.localPathConfig, activities=self.activities, dt=self.deltaTime, method="select")
 
     def createDiaries(self):
-        self.drain = self.distributedActivities.discretise(column="drain")
-        self.uncontrolledCharge = self.distributedActivities.discretise(column="uncontrolledCharge")
+        # self.drain = self.distributedActivities.discretise(column="drain")
+        # self.uncontrolledCharge = self.distributedActivities.discretise(column="uncontrolledCharge")
         # # # self.residualNeed = self.distributedActivities.discretise(column="residualNeed") # in elec terms kWh elec
         self.chargingPower = self.selectedActivities.discretise(column="chargingPower")
-        self.maxBatteryLevel = self.selectedActivities.discretise(column="maxBatteryLevelStart")
+        # self.maxBatteryLevel = self.selectedActivities.discretise(column="maxBatteryLevelStart")
         # # # self.maxBatteryLevelEnd = self.selectedActivities.discretise(column="maxBatteryLevelEnd")
-        self.minBatteryLevel = self.selectedActivities.discretise(column="minBatteryLevelStart")
+        # self.minBatteryLevel = self.selectedActivities.discretise(column="minBatteryLevelStart")
         # # # self.minBatteryLevelEnd = self.selectedActivities.discretise(column="minBatteryLevelEnd")
 
 
@@ -135,7 +135,7 @@ class TimeDiscretiser:
 
     def _createDiscretisedStructure(self):
         self.discreteData = pd.DataFrame(
-            index=self.oneActivity.genericID.unique(), columns=range(len(list(self.timeIndex))))
+            index=self.oneActivity.genericID.unique(), columns=range(len(list(self.timeIndex))-1))
 
     def _identifyBinShares(self):  # calculate value share
         self._calculateValueBinsAndQuanta()
@@ -268,7 +268,7 @@ if __name__ == '__main__':
     configDict = loadConfigDict(configNames, basePath=basePath)
 
     if datasetID == "MiD17":
-        vpData = ParseMiD(configDict=configDict, datasetID=datasetID, debug=False)
+        vpData = ParseMiD(configDict=configDict, datasetID=datasetID, debug=True)
     elif datasetID == "KiD":
         vpData = ParseKiD(configDict=configDict, datasetID=datasetID, debug=False)
     elif datasetID == "VF":
