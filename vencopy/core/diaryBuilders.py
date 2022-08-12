@@ -47,6 +47,7 @@ class DiaryBuilder:
         # # self.maxBatteryLevelEnd = self.selectedActivities.discretise(column="maxBatteryLevelEnd")
         # # self.minBatteryLevelEnd = self.selectedActivities.discretise(column="minBatteryLevelEnd")
 
+
 class TimeDiscretiser:
     def __init__(self, activities, dt, datasetID, method: str, globalConfig, localPathConfig):
         """
@@ -212,8 +213,8 @@ class TimeDiscretiser:
         # Option 3
         self.oneActivity['lastBin'] = self.oneActivity['firstBin'] + self.oneActivity['nBins'] - 1
         # FIXME: more elegant way for lastBin +1 if lastActivity = True -> +1 ?
-        self.oneActivity.loc[self.oneActivity['isLastActivity'] == True, 'lastBin'] = (
-            self.oneActivity.loc[self.oneActivity['isLastActivity'] == True, 'lastBin'] + 1)
+        self.oneActivity.loc[self.oneActivity['isLastActivity'], 'lastBin'] = (
+            self.oneActivity.loc[self.oneActivity['isLastActivity'], 'lastBin'] + 1)
 
     def _allocateBinShares(self):
         self._overlappingActivities()  # identify shared events in bin and handle them

@@ -30,44 +30,44 @@ def loadConfigDict(configNames: tuple, basePath):
 
 
 def returnDictBottomKeys(baseDict: dict, lst: list = None) -> list:
-        """
-        Returns the lowest level keys of baseDict and returns all of them
-        as a list. The parameter lst is used as
-        interface between recursion levels.
+    """
+    Returns the lowest level keys of baseDict and returns all of them
+    as a list. The parameter lst is used as
+    interface between recursion levels.
 
-        :param baseDict: Dictionary of variables
-        :param lst: empty list, used as interface between recursion levels
-        :return: Returns a list with all the bottom level dictionary keys
-        """
-        if lst is None:
-            lst = []
-        for iKey, iVal in baseDict.items():
-            if isinstance(iVal, dict):
-                lst = returnDictBottomKeys(iVal, lst)
-            elif iVal is not None:
-                lst.append(iKey)
-        return lst
+    :param baseDict: Dictionary of variables
+    :param lst: empty list, used as interface between recursion levels
+    :return: Returns a list with all the bottom level dictionary keys
+    """
+    if lst is None:
+        lst = []
+    for iKey, iVal in baseDict.items():
+        if isinstance(iVal, dict):
+            lst = returnDictBottomKeys(iVal, lst)
+        elif iVal is not None:
+            lst.append(iKey)
+    return lst
 
 
 def returnDictBottomValues(baseDict: dict, lst: list = None) -> list:
-        """
-        Returns a list of all dictionary values of the last dictionary level
-        (the bottom) of baseDict. The parameter
-        lst is used as an interface between recursion levels.
+    """
+    Returns a list of all dictionary values of the last dictionary level
+    (the bottom) of baseDict. The parameter
+    lst is used as an interface between recursion levels.
 
-        :param baseDict: Dictionary of variables
-        :param lst: empty list, is used as interface to next recursion
-        :return: Returns a list with all the bottom dictionary values
-        """
-        if lst is None:
-            lst = []
-        # iKey not used in returndictBottomValues but used in checkFilterDict to have lists
-        for iKey, iVal in baseDict.items():
-            if isinstance(iVal, dict):
-                lst = returnDictBottomValues(iVal, lst)
-            elif iVal is not None:
-                lst.append(iVal)
-        return lst
+    :param baseDict: Dictionary of variables
+    :param lst: empty list, is used as interface to next recursion
+    :return: Returns a list with all the bottom dictionary values
+    """
+    if lst is None:
+        lst = []
+    # iKey not used in returndictBottomValues but used in checkFilterDict to have lists
+    for iKey, iVal in baseDict.items():
+        if isinstance(iVal, dict):
+            lst = returnDictBottomValues(iVal, lst)
+        elif iVal is not None:
+            lst.append(iVal)
+    return lst
 
 
 def createOutputFolders(configDict: dict):
@@ -149,14 +149,19 @@ def writeProfilesToCSV(profileDictOut, globalConfig: dict, localPathConfig: dict
 
     if singleFile:
         dataOut = pd.DataFrame(profileDictOut)
-        dataOut.to_csv(Path(localPathConfig['pathAbsolute']['vencoPyRoot']) / globalConfig['pathRelative']['flexOutput'] /
-                       createFileString(globalConfig=globalConfig, fileKey='output',
-                                        manualLabel=globalConfig['labels']['technologyLabel'], datasetID=datasetID),
+        dataOut.to_csv(Path(
+            localPathConfig['pathAbsolute']['vencoPyRoot']) / globalConfig['pathRelative']['flexOutput'] /
+                       createFileString(globalConfig=globalConfig,
+                                        fileKey='output',
+                                        manualLabel=globalConfig['labels']['technologyLabel'],
+                                        datasetID=datasetID),
                        header=True)
     else:
         for iName, iProf in profileDictOut.items():
-            iProf.to_csv(Path(localPathConfig['pathAbsolute']['vencoPyRoot']) / globalConfig['pathRelative']['flexOutput'] /
-                         Path(f'vencopy_{iName}_{datasetID}.csv'), header=True)
+            iProf.to_csv(Path(
+                localPathConfig['pathAbsolute']['vencoPyRoot']) / globalConfig['pathRelative']['flexOutput'] /
+                         Path(f'vencopy_{iName}_{datasetID}.csv'),
+                         header=True)
 
 
 def writeOut(dataset, outputFolder, fileKey, manualLabel, datasetID, localPathConfig, globalConfig):

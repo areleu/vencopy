@@ -334,8 +334,8 @@ class DataParser:
         dat.loc[dat['tripEndNextDay'], 'tripEndHour'] = dat.loc[dat['tripEndNextDay'], 'tripEndHour'] + 24
         dat['tripStartsAfterPrevTrip'] = (
                 (dat['tripStartHour'] > dat['tripEndHour'].shift(period)) | (
-                (dat['tripStartHour'] == dat['tripEndHour'].shift(period)) & (
-                    dat['tripStartMinute'] >= dat['tripEndMinute'].shift(period)))
+                    (dat['tripStartHour'] == dat['tripEndHour'].shift(period)) & (
+                        dat['tripStartMinute'] >= dat['tripEndMinute'].shift(period)))
             )
         dat['tripDoesNotOverlap'] = ~(dat['isSameHHAsPrevTrip'] & ~dat['tripStartsAfterPrevTrip'])
         return dat['tripDoesNotOverlap']
@@ -344,7 +344,7 @@ class DataParser:
         """ New implementation of identifying trips that overlap with previous trips. This implementation is cleaner
 
         Args:
-            data (pd.DataFrame): Trip data set including the two variables timestampStart and timestampEnd 
+            data (pd.DataFrame): Trip data set including the two variables timestampStart and timestampEnd
             characterizing a trip
             period (int): Trip identifier within trip diary in survey day to compare every trip to
 

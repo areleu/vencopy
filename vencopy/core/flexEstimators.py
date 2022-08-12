@@ -51,7 +51,7 @@ class FlexEstimator:
         Calculate the maximum battery level at the beginning and end of each activity. This represents the case of
         vehicle users always connecting when charging is available and charging as soon as possible as fast as possible
         until the maximum battery capacity is reached.
-        actTemp is the overall collector for each activity's park and trip results, that will then get written to 
+        actTemp is the overall collector for each activity's park and trip results, that will then get written to
         self.activities at the very end.
         """
         print('Starting maximum battery level calculation')
