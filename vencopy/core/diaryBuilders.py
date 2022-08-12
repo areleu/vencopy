@@ -39,10 +39,10 @@ class DiaryBuilder:
 
     def createDiaries(self):
         self.drain = self.distributedActivities.discretise(column="drain")
-        self.uncontrolledCharge = self.distributedActivities.discretise(column="uncontrolledCharge")
         self.chargingPower = self.selectedActivities.discretise(column="chargingPower")
-        self.maxBatteryLevel = self.selectedActivities.discretise(column="maxBatteryLevelStart")
-        self.minBatteryLevel = self.selectedActivities.discretise(column="minBatteryLevelStart")
+        # self.uncontrolledCharge = self.distributedActivities.discretise(column="uncontrolledCharge")
+        # self.maxBatteryLevel = self.selectedActivities.discretise(column="maxBatteryLevelStart")
+        # self.minBatteryLevel = self.selectedActivities.discretise(column="minBatteryLevelStart")
         # # self.residualNeed = self.distributedActivities.discretise(column="residualNeed") # in elec terms kWh elec
         # # self.maxBatteryLevelEnd = self.selectedActivities.discretise(column="maxBatteryLevelEnd")
         # # self.minBatteryLevelEnd = self.selectedActivities.discretise(column="minBatteryLevelEnd")
@@ -257,7 +257,7 @@ class TimeDiscretiser:
         self._createDiscretisedStructure()
         self._identifyBinShares()
         self._allocateBinShares()
-        # self._writeOutput()
+        self._writeOutput()
         print(f"Discretisation finished for {self.columnToDiscretise}.")
         self.columnToDiscretise = None
         return self.discreteData

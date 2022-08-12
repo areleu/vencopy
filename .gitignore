@@ -26,3 +26,6 @@ vencopy/config/localPathConfig.yaml
 .vscode
 /docs/_build/
 *.code-workspace
+clusters.py
+clusters.csv
+plots.ipynb

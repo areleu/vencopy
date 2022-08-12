@@ -84,7 +84,7 @@ files:
     flexPlotName: flexProfileComparison
 
 labels:
-    runLabel: CLUSTERS
+    runLabel: IAEE_CLUSTERS_2
     technologyLabel: BEV
     outputFileName: vencopy
     strAdd:

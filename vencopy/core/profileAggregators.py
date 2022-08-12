@@ -1,4 +1,5 @@
 import itertools
+
 __version__ = '0.4.X'
 __maintainer__ = 'Niklas Wulff'
 __contributors__ = 'Fabia Miorelli'
@@ -12,12 +13,13 @@ if __package__ is None or __package__ == '':
     from os import path
     sys.path.append(path.dirname(path.dirname(path.dirname(__file__))))
 
+import time
 from pathlib import Path
 
 import matplotlib.pyplot as plt
-import seaborn as sns
-import pandas as pd
 import numpy as np
+import pandas as pd
+import seaborn as sns
 from kneed import KneeLocator
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
@@ -26,7 +28,8 @@ from vencopy.core.dataParsers import ParseKiD, ParseMiD, ParseVF
 from vencopy.core.diaryBuilders import DiaryBuilder
 from vencopy.core.flexEstimators import FlexEstimator
 from vencopy.core.gridModelers import GridModeler
-from vencopy.utils.globalFunctions import loadConfigDict, writeOut, createOutputFolders
+from vencopy.utils.globalFunctions import (createOutputFolders, loadConfigDict,
+                                           writeOut)
 
 
 class ProfileAggregator():
@@ -45,10 +48,10 @@ class ProfileAggregator():
         self.clusterBool = cluster
         self.nClusters = self.aggregatorConfig['clustering']['nClusters']
         self.drain = profiles.drain
-        self.uncontrolledCharge = profiles.uncontrolledCharge
         self.chargingPower = profiles.chargingPower
-        self.maxBatteryLevel = profiles.maxBatteryLevel
-        self.minBatteryLevel = profiles.minBatteryLevel
+        # self.uncontrolledCharge = profiles.uncontrolledCharge
+        # self.maxBatteryLevel = profiles.maxBatteryLevel
+        # self.minBatteryLevel = profiles.minBatteryLevel
 
     def selectInputFeatures(self):
         # read from disk or from previous class
@@ -76,6 +79,7 @@ class ProfileAggregator():
         kmeans.fit(self.scaledFeatures)
         self.predictedLabels = kmeans.labels_
         self.activitiesNoDuplicates['cluster'] = self.predictedLabels
+        self._writeOutputActs()
         # inertia = kmeans.inertia_
         # centroids = kmeans.cluster_centers_
         # iterations = kmeans.n_iter_
@@ -87,7 +91,7 @@ class ProfileAggregator():
         plt.figure(figsize=(8, 8))
         scat = sns.scatterplot("component_1", "component_2", s=50, data=self.activitiesNoDuplicates,
                                hue="predicted_cluster", style="true_label", palette="Set2")
-        scat.set_title("Clustering results from TCGA Pan-Cancer\nGene Expression Data")
+        scat.set_title("Clustering results")
         plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.0)
         plt.show()
 
@@ -133,6 +137,7 @@ class ProfileAggregator():
         plt.show()
 
     def clusterHH(self):
+        # FIXME: custering should only happen once
         self.selectInputFeatures()
         self.standardiseInputFeatures()
         self.cluster()
@@ -147,9 +152,9 @@ class ProfileAggregator():
 
     def createWeeklyProfiles(self):
         if self.clusterBool:
+            print('Aggregating profiles based on clustering of household specific characteristics.')
             self.clusterHH()
             print(f'Clustered household into {self.nClusters} clusters.')
-            print('Aggregating profiles based on clustering of household specific characteristics.')
             self.aggregateClusters()
         else:
             print('Aggregating all profiles to fleet level based on day of the week.')
@@ -162,11 +167,12 @@ class ProfileAggregator():
             subset=['genericID']).reset_index(drop=True)
         # loop over clusters to aggregate over weekday and create weekly and annual profiles
         for clusterID in self.activitiesSubset.cluster.unique():
+            print(f'Aggregating cluster {clusterID} based on day of the week.')
             self.clusterID = clusterID
             self.clusterSubset = (
                 self.activitiesSubset[self.activitiesSubset.cluster == clusterID].reset_index(drop=True))
             # aggregateWeightsAndWeekdays takes self.profile and self.activities into account
-            self.aggregateWeightsAndWeekdays(byColumn="tripStartWeekday")
+            # self.aggregateWeightsAndWeekdays(byColumn="tripStartWeekday")
 
     def aggregateWeightsAndWeekdays(self, byColumn: str) -> pd.Series:
         self.weekdayProfiles = pd.DataFrame(columns=self.profile.columns, index=range(1, 8))
@@ -190,7 +196,6 @@ class ProfileAggregator():
             self.calculateWeightedAverageStateProfiles(byColumn=byColumn)
         self.composeWeeklyProfile()
         self.createAnnualProfiles()
-        # for clusters add self.clusterID in writeOutput function
         self._writeOutput()
 
     def calculateWeightedAverageFlowProfiles(self, byColumn):
@@ -219,12 +224,14 @@ class ProfileAggregator():
     def composeWeeklyProfile(self):
         # input is self.weekdayProfiles
         # check if any day of the week is not filled, copy line above in that case
+        # FIXME: very ugly function below
         if self.weekdayProfiles.isna().any(axis=1).any():
-            indexEmptyRow = self.weekdayProfiles[self.weekdayProfiles.isna().any(axis=1)].index - 1 
-            if indexEmptyRow == 7:
-                self.weekdayProfiles.iloc[indexEmptyRow] = self.weekdayProfiles.iloc[indexEmptyRow - 1]
-            else:
-                self.weekdayProfiles.iloc[indexEmptyRow] = self.weekdayProfiles.iloc[indexEmptyRow + 1]
+            indexEmptyRows = self.weekdayProfiles[self.weekdayProfiles.isna().any(axis=1)].index - 1
+            for emptyRow in indexEmptyRows:
+                if emptyRow == 6:
+                    self.weekdayProfiles.iloc[emptyRow] = self.weekdayProfiles.iloc[emptyRow - 1]
+                else:
+                    self.weekdayProfiles.iloc[emptyRow] = self.weekdayProfiles.iloc[emptyRow + 1]
         self.weekdayProfiles.index.name = 'weekday'
         self.weekdayProfiles = self.weekdayProfiles.stack().unstack(0)
         self.weeklyProfile = (
@@ -240,6 +247,11 @@ class ProfileAggregator():
         self.annualProfile.drop(
             self.annualProfile.tail(len(self.annualProfile)-((len(list(self.timeIndex)))-1)*365).index, inplace=True)
 
+    def _writeOutputActs(self):
+        writeOut(dataset=self.activities, outputFolder='aggregatorOutput', fileKey=('outputProfileAggregator'),
+                 datasetID=self.datasetID, manualLabel=str('actvities_clusters'),
+                 localPathConfig=self.localPathConfig, globalConfig=self.globalConfig)
+
     def _writeOutput(self):
         if self.clusterBool:
             writeOut(dataset=self.annualProfile, outputFolder='aggregatorOutput', fileKey=('outputProfileAggregator'),
@@ -252,16 +264,18 @@ class ProfileAggregator():
 
     def createTimeseries(self):
         # profiles = (vpDiary.drain, vpDiary.uncontrolledCharge, vpDiary.chargingPower, vpDiary.maxBatteryLevel, vpDiary.minBatteryLevel)
-        profiles = (self.drain, self.uncontrolledCharge, self.chargingPower, self.maxBatteryLevel, self.minBatteryLevel)
-        profileNames = ('drain', 'uncontrolledCharge', 'chargingPower', 'maxBatteryLevel', 'minBatteryLevel')
+        profiles = (self.drain, self.chargingPower)  # , self.uncontrolledCharge, self.maxBatteryLevel, self.minBatteryLevel)
+        profileNames = ('drain', 'chargingPower')  # , 'uncontrolledCharge', 'maxBatteryLevel', 'minBatteryLevel')
         for profile, profileName in itertools.product(profiles, profileNames):
             self.profileName = profileName
             self.profile = profile
             self.createWeeklyProfiles()
+        print('Run finished')
 
 
 if __name__ == '__main__':
 
+    startTime = time.time()
     datasetID = "MiD17"
     basePath = Path(__file__).parent.parent
     configNames = ("globalConfig", "localPathConfig", "parseConfig", "diaryConfig",
@@ -269,27 +283,27 @@ if __name__ == '__main__':
     configDict = loadConfigDict(configNames, basePath=basePath)
     createOutputFolders(configDict=configDict)
 
-    if datasetID == "MiD17":
-        vpData = ParseMiD(configDict=configDict, datasetID=datasetID, debug=True)
-    elif datasetID == "KiD":
-        vpData = ParseKiD(configDict=configDict, datasetID=datasetID, debug=False)
-    elif datasetID == "VF":
-        vpData = ParseVF(configDict=configDict, datasetID=datasetID, debug=False)
-    vpData.process()
+    # if datasetID == "MiD17":
+        # vpData = ParseMiD(configDict=configDict, datasetID=datasetID, debug=False)
+    # elif datasetID == "KiD":
+        # vpData = ParseKiD(configDict=configDict, datasetID=datasetID, debug=False)
+    # elif datasetID == "VF":
+        # vpData = ParseVF(configDict=configDict, datasetID=datasetID, debug=False)
+    # vpData.process()
 
-    vpGrid = GridModeler(configDict=configDict, datasetID=datasetID, activities=vpData.activities, gridModel='simple')
-    vpGrid.assignGrid()
+    # vpGrid = GridModeler(configDict=configDict, datasetID=datasetID, activities=vpData.activities, gridModel='simple')
+    # vpGrid.assignGrid()
 
-    vpFlex = FlexEstimator(configDict=configDict, datasetID=datasetID, activities=vpGrid.activities)
-    vpFlex.estimateTechnicalFlexibility()
+    # vpFlex = FlexEstimator(configDict=configDict, datasetID=datasetID, activities=vpGrid.activities)
+    # vpFlex.estimateTechnicalFlexibility()
 
-    vpDiary = DiaryBuilder(configDict=configDict, datasetID=datasetID, activities=vpFlex.activities)
-    vpDiary.createDiaries()
+    # vpDiary = DiaryBuilder(configDict=configDict, datasetID=datasetID, activities=vpFlex.activities)
+    # vpDiary.createDiaries()
 
-    # activities = pd.read_csv('C:\\work\\VencoPy\\vencopy_internal\\vencopy\\vencopy\\output\\flexEstimator\\vencopyOutputFlexEstimator_DEBUG_MiD17_clusters.csv')
-    # vpProfile = ProfileAggregator(configDict=configDict, datasetID=datasetID,
-    #                               activities=activities, profiles=activities, cluster=True)
 
     vpProfile = ProfileAggregator(configDict=configDict, datasetID=datasetID,
                                   activities=vpFlex.activities, profiles=vpDiary, cluster=True)
     vpProfile.createTimeseries()
+
+    elapsedTime = time.time() - startTime
+    print('Elapsed time:', elapsedTime)
