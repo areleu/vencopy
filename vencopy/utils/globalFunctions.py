@@ -70,6 +70,15 @@ def returnDictBottomValues(baseDict: dict, lst: list = None) -> list:
     return lst
 
 
+def replace_vec(series, year=None, month=None, day=None, hour=None, minute=None):
+    return pd.to_datetime(
+        {'year': series.dt.year if year is None else year,
+         'month': series.dt.month if month is None else month,
+         'day': series.dt.day if day is None else day,
+         'hour': series.dt.hour if hour is None else hour,
+         'minute': series.dt.minute if minute is None else minute})
+
+
 def createOutputFolders(configDict: dict):
     """
     Function to crete vencopy output folder and subfolders
@@ -151,17 +160,17 @@ def writeProfilesToCSV(profileDictOut, globalConfig: dict, localPathConfig: dict
         dataOut = pd.DataFrame(profileDictOut)
         dataOut.to_csv(Path(
             localPathConfig['pathAbsolute']['vencoPyRoot']) / globalConfig['pathRelative']['flexOutput'] /
-                       createFileString(globalConfig=globalConfig,
-                                        fileKey='output',
-                                        manualLabel=globalConfig['labels']['technologyLabel'],
-                                        datasetID=datasetID),
-                       header=True)
+            createFileString(globalConfig=globalConfig,
+                             fileKey='output',
+                             manualLabel=globalConfig['labels']['technologyLabel'],
+                             datasetID=datasetID),
+            header=True)
     else:
         for iName, iProf in profileDictOut.items():
             iProf.to_csv(Path(
                 localPathConfig['pathAbsolute']['vencoPyRoot']) / globalConfig['pathRelative']['flexOutput'] /
-                         Path(f'vencopy_{iName}_{datasetID}.csv'),
-                         header=True)
+                Path(f'vencopy_{iName}_{datasetID}.csv'),
+                header=True)
 
 
 def writeOut(dataset, outputFolder, fileKey, manualLabel, datasetID, localPathConfig, globalConfig):

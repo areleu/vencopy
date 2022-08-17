@@ -16,6 +16,8 @@ if __package__ is None or __package__ == "":
 from pathlib import Path
 
 import pandas as pd
+from profilehooks import profile
+
 from vencopy.core.dataParsers import ParseKiD, ParseMiD, ParseVF
 from vencopy.core.gridModelers import GridModeler
 from vencopy.utils.globalFunctions import loadConfigDict, writeOut
@@ -45,7 +47,7 @@ class FlexEstimator:
         self.activities.loc[self.isPark, 'maxChargeVolume'] = self.activities.loc[self.isPark, 'chargingPower'] * \
             self.activities.loc[self.isPark, 'timedelta'] / pd.Timedelta('1 hour')
 
-    # @profile(immediate=True)
+    @profile(immediate=True)
     def _batteryLevelMax(self):
         """
         Calculate the maximum battery level at the beginning and end of each activity. This represents the case of
@@ -67,6 +69,7 @@ class FlexEstimator:
         tripActsRes = pd.DataFrame()
         for act in setActs:
             print(f'Calculate maximum battery level for act {act}')
+            # FIXME: Possible to get rid of firstAct test?
             tripRows = (self.activities['tripID'] == act) & (~self.activities['isFirstActivity'])
             parkRows = (self.activities['parkID'] == act) & (~self.activities['isFirstActivity'])
             tripActs = self.activities.loc[tripRows, :]
@@ -90,7 +93,7 @@ class FlexEstimator:
             prevTripActs = tripActsRes  # Redundant?
         self.activities = actTemp.sort_values(by=['hhPersonID', 'actID', 'parkID'])
 
-    # @profile(immediate=True)
+    @profile(immediate=True)
     def _batteryLevelMin(self):
         """
         Calculate the minimum battery level at the beginning and end of each activity. This represents the case of
@@ -129,32 +132,38 @@ class FlexEstimator:
         # First activities - parking and trips
         idx = (self.activities['isFirstActivity']) | (self.activities['parkID'] == 1)
         firstAct = self.activities.loc[idx, :].copy()
+
+        isTripAct = ~firstAct.loc[:, 'tripID'].isna()
+        isParkAct = ~firstAct.loc[:, 'parkID'].isna()
+
         firstAct.loc[:, 'maxBatteryLevelStart'] = self.upperBatLev
-        firstAct.loc[self.isPark, 'maxBatteryLevelEnd'] = firstAct['maxBatteryLevelStart']
-        firstAct.loc[self.isPark, 'maxOvershoot'] = firstAct['maxChargeVolume']
-        firstAct.loc[self.isTrip, 'maxBatteryLevelEnd_unlimited'] = firstAct.loc[
-            self.isTrip, 'maxBatteryLevelStart'] - firstAct.loc[self.isTrip, 'drain']
-        firstAct.loc[self.isTrip, 'maxBatteryLevelEnd'] = firstAct.loc[
-            self.isTrip, 'maxBatteryLevelEnd_unlimited'].where(firstAct.loc[
-                self.isTrip, 'maxBatteryLevelEnd_unlimited'] >= self.lowerBatLev, other=self.lowerBatLev)
-        firstAct.loc[self.isTrip, 'maxResidualNeed'] = firstAct.loc[
-            self.isTrip, 'maxBatteryLevelEnd_unlimited'].where(firstAct.loc[
-                self.isTrip, 'maxBatteryLevelEnd_unlimited'] < 0, other=0)
+        firstAct.loc[isParkAct, 'maxBatteryLevelEnd'] = firstAct['maxBatteryLevelStart']
+        firstAct.loc[isParkAct, 'maxOvershoot'] = firstAct['maxChargeVolume']
+        firstAct.loc[isTripAct, 'maxBatteryLevelEnd_unlimited'] = firstAct.loc[
+            isTripAct, 'maxBatteryLevelStart'] - firstAct.loc[isTripAct, 'drain']
+        firstAct.loc[isTripAct, 'maxBatteryLevelEnd'] = firstAct.loc[
+            isTripAct, 'maxBatteryLevelEnd_unlimited'].where(firstAct.loc[
+                isTripAct, 'maxBatteryLevelEnd_unlimited'] >= self.lowerBatLev, other=self.lowerBatLev)
+        firstAct.loc[isTripAct, 'maxResidualNeed'] = firstAct.loc[
+            isTripAct, 'maxBatteryLevelEnd_unlimited'].where(firstAct.loc[
+                isTripAct, 'maxBatteryLevelEnd_unlimited'] < 0, other=0)
         return firstAct
 
     def _calcMinBatLastAct(self):
         # Last activities - parking and trips
         lastAct = self.activities.loc[self.activities['isLastActivity'], :].copy()
-        lastAct.loc[self.isPark, 'minBatteryLevelEnd'] = self.lowerBatLev
-        lastAct.loc[self.isPark, 'minBatteryLevelStart'] = self.lowerBatLev
-        lastAct.loc[self.isTrip, 'minBatteryLevelEnd'] = self.lowerBatLev
-        lastAct.loc[self.isTrip, 'minBatteryLevelStart_unlimited'] = self.lowerBatLev + lastAct.loc[
-            self.isTrip, 'drain']
-        lastAct.loc[self.isTrip, 'minBatteryLevelStart'] = lastAct.loc[self.isTrip,
-                                                                       'minBatteryLevelStart_unlimited'].where(
-            lastAct.loc[self.isTrip, 'minBatteryLevelStart_unlimited'] <= self.upperBatLev, other=self.upperBatLev)
-        resNeed = lastAct.loc[self.isTrip, 'minBatteryLevelStart_unlimited'] - self.upperBatLev
-        lastAct.loc[self.isTrip, 'residualNeed'] = resNeed.where(resNeed >= 0, other=0)
+
+        isTripAct = ~lastAct.loc[:, 'tripID'].isna()
+        isParkAct = ~lastAct.loc[:, 'parkID'].isna()
+
+        lastAct.loc[isParkAct, 'minBatteryLevelEnd'] = self.lowerBatLev
+        lastAct.loc[isParkAct, 'minBatteryLevelStart'] = self.lowerBatLev
+        lastAct.loc[isTripAct, 'minBatteryLevelEnd'] = self.lowerBatLev
+        lastAct.loc[isTripAct, 'minBatteryLevelStart_unlimited'] = self.lowerBatLev + lastAct.loc[isTripAct, 'drain']
+        lastAct.loc[isTripAct, 'minBatteryLevelStart'] = lastAct.loc[isTripAct, 'minBatteryLevelStart_unlimited'].where(
+            lastAct.loc[isTripAct, 'minBatteryLevelStart_unlimited'] <= self.upperBatLev, other=self.upperBatLev)
+        resNeed = lastAct.loc[isTripAct, 'minBatteryLevelStart_unlimited'] - self.upperBatLev
+        lastAct.loc[isTripAct, 'residualNeed'] = resNeed.where(resNeed >= 0, other=0)
         return lastAct
 
     def _calcBatLevTripMax(self, actID: int, tripActs: pd.DataFrame, prevParkActs: pd.DataFrame = None):
@@ -292,7 +301,8 @@ if __name__ == "__main__":
         vpData = ParseVF(configDict=configDict, datasetID=datasetID)
     vpData.process()
 
-    vpGrid = GridModeler(configDict=configDict, datasetID=datasetID, activities=vpData.activities, gridModel='simple')
+    vpGrid = GridModeler(configDict=configDict, datasetID=datasetID, activities=vpData.activities,
+                         gridModel='simple')
     vpGrid.assignGrid()
 
     vpFlex = FlexEstimator(configDict=configDict, datasetID=datasetID, activities=vpGrid.activities)

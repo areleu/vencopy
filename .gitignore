@@ -29,3 +29,6 @@ vencopy/config/localPathConfig.yaml
 clusters.py
 clusters.csv
 plots.ipynb
+
+# Verification notebook
+vencopy/verificationTimeBranch.ipynb

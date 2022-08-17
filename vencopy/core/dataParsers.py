@@ -20,7 +20,10 @@ from zipfile import ZipFile
 
 import numpy as np
 import pandas as pd
-from vencopy.utils.globalFunctions import loadConfigDict, returnDictBottomKeys, returnDictBottomValues, writeOut
+from profilehooks import profile
+
+from vencopy.utils.globalFunctions import loadConfigDict, replace_vec, writeOut
+from vencopy.utils.globalFunctions import returnDictBottomKeys, returnDictBottomValues
 
 
 class DataParser:
@@ -333,10 +336,10 @@ class DataParser:
         dat['isSameHHAsPrevTrip'] = dat['hhPersonID'] == dat['hhPersonID'].shift(period)
         dat.loc[dat['tripEndNextDay'], 'tripEndHour'] = dat.loc[dat['tripEndNextDay'], 'tripEndHour'] + 24
         dat['tripStartsAfterPrevTrip'] = (
-                (dat['tripStartHour'] > dat['tripEndHour'].shift(period)) | (
-                    (dat['tripStartHour'] == dat['tripEndHour'].shift(period)) & (
-                        dat['tripStartMinute'] >= dat['tripEndMinute'].shift(period)))
-            )
+            (dat['tripStartHour'] > dat['tripEndHour'].shift(period)) | (
+                (dat['tripStartHour'] == dat['tripEndHour'].shift(period)) & (
+                    dat['tripStartMinute'] >= dat['tripEndMinute'].shift(period)))
+        )
         dat['tripDoesNotOverlap'] = ~(dat['isSameHHAsPrevTrip'] & ~dat['tripStartsAfterPrevTrip'])
         return dat['tripDoesNotOverlap']
 
@@ -452,7 +455,8 @@ class DataParser:
                                  self.activities['parkID'])
         self.activities = self.activities.loc[~indexMultiDayActivity, :]
 
-    def __adjustParkTimeStamps(self):
+    # DEPRECATED WILL BE REMOVED IN NEXT RELEASE
+    def __adjustParkTimeStamps_old(self):
         # Setting timestamps
         self.activities = self.activities.reset_index()
         parkingAct = self.activities['parkID'].fillna(0).astype(bool)
@@ -478,7 +482,37 @@ class DataParser:
         # Updating park end timestamps for last activity
         idxActs = self.activities['parkID'].fillna(0).astype(bool) & self.activities['isLastActivity']
         self.activities.loc[idxActs, 'timestampEnd'] = self.activities.loc[
-            idxActs, 'timestampStart'].apply(lambda x: x.replace(hour=0, minute=0) + pd.Timedelta(1, 'h'))
+            idxActs, 'timestampStart'].apply(lambda x: x.replace(hour=0, minute=0) + pd.Timedelta(1, 'd'))
+
+    def __adjustParkTimeStamps(self):
+        # Setting timestamps
+        self.activities = self.activities.reset_index()
+        parkingAct = self.activities['parkID'].fillna(0).astype(bool)
+        parkingAct = parkingAct.loc[parkingAct]
+        parkingActwoLast = parkingAct.iloc[:-1]
+        parkingActwoFirst = parkingAct.iloc[1:]
+
+        # Updating park end timestamps
+        set_ts = self.activities.loc[parkingActwoLast.index + 1, 'timestampStart']
+        set_ts.index = self.activities.loc[parkingActwoLast.index, 'timestampEnd'].index
+        self.activities.loc[parkingActwoLast.index, 'timestampEnd'] = set_ts
+
+        # Updating park start timestamps
+        set_ts = self.activities.loc[parkingActwoFirst.index - 1, 'timestampEnd']
+        set_ts.index = self.activities.loc[parkingActwoFirst.index, 'timestampStart'].index
+        self.activities.loc[parkingActwoFirst.index, 'timestampStart'] = set_ts
+
+        # Updating park start timestamps for first activity
+        idxActs = self.activities['parkID'].fillna(0).astype(bool) & self.activities['isFirstActivity']
+        self.activities.loc[idxActs, 'timestampStart'] = replace_vec(self.activities.loc[idxActs, 'timestampEnd'],
+                                                                     hour=0, minute=0)
+
+        # Updating park end timestamps for last activity
+        idxActs = self.activities['parkID'].fillna(0).astype(bool) & self.activities['isLastActivity']
+        self.activities.loc[idxActs, 'timestampEnd'] = replace_vec(self.activities.loc[idxActs, 'timestampEnd'],
+                                                                   hour=0, minute=0)
+        self.activities.loc[idxActs, 'timestampEnd'] = self.activities.loc[
+            idxActs, 'timestampEnd'] + pd.Timedelta(1, 'd')
 
     def __setTripAttrsNAForParkActs(self):
         # Set tripEndNextDay to False for all park activities
@@ -535,15 +569,13 @@ class DataParser:
     def __adjustONTimestamps(self, trips: pd.DataFrame):
         tripsRes = trips.copy()
         tripsRes['timestampEnd'] = tripsRes.loc[:, 'timestampEnd'] - pd.Timedelta(1, 'd')
-        tripsRes['timestampStart'] = tripsRes.loc[:, 'timestampEnd'].apply(
-            lambda x: x.replace(hour=0, minute=0))
+        tripsRes['timestampStart'] = replace_vec(tripsRes.loc[:, 'timestampEnd'], hour=0, minute=0)
         return tripsRes
 
     def __setAllLastActEndTSToZero(self):
         # Set timestamp end of evening part of overnight trip split to 00:00
-        self.activities.loc[self.activities['isLastActivity'], 'timestampEnd'] = self.activities.loc[
-            self.activities['isLastActivity'], 'timestampEnd'].apply(
-            lambda x: x.replace(hour=0, minute=0))
+        self.activities.loc[self.activities['isLastActivity'], 'timestampEnd'] = replace_vec(self.activities.loc[
+            self.activities['isLastActivity'], 'timestampEnd'], hour=0, minute=0)
 
     def __setONTripIDZero(self, trips):
         trips['tripID'] = 0
@@ -679,8 +711,8 @@ class DataParser:
         """
         idxConsolidatedTrips = (self.activities['hhPersonID'].isin(hhpid_neglect)) & (self.activities[
             'isFirstActivity'])
-        self.activities.loc[idxConsolidatedTrips, 'timestampStart'] = self.activities.loc[
-            idxConsolidatedTrips, 'timestampStart'].apply(lambda x: x.replace(hour=0, minute=0))
+        self.activities.loc[idxConsolidatedTrips, 'timestampStart'] = replace_vec(self.activities.loc[
+            idxConsolidatedTrips, 'timestampStart'], hour=0, minute=0)
         self.activities.loc[idxConsolidatedTrips, 'prevActID'] = pd.NA
 
     def __dropONCol(self):
@@ -947,6 +979,7 @@ class ParseMiD(IntermediateParsing):
                 colName="purposeStr", varName="tripPurpose"
             )
 
+    @profile(immediate=True)
     def process(self):
         """
         Wrapper function for harmonising and filtering the dataset.
@@ -1223,7 +1256,6 @@ class ParseKiD(IntermediateParsing):
 
 
 if __name__ == '__main__':
-
     basePath = Path(__file__).parent.parent
     configNames = ("globalConfig", "localPathConfig", "parseConfig", "diaryConfig",
                    "gridConfig", "flexConfig", "aggregatorConfig", "evaluatorConfig")
