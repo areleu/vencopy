@@ -48,6 +48,11 @@ class DiaryBuilder:
         # # self.minBatteryLevelEnd = self.selectedActivities.discretise(column="minBatteryLevelEnd")
 
 
+class WeekDiaryBuilder:
+    def __init__(self):
+        pass
+
+
 class TimeDiscretiser:
     def __init__(self, activities, dt, datasetID, method: str, globalConfig, localPathConfig):
         """
