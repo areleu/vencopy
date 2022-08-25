@@ -378,7 +378,7 @@ class DataParser:
         print(f"All filters combined yielded that a total of {lenData} trips are taken into account")
         print(f'This corresponds to {lenData / len(filterData)* 100} percent of the original data')
 
-    def _addParkingRows(self):
+    def _addParkingRows(self, splitOvernightTrips: bool = True):
         """Wrapper function generating park activity rows between the trip data from the original MID dataset. Some
         utility attributes are being added such as isFirstActivity, isLastActivity or the hhPersonID of the next and
         previous activity. Redundant time observations are dropped after timestamp creation for start and end time of
@@ -386,6 +386,10 @@ class DataParser:
         split up into two trips. The first one extends to the end of the day (00:00) and the other one is appended
         to the activity list before the first parking activity (0:00-1:30). The trip distance is split between the two
         based on the time.
+        
+        :param splitOvernightTrips: Should trips that end on the consecutive day (not the survey day) be split in two 
+        trips in such a way that the estimated trip distance the next day is appended in the morning hours of the survey
+        day?
         """
 
         self.__copyRows()
@@ -397,7 +401,7 @@ class DataParser:
         self.__adjustParkTimeStamps()
         self.__setTripAttrsNAForParkActs()
         self.__addNextAndPrevIDs()
-        self.__splitOvernightTrips()
+        self.__ONSplitDecider(split=splitOvernightTrips)  # ON = overnight
         self.__addTimeDeltaCol()
         self.__uniqueIndex()
 
@@ -439,7 +443,7 @@ class DataParser:
         # Clean-up of temporary redundant columns
         self.activities.drop(columns=[
             'isMIVDriver', 'tripStartClock', 'tripEndClock', 'tripStartYear', 'tripStartMonth',
-            'tripStartWeek', 'tripStartHour', 'tripStartMinute', 'tripEndHour', 'tripEndMinute', 'hhpid_prev',
+            'tripStartWeek', 'tripStartHour', 'tripStartMinute', 'tripEndHour', 'tripEndMinute', 'hhpid_prev',  # 
             'hhpid_next', 'colFromIndex'], inplace=True)
 
     def __removeParkActsAfterOvernightTrips(self):
@@ -525,6 +529,19 @@ class DataParser:
             :, 'actID'].shift(-1)
         self.activities.loc[~self.activities['isFirstActivity'], 'prevActID'] = self.activities.loc[
             :, 'actID'].shift(1)
+
+    def __ONSplitDecider(self, split: bool):
+        """Boolean function that differentiates if overnight trips should be split (split==True) or not (split==False).
+        In the latter case, overnight trips identified by the variable 'tripEndNextDay' are excluded from the data set.
+
+        Args:
+            split (bool): Should trips that end on the consecutive day (not the survey day) be split in two trips in 
+            such a way that the estimated trip distance the next day is appended in the morning hours of the survey day?
+        """
+        if split:
+            self.__splitOvernightTrips()
+        else:
+            self.activities = self.activities.loc[~self.activities['tripEndNextDay'], :]
 
     def __splitOvernightTrips(self):
         """ Wrapper function for treating edge case trips ending not in the 24 hours of the survey day but stretch
@@ -980,10 +997,14 @@ class ParseMiD(IntermediateParsing):
             )
 
     @profile(immediate=True)
-    def process(self):
+    def process(self, splitOvernightTrips: bool = True):
         """
-        Wrapper function for harmonising and filtering the dataset.
+        Wrapper function for harmonising and filtering the activities dataset as well as adding parking rows.
+        
+        :param splitOvernightTrips: Should trips that end on the consecutive day (not the survey day) be split in such
+        a way that the estimated trip distance the next day is appended in the morning hours of the survey day?
         """
+        
         self._selectColumns()
         self.__harmonizeVariables()
         self.__convertTypes()
@@ -994,7 +1015,7 @@ class ParseMiD(IntermediateParsing):
         self._filter(self.filterDict)
         self._filterConsistentHours()
         self._harmonizeVariablesGenericIdNames()
-        self._addParkingRows()
+        self._addParkingRows(splitOvernightTrips=splitOvernightTrips)
         print("Parsing MiD dataset completed")
 
 
