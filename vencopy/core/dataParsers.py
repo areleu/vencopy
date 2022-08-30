@@ -71,6 +71,9 @@ class DataParser:
             self._loadData()
         self.rawData = self.rawData.loc[0:2000, :] if debug else self.rawData.copy()
 
+        # Storage for original data variable that is being overwritten throughout adding of park rows
+        self.tripEndNextDayRaw = None
+
     def _loadData(self):
         """
         Loads data specified in self.rawDataPath and stores it in self.rawData.
@@ -386,7 +389,7 @@ class DataParser:
         split up into two trips. The first one extends to the end of the day (00:00) and the other one is appended
         to the activity list before the first parking activity (0:00-1:30). The trip distance is split between the two
         based on the time.
-        
+
         :param splitOvernightTrips: Should trips that end on the consecutive day (not the survey day) be split in two 
         trips in such a way that the estimated trip distance the next day is appended in the morning hours of the survey
         day?
@@ -398,7 +401,7 @@ class DataParser:
         self.__adjustParkAttrs()
         self.__dropRedundantCols()
         self.__removeParkActsAfterOvernightTrips()
-        self.__adjustParkTimeStamps()
+        self.__adjustParkTimestamps()
         self.__setTripAttrsNAForParkActs()
         self.__addNextAndPrevIDs()
         self.__ONSplitDecider(split=splitOvernightTrips)  # ON = overnight
@@ -443,7 +446,7 @@ class DataParser:
         # Clean-up of temporary redundant columns
         self.activities.drop(columns=[
             'isMIVDriver', 'tripStartClock', 'tripEndClock', 'tripStartYear', 'tripStartMonth',
-            'tripStartWeek', 'tripStartHour', 'tripStartMinute', 'tripEndHour', 'tripEndMinute', 'hhpid_prev',  # 
+            'tripStartWeek', 'tripStartHour', 'tripStartMinute', 'tripEndHour', 'tripEndMinute', 'hhpid_prev',  #
             'hhpid_next', 'colFromIndex'], inplace=True)
 
     def __removeParkActsAfterOvernightTrips(self):
@@ -460,7 +463,7 @@ class DataParser:
         self.activities = self.activities.loc[~indexMultiDayActivity, :]
 
     # DEPRECATED WILL BE REMOVED IN NEXT RELEASE
-    def __adjustParkTimeStamps_old(self):
+    def __adjustParkTimestamps_old(self):
         # Setting timestamps
         self.activities = self.activities.reset_index()
         parkingAct = self.activities['parkID'].fillna(0).astype(bool)
@@ -488,35 +491,62 @@ class DataParser:
         self.activities.loc[idxActs, 'timestampEnd'] = self.activities.loc[
             idxActs, 'timestampStart'].apply(lambda x: x.replace(hour=0, minute=0) + pd.Timedelta(1, 'd'))
 
-    def __adjustParkTimeStamps(self):
-        # Setting timestamps
+    def __adjustParkTimestamps(self):
+        """Adjust the start and end timestamps of the newly added rows. This is done via range index, that is reset at
+        the beginning. First and last activities have to be treated separately since their dates have to match with 
+        their daily activity chain. 
+        """
+        
         self.activities = self.activities.reset_index()
-        parkingAct = self.activities['parkID'].fillna(0).astype(bool)
+        parkingActwoFirst, parkingActwoLast = self.__getParkingActsWOFirstAndLast()
+
+        self.__updateParkActStart(parkingActwoFirst=parkingActwoFirst)
+        self.__updateParkActEnd(parkingActwoLast=parkingActwoLast)
+
+        self.__updateTimestampFirstParkAct()
+        self.__updateTimestampLastParkAct()
+        
+        print('Completed park timestamp adjustments')
+
+    def __getParkingActsWOFirstAndLast(self) -> (pd.Series, pd.Series):
+        """Return all parking activities except for the last one (return argument 1) and the first one (return argument
+        2)
+
+        Returns:
+            pd.Series: Parking activity indices without the last one
+            pd.Series: Parking activity indices without the first one
+        """
+        parkingAct = ~self.activities['parkID'].isna()
         parkingAct = parkingAct.loc[parkingAct]
-        parkingActwoLast = parkingAct.iloc[:-1]
-        parkingActwoFirst = parkingAct.iloc[1:]
+        return parkingAct.iloc[1:], parkingAct.iloc[:-1]
 
-        # Updating park end timestamps
-        set_ts = self.activities.loc[parkingActwoLast.index + 1, 'timestampStart']
-        set_ts.index = self.activities.loc[parkingActwoLast.index, 'timestampEnd'].index
-        self.activities.loc[parkingActwoLast.index, 'timestampEnd'] = set_ts
-
-        # Updating park start timestamps
+    def __updateParkActStart(self, parkingActwoFirst: pd.Series):
+        """ Updating park start timestamps for newly added rows
+        """
         set_ts = self.activities.loc[parkingActwoFirst.index - 1, 'timestampEnd']
         set_ts.index = self.activities.loc[parkingActwoFirst.index, 'timestampStart'].index
         self.activities.loc[parkingActwoFirst.index, 'timestampStart'] = set_ts
 
-        # Updating park start timestamps for first activity
-        idxActs = self.activities['parkID'].fillna(0).astype(bool) & self.activities['isFirstActivity']
+    def __updateParkActEnd(self, parkingActwoLast: pd.Series):
+        """ Updating park end timestamps for newly added rows
+        """
+        set_ts = self.activities.loc[parkingActwoLast.index + 1, 'timestampStart']
+        set_ts.index = self.activities.loc[parkingActwoLast.index, 'timestampEnd'].index
+        self.activities.loc[parkingActwoLast.index, 'timestampEnd'] = set_ts
+        
+    def __updateTimestampFirstParkAct(self):
+        """ Updating park end timestamps for last activity in new park rows
+        """
+        idxActs = ~(self.activities['parkID'].isna()) & (self.activities['isFirstActivity'])
         self.activities.loc[idxActs, 'timestampStart'] = replace_vec(self.activities.loc[idxActs, 'timestampEnd'],
                                                                      hour=0, minute=0)
 
-        # Updating park end timestamps for last activity
-        idxActs = self.activities['parkID'].fillna(0).astype(bool) & self.activities['isLastActivity']
-        self.activities.loc[idxActs, 'timestampEnd'] = replace_vec(self.activities.loc[idxActs, 'timestampEnd'],
-                                                                   hour=0, minute=0)
-        self.activities.loc[idxActs, 'timestampEnd'] = self.activities.loc[
-            idxActs, 'timestampEnd'] + pd.Timedelta(1, 'd')
+    def __updateTimestampLastParkAct(self):
+        """ Updating park end timestamps for last activity in new park rows
+        """
+        idxActs = ~(self.activities['parkID'].isna()) & (self.activities['isLastActivity'])
+        self.activities.loc[idxActs, 'timestampEnd'] = replace_vec(self.activities.loc[idxActs, 'timestampStart'],
+                                                                   hour=0, minute=0) + pd.Timedelta(1, 'd')
 
     def __setTripAttrsNAForParkActs(self):
         # Set tripEndNextDay to False for all park activities
@@ -541,7 +571,8 @@ class DataParser:
         if split:
             self.__splitOvernightTrips()
         else:
-            self.activities = self.activities.loc[~self.activities['tripEndNextDay'], :]
+            self.__setONVarFalseForLastActTrip()
+            self.__neglectONTrips()
 
     def __splitOvernightTrips(self):
         """ Wrapper function for treating edge case trips ending not in the 24 hours of the survey day but stretch
@@ -737,6 +768,37 @@ class DataParser:
 
     def __sortActivities(self):
         self.activities = self.activities.sort_values(by=['hhPersonID', 'timestampStart'])
+
+    def __setONVarFalseForLastActTrip(self):
+        """This function treats the edge case of trips being the last activity in the daily activity chain, i.e. trips
+        ending exactly at 00:00. They are falsely labelled as overnight trips which is corrected here. 
+
+        """
+        idxLastActTrips = (self.activities['isLastActivity']) & ~(self.activities['tripID'].isna())
+        idxLastTripEndMidnight = idxLastActTrips & (
+            self.activities.loc[idxLastActTrips, 'timestampEnd'].dt.hour == 0) & (
+            self.activities.loc[idxLastActTrips, 'timestampEnd'].dt.minute == 0)
+        self.tripEndNextDayRaw = self.activities['tripEndNextDay']
+        self.activities.loc[idxLastTripEndMidnight, 'tripEndNextDay'] = False
+
+    def __neglectONTrips(self):
+        """ Removes all overnight trips from the activities data set based on the column 'tripEndNextDay'. Updates 
+        timestamp end (to 00:00) and isLastActivity for the new last parking activities. Overwrites self.activities. 
+        """
+        # Column for lastActivity setting later
+        self.activities['tripEndNextDay_next'] = self.activities['tripEndNextDay'].shift(-1, fill_value=False)
+
+        # Get rid of overnight trips
+        idxNoONTrip = (~(self.activities['tripEndNextDay'].fillna(False)))
+        self.activities = self.activities.loc[idxNoONTrip, :]
+
+        # Update isLastActivity and timestampEnd variables and clean-up column
+        idxNewLastAct = self.activities['tripEndNextDay_next']
+        idxNewLastAct = idxNewLastAct.fillna(False).astype(bool)
+        self.activities.loc[idxNewLastAct, 'isLastActivity'] = True
+        self.activities.loc[idxNewLastAct, 'timestampEnd'] = replace_vec(
+            self.activities.loc[idxNewLastAct, 'timestampStart'], hour=0, minute=0)
+        self.activities = self.activities.drop(columns=['tripEndNextDay_next'])
 
     def __addTimeDeltaCol(self):
         # Add timedelta column
@@ -1000,11 +1062,11 @@ class ParseMiD(IntermediateParsing):
     def process(self, splitOvernightTrips: bool = True):
         """
         Wrapper function for harmonising and filtering the activities dataset as well as adding parking rows.
-        
+
         :param splitOvernightTrips: Should trips that end on the consecutive day (not the survey day) be split in such
         a way that the estimated trip distance the next day is appended in the morning hours of the survey day?
         """
-        
+
         self._selectColumns()
         self.__harmonizeVariables()
         self.__convertTypes()

@@ -32,8 +32,8 @@ class FlexEstimator:
         self.upperBatLev = self.flexConfig['Battery_capacity'] * self.flexConfig['Maximum_SOC']
         self.lowerBatLev = self.flexConfig['Battery_capacity'] * self.flexConfig['Minimum_SOC']
         self.activities = activities.copy()
-        self.isTrip = self.activities['tripID'].fillna(0).astype(bool)
-        self.isPark = self.activities['parkID'].fillna(0).astype(bool)
+        self.isTrip = ~self.activities['tripID'].isna()
+        self.isPark = ~self.activities['parkID'].isna()
         self.isFirstAct = self.activities['isFirstActivity'].fillna(0).astype(bool)
         self.isLastAct = self.activities['isLastActivity'].fillna(0).astype(bool)
         self.activities[['maxBatteryLevelStart', 'maxBatteryLevelEnd', 'minBatteryLevelStart',
@@ -47,8 +47,7 @@ class FlexEstimator:
         self.activities.loc[self.isPark, 'maxChargeVolume'] = self.activities.loc[self.isPark, 'chargingPower'] * \
             self.activities.loc[self.isPark, 'timedelta'] / pd.Timedelta('1 hour')
 
-    @profile(immediate=True)
-    def _batteryLevelMax(self):
+    def __batteryLevelMax(self):
         """
         Calculate the maximum battery level at the beginning and end of each activity. This represents the case of
         vehicle users always connecting when charging is available and charging as soon as possible as fast as possible
@@ -78,7 +77,7 @@ class FlexEstimator:
             # Filtering for the previous trips that have the current activity as next activity
             prevTripActs = actTemp.loc[(actTemp['nextActID'] == act) & (~actTemp['tripID'].isna()), :]
 
-            if act == 1:  # trips with tripID==0 (overnight morning splits) are handled in firstAct above
+            if act == 1:  # firstAct trips with tripID==0 (overnight morning splits) are handled in firstAct above
                 tripActsRes = self._calcBatLevTripMax(actID=act, tripActs=tripActs, prevParkActs=firstParkActs)
 
             elif act != 0:
@@ -91,10 +90,9 @@ class FlexEstimator:
 
             actTemp = pd.concat([actTemp, tripActsRes], ignore_index=True)
             prevTripActs = tripActsRes  # Redundant?
-        self.activities = actTemp.sort_values(by=['hhPersonID', 'actID', 'parkID'])
+        self.activities = actTemp.sort_values(by=['genericID', 'actID', 'parkID'])
 
-    @profile(immediate=True)
-    def _batteryLevelMin(self):
+    def __batteryLevelMin(self):
         """
         Calculate the minimum battery level at the beginning and end of each activity. This represents the case of
         vehicles just being charged for the energy required for the next trip and as late as possible. The loop works
@@ -126,60 +124,83 @@ class FlexEstimator:
             nextTripActs = actTemp.loc[~actTemp['tripID'].isna(), :]
             parkActsRes = self._calcBatLevParkMin(actID=act, parkActs=parkActs, nextTripActs=nextTripActs)
             actTemp = pd.concat([actTemp, parkActsRes], ignore_index=True)
-        self.activities = actTemp.sort_values(by=['hhPersonID', 'actID', 'parkID'], ignore_index=True)
+        self.activities = actTemp.sort_values(by=['genericID', 'actID', 'parkID'], ignore_index=True)
 
-    def _calcMaxBatFirstAct(self):
+    def _calcMaxBatFirstAct(self) -> pd.DataFrame:
+        """Calculate maximum battery levels at beginning and end of the first activities. If overnight trips are split
+        up, not only first activities are being treated (see details in docstring of self._getFirstActIdx())
+
+        Returns:
+            pd.DataFrame: First activities with all battery level columns as anchor for the consecutive calculation 
+            of maximum charge
+        """
+
         # First activities - parking and trips
-        idx = (self.activities['isFirstActivity']) | (self.activities['parkID'] == 1)
+        idx = self._getFirstActIdx()
         firstAct = self.activities.loc[idx, :].copy()
 
-        isTripAct = ~firstAct.loc[:, 'tripID'].isna()
-        isParkAct = ~firstAct.loc[:, 'parkID'].isna()
-
         firstAct.loc[:, 'maxBatteryLevelStart'] = self.upperBatLev
-        firstAct.loc[isParkAct, 'maxBatteryLevelEnd'] = firstAct['maxBatteryLevelStart']
-        firstAct.loc[isParkAct, 'maxOvershoot'] = firstAct['maxChargeVolume']
-        firstAct.loc[isTripAct, 'maxBatteryLevelEnd_unlimited'] = firstAct.loc[
-            isTripAct, 'maxBatteryLevelStart'] - firstAct.loc[isTripAct, 'drain']
-        firstAct.loc[isTripAct, 'maxBatteryLevelEnd'] = firstAct.loc[
-            isTripAct, 'maxBatteryLevelEnd_unlimited'].where(firstAct.loc[
-                isTripAct, 'maxBatteryLevelEnd_unlimited'] >= self.lowerBatLev, other=self.lowerBatLev)
-        firstAct.loc[isTripAct, 'maxResidualNeed'] = firstAct.loc[
-            isTripAct, 'maxBatteryLevelEnd_unlimited'].where(firstAct.loc[
-                isTripAct, 'maxBatteryLevelEnd_unlimited'] < 0, other=0)
+        firstAct.loc[self.isPark, 'maxBatteryLevelEnd'] = firstAct['maxBatteryLevelStart']
+        firstAct.loc[self.isPark, 'maxOvershoot'] = firstAct['maxChargeVolume']
+        firstAct.loc[self.isTrip, 'maxBatteryLevelEnd_unlimited'] = firstAct.loc[
+            self.isTrip, 'maxBatteryLevelStart'] - firstAct.loc[self.isTrip, 'drain']
+        firstAct.loc[self.isTrip, 'maxBatteryLevelEnd'] = firstAct.loc[
+            self.isTrip, 'maxBatteryLevelEnd_unlimited'].where(firstAct.loc[
+                self.isTrip, 'maxBatteryLevelEnd_unlimited'] >= self.lowerBatLev, other=self.lowerBatLev)
+        firstAct.loc[self.isTrip, 'maxResidualNeed'] = firstAct.loc[
+            self.isTrip, 'maxBatteryLevelEnd_unlimited'].where(firstAct.loc[
+                self.isTrip, 'maxBatteryLevelEnd_unlimited'] < 0, other=0)
         return firstAct
 
-    def _calcMinBatLastAct(self):
+    def _getFirstActIdx(self) -> pd.Series:
+        """ Get indices of all activities that should be treated here. These comprise not only the first activities
+        determined by the column isFirstActivity but also the split-up overnight trips with the tripID==0 and the first
+        parking activities with parkID==1. This method is overwritten in the FlexEstimatorWeek.
+
+        Returns:
+            pd.Series: Boolean Series identifying the relevant rows for calculating SOCs for first activities
+        """
+        return (self.activities['isFirstActivity']) | (self.activities['parkID'] == 1)
+
+    def _calcMinBatLastAct(self) -> pd.DataFrame:
+        """Calculate the minimum battery levels for the last activity in the data set determined by the maximum activity
+        ID. 
+
+        Returns:
+            pd.DataFrame: Activity data set with the battery variables set for all last activities of the activity 
+            chains
+        """
+        
         # Last activities - parking and trips
         lastAct = self.activities.loc[self.activities['isLastActivity'], :].copy()
-
-        isTripAct = ~lastAct.loc[:, 'tripID'].isna()
-        isParkAct = ~lastAct.loc[:, 'parkID'].isna()
-
-        lastAct.loc[isParkAct, 'minBatteryLevelEnd'] = self.lowerBatLev
-        lastAct.loc[isParkAct, 'minBatteryLevelStart'] = self.lowerBatLev
-        lastAct.loc[isTripAct, 'minBatteryLevelEnd'] = self.lowerBatLev
-        lastAct.loc[isTripAct, 'minBatteryLevelStart_unlimited'] = self.lowerBatLev + lastAct.loc[isTripAct, 'drain']
-        lastAct.loc[isTripAct, 'minBatteryLevelStart'] = lastAct.loc[isTripAct, 'minBatteryLevelStart_unlimited'].where(
-            lastAct.loc[isTripAct, 'minBatteryLevelStart_unlimited'] <= self.upperBatLev, other=self.upperBatLev)
-        resNeed = lastAct.loc[isTripAct, 'minBatteryLevelStart_unlimited'] - self.upperBatLev
-        lastAct.loc[isTripAct, 'residualNeed'] = resNeed.where(resNeed >= 0, other=0)
+        lastAct.loc[self.isPark, 'minBatteryLevelEnd'] = self.lowerBatLev
+        lastAct.loc[self.isPark, 'minBatteryLevelStart'] = self.lowerBatLev
+        lastAct.loc[self.isTrip, 'minBatteryLevelEnd'] = self.lowerBatLev
+        lastAct.loc[self.isTrip, 'minBatteryLevelStart_unlimited'] = self.lowerBatLev + lastAct.loc[self.isTrip, 
+                                                                                                    'drain']
+        lastAct.loc[self.isTrip, 'minBatteryLevelStart'] = lastAct.loc[
+            self.isTrip, 'minBatteryLevelStart_unlimited'].where(lastAct.loc[
+                self.isTrip, 'minBatteryLevelStart_unlimited'] <= self.upperBatLev, other=self.upperBatLev)
+        resNeed = lastAct.loc[self.isTrip, 'minBatteryLevelStart_unlimited'] - self.upperBatLev
+        lastAct.loc[self.isTrip, 'residualNeed'] = resNeed.where(resNeed >= 0, other=0)
         return lastAct
 
-    def _calcBatLevTripMax(self, actID: int, tripActs: pd.DataFrame, prevParkActs: pd.DataFrame = None):
+    def __calcBatLevTripMax(self, actID: int, tripActs: pd.DataFrame, prevParkActs: pd.DataFrame = None):
         # Setting trip activity battery start level to battery end level of previous parking
-        # FIXME: Implement case without first parking activity (either via overnight or in the real surveyed trips)
 
-        activeHHPersonIDs = tripActs.loc[:, 'hhPersonID']
+        # Index setting of trip activities to be updated
+        activeHHPersonIDs = tripActs.loc[:, 'genericID']
         multiIdxTrip = [(id, actID, None) for id in activeHHPersonIDs]
-        tripActsIdx = tripActs.set_index(['hhPersonID', 'tripID', 'parkID'])
+        tripActsIdx = tripActs.set_index(['genericID', 'tripID', 'parkID'])
+
+        # Index setting of previous park activities as basis for the update
         prevParkIDs = tripActs.loc[:, 'prevActID']
         multiIdxPark = [(id, None, act) for id, act in zip(activeHHPersonIDs, prevParkIDs)]
-        prevParkActsIdx = prevParkActs.set_index(['hhPersonID', 'tripID', 'parkID'])
+        prevParkActsIdx = prevParkActs.set_index(['genericID', 'tripID', 'parkID'])
+
+        # Calculation of battery level at start and end of trip
         tripActsIdx.loc[multiIdxTrip, 'maxBatteryLevelStart'] = prevParkActsIdx.loc[
             multiIdxPark, 'maxBatteryLevelEnd'].values
-
-        # Setting maximum battery end level for trip
         tripActsIdx.loc[multiIdxTrip, 'maxBatteryLevelEnd_unlimited'] = tripActsIdx.loc[
             multiIdxTrip, 'maxBatteryLevelStart'] - tripActsIdx.loc[multiIdxTrip, 'drain']
         tripActsIdx.loc[multiIdxTrip, 'maxBatteryLevelEnd'] = tripActsIdx.loc[
@@ -190,15 +211,15 @@ class FlexEstimator:
                 multiIdxTrip, 'maxBatteryLevelEnd_unlimited'] < 0, other=0)
         return tripActsIdx.reset_index()
 
-    def _calcBatLevTripMin(self, actID: int, tripActs: pd.DataFrame, nextParkActs: pd.DataFrame = None):
+    def __calcBatLevTripMin(self, actID: int, tripActs: pd.DataFrame, nextParkActs: pd.DataFrame = None):
         # Setting trip activity battery start level to battery end level of previous parking
-        activeHHPersonIDs = tripActs.loc[:, 'hhPersonID']
+        activeHHPersonIDs = tripActs.loc[:, 'genericID']
         multiIdxTrip = [(id, actID, None) for id in activeHHPersonIDs]
         # Index the previous park activity via integer index because loc park indices vary
-        tripActsIdx = tripActs.set_index(['hhPersonID', 'tripID', 'parkID'])
+        tripActsIdx = tripActs.set_index(['genericID', 'tripID', 'parkID'])
         nextParkIDs = tripActs.loc[:, 'nextActID']
         multiIdxPark = [(id, None, act) for id, act in zip(activeHHPersonIDs, nextParkIDs)]
-        nextParkActsIdx = nextParkActs.set_index(['hhPersonID', 'tripID', 'parkID'])
+        nextParkActsIdx = nextParkActs.set_index(['genericID', 'tripID', 'parkID'])
         tripActsIdx.loc[multiIdxTrip, 'minBatteryLevelEnd'] = nextParkActsIdx.loc[
             multiIdxPark, 'minBatteryLevelStart'].values
         # Setting minimum battery end level for trip
@@ -211,15 +232,19 @@ class FlexEstimator:
         tripActsIdx.loc[multiIdxTrip, 'minResidualNeed'] = resNeed.where(resNeed >= 0, other=0)
         return tripActsIdx.reset_index()
 
-    def _calcBatLevParkMax(self, actID: int, parkActs: pd.DataFrame, prevTripActs: pd.DataFrame = None):
+    def __calcBatLevParkMax(self, actID: int, parkActs: pd.DataFrame, prevTripActs: pd.DataFrame = None):
         # Setting next park activity battery start level to battery end level of current trip
-        activeHHPersonIDs = parkActs.loc[:, 'hhPersonID']
+        # Index setting of park activities to be updated
+        activeHHPersonIDs = parkActs.loc[:, 'genericID']
         multiIdxPark = [(id, None, actID) for id in activeHHPersonIDs]
-        parkActsIdx = parkActs.set_index(['hhPersonID', 'tripID', 'parkID'])
-        # Preliminary defs
+        parkActsIdx = parkActs.set_index(['genericID', 'tripID', 'parkID'])
+
+        # Index setting of previous trip activities used to update
         prevTripIDs = parkActs.loc[:, 'prevActID']
         multiIdxTrip = [(id, act, None) for id, act in zip(activeHHPersonIDs, prevTripIDs)]
-        prevTripActsIdx = prevTripActs.set_index(['hhPersonID', 'tripID', 'parkID'])
+        prevTripActsIdx = prevTripActs.set_index(['genericID', 'tripID', 'parkID'])
+
+        # Calculation of battery level at start and end of park activity
         parkActsIdx.loc[multiIdxPark, 'maxBatteryLevelStart'] = prevTripActsIdx.loc[
             multiIdxTrip, 'maxBatteryLevelEnd'].values
         parkActsIdx['maxBatteryLevelEnd_unlimited'] = parkActsIdx.loc[
@@ -228,9 +253,10 @@ class FlexEstimator:
             parkActsIdx['maxBatteryLevelEnd_unlimited'] <= self.upperBatLev, other=self.upperBatLev)
         tmpOvershoot = parkActsIdx['maxBatteryLevelEnd_unlimited'] - self.upperBatLev
         parkActsIdx['maxOvershoot'] = tmpOvershoot.where(tmpOvershoot >= 0, other=0)
+
         return parkActsIdx.reset_index()
 
-    def _calcBatLevParkMin(self, actID: int, parkActs: pd.DataFrame, nextTripActs: pd.DataFrame = None):
+    def __calcBatLevParkMin(self, actID: int, parkActs: pd.DataFrame, nextTripActs: pd.DataFrame = None):
         """Calculate minimum battery levels for given parking activities based on the given next trip activities.
         The calculated battery levels only suffice for the trips and thus describe a technical lower level for
         each activity. This function is called looping through the parking activities from largest to smallest.
@@ -246,13 +272,16 @@ class FlexEstimator:
             _type_: _description_
         """
         # Setting next park activity battery start level to battery end level of current trip
-        activeHHPersonIDs = parkActs.loc[:, 'hhPersonID']
+        activeHHPersonIDs = parkActs.loc[:, 'genericID']
         multiIdxPark = [(id, None, actID) for id in activeHHPersonIDs]
-        parkActsIdx = parkActs.set_index(['hhPersonID', 'tripID', 'parkID'])
+        parkActsIdx = parkActs.set_index(['genericID', 'tripID', 'parkID'])
+
         # Preliminary defs
         nextTripIDs = parkActs.loc[:, 'nextActID']
         multiIdxTrip = [(id, act, None) for id, act in zip(activeHHPersonIDs, nextTripIDs)]
-        nextTripActsIdx = nextTripActs.set_index(['hhPersonID', 'tripID', 'parkID'])
+        nextTripActsIdx = nextTripActs.set_index(['genericID', 'tripID', 'parkID'])
+        
+        # Setting of battery level variables
         parkActsIdx.loc[multiIdxPark, 'minBatteryLevelEnd'] = nextTripActsIdx.loc[
             multiIdxTrip, 'minBatteryLevelStart'].values
         # FIXME: This should not be oriented at maxChargeVolume but rather at drain of next trip
@@ -284,6 +313,195 @@ class FlexEstimator:
         self._batteryLevelMin()
         print("Technical flexibility estimation ended")
 
+
+class WeekFlexEstimator(FlexEstimator):
+    def __init__(self, configDict: dict, datasetID: str, activities: pd.DataFrame):
+        super().__init__(configDict=configDict, datasetID=datasetID, activities=activities)
+
+    def estimateTechnicalFlexibility(self):
+        self._drain()
+        self.__maxChargeVolumePerParkingActWeek()
+        self._batteryLevelMax()
+        self._uncontrolledCharging()
+        self._batteryLevelMin()
+        print("Technical flexibility estimation ended")
+
+    def __maxChargeVolumePerParkingActWeek(self):
+        self.__calcTimedeltaONActs(ONIdx=self.activities['isSyntheticONPark'])
+        self._maxChargeVolumePerParkingAct()
+
+    def __calcTimedeltaONActs(self, ONIdx: pd.Series):
+        """Calculate the timedelta for week activity chains between two synthetically merged days neglecting the dates (
+            year-month-day) and only taking into account the start and end timestamps of the overnight parking activity.
+
+        Args:
+            ONIdx (pd.Series): Boolean series identifying overnight park activities in the week activity chain
+        """
+        
+        ONActs = self.activities.loc[ONIdx, :]
+        tsEndWODate = pd.to_timedelta(ONActs['timestampEnd'].dt.hour, unit='h') + pd.to_timedelta(
+            ONActs['timestampEnd'].dt.minute, unit='m') + pd.to_timedelta(1, unit='d')
+        tsStartWODate = pd.to_timedelta(ONActs['timestampStart'].dt.hour, unit='h') + pd.to_timedelta(
+            ONActs['timestampStart'].dt.minute, unit='m')
+        self.activities.loc[ONIdx, 'timedelta'] = tsEndWODate - tsStartWODate
+
+    def _batteryLevelMax(self):
+        """
+        Calculate the maximum battery level at the beginning and end of each activity for weekly activity chains. 
+        This represents the case of vehicle users always connecting when charging is available and charging as soon as
+        possible as fast as possible until the maximum battery capacity is reached.
+        actTemp is the overall collector for each activity's park and trip results, that will then get written to
+        self.activities at the very end.
+        """
+        print('Starting maximum battery level calculation')
+        self.activities.loc[self.activities['isFirstActivity'], :] = self._calcMaxBatFirstAct()
+
+        # Start and end for all trips and parkings in between
+        setActs = range(self.activities['actID'].max() + 1)
+        for act in setActs:
+            print(f'Calculate maximum battery level for actID (park and trip) {act}')
+            if act != 0:
+                self.__shiftBatLevEnd()
+                self.__maxBatLevPark(parkID=act)
+            self.__shiftBatLevEnd()
+            self.__maxBatLevTrips(tripID=act)
+
+    def _getFirstActIdx(self):
+        """Method to return the first activities. In the week diary, the activities are reset in strict ascending order
+        currently neglecting the edge case of overnight trips. Thus all week activity chains have the exact same 
+        beginning of the first activity being a park activity with parkID==0, then a trip with tripID==0, then a park
+        activity with parkID==1 and so forth.
+
+        Returns:
+            pd.Series: Boolean pandas Series with first activities
+        """
+        return self.activities['isFirstActivity']
+
+    def __shiftBatLevEnd(self):
+        """Shifts the battery level at end of the previous trip to current activity for battery calculation to the next
+        activity. This is always called between maxBatLevTrips() and maxBatLevPark() before setting the 
+        variables.
+        """
+        self.activities['maxBatteryLevelEnd_prev'] = self.activities['maxBatteryLevelEnd'].shift(1)
+        
+    def __maxBatLevTrips(self, tripID: int):
+        """Calculates the maximum battery level for trip activities in the week activity chain.
+        """
+        idx = self.activities['tripID'] == tripID
+                
+        # Calculation of battery level at start and end of trip
+        self.activities.loc[idx, 'maxBatteryLevelStart'] = self.activities.loc[idx, 'maxBatteryLevelEnd_prev']
+        self.activities.loc[idx, 'maxBatteryLevelEnd_unlimited'] = self.activities.loc[
+            idx, 'maxBatteryLevelStart'] - self.activities.loc[idx, 'drain']
+        self.activities.loc[idx, 'maxBatteryLevelEnd'] = self.activities.loc[idx, 'maxBatteryLevelEnd_unlimited'].where(
+            self.activities.loc[idx, 'maxBatteryLevelEnd_unlimited'] >= self.lowerBatLev, other=self.lowerBatLev)
+        self.activities.loc[idx, 'maxResidualNeed'] = self.activities.loc[idx, 'maxBatteryLevelEnd_unlimited'].where(
+            self.activities.loc[idx, 'maxBatteryLevelEnd_unlimited'] < 0, other=0)
+
+    def __maxBatLevPark(self, parkID: int):
+        """Calculates the maximum battery level for park activities in the week activity chain.
+        """
+        idx = self.activities['parkID'] == parkID
+
+        # Calculation of battery level at start and end of park activity
+        self.activities.loc[idx, 'maxBatteryLevelStart'] = self.activities.loc[idx, 'maxBatteryLevelEnd_prev']
+        self.activities.loc[idx, 'maxBatteryLevelEnd_unlimited'] = self.activities.loc[
+            idx, 'maxBatteryLevelStart'] + self.activities.loc[idx, 'maxChargeVolume']
+        self.activities.loc[idx, 'maxBatteryLevelEnd'] = self.activities['maxBatteryLevelEnd_unlimited'].where(
+            self.activities['maxBatteryLevelEnd_unlimited'] <= self.upperBatLev, other=self.upperBatLev)
+        tmpOvershoot = self.activities['maxBatteryLevelEnd_unlimited'] - self.upperBatLev
+        self.activities['maxOvershoot'] = tmpOvershoot.where(tmpOvershoot >= 0, other=0)
+
+    def _batteryLevelMin(self):
+        """ Calculate the minimum battery level at the beginning and end of each activity. This represents the case of
+        vehicles just being charged for the energy required for the next trip and as late as possible. The loop works
+        exactly inverted to the batteryLevelMax() function since later trips influence the energy that has to be
+        charged in parking activities before. Thus, activities are looped over from the last activity to first. 
+        For week flexibility estimation, it can not always be assured that the last activity is a parking activity. 
+        """
+        
+        print('Starting minimum battery level calculation')
+        self.activities.loc[self.activities['isLastActivity'], :] = self._calcMinBatLastAct()
+        self.__calcMinBatBeforeLastAct()
+
+        # Start and end for all trips and parkings in between
+        setActs = range(self.activities['actID'].max()-1, -1, -1)
+        for act in setActs:
+            print(f'Calculate minimum battery level for actID (park and trip) {act}')
+            self.__shiftBatLevStart()
+            self.__minBatLevTrips(tripID=act)
+            self.__shiftBatLevStart()
+            self.__minBatLevPark(parkID=act)
+
+    def __calcMinBatBeforeLastAct(self):
+        """Calculate the minimum battery level attributes only for the activities with the same activityID as the last
+        activity that are not the last activity. This function is used to start with a clean unified setup in the 
+        loop of __batteryLevelMin(). Those activities are all park activities.
+        """
+        self.__shiftBatLevStart()
+        
+        # Preliminary identification of activities
+        self.activities[['isLastActivity_next', 'actID_next']] = self.activities[['isLastActivity', 'actID']].shift(-1)
+        idx = (self.activities['isLastActivity_next']) & (self.activities['actID'] == self.activities['actID_next'])
+        self.activities['parkActBeforeLastAct'] = idx
+        
+        # Setting of battery level attributes
+        self.activities.loc[idx, 'minBatteryLevelEnd'] = self.activities.loc[idx, 'minBatteryLevelStart_next']
+        self.activities.loc[idx, 'minBatteryLevelStart_unlimited'] = self.activities.loc[
+            idx, 'minBatteryLevelEnd'] - self.activities.loc[idx, 'maxChargeVolume']
+        self.activities.loc[idx, 'minBatteryLevelStart'] = self.activities['minBatteryLevelStart_unlimited'].where(
+            self.activities['minBatteryLevelStart_unlimited'] >= self.lowerBatLev, other=self.lowerBatLev)
+        tmpUndershoot = self.activities.loc[idx, 'minBatteryLevelStart_unlimited'] - self.lowerBatLev
+        self.activities.loc[idx, 'minUndershoot'] = tmpUndershoot.where(tmpUndershoot >= 0, other=0)
+        self.activities.drop(columns=['isLastActivity_next', 'actID_next'])
+        
+    def __shiftBatLevStart(self):
+        """Shifts the battery level at start of the next trip to current activity for battery calculation. This is 
+        always called between minBatLevTrips() and minBatLevPark() before setting the battery level variables.
+        """
+        self.activities['minBatteryLevelStart_next'] = self.activities['minBatteryLevelStart'].shift(-1)
+
+    def __minBatLevTrips(self, tripID: int):
+        """Calculate minimum battery levels for given tripID. The calculated battery levels only suffice for the trips
+        and thus describe a technical lower level for each activity. This function is called looping through the parking
+        activities from largest to smallest. The column "minOvershoot" describes electricity volume that can be charged
+        beyond the given battery capacity.
+
+        Args:
+            tripID (int): tripID for which the battery levels should be calculated
+        """
+        idx = (self.activities['tripID'] == tripID) & ~(self.activities['isLastActivity'])
+        
+        self.activities.loc[idx, 'minBatteryLevelEnd'] = self.activities.loc[idx, 'minBatteryLevelStart_next']
+        self.activities.loc[idx, 'minBatteryLevelStart_unlimited'] = self.activities.loc[
+            idx, 'minBatteryLevelEnd'] + self.activities.loc[idx, 'drain']
+        self.activities.loc[idx, 'minBatteryLevelStart'] = self.activities.loc[
+            idx, 'minBatteryLevelStart_unlimited'].where(self.activities.loc[
+                idx, 'minBatteryLevelStart_unlimited'] <= self.upperBatLev, other=self.upperBatLev)
+        resNeed = self.activities.loc[idx, 'minBatteryLevelStart_unlimited'] - self.upperBatLev
+        self.activities.loc[idx, 'minResidualNeed'] = resNeed.where(resNeed >= 0, other=0)
+    
+    def __minBatLevPark(self, parkID: int):
+        """Calculate minimum battery levels for given parking activities based on the given next trip activities.
+        The calculated battery levels only suffice for the trips and thus describe a technical lower level for
+        each activity. This function is called looping through the parking activities from largest to smallest.
+        The column "minOvershoot" describes electricity volume that can be charged beyond the given battery
+        capacity.
+
+        Args:
+            parkID (int): ID of the current park activities for which the battery level variables are being calculated
+        """
+        idx = (self.activities['parkID'] == parkID) & ~(self.activities['isLastActivity']) & ~(
+            self.activities['parkActBeforeLastAct'])
+        
+        self.activities.loc[idx, 'minBatteryLevelEnd'] = self.activities.loc[idx, 'minBatteryLevelStart_next']
+        self.activities.loc[idx, 'minBatteryLevelStart_unlimited'] = self.activities.loc[
+            idx, 'minBatteryLevelEnd'] - self.activities.loc[idx, 'maxChargeVolume']
+        self.activities.loc[idx, 'minBatteryLevelStart'] = self.activities['minBatteryLevelStart_unlimited'].where(
+            self.activities.loc[idx, 'minBatteryLevelStart_unlimited'] >= self.lowerBatLev, other=self.lowerBatLev)
+        tmpUndershoot = self.activities.loc[idx, 'minBatteryLevelStart_unlimited'] - self.lowerBatLev
+        self.activities.loc[idx, 'minUndershoot'] = tmpUndershoot.where(tmpUndershoot >= 0, other=0)
+        
 
 if __name__ == "__main__":
 
