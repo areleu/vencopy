@@ -36,3 +36,6 @@ plots.ipynb
 
 # Verification notebook
 verificationTimeBranch.ipynb
+
+# Old snippets on fix hourly resolution
+vencopy/snippets/run_oldVP.py

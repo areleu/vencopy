@@ -2,6 +2,7 @@ import sys
 import numpy as np
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 from pathlib import Path
 from itertools import product
 from profilehooks import profile
@@ -82,7 +83,7 @@ if __name__ == '__main__':
             self.activities = self.__assignCategoryID(acts=self.activities, catIDs=self.categoryID,
                                                       catCols=self.catCols)
             self.activities = self.__assignSamplingBaseID(acts=self.activities, sampleBaseIDs=self.sampleBaseID)
-            self.sampleBaseInAct = self.__subsetSampleBase(acts=self.activities, sampleBaseIDs=self.sampleBaseID)
+            self.sampleBaseInAct = self.__subsetSampleBase()
 
         def __retrieveUniqueCategories(self, acts: pd.DataFrame, catCols: list[str]):
             return [set(acts.loc[:, c]) for c in catCols]
@@ -114,7 +115,13 @@ if __name__ == '__main__':
             acts = acts.merge(sampleBaseIDs, left_index=True, right_index=True, how='left')
             return acts.reset_index(idxCols)
 
-        def __subsetSampleBase(self, acts: pd.DataFrame, sampleBaseIDs: pd.Series):
+        def __subsetSampleBase(self):
+            """Filter the sample base to only the category combinations that really exist in the data set.
+
+            Returns:
+                pd.Series: A subset of self.sampleBaseID representing only the sample bases for the categories that
+                exist and are thus not empty.
+            """
             return self.sampleBaseID.loc[self.sampleBaseID['sampleBaseID'].isin(self.activities['sampleBaseID'])]
 
         def summarizeSamplingBases(self):
@@ -136,7 +143,7 @@ if __name__ == '__main__':
             print(f'The average sample size is approximately {sampleBaseLength.mean().round()}.')
             print(f'The median sample size is approximately {sampleBaseLength.median().round()}.')
 
-        def __assignWeeks(self, nWeeks: int, how: str = 'random', seed: int = None):
+        def __assignWeeks(self, nWeeks: int, how: str = 'random', seed: int = None, replace: bool = False):
             """Interface function to generate nWeeks weeks from the specified sample base. Here, the mapping of the 
             genericID to the respective weekID is generated
 
@@ -144,16 +151,34 @@ if __name__ == '__main__':
                 nWeeks (int): Number of weeks to sample from the sample bases defined by the elements of catCol
                 how (str): Different sampling methods. Currently only random is implemented
                 seed (int): Random seed for reproducibility
+                replace (bool): In sampling, should it be possible to draw more samples than in the sampleBase? See
+                docstring of randomSample for details.
             """
 
             if how == 'random':
-                sample = self.__randomSample(nWeeks=nWeeks, seed=seed)
+                sample = self.__randomSample(nWeeks=nWeeks, seed=seed, replace=replace)
             elif how not in ['weighted', 'stratified']:
                 raise NotImplementedError(f'The requested method {how} is not implemented. Please select "random", '
                                           f'"weighted" or "stratified".')
             return sample
 
-        def __randomSample(self, nWeeks: int, seed: int = None):
+        def __randomSample(self, nWeeks: int, seed: int = None, replace: bool = False) -> pd.DataFrame:
+            """ Pulls nWeeks samples from each sample base. Each sample represents one day and is identified by one
+            genericID. Per default only as many samples can be drawn from the sample base as there are days in the 
+            original data set (replace=False). This can be overwritten by replace=True
+
+            Args:
+                nWeeks (int): Number of samples to be pulled out of each sampleBase
+                seed (int, optional): Random seed for reproducibility. Defaults to None.
+                replace (bool): If True, an infinite number of samples can be drawn from the sampleBase (German: Mit 
+                zurücklegen), if False only as many as there are days in the sampleBase (no bootstrapping, German: Ohne
+                zurücklegen). Defaults to False.
+
+            Returns:
+                pd.DataFrame: A pd.DataFrame with the three columns sampleBaseID, genericID and weekID where weekID is 
+                a range object for each sampleBase, genericID are the samples. 
+            """
+            
             # Set seed for reproducibiilty for debugging
             if seed:
                 np.random.seed(seed=seed)
@@ -161,8 +186,8 @@ if __name__ == '__main__':
             sample = pd.DataFrame()
 
             for sbID in self.sampleBaseInAct['sampleBaseID']:
-                sampleBase = self.activities.loc[self.activities['sampleBaseID'] == sbID, 'genericID']
-                subSample = np.random.choice(sampleBase, replace=False, size=nWeeks)
+                sampleBase = self.activities.loc[self.activities['sampleBaseID'] == sbID, 'genericID'].unique()
+                subSample = np.random.choice(sampleBase, replace=replace, size=nWeeks)
                 df = pd.DataFrame.from_dict({'sampleBaseID': sbID,
                                              'genericID': subSample,
                                              'weekID': list(range(nWeeks))})
@@ -170,7 +195,7 @@ if __name__ == '__main__':
             return sample
 
         @profile(immediate=True)
-        def composeWeekActivities(self, nWeeks: int, seed: int = None):
+        def composeWeekActivities(self, nWeeks: int = 10, seed: int = None, replace: bool = False):
             """Wrapper function to call function for sampling each person (day mobility) to a specific week in a 
             specified category. activityID and genericID are adapted to cover the weekly pattern of the sampled mobility
             days within each week. 
@@ -178,15 +203,20 @@ if __name__ == '__main__':
             Args:
                 nWeeks (int): Number of weeks to sample from the sample bases defined by the elements of catCol
                 seed (int): Seed for random choice from the sampling bases for reproducibility
+                replace (bool): In sampling, should it be possible to draw more samples than in the sampleBase? See
+                docstring of randomSample for details.
             """
 
-            self.dayWeekMap = self.__assignWeeks(nWeeks=10, seed=seed)
+            print(f'Composing weeks for {nWeeks} choices from each sample base.')
+
+            self.dayWeekMap = self.__assignWeeks(nWeeks=nWeeks, seed=seed, replace=replace)
             weekActs = self.__merge(dayWeekMap=self.dayWeekMap, dayActs=self.activities, index_col='genericID')
             weekActs = self.__adjustGenericID(acts=weekActs)
             weekActs = self.__orderViaWeekday(acts=weekActs)
             weekActs = self.__adjustActID(acts=weekActs)
 
             self.weekActivities = weekActs
+            return weekActs
 
         def __merge(self, dayWeekMap: pd.DataFrame, dayActs: pd.DataFrame, index_col: str) -> pd.DataFrame:
             """Utility function to merge two dataframes on a column, via more performant index merging. Indices will 
@@ -421,8 +451,37 @@ if __name__ == '__main__':
     # Week diary building
     vpWDB = WeekDiaryBuilder(activities=vpGrid.activities, catCols=['bundesland', 'areaType'])
     vpWDB.summarizeSamplingBases()
-    vpWDB.composeWeekActivities(seed=42)
+    # vpWDB.composeWeekActivities(seed=42)
 
     # Estimate charging flexibility based on driving profiles and charge connection
-    vpWeFlex = WeekFlexEstimator(configDict=configDict, datasetID=datasetID, activities=vpWDB.weekActivities)
-    vpWeFlex.estimateTechnicalFlexibility()
+    # vpWeFlex = WeekFlexEstimator(configDict=configDict, datasetID=datasetID, activities=vpWDB.weekActivities)
+    # vpWeFlex.estimateTechnicalFlexibility()
+
+    
+    # Sampling of multiple weeks
+    nWeeks = [i for i in range(10, 110, 10)]
+    nWeeks.append(1000)
+
+    actDict = {}
+
+    # Plotting preparation    
+    plt.figure()
+    
+    for w in nWeeks:
+        wa = vpWDB.composeWeekActivities(nWeeks=w, seed=42, replace=True)
+        vpWeFlex = WeekFlexEstimator(configDict=configDict, datasetID=datasetID, activities=wa)
+        vpWeFlex.estimateTechnicalFlexibility()
+        actDict[w] = vpWeFlex.activities
+        plt.hist(vpWeFlex.activities['uncontrolledCharge'], bins=100, alpha=0.5, label=f'nWeeks={w}', density=True)
+    
+    plt.legend()
+    plt.show()
+    
+    plt.hist(actDict[10].loc[~actDict[10]['parkID'].isna(), :]['uncontrolledCharge'], bins=100, alpha=0.5, label=f'nWeeks=10', density=True)
+    plt.hist(actDict[90].loc[~actDict[90]['parkID'].isna(), :]['uncontrolledCharge'], bins=100, alpha=0.5, label=f'nWeeks=90', density=True)
+    plt.hist(actDict[1000].loc[~actDict[1000]['parkID'].isna(), :]['uncontrolledCharge'], bins=100, alpha=0.5, label=f'nWeeks=1000', density=True)
+    plt.xlim(left=-10)
+    plt.legend()
+    plt.show()
+    
+    print('this is the end')
