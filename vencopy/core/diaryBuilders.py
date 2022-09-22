@@ -51,6 +51,7 @@ class DiaryBuilder:
 class WeekDiaryBuilder:
     def __init__(self):
         pass
+        # FIXME: Move WDB here
 
 
 class TimeDiscretiser:

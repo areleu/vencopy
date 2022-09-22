@@ -45,8 +45,12 @@ if __name__ == '__main__':
 
     # Correlation 
     trips = vpData.activities.loc[~vpData.activities['tripID'].isna(), :]
+    trips['tripDistance'] = trips['tripDistance'].astype(float)
+    
     corr = trips.apply(lambda x: x.corr(trips['tripDistance'], method='pearson'))
     corr = corr.concat([corr, trips.apply(lambda x: x.corr(trips['tripDistance'], method='kendall'))])
     corr = corr.concat([corr, trips.apply(lambda x: x.corr(trips['tripDistance'], method='spearman'))])
+    
+    # FIXME: MCA Major component analysis
     
     print('debug break')

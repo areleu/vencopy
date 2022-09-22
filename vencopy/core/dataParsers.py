@@ -797,7 +797,7 @@ class DataParser:
         idxNewLastAct = idxNewLastAct.fillna(False).astype(bool)
         self.activities.loc[idxNewLastAct, 'isLastActivity'] = True
         self.activities.loc[idxNewLastAct, 'timestampEnd'] = replace_vec(
-            self.activities.loc[idxNewLastAct, 'timestampStart'], hour=0, minute=0)
+            self.activities.loc[idxNewLastAct, 'timestampStart'], hour=0, minute=0) + pd.Timedelta(1, 'd')
         self.activities = self.activities.drop(columns=['tripEndNextDay_next'])
 
     def __addTimeDeltaCol(self):

@@ -18,6 +18,7 @@ from vencopy.utils.globalFunctions import (
     mergeDataToWeightsAndDays,
     writeProfilesToCSV,
 )
+from vencopy.core.flexEstimators import WeekFlexEstimator
 
 class Evaluator:
     def __init__(
@@ -87,6 +88,8 @@ class Evaluator:
                 ret[iDat] = dataIn
         return ret
 
+
+    ### OLD PLOTS START
     def mergeDaysAndWeights(self):
         """
         Method to merge mobility data to respective trip weights and days.
@@ -809,6 +812,45 @@ class Evaluator:
                                             manualLabel='powerDist',
                                             filetypeStr='png'),
                         format='png')
+    ### OLD PLOTS END
+
+    ### NEW TIME PLOTS START
+    def composeMultiSampleDict(nWeeks: list[int], seed: int, replace=True: bool, weekDiaryBuilder) -> dict:
+        """ Compose multiple weekly samples of the size of the ints given in the list of ints in nWeeks. 
+
+        Args:
+            nWeeks (list[int]): List of integers defining the sample size per sample base
+            seed (int): Seed for reproducible sampling
+            replace (bool): Should bootstrapping of the sample bases be allowed?
+            
+        Returns:
+            dict: Dictionary of activities with sample size in the keys and pandas DataFrames describing activities in
+            the values.
+        """
+        actDict = {}
+        for w in nWeeks:
+            wa = weekDiaryBuilder.composeWeekActivities(nWeeks=w, seed=seed, replace=replace)
+            vpWeFlex = WeekFlexEstimator(configDict=configDict, datasetID=datasetID, activities=wa)
+            vpWeFlex.estimateTechnicalFlexibility()
+            actDict[w] = vpWeFlex.activities
+        return actDict
+        
+    
+    def plotDistribution(vpActDict: dict, var: str, **kwargs):
+        """Plot multiple distributions for different sample sizes of a specific variable in a plot. 
+
+        Args:
+            vpActDict (dict): A dictionary with the sample size as ints in the keys and a pandas DataFrame in the values
+            representing the activities sampled from the sample bases (written for the application of sampling via 
+            WeekDiaryBuilder). 
+        """
+        plt.figure()
+        
+        for nWeeks, acts in vpActDict.items():
+            plt.hist(acts[var], label=f'nWeeks={nWeeks}', kwargs)
+    
+        plt.legend()
+        plt.show()
 
 
 class chargingTransactionEvaluator:

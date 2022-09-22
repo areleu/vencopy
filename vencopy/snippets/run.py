@@ -421,8 +421,10 @@ if __name__ == '__main__':
     # Week diary building
     vpWDB = WeekDiaryBuilder(activities=vpGrid.activities, catCols=['bundesland', 'areaType'])
     vpWDB.summarizeSamplingBases()
-    vpWDB.composeWeekActivities(seed=42)
+    vpWDB.composeWeekActivities(seed=42, nWeeks=1000)
 
     # Estimate charging flexibility based on driving profiles and charge connection
     vpWeFlex = WeekFlexEstimator(configDict=configDict, datasetID=datasetID, activities=vpWDB.weekActivities)
     vpWeFlex.estimateTechnicalFlexibility()
+
+    print('end break')

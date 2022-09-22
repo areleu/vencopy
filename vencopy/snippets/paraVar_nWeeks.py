@@ -1,24 +1,20 @@
+from vencopy.utils.globalFunctions import loadConfigDict, createOutputFolders
+from vencopy.core.flexEstimators import WeekFlexEstimator
+from vencopy.core.gridModelers import GridModeler
+from vencopy.core.dataParsers import ParseMiD
 import sys
+import pickle
 import numpy as np
 import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
 from pathlib import Path
-from itertools import product
 from profilehooks import profile
 
 # Needed to run in VSCode properties currently
 sys.path.append('.')
 
-from vencopy.core.dataParsers import ParseMiD
-from vencopy.core.gridModelers import GridModeler
-from vencopy.core.flexEstimators import WeekFlexEstimator
-from vencopy.utils.globalFunctions import loadConfigDict, createOutputFolders
-
-
-
+# from vencopy.core.evaluators import Evaluator
 # from vencopy.core.diaryBuilders import WeekDiaryBuilder
-
 
 __version__ = '0.2.X'
 __maintainer__ = 'Niklas Wulff'
@@ -27,10 +23,8 @@ __birthdate__ = '11.01.2022'
 __status__ = 'test'  # options are: dev, test, prod
 __license__ = 'BSD-3-Clause'
 
-
 # Columns for debugging purposes
 # ['genericID', 'parkID', 'tripID', 'actID', 'nextActID', 'prevActID', 'dayActID', 'timestampStart', 'timestampEnd']
-
 
 if __name__ == '__main__':
     # Set dataset and config to analyze, create output folders
@@ -178,7 +172,7 @@ if __name__ == '__main__':
                 pd.DataFrame: A pd.DataFrame with the three columns sampleBaseID, genericID and weekID where weekID is 
                 a range object for each sampleBase, genericID are the samples. 
             """
-            
+
             # Set seed for reproducibiilty for debugging
             if seed:
                 np.random.seed(seed=seed)
@@ -199,7 +193,7 @@ if __name__ == '__main__':
             """Wrapper function to call function for sampling each person (day mobility) to a specific week in a 
             specified category. activityID and genericID are adapted to cover the weekly pattern of the sampled mobility
             days within each week. 
-            
+
             Args:
                 nWeeks (int): Number of weeks to sample from the sample bases defined by the elements of catCol
                 seed (int): Seed for random choice from the sampling bases for reproducibility
@@ -311,7 +305,7 @@ if __name__ == '__main__':
             Returns:
                 pd.DataFrame: Activity data set with the added column 'isSyntheticONPark'
             """
-            
+
             acts['isSyntheticONPark'] = False
             acts.loc[self.__getLastParkActsWOSun(acts), 'isSyntheticONPark'] = True
             return acts
@@ -320,23 +314,23 @@ if __name__ == '__main__':
             """Removes all first parking activities with two exceptions: First parking on Mondays will be kept since 
             they form the first activities of the week (genericID). Also, first parking activities directly after trips
             that end exactly at 00:00 are kept. 
-            
+
             Args:
                 acts (pd.DataFrame): Activities with daily first activities for every day activity chain
 
             Returns:
                 pd.DataFrame: Activities with weekly first activities for every week activity chain
             """
-            
-            # Exclude the second edge case of previous trip activities ending exactly at 00:00. In that case the 
+
+            # Exclude the second edge case of previous trip activities ending exactly at 00:00. In that case the
             # previous activity is a trip not a park, so the identification goes via type checking of shifted parkID.
             acts['parkID_prev'] = acts['parkID'].shift(1)
             idxToNeglect = (self.__getFirstParkActsWOMon(acts)) & ~(acts['parkID_prev'].isna())
-            
-            # Set isFirstActivity to False for the above mentioned edge case 
+
+            # Set isFirstActivity to False for the above mentioned edge case
             idxSetFirstActFalse = (acts['isFirstActivity']) & ~(acts['tripStartWeekday'] == 1)
             acts.loc[idxSetFirstActFalse, 'isFirstActivity'] = False
-            
+
             return acts.loc[~idxToNeglect, :].drop(columns=['parkID_prev'])
 
         def __getFirstParkActsWOMon(self, acts: pd.DataFrame) -> pd.Series:
@@ -351,7 +345,7 @@ if __name__ == '__main__':
                 pd.Series: A boolean Series which is True for all first activities except the ones on the first day of the 
             week, i.e. Mondays.
             """
-            
+
             return (~acts['parkID'].isna()) & (acts['isFirstActivity']) & ~(acts['tripStartWeekday'] == 1)
 
         def __getLastParkActsWOSun(self, acts) -> pd.Series:
@@ -451,37 +445,168 @@ if __name__ == '__main__':
     # Week diary building
     vpWDB = WeekDiaryBuilder(activities=vpGrid.activities, catCols=['bundesland', 'areaType'])
     vpWDB.summarizeSamplingBases()
-    # vpWDB.composeWeekActivities(seed=42)
 
-    # Estimate charging flexibility based on driving profiles and charge connection
-    # vpWeFlex = WeekFlexEstimator(configDict=configDict, datasetID=datasetID, activities=vpWDB.weekActivities)
-    # vpWeFlex.estimateTechnicalFlexibility()
+    def composeMultiSampleDict(
+            nWeeks: list[int],
+            weekDiaryBuilder: WeekDiaryBuilder, threshold: float, seed: int = None, replace: bool = True) -> dict:
+        """ Compose multiple weekly samples of the size of the ints given in the list of ints in nWeeks.
 
-    
-    # Sampling of multiple weeks
-    nWeeks = [i for i in range(10, 110, 10)]
-    nWeeks.append(1000)
+        Args:
+            nWeeks (list[int]): List of integers defining the sample size per sample base
+            seed (int): Seed for reproducible sampling
+            replace (bool): Should bootstrapping of the sample bases be allowed?
+            threshold (float): SOC threshold over which charging does not occur
 
-    actDict = {}
+        Returns:
+            dict: Dictionary of activities with sample size in the keys and pandas DataFrames describing activities in
+            the values.
+        """
+        actDict = {}
+        for w in nWeeks:
+            wa = weekDiaryBuilder.composeWeekActivities(nWeeks=w, seed=seed, replace=replace)
+            vpWeFlex = WeekFlexEstimator(configDict=configDict, datasetID=datasetID, activities=wa, threshold=threshold)
+            vpWeFlex.estimateTechnicalFlexibility()
+            actDict[w] = vpWeFlex.activities
+        return actDict
 
-    # Plotting preparation    
-    plt.figure()
-    
-    for w in nWeeks:
-        wa = vpWDB.composeWeekActivities(nWeeks=w, seed=42, replace=True)
-        vpWeFlex = WeekFlexEstimator(configDict=configDict, datasetID=datasetID, activities=wa)
-        vpWeFlex.estimateTechnicalFlexibility()
-        actDict[w] = vpWeFlex.activities
-        plt.hist(vpWeFlex.activities['uncontrolledCharge'], bins=100, alpha=0.5, label=f'nWeeks={w}', density=True)
-    
-    plt.legend()
-    plt.show()
-    
-    plt.hist(actDict[10].loc[~actDict[10]['parkID'].isna(), :]['uncontrolledCharge'], bins=100, alpha=0.5, label=f'nWeeks=10', density=True)
-    plt.hist(actDict[90].loc[~actDict[90]['parkID'].isna(), :]['uncontrolledCharge'], bins=100, alpha=0.5, label=f'nWeeks=90', density=True)
-    plt.hist(actDict[1000].loc[~actDict[1000]['parkID'].isna(), :]['uncontrolledCharge'], bins=100, alpha=0.5, label=f'nWeeks=1000', density=True)
-    plt.xlim(left=-10)
-    plt.legend()
-    plt.show()
-    
+    def composeMultiThresholdDict(nWeeks: int, weekDiaryBuilder: WeekDiaryBuilder, threshold: list[float],
+                                  seed: int = None, replace: bool = True) -> dict:
+        """ Compose multiple weekly samples of the size of the nWeeks and varying charging threshold given in the list
+        of floats in threshold. 
+
+        Args:
+            nWeeks (list[int]): List of integers defining the sample size per sample base
+            seed (int): Seed for reproducible sampling
+            replace (bool): Should bootstrapping of the sample bases be allowed?
+            threshold (list[float]): List of SOC thresholds over which charging does not occur
+
+        Returns:
+            dict: Dictionary of activities with thresholds in the keys and pandas DataFrames describing activities in
+            the values.
+        """
+        actDict = {}
+        weekActs = weekDiaryBuilder.composeWeekActivities(nWeeks=nWeeks, seed=seed, replace=replace)
+        for t in threshold:
+            vpWeFlex = WeekFlexEstimator(configDict=configDict, datasetID=datasetID, activities=weekActs,
+                                         threshold=t)
+            vpWeFlex.estimateTechnicalFlexibility()
+            actDict[t] = vpWeFlex.activities
+        return actDict
+
+    def plotDistribution(vpActDict: dict, var: str, subset: str, lTitle: str = '', pTitle: str = ''):  # **kwargs
+        """Plot multiple distributions for different sample sizes of a specific variable in a plot.
+
+        Args:
+            vpActDict (dict): A dictionary with the sample size as ints in the keys and a pandas DataFrame in the values
+            representing the activities sampled from the sample bases (written for the application of sampling via
+            WeekDiaryBuilder).
+            var (str): Variable column to plot histogram of
+            subset (str): Must be either 'park' or 'trip'
+            lTitle (str): Legend title
+            pTitle (str): Plot title
+        """
+        plt.figure()
+
+        for p, acts in vpActDict.items():
+            # plt.hist(data=acts[var], label=f'nWeeks={nWeeks}', kwargs)
+            if subset == 'park':
+                vec = acts.loc[~acts['parkID'].isna(), var]
+                plt.hist(x=vec, label=f'paraVar={p}', bins=100, alpha=0.5, density=True)
+                if var != 'weekdayStr':
+                    addMeanMedianText(vector=vec)
+            elif subset == 'trip':
+                vec = acts.loc[~acts['tripID'].isna(), var]
+                plt.hist(x=vec, label=f'paraVar={p}', bins=100, alpha=0.5, density=True)
+                if var != 'weekdayStr':
+                    addMeanMedianText(vector=vec)
+            else:
+                plt.hist(x=acts[var], label=f'nWeeks={nWeeks}', bins=100, alpha=0.5, density=True)
+                if var != 'weekdayStr':
+                    addMeanMedianText(vector=acts[var])
+        plt.legend(title=lTitle)
+        plt.title(label=pTitle)
+        plt.show()
+
+    def addMeanMedianText(vector: pd.Series):
+        plt.text(x=0.1, y=0.9, s=f'Average={np.average(vector)}')
+        plt.text(x=0.1, y=0.8, s=f'Median={np.median(vector)}')
+
+    def plotArrivalHourDistribution(vpActDict: dict, paraName: str, pTitle: str):
+        plt.figure()
+        for t, acts in vpActDict.items():
+            plt.hist(x=acts.loc[~acts['parkID'].isna(), 'timestampStart'].dt.hour,
+                     label=f'{paraName}={t}', bins=100, alpha=0.5, density=True)
+        plt.legend()
+        plt.title(label=pTitle)
+        plt.show()
+
+    def plotParkDurationDistribution(vpActDict: dict, paraName: str, pTitle: str):
+        plt.figure()
+        for t, acts in vpActDict.items():
+            plt.hist(x=acts.loc[~acts['parkID'].isna(), 'timedelta'].dt.total_seconds() / 60,
+                     label=f'{paraName}={t}', bins=100, alpha=0.5, density=True)
+        plt.legend()
+        plt.title(label=pTitle)
+        plt.show()
+
+    # Sampling of multiple weeks varying sample size
+    loadSamplesFromPickle = True
+    if not loadSamplesFromPickle:
+        nWeeks = [10, 50, 100, 500, 1000]
+        sampleDict = composeMultiSampleDict(nWeeks=nWeeks, weekDiaryBuilder=vpWDB, seed=42, replace=True, threshold=0.8)
+        pickle.dump(sampleDict, open('sampleDictT0.8.p', 'wb'))
+    else:
+        sampleDict = pickle.load(open('sampleDictT0.8.p', 'rb'))
+
+    # Sampling of multiple weeks varying plugin threshold
+    loadThresholdsFromPickle = True
+    if not loadThresholdsFromPickle:
+        thresholds = [0.7, 0.8, 0.9, 1]
+        thresholdDictN100 = composeMultiThresholdDict(nWeeks=100, weekDiaryBuilder=vpWDB, seed=42, replace=True,
+                                                      threshold=thresholds)
+        thresholdDictN200 = composeMultiThresholdDict(nWeeks=200, weekDiaryBuilder=vpWDB, seed=42, replace=True,
+                                                      threshold=thresholds)
+        thresholdDictN500 = composeMultiThresholdDict(nWeeks=500, weekDiaryBuilder=vpWDB, seed=42, replace=True,
+                                                      threshold=thresholds)
+
+        pickle.dump(thresholdDictN100, open('thresholdDictN100.p', 'wb'))
+        pickle.dump(thresholdDictN200, open('thresholdDictN200.p', 'wb'))
+        pickle.dump(thresholdDictN500, open('thresholdDictN500.p', 'wb'))
+    else:
+        thresholdDictN100 = pickle.load(open('thresholdDictN100.p', 'rb'))
+        thresholdDictN200 = pickle.load(open('thresholdDictN200.p', 'rb'))
+        thresholdDictN500 = pickle.load(open('thresholdDictN500.p', 'rb'))
+
+    # Plotting uncontrolled charging for multiple sample sizes and thresholds
+    plotDistribution(vpActDict=sampleDict, var='uncontrolledCharge', subset='park')
+    # plotDistribution(vpActDict=thresholdDictN100, var='uncontrolledCharge', subset='park', lTitle='Threshold',
+    #                  pTitle='Sample size n=100')
+    # plotDistribution(vpActDict=thresholdDictN200, var='uncontrolledCharge', subset='park', lTitle='Threshold',
+    #                  pTitle='Sample size n=200')
+    # plotDistribution(vpActDict=thresholdDictN500, var='uncontrolledCharge', subset='park', lTitle='Threshold',
+    #                  pTitle='Sample size n=500')
+
+    # Plotting weekday distribution
+    plotDistribution(vpActDict=sampleDict, var='weekdayStr', subset='trip')
+    # plotDistribution(vpActDict=thresholdDictN100, var='weekdayStr', subset='trip', lTitle='Threshold')
+
+    # Plotting charging power distribution
+    plotDistribution(vpActDict=sampleDict, var='chargingPower', subset='park')
+    # plotDistribution(vpActDict=thresholdDictN100, var='chargingPower', subset='park', lTitle='Threshold')
+
+    # Plotting arrival hour
+    plotArrivalHourDistribution(vpActDict=sampleDict, paraName='Sample size', pTitle='Threshold t=0.8')
+    # plotArrivalHourDistribution(vpActDict=thresholdDictN100, pTitle='Sample size n=100')
+    # plotArrivalHourDistribution(vpActDict=thresholdDictN200, pTitle='Sample size n=200')
+    # plotArrivalHourDistribution(vpActDict=thresholdDictN500, pTitle='Sample size n=500')
+
+    # Plotting parking duration in minutes
+    plotParkDurationDistribution(vpActDict=sampleDict, paraName='Sample size', pTitle='Threshold t=0.8')
+    # plotParkDurationDistribution(vpActDict=thresholdDictN100, pTitle='Sample size n=100')
+    # plotParkDurationDistribution(vpActDict=thresholdDictN200, pTitle='Sample size n=200')
+    # plotParkDurationDistribution(vpActDict=thresholdDictN500, pTitle='Sample size n=500')
+
     print('this is the end')
+
+
+# FIXME: Continue with calculating averages, distributions and profiles for different categories
