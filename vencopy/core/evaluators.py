@@ -815,7 +815,7 @@ class Evaluator:
     ### OLD PLOTS END
 
     ### NEW TIME PLOTS START
-    def composeMultiSampleDict(nWeeks: list[int], seed: int, replace=True: bool, weekDiaryBuilder) -> dict:
+    def composeMultiSampleDict(weekDiaryBuilder, nWeeks: list[int], seed: int, replace: bool=True) -> dict:
         """ Compose multiple weekly samples of the size of the ints given in the list of ints in nWeeks. 
 
         Args:
@@ -835,7 +835,6 @@ class Evaluator:
             actDict[w] = vpWeFlex.activities
         return actDict
         
-    
     def plotDistribution(vpActDict: dict, var: str, **kwargs):
         """Plot multiple distributions for different sample sizes of a specific variable in a plot. 
 
@@ -851,6 +850,8 @@ class Evaluator:
     
         plt.legend()
         plt.show()
+
+    
 
 
 class chargingTransactionEvaluator:

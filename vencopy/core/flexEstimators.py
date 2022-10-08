@@ -16,7 +16,6 @@ if __package__ is None or __package__ == "":
 from pathlib import Path
 
 import pandas as pd
-from profilehooks import profile
 
 from vencopy.core.dataParsers import ParseKiD, ParseMiD, ParseVF
 from vencopy.core.gridModelers import GridModeler

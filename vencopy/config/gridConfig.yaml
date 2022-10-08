@@ -54,29 +54,29 @@ gridAvailabilityDistribution:  # Grid model 3: Probabilities given for each loca
         #0.005: 75
         #0.005: 150
     'HOME':
-        3.6 : 0.5
-        11: 0.25            #0.25 (0.75 - 0.50) probability of finding a charging station
-        22 : 0.15        #0.05 (0.80 - 0.75) probability of finding a charging station
-        0: 0.1            #0.2 (1- 0.80) probability of finding a charging station
+        3.6 : 0.2
+        11: 0.2            #0.25 (0.75 - 0.50) probability of finding a charging station
+        22 : 0        #0.05 (0.80 - 0.75) probability of finding a charging station
+        0: 0.6            #0.2 (1- 0.80) probability of finding a charging station
     'WORK':
-        11 : 0.50
-        22: 0.35
-        0 : 0.15
+        11 : 0.2
+        22: 0.2
+        0 : 0.6
     'SCHOOL':
-        11: 0.35
-        22: 0.20
-        0: 0.45
+        11: 0
+        22: 0
+        0: 1
     'SHOPPING':
-        11: 0.35
-        22: 0.20
-        0: 0.45
+        11: 0.2
+        22: 0.2
+        0: 0.6
     'LEISURE':
-        11: 0.35
-        22: 0.20
-        0: 0.45
+        11: 0.2
+        22: 0.2
+        0: 0.6
     'OTHER':
-        11: 0.20
-        22: 0.10
-        0: 0.70
+        11: 0.2
+        22: 0.2
+        0: 0.6
     '0.0':
         0: 1
