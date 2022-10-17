@@ -21,26 +21,31 @@ from vencopy.core.flexEstimators import FlexEstimator
 from vencopy.core.gridModelers import GridModeler
 from vencopy.utils.globalFunctions import loadConfigDict, writeOut
 
+IDXSLICE = pd.IndexSlice
+
 
 class DiaryBuilder:
-    def __init__(self, configDict: dict, datasetID: str, activities: pd.DataFrame):
+    def __init__(self, configDict: dict, datasetID: str, activities: pd.DataFrame, isWeekDiary: bool = False):
         self.diaryConfig = configDict['diaryConfig']
         self.globalConfig = configDict['globalConfig']
         self.localPathConfig = configDict['localPathConfig']
         self.datasetID = datasetID
         self.activities = activities
         self.deltaTime = configDict['diaryConfig']['TimeDelta']
+        self.isWeekDiary = isWeekDiary
         self.distributedActivities = TimeDiscretiser(
             datasetID=self.datasetID, globalConfig=self.globalConfig,
-            localPathConfig=self.localPathConfig, activities=self.activities, dt=self.deltaTime, method="distribute")
+            localPathConfig=self.localPathConfig, activities=self.activities, dt=self.deltaTime, isWeek=isWeekDiary,
+            method="distribute")
         self.selectedActivities = TimeDiscretiser(
             datasetID=self.datasetID, globalConfig=self.globalConfig,
-            localPathConfig=self.localPathConfig, activities=self.activities, dt=self.deltaTime, method="select")
+            localPathConfig=self.localPathConfig, activities=self.activities, dt=self.deltaTime, isWeek=isWeekDiary,
+            method="select")
 
     def createDiaries(self):
-        self.drain = self.distributedActivities.discretise(column="drain")
-        self.chargingPower = self.selectedActivities.discretise(column="chargingPower")
-        # self.uncontrolledCharge = self.distributedActivities.discretise(column="uncontrolledCharge")
+        # self.drain = self.distributedActivities.discretise(column="drain")
+        # self.chargingPower = self.selectedActivities.discretise(column="chargingPower")
+        self.uncontrolledCharge = self.distributedActivities.discretise(column="uncontrolledCharge")
         # self.maxBatteryLevel = self.selectedActivities.discretise(column="maxBatteryLevelStart")
         # self.minBatteryLevel = self.selectedActivities.discretise(column="minBatteryLevelStart")
         # # self.residualNeed = self.distributedActivities.discretise(column="residualNeed") # in elec terms kWh elec
@@ -254,7 +259,8 @@ class WeekDiaryBuilder:
         return acts
 
     def __orderViaWeekday(self, acts) -> pd.DataFrame:
-        return acts.sort_values(by=['genericID', 'tripStartWeekday'])
+        # FIXME: Some weekday activities are not in order
+        return acts.sort_values(by=['genericID', 'tripStartWeekday', 'timestampStart'])
 
     def __adjustActID(self, acts: pd.DataFrame) -> pd.DataFrame:
         """Replaces the activityID with a weekly identifier so that activities count up all the way within a
@@ -283,12 +289,13 @@ class WeekDiaryBuilder:
         # FIXME: Correct the end timestamp of remaining park activity after merge
 
         # Calculate shifted columns for merging last and first day park acts and updating lastAct col
+        acts = self.__neglectFirstParkActs(acts=acts)  # only for weekdays TUE-SUN
         acts, nextVars = self.__addNextActVars(acts=acts,
                                                vars=['genericID', 'parkID', 'timestampStart', 'timestampEnd',
                                                      'tripPurpose'])
         acts = self.__adjustEndTimestamp(acts=acts)
         acts = self.__addONParkVariable(acts=acts)
-        acts = self.__neglectFirstParkActs(acts=acts)  # only for weekdays TUE-SUN
+        # OLD implementation was here acts = self.__neglectFirstParkActs(acts=acts)
         acts = self.__updateLastWeekActs(acts=acts)
         acts = self.__removeNextActVarCols(acts=acts, nextVars=nextVars)
         print('Finished last and first daily parking to one parking activity')
@@ -455,7 +462,8 @@ class WeekDiaryBuilder:
 
 
 class TimeDiscretiser:
-    def __init__(self, activities, dt, datasetID, method: str, globalConfig, localPathConfig):
+    def __init__(self, activities: pd.DataFrame, dt: int, datasetID: str, method: str, globalConfig: dict,
+                 localPathConfig: dict, isWeek: bool = False):
         """
         Class for discretisation of activities to fixed temporal resolution. Act is
         a pandas Series with a unique ID in the index, ts is a pandas dataframe with two
@@ -484,13 +492,18 @@ class TimeDiscretiser:
         self.activities = activities
         self.datasetID = datasetID
         self.method = method
-        self.oneActivity = None
+        self.oneActivity = None  # rename --> FIXME in self.datasetCleanup()
         self.localPathConfig = localPathConfig
         self.globalConfig = globalConfig
         self.quantum = pd.Timedelta(value=1, unit='min')
         self.dt = dt  # e.g. 15 min
+        self.isWeek = isWeek
         self.nTimeSlots = self._nSlotsPerInterval(interval=pd.Timedelta(value=self.dt, unit='min'))
-        self.timeDelta = (pd.timedelta_range(start='00:00:00', end='24:00:00', freq=f'{self.dt}T'))
+        if isWeek:
+            self.timeDelta = (pd.timedelta_range(start='00:00:00', end='168:00:00', freq=f'{self.dt}T'))
+            self.weekdays = self.activities['weekdayStr'].unique()
+        else:  # is Day
+            self.timeDelta = (pd.timedelta_range(start='00:00:00', end='24:00:00', freq=f'{self.dt}T'))
         self.timeIndex = list(self.timeDelta)
 
     def _nSlotsPerInterval(self, interval: pd.Timedelta):
@@ -513,6 +526,8 @@ class TimeDiscretiser:
         necessaryColumns = ['tripID', 'timestampStart', 'timestampEnd', 'genericID',
                             'parkID', 'isFirstActivity', 'isLastActivity', 'timedelta',
                             'actID', 'nextActID', 'prevActID'] + [self.columnToDiscretise]
+        if self.isWeek:
+            necessaryColumns = necessaryColumns + ['weekdayStr']
         # FIXME: rename self.oneActivity to self.oneProfile
         self.oneActivity = self.activities[necessaryColumns].copy()
         self._correctDataset()
@@ -540,8 +555,20 @@ class TimeDiscretiser:
         self.oneActivity['timestampEndCorrected'] = self.oneActivity['timestampEnd'].dt.round(f'{self.dt}min')
 
     def _createDiscretisedStructure(self):
-        self.discreteData = pd.DataFrame(
-            index=self.oneActivity.genericID.unique(), columns=range(len(list(self.timeIndex))-1))
+        """ Create an empty dataframe with columns each representing one timedelta (e.g. one 15-min slot). Scope can 
+        currently be either day (nCol = 24*60 / dt) or week - determined be self.isWeek (nCol= 7 * 24 * 60 / dt). 
+        self.timeIndex is set on instantiation.
+        """
+        if self.isWeek:
+            # FIXME: make more generic to be able to model higher temporal resolution than 1h
+            nHours = len(list(self.timeIndex))-1
+            hPerDay = int(nHours / len(self.weekdays))
+            hours = range(hPerDay)
+            self.discreteData = pd.DataFrame(
+                index=self.oneActivity.genericID.unique(), columns=pd.MultiIndex.from_product([self.weekdays, hours]))
+        else:
+            self.discreteData = pd.DataFrame(
+                index=self.oneActivity.genericID.unique(), columns=range(len(list(self.timeIndex))-1))
 
     def _identifyBinShares(self):  # calculate value share
         self._calculateValueBinsAndQuanta()
@@ -556,8 +583,18 @@ class TimeDiscretiser:
                 f'Specified method {self.method} is not implemented please specify "distribute" or "select".'))
 
     def _calculateValueBinsAndQuanta(self):
+        """FIXME: Please describe logic here
+            FIXME: Is self.oneActivity a frame with all activities or just the first one?
+            FIXME: Since quanta are not calculated here, think about changing the func name
+            Niklas's understanding so far:
+            Calculates the multiple of dt of the activity duration and stores it to column nBins. E.g. a 2h-activity
+            with a dt of 15 mins would have a 8 in the column. Seems like this is still precise, e.g. a 2h and 3 min
+            activity would have a 8.2 in the column nBins. At this point, oneActivity seems to be still all activities,
+            later it becomes the row representing one vehicle (represented by one genericID)
+            --> FIXME in self.datasetCleanup()
+        """
         self.oneActivity['activityDuration'] = (
-            self.oneActivity['timestampEndCorrected']-self.oneActivity['timestampStartCorrected'])
+            self.oneActivity['timestampEndCorrected'] - self.oneActivity['timestampStartCorrected'])
         # remove rows with activitsDuration = 0 which cause division by zero in nBins calculation
         # self.oneActivity = self.oneActivity[self.oneActivity['activityDuration'] != pd.Timedelta(value=0, unit='min')]
         self.oneActivity = self.oneActivity.drop(
@@ -587,6 +624,10 @@ class TimeDiscretiser:
         self._identifyLastBin()
 
     def _identifyFirstBin(self):
+        """FIXME: Add docstring
+        """
+        # FIXME: Continue working for weekly profiles here
+
         self.oneActivity['timestampStartCorrected'] = self.oneActivity['timestampStartCorrected'].apply(
             lambda x: pd.to_datetime(str(x)))
         dayStart = self.oneActivity['timestampStartCorrected'].apply(
@@ -604,6 +645,8 @@ class TimeDiscretiser:
             lambda x: np.argmax(x < self.binFromMidnightSeconds)-1)
 
     def _identifyLastBin(self):
+        """FIXME: Add docstring
+        """
         dayEnd = self.oneActivity['timestampEndCorrected'].apply(
             lambda x: pd.Timestamp(year=x.year, month=x.month, day=x.day))
         self.oneActivity['dailyTimeDeltaEnd'] = self.oneActivity['timestampEndCorrected'] - dayEnd
@@ -624,7 +667,10 @@ class TimeDiscretiser:
 
     def _allocateBinShares(self):
         self._overlappingActivities()  # identify shared events in bin and handle them
-        self._allocate()
+        if self.isWeek:
+            self._allocateWeek()
+        else:
+            self._allocate()
         self._checkBinValues()
 
     def _checkBinValues(self):
@@ -638,19 +684,46 @@ class TimeDiscretiser:
     #         self.oneActivity[self.oneActivity.timestampStartCorrected
     #         == self.oneActivity.timestampEndCorrected].index)
 
+    # FIXME: Implement this func, gets important especially for low resolutions (e.g. 1h)
     def _overlappingActivities(self):
         pass
         # stategy if time resolution high enough so that event becomes negligible (now in calculateValueBinsAndQuanta)
         # self._dropNoLengthEvents()
         # define other strategies to treat overlapping events here
 
-    def _allocate(self):
-        for id in self.oneActivity.genericID.unique():
-            vehicleSubset = self.oneActivity[self.oneActivity.genericID == id].reset_index(drop=True)
+    def _allocateWeek(self):
+        """ Wrapper method for allocating respective values per bin to days within a week. Expects that the activities
+        are formatted in a way that genericID represents a unique week ID. The function then loops over the 7 weekdays
+        and calls _allocate for each day a total of 7 times. 
+
+        """
+        for d in self.weekdays:
+            self._allocate(self.oneActivity.loc[self.oneActivity['weekdayStr'] == d, :],
+                           weekday=d)
+
+    def _allocate(self, acts, weekday: str = None):
+        """ FIXME: Add docstring
+        """
+
+        # FIXME: Performance improvements by 1. vectorization, 2. not subsetting but concatenating in the end,
+        # 3. more efficient treatment of weeks e.g. looping just via days
+        for id in acts['genericID'].unique():
+            vehicleSubset = acts[acts['genericID'] == id].reset_index(drop=True)
             for irow in range(len(vehicleSubset)):
-                self.discreteData.loc[id, (vehicleSubset.loc[irow, 'firstBin']):(
-                    vehicleSubset.loc[irow, 'lastBin'])] = vehicleSubset.loc[irow, 'valPerBin']
-        # return self.discreteData
+                if self.isWeek:
+                    # colIdx = (weekday,
+                    #           IDXSLICE[(vehicleSubset.loc[irow, 'firstBin']):(vehicleSubset.loc[irow, 'lastBin'])]
+                    #          )
+                    day = self.discreteData.loc[id, weekday]
+                    day.loc[(vehicleSubset.loc[irow, 'firstBin']):(
+                        vehicleSubset.loc[irow, 'lastBin'])] = vehicleSubset.loc[irow, 'valPerBin']
+                    # self.discreteData[id, weekday] = day  This doesnt work for some reason, BEN?
+                    self.discreteData.loc[id, weekday] = day.values
+                else:
+                    self.discreteData.loc[id, (vehicleSubset.loc[irow, 'firstBin']):(
+                        vehicleSubset.loc[irow, 'lastBin'])] = vehicleSubset.loc[irow, 'valPerBin']
+
+        return self.discreteData
 
     def _writeOutput(self):
         writeOut(dataset=self.discreteData, outputFolder='diaryOutput', datasetID=self.datasetID,

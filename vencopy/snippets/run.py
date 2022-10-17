@@ -1,7 +1,9 @@
 import sys
+import pickle
 import numpy as np
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 from pathlib import Path
 from itertools import product
 from profilehooks import profile
@@ -9,16 +11,13 @@ from profilehooks import profile
 # Needed to run in VSCode properties currently
 sys.path.append('.')
 
-from vencopy.core.dataParsers import ParseMiD
-from vencopy.core.gridModelers import GridModeler
-from vencopy.core.diaryBuilders import WeekDiaryBuilder
-from vencopy.core.flexEstimators import WeekFlexEstimator
 from vencopy.utils.globalFunctions import loadConfigDict, createOutputFolders
-
-
+from vencopy.core.flexEstimators import WeekFlexEstimator
+from vencopy.core.diaryBuilders import WeekDiaryBuilder, DiaryBuilder
+from vencopy.core.gridModelers import GridModeler
+from vencopy.core.dataParsers import ParseMiD
 
 # from vencopy.core.diaryBuilders import WeekDiaryBuilder
-
 
 __version__ = '0.2.X'
 __maintainer__ = 'Niklas Wulff'
@@ -35,28 +34,33 @@ __license__ = 'BSD-3-Clause'
 if __name__ == '__main__':
     # Set dataset and config to analyze, create output folders
     datasetID = 'MiD17'
-    configNames = ('globalConfig', 'localPathConfig', 'parseConfig', 'gridConfig', 'flexConfig', 'evaluatorConfig')
+    configNames = ('globalConfig', 'localPathConfig', 'parseConfig', 'gridConfig', 'flexConfig', 'diaryConfig',
+                   'evaluatorConfig')
     basePath = Path(__file__).parent.parent
     configDict = loadConfigDict(configNames, basePath)
     createOutputFolders(configDict=configDict)
 
-    vpData = ParseMiD(configDict=configDict, datasetID=datasetID)
-    vpData.process(splitOvernightTrips=False)
+    CALC = True
+    FN = 'vpWeFlex_acts_areaType_t07n200b40'
 
-    # Grid model application
-    vpGrid = GridModeler(configDict=configDict, datasetID=datasetID, activities=vpData.activities,
-                         gridModel='simple')
-    vpGrid.assignGrid()
+    if CALC:
+        vpData = ParseMiD(configDict=configDict, datasetID=datasetID)
+        vpData.process(splitOvernightTrips=False)
 
-    # class WeekDiaryBuilder:
+        # Grid model application
+        vpGrid = GridModeler(configDict=configDict, datasetID=datasetID, activities=vpData.activities,
+                             gridModel='probability')
+        vpGrid.assignGrid()
+
+        # class WeekDiaryBuilder:
         # @profile(immediate=True)
         # def __init__(self, activities: pd.DataFrame, catCols: list[str], seed: int = None):
         #     """
         #     Class that synthesizes weekly activity chains from daily activity chains. This is done for a specific set of
         #     categories that is determined by columns in the activities data set. The cross-product of the unique entries
-        #     of each category column forms the number of categories for merging randomly drawn day activities within 
+        #     of each category column forms the number of categories for merging randomly drawn day activities within
         #     each set. The user can then give the number of sampled weeks within each sample base that should be
-        #     synthesized from the day chains. 
+        #     synthesized from the day chains.
 
         #     :param activities: Activities dataset with daily activity chains. Has to contain all VencoPy internal column
         #     names.
@@ -138,7 +142,7 @@ if __name__ == '__main__':
         #     print(f'The median sample size is approximately {sampleBaseLength.median().round()}.')
 
         # def __assignWeeks(self, nWeeks: int, how: str = 'random', seed: int = None):
-        #     """Interface function to generate nWeeks weeks from the specified sample base. Here, the mapping of the 
+        #     """Interface function to generate nWeeks weeks from the specified sample base. Here, the mapping of the
         #     genericID to the respective weekID is generated
 
         #     Args:
@@ -172,10 +176,10 @@ if __name__ == '__main__':
 
         # @profile(immediate=True)
         # def composeWeekActivities(self, nWeeks: int, seed: int = None):
-        #     """Wrapper function to call function for sampling each person (day mobility) to a specific week in a 
+        #     """Wrapper function to call function for sampling each person (day mobility) to a specific week in a
         #     specified category. activityID and genericID are adapted to cover the weekly pattern of the sampled mobility
-        #     days within each week. 
-            
+        #     days within each week.
+
         #     Args:
         #         nWeeks (int): Number of weeks to sample from the sample bases defined by the elements of catCol
         #         seed (int): Seed for random choice from the sampling bases for reproducibility
@@ -190,7 +194,7 @@ if __name__ == '__main__':
         #     self.weekActivities = weekActs
 
         # def __merge(self, dayWeekMap: pd.DataFrame, dayActs: pd.DataFrame, index_col: str) -> pd.DataFrame:
-        #     """Utility function to merge two dataframes on a column, via more performant index merging. Indices will 
+        #     """Utility function to merge two dataframes on a column, via more performant index merging. Indices will
         #     be reset before returning the merged DataFrame.
 
         #     Args:
@@ -208,8 +212,8 @@ if __name__ == '__main__':
         #     return merged.reset_index(index_col)
 
         # def __adjustGenericID(self, acts: pd.DataFrame) -> pd.DataFrame:
-        #     """Replaces the generic ID that characterized a specific person living in a specific household (MiD) or 
-        #     a specific vehicle (KID) and its respective daily travel patterns with a combination of 7 genericIDs - 
+        #     """Replaces the generic ID that characterized a specific person living in a specific household (MiD) or
+        #     a specific vehicle (KID) and its respective daily travel patterns with a combination of 7 genericIDs -
         #     one for every day of the week determined by the categories given in catCols in the class instantiation.
         #     The genericID column does not have to be stored elsewhere since hhPersonID exists as a separate column.
 
@@ -224,7 +228,7 @@ if __name__ == '__main__':
         #     return acts.sort_values(by=['genericID', 'tripStartWeekday'])
 
         # def __adjustActID(self, acts: pd.DataFrame) -> pd.DataFrame:
-        #     """Replaces the activityID with a weekly identifier so that activities count up all the way within a 
+        #     """Replaces the activityID with a weekly identifier so that activities count up all the way within a
         #     sampled week instead of just in a day. Day activity IDs will be stored for debugging in a separate column.
 
         #     Args:
@@ -244,7 +248,7 @@ if __name__ == '__main__':
         #     day to one activity spanning two days.
 
         #     Args:
-        #         acts (pd.DataFrame): Activity data set, where the week is identified by the column genericID and the 
+        #         acts (pd.DataFrame): Activity data set, where the week is identified by the column genericID and the
         #         day via the column tripStartWeekday
         #     """
 
@@ -271,82 +275,82 @@ if __name__ == '__main__':
         #     return acts
 
         # def __addONParkVariable(self, acts: pd.DataFrame) -> pd.DataFrame:
-        #     """Adds a column for merged park activities. This is important later for the maximum charged energy at the 
+        #     """Adds a column for merged park activities. This is important later for the maximum charged energy at the
         #     ON parking activities because the timestamps do not have the same day. For the calculation of the length of
-        #     the parking activity, and consequently the maximum electricity that can be charged, this has to be taken 
-        #     into account. 
+        #     the parking activity, and consequently the maximum electricity that can be charged, this has to be taken
+        #     into account.
 
         #     Args:
-        #         acts (pd.DataFrame): Activity data set 
+        #         acts (pd.DataFrame): Activity data set
 
         #     Returns:
         #         pd.DataFrame: Activity data set with the added column 'isSyntheticONPark'
         #     """
-            
+
         #     acts['isSyntheticONPark'] = False
         #     acts.loc[self.__getLastParkActsWOSun(acts), 'isSyntheticONPark'] = True
         #     return acts
 
         # def __neglectFirstParkActs(self, acts: pd.DataFrame) -> pd.DataFrame:
-        #     """Removes all first parking activities with two exceptions: First parking on Mondays will be kept since 
+        #     """Removes all first parking activities with two exceptions: First parking on Mondays will be kept since
         #     they form the first activities of the week (genericID). Also, first parking activities directly after trips
-        #     that end exactly at 00:00 are kept. 
-            
+        #     that end exactly at 00:00 are kept.
+
         #     Args:
         #         acts (pd.DataFrame): Activities with daily first activities for every day activity chain
 
         #     Returns:
         #         pd.DataFrame: Activities with weekly first activities for every week activity chain
         #     """
-            
-        #     # Exclude the second edge case of previous trip activities ending exactly at 00:00. In that case the 
+
+        #     # Exclude the second edge case of previous trip activities ending exactly at 00:00. In that case the
         #     # previous activity is a trip not a park, so the identification goes via type checking of shifted parkID.
         #     acts['parkID_prev'] = acts['parkID'].shift(1)
         #     idxToNeglect = (self.__getFirstParkActsWOMon(acts)) & ~(acts['parkID_prev'].isna())
-            
-        #     # Set isFirstActivity to False for the above mentioned edge case 
+
+        #     # Set isFirstActivity to False for the above mentioned edge case
         #     idxSetFirstActFalse = (acts['isFirstActivity']) & ~(acts['tripStartWeekday'] == 1)
         #     acts.loc[idxSetFirstActFalse, 'isFirstActivity'] = False
-            
+
         #     return acts.loc[~idxToNeglect, :].drop(columns=['parkID_prev'])
 
         # def __getFirstParkActsWOMon(self, acts: pd.DataFrame) -> pd.Series:
-        #     """ Select all first park activities except the first activities of Mondays - those will be the first 
-        #     activities of the week and thus remain unchanged. 
+        #     """ Select all first park activities except the first activities of Mondays - those will be the first
+        #     activities of the week and thus remain unchanged.
 
         #     Args:
-        #         acts (pd.DataFrame): Activities data set with at least the columns 'parkID', 'isFirstActivity' and 
+        #         acts (pd.DataFrame): Activities data set with at least the columns 'parkID', 'isFirstActivity' and
         #         'tripStartWeekday'
 
         #     Returns:
-        #         pd.Series: A boolean Series which is True for all first activities except the ones on the first day of the 
+        #         pd.Series: A boolean Series which is True for all first activities except the ones on the first day of the
         #     week, i.e. Mondays.
         #     """
-            
+
         #     return (~acts['parkID'].isna()) & (acts['isFirstActivity']) & ~(acts['tripStartWeekday'] == 1)
 
         # def __getLastParkActsWOSun(self, acts) -> pd.Series:
-        #     """ Select all last park activities except the last activities of Sundays - those will be the last 
-        #     activities of the week and thus remain unchanged. 
+        #     """ Select all last park activities except the last activities of Sundays - those will be the last
+        #     activities of the week and thus remain unchanged.
 
         #     Args:
-        #         acts (pd.DataFrame): Activities data set with at least the columns 'parkID', 'isLastActivity' and 
+        #         acts (pd.DataFrame): Activities data set with at least the columns 'parkID', 'isLastActivity' and
         #         'tripStartWeekday'
 
         #     Returns:
-        #         pd.Series: A boolean Series which is True for all last activities except the ones on the first day of 
+        #         pd.Series: A boolean Series which is True for all last activities except the ones on the first day of
         #         the week, i.e. Sundays.
         #     """
 
         #     return (~acts['parkID'].isna()) & (acts['isLastActivity']) & ~(acts['tripStartWeekday'] == 7)
 
         # def __updateLastWeekActs(self, acts: pd.DataFrame) -> pd.DataFrame:
-        #     """ Updates the column isLastActivity for a week diary after merging 7 day activity chains to one week 
-        #     activity chain. 
+        #     """ Updates the column isLastActivity for a week diary after merging 7 day activity chains to one week
+        #     activity chain.
 
         #     Args:
-        #         acts (pd.DataFrame): Activity data set that has to at least have the columns 'isLastActivity', 
-        #         'genericID' and 'nextGenericID'. The last one should be available from before by 
+        #         acts (pd.DataFrame): Activity data set that has to at least have the columns 'isLastActivity',
+        #         'genericID' and 'nextGenericID'. The last one should be available from before by
         #         acts['genericID'].shift(-1)
 
         #     Returns:
@@ -361,17 +365,17 @@ if __name__ == '__main__':
         #     return acts.drop(columns=nextVars)
 
         # def __reassignParkIDs(self, acts: pd.DataFrame) -> pd.DataFrame:
-        #     """ Resets the activitiy IDs of the day park chain (increasing acts per Day) with continuously increasing 
-        #     actvity IDs per week identified by genericID. The day activity IDs will be stored in a separate column 
+        #     """ Resets the activitiy IDs of the day park chain (increasing acts per Day) with continuously increasing
+        #     actvity IDs per week identified by genericID. The day activity IDs will be stored in a separate column
         #     'dayActID'
 
         #     Args:
-        #         acts (pd.DataFrame): The park activities of the activity data set at least with the columns 
+        #         acts (pd.DataFrame): The park activities of the activity data set at least with the columns
         #         'genericID' and 'actID'
 
         #     Returns:
         #         pd.DataFrame: Activities data set with week actIDs and a new column 'dayActID' with the day
-        #         activity IDs. 
+        #         activity IDs.
         #     """
 
         #     parkIdx = ~acts['parkID'].isna()
@@ -382,17 +386,17 @@ if __name__ == '__main__':
         #     return acts
 
         # def __reassignTripIDs(self, acts: pd.DataFrame) -> pd.DataFrame:
-        #     """ Resets the activitiy IDs of the day trip chain (increasing acts per day) with continuously increasing 
-        #     actvity IDs per week identified by genericID. The day activity IDs will be stored in a separate column 
+        #     """ Resets the activitiy IDs of the day trip chain (increasing acts per day) with continuously increasing
+        #     actvity IDs per week identified by genericID. The day activity IDs will be stored in a separate column
         #     'dayActID'
 
         #     Args:
-        #         acts (pd.DataFrame): The trip activities of the activity data set at least with the columns 
+        #         acts (pd.DataFrame): The trip activities of the activity data set at least with the columns
         #         'genericID', 'tripID' and 'actID'
 
         #     Returns:
         #         pd.DataFrame: Activities data set with week actIDs and a new column 'dayActID' with the day
-        #         activity IDs. 
+        #         activity IDs.
         #     """
 
         #     tripIdx = ~acts['tripID'].isna()
@@ -419,16 +423,42 @@ if __name__ == '__main__':
         #     acts.loc[~acts['isFirstActivity'], 'prevActID'] = acts.loc[:, 'actID'].shift(1)
         #     return acts
 
-    # Week diary building
-    vpWDB = WeekDiaryBuilder(activities=vpGrid.activities, catCols=['bundesland', 'areaType'])
-    vpWDB.summarizeSamplingBases()
-    vpWDB.composeWeekActivities(seed=42, nWeeks=500, replace=True)
+        # Week diary building
+        vpWDB = WeekDiaryBuilder(activities=vpGrid.activities, catCols=['areaType'])
+        vpWDB.summarizeSamplingBases()
+        vpWDB.composeWeekActivities(seed=42, nWeeks=200, replace=True)
 
-    # Estimate charging flexibility based on driving profiles and charge connection
-    vpWeFlex = WeekFlexEstimator(configDict=configDict,
-                                 datasetID=datasetID,
-                                 activities=vpWDB.weekActivities,
-                                 threshold=0.8)
-    vpWeFlex.estimateTechnicalFlexibility()
+        # Estimate charging flexibility based on driving profiles and charge connection
+        vpWeFlex = WeekFlexEstimator(configDict=configDict,
+                                     datasetID=datasetID,
+                                     activities=vpWDB.weekActivities,
+                                     threshold=0.8)
+        vpWeFlex.estimateTechnicalFlexibility()
+
+        pickle.dump(vpWeFlex.activities, open(f'{FN}.p', 'wb'))
+        print(f'Weekly activities dumped to {FN}.p')
+        vpWeFlex.activities.to_csv(f'C:/repos/vencopy_paper/2022_EMPSIS/results/VencoPy_acts/{FN}.csv')
+
+    else:
+        print(f'Reading weekly activities from dump at {FN}.p')
+        acts = pickle.load(open(f'{FN}.p', 'rb'))
+
+    # Diary building
+    if CALC:
+        vpDiary = DiaryBuilder(configDict=configDict, datasetID=datasetID, activities=vpWeFlex.activities,
+                               isWeekDiary=True)
+    else:
+        vpDiary = DiaryBuilder(configDict=configDict, datasetID=datasetID, activities=acts, isWeekDiary=True)
+    vpDiary.createDiaries()
+    vpDiary.uncontrolledCharge.sum(axis=0).plot()
+    plt.show()
+
+    # pickle.dump(vpDiary, open('classDiary_T0.8_N100_smpGrid.p', 'wb'))
+    vpDiary.uncontrolledCharge.to_csv(
+        Path(f'C:/repos/vencopy_paper/2022_EMPSIS/results/VencoPy_profiles/{FN}_uncCharge_probGrid.csv'))
+    # vpDiary.drain.to_csv(
+    #     Path('C:/repos/vencopy_paper/2022_EMPSIS/results/VencoPy_profiles/vencopy_week_drain_N1000_smpGrid.csv'))
+    # vpDiary.chargingPower.to_csv(
+    #     Path('C:/repos/vencopy_paper/2022_EMPSIS/results/VencoPy_profiles/vencopy_week_chargingPower_N1000_smpGrid.csv'))
 
     print('end break')

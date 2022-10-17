@@ -46,31 +46,31 @@ if __name__ == '__main__':
         vpData.process(splitOvernightTrips=False)
 
         # Simple grid model application
-        vpGridSmp = GridModeler(configDict=configDict, datasetID=datasetID, activities=vpData.activities,
-                                gridModel='simple')
-        vpGridSmp.assignGrid()
+        # vpGridSmp = GridModeler(configDict=configDict, datasetID=datasetID, activities=vpData.activities,
+        #                         gridModel='simple')
+        # vpGridSmp.assignGrid()
 
         # Probability based grid applicaion 
         vpGridProb = GridModeler(configDict=configDict, datasetID=datasetID, activities=vpData.activities,
-                                 gridModel='simple')
+                                 gridModel='probability')
         vpGridProb.assignGrid()
 
         # Week diary building
-        vpWDB = WeekDiaryBuilder(activities=vpGridSmp.activities, catCols=['bundesland', 'areaType'])
+        vpWDB = WeekDiaryBuilder(activities=vpGridProb.activities, catCols=['bundesland', 'areaType'])
         vpWDB.summarizeSamplingBases()
         vpWDB.composeWeekActivities(seed=42, nWeeks=500, replace=True)
 
         # SIMPLE GRID
-        vpWeFlexSmp = WeekFlexEstimator(configDict=configDict,
-                                        datasetID=datasetID,
-                                        activities=vpWDB.weekActivities,
-                                        threshold=0.8)
-        vpWeFlexSmp.estimateTechnicalFlexibility()
-        actsSmp = vpWeFlexSmp.activities
+        # vpWeFlexSmp = WeekFlexEstimator(configDict=configDict,
+        #                                 datasetID=datasetID,
+        #                                 activities=vpWDB.weekActivities,
+        #                                 threshold=0.8)
+        # vpWeFlexSmp.estimateTechnicalFlexibility()
+        # actsSmp = vpWeFlexSmp.activities
 
         # PROBABILISTIC GRID MODELING
         acts = vpWDB.weekActivities
-        acts['chargingPower'] = vpGridProb.activities['chargingPower']
+        # acts['chargingPower'] = vpGridProb.activities['chargingPower']
         vpWeFlexProb = WeekFlexEstimator(configDict=configDict,
                                          datasetID=datasetID,
                                          activities=vpWDB.weekActivities,
@@ -78,9 +78,8 @@ if __name__ == '__main__':
         vpWeFlexProb.estimateTechnicalFlexibility()
         actsProb = vpWeFlexProb.activities
 
-        pickle.dump(acts, open('activities_T0.8_N500.p', 'wb'))
-
-
+        # pickle.dump(actsSmp, open('activities_T0.8_N500_simpleGrid.p', 'wb'))
+        pickle.dump(actsProb, open('activities_T0.8_N500_probGrid.p', 'wb'))
 
     else:
         acts = pickle.load(open('activities_T0.8_N500.p', 'rb'))
@@ -104,18 +103,22 @@ if __name__ == '__main__':
     # Filtering before writing
     # Filter out weeks that require fuel
     # FIXME: Move this to a the flexEstimator or a separate filtering instance
-    actsIdx = acts.set_index(['categoryID', 'weekID'])
-    catWeekIDOut = acts.loc[~acts['maxResidualNeed'].isin([None, 0]), ['categoryID', 'weekID']]
+    actsIdx = actsProb.set_index(['categoryID', 'weekID'])
+    catWeekIDOut = actsProb.loc[~actsProb['maxResidualNeed'].isin([None, 0]), ['categoryID', 'weekID']]
     tplFilt = catWeekIDOut.apply(lambda x: tuple(x), axis=1).unique()
     actsFilt = actsIdx.loc[~actsIdx.index.isin(tplFilt), :]
-    acts = actsFilt.reset_index()
+    actsProb = actsFilt.reset_index()
 
     # Filter out activities that describe charging
-    actsCE = acts.loc[acts['uncontrolledCharge'] > 0, :]
+    actsCE = actsProb.loc[actsProb['uncontrolledCharge'] > 0, :]
 
     # Writing
-    actsCE.to_csv(Path('C:/repos/vencopy_paper/2022_EMPSIS/results/VencoPy_results_T0.8_N500/actsCE_T0.8_N500.csv'))
-    acts.to_csv(Path('C:/repos/vencopy_paper/2022_EMPSIS/results/VencoPy_results_T0.8_N500/acts_T0.8_N500.csv'))
+    actsCE.to_csv(Path(
+        'C:/repos/vencopy_paper/2022_EMPSIS/results/VencoPy_results_T0.8_N500/actsCE_T0.8_N500_probGrid.csv'))
+    actsProb.to_csv(Path(
+        'C:/repos/vencopy_paper/2022_EMPSIS/results/VencoPy_results_T0.8_N500/acts_T0.8_N500_probGrid.csv'))
+        
+    # Overall averages
     totalNCE = len(actsCE)
     totalWeeks, totalDays = getWeeksDays(wdb=vpWDB)
     NCEPerDay = totalNCE / totalDays

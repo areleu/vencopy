@@ -314,9 +314,9 @@ class FlexEstimator:
     def estimateTechnicalFlexibility(self):
         self._drain()
         self._maxChargeVolumePerParkingAct()
-        self._batteryLevelMax(startLevel=self.upperBatLev)
+        self.__batteryLevelMax(startLevel=self.upperBatLev)
         self._uncontrolledCharging()
-        self._batteryLevelMin()
+        self.__batteryLevelMin()
         print("Technical flexibility estimation ended")
 
 

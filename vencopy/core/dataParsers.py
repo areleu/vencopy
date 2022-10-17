@@ -395,6 +395,7 @@ class DataParser:
         day?
         """
 
+        # FIXME: If split-up to separate class, call not in ParseData but in IntermediateParsing 
         self.__copyRows()
         self.__addUtilAttributes()
         self.__addParkActAfterLastTrip()
@@ -533,7 +534,7 @@ class DataParser:
         set_ts = self.activities.loc[parkingActwoLast.index + 1, 'timestampStart']
         set_ts.index = self.activities.loc[parkingActwoLast.index, 'timestampEnd'].index
         self.activities.loc[parkingActwoLast.index, 'timestampEnd'] = set_ts
-        
+
     def __updateTimestampFirstParkAct(self):
         """ Updating park end timestamps for last activity in new park rows
         """
