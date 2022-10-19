@@ -60,6 +60,15 @@
 
 ### END OF TEMPLATE AND START OF GITLAB FIRST STEPS TEMPLATE
 
+before_script:
+  - mamba activate vencopy-ci
+
+stages:
+  - build
+  - test
+  - docs
+#  - release
+
 build-job:
   stage: build
   script:
@@ -78,8 +87,39 @@ test-job2:
     - echo "which simulates a test that runs 20 seconds longer than test-job1"
     - sleep 20
 
-deploy-prod:
-  stage: deploy
+unit-tests:
+  stage: test
+  allow_failure: true
+  needs:
+    - job: setup-tests
   script:
-    - echo "This job deploys something from the $CI_COMMIT_BRANCH branch."
-  environment: production
+    - coverage run --source=vencopy -m pytest tests/test_*.py --mode=solve -k "not instances"
+    - coverage report
+    - coverage xml
+#  rules:
+#    - !reference [.test_rules, rules]
+  coverage: '/^TOTAL.+?(\d+\%)$/'
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
+
+#deploy-prod:
+#  stage: deploy
+#  script:
+#    - echo "This job deploys something from the $CI_COMMIT_BRANCH branch."
+#  environment: production
+
+trigger-docs:
+  stage: docs
+  rules:
+    - if: $CI_PROJECT_ID == "5228" && $CI_COMMIT_REF_NAME == "dev"
+      changes:
+        - docs/**/*
+        - remix/framework/**/*
+  variables:
+    UPSTREAM_BRANCH: $CI_COMMIT_REF_NAME
+  trigger:
+    project: vencopy/docs
+    branch: main
