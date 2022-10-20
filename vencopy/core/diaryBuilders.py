@@ -13,6 +13,7 @@ if __package__ is None or __package__ == '':
 
 import time
 from pathlib import Path
+from profilehooks import profile
 
 import numpy as np
 import pandas as pd
@@ -506,6 +507,9 @@ class TimeDiscretiser:
             self.timeDelta = (pd.timedelta_range(start='00:00:00', end='24:00:00', freq=f'{self.dt}T'))
         self.timeIndex = list(self.timeDelta)
 
+        self.discreteData = None
+        self.discreteDataFast = None  # Only for performance analysis
+
     def _nSlotsPerInterval(self, interval: pd.Timedelta):
         # Check if interval is an integer multiple of quantum
         # the minimum resolution is 1 min, case for resolution below 1 min
@@ -566,6 +570,7 @@ class TimeDiscretiser:
             hours = range(hPerDay)
             self.discreteData = pd.DataFrame(
                 index=self.oneActivity.genericID.unique(), columns=pd.MultiIndex.from_product([self.weekdays, hours]))
+            self.discreteDataFast = self.discreteData.copy()  # Only for performance analysis
         else:
             self.discreteData = pd.DataFrame(
                 index=self.oneActivity.genericID.unique(), columns=range(len(list(self.timeIndex))-1))
@@ -619,6 +624,7 @@ class TimeDiscretiser:
         # self.activities['valFullSlot'] = self.activities[self.columnToDiscretise]
         # self.activities['valLastSLot'] = self.activities[self.columnToDiscretise]
 
+    # FIXME: Rename to identifyFirstAndLastBin
     def _identifyBins(self):
         self._identifyFirstBin()
         self._identifyLastBin()
@@ -697,12 +703,19 @@ class TimeDiscretiser:
         and calls _allocate for each day a total of 7 times. 
 
         """
+        # FIXME: Idea for performance improvement: Apply allocate() to groupby-slices with by=['weekday', 'actID']
         for d in self.weekdays:
-            self._allocate(self.oneActivity.loc[self.oneActivity['weekdayStr'] == d, :],
-                           weekday=d)
+            self._allocate(self.oneActivity.loc[self.oneActivity['weekdayStr'] == d, :], weekday=d)
+            # just for performance improvements purposes
+            self._allocateFast(self.oneActivity.loc[self.oneActivity['weekdayStr'] == d, :], weekday=d)
 
+        # New implementation
+        self.oneActivity.groupby(by=['weekdayStr', 'actID'])._allocateFast()
+
+
+    @profile(immediate=True)
     def _allocate(self, acts, weekday: str = None):
-        """ FIXME: Add docstring
+        """ Allocates the value per bin to the respective time-discrete columns.
         """
 
         # FIXME: Performance improvements by 1. vectorization, 2. not subsetting but concatenating in the end,
@@ -724,6 +737,25 @@ class TimeDiscretiser:
                         vehicleSubset.loc[irow, 'lastBin'])] = vehicleSubset.loc[irow, 'valPerBin']
 
         return self.discreteData
+
+    @profile(immediate=True)
+    def _allocateFast(acts):
+        for irow in range(len(vehicleSubset)):
+            if self.isWeek:
+                # colIdx = (weekday,
+                #           IDXSLICE[(vehicleSubset.loc[irow, 'firstBin']):(vehicleSubset.loc[irow, 'lastBin'])]
+                #          )
+                day = self.discreteDataFast.loc[id, weekday]
+                day.loc[(vehicleSubset.loc[irow, 'firstBin']):(
+                        vehicleSubset.loc[irow, 'lastBin'])] = vehicleSubset.loc[irow, 'valPerBin']
+                # self.discreteData[id, weekday] = day  This doesnt work for some reason, BEN?
+                self.discreteDataFast.loc[self.discreteDataFast['actID'] == a, weekday] = day.values
+                print('am here')
+            else:
+                self.discreteDataFast.loc[self.discreteDataFast['actID'] == a, (vehicleSubset.loc[irow, 'firstBin']):(
+                    vehicleSubset.loc[irow, 'lastBin'])] = vehicleSubset.loc[irow, 'valPerBin']
+
+        return self.discreteDataFast
 
     def _writeOutput(self):
         writeOut(dataset=self.discreteData, outputFolder='diaryOutput', datasetID=self.datasetID,
