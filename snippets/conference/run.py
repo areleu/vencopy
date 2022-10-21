@@ -1,4 +1,9 @@
 
+from vencopy.utils.globalFunctions import loadConfigDict, createOutputFolders
+from vencopy.core.flexEstimators import WeekFlexEstimator
+from vencopy.core.diaryBuilders import WeekDiaryBuilder, DiaryBuilder
+from vencopy.core.gridModelers import GridModeler
+from vencopy.core.dataParsers import ParseMiD
 import sys
 import pickle
 import numpy as np
@@ -9,15 +14,6 @@ from pathlib import Path
 from itertools import product
 from profilehooks import profile
 
-# Needed to run in VSCode properties currently
-sys.path.append('.')
-
-from vencopy.core.dataParsers import ParseMiD
-from vencopy.core.gridModelers import GridModeler
-from vencopy.core.diaryBuilders import WeekDiaryBuilder, DiaryBuilder
-from vencopy.core.flexEstimators import WeekFlexEstimator
-from vencopy.utils.globalFunctions import loadConfigDict, createOutputFolders
-# from vencopy.core.diaryBuilders import WeekDiaryBuilder
 
 __version__ = '0.2.X'
 __maintainer__ = 'Niklas Wulff'
