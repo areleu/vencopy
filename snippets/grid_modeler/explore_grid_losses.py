@@ -35,7 +35,20 @@ if __name__ == "__main__":
     vpData.process()
 
     vpGrid = GridModeler(configDict=configDict, datasetID=datasetID, activities=vpData.activities, gridModel='simple')
-    vpGrid.assignGrid(losses=True)
+    actWLosses = vpGrid.assignGrid(losses=True).copy()
+    actWOLosses = vpGrid.assignGrid(losses=False).copy()
 
-    vpFlex = FlexEstimator(configDict=configDict, datasetID=datasetID, activities=vpGrid.activities)
-    vpFlex.estimateTechnicalFlexibility()
+    vpFlexWLosses = FlexEstimator(configDict=configDict, datasetID=datasetID, activities=actWLosses)
+    actWLosses = vpFlexWLosses.estimateTechnicalFlexibility()
+
+    vpFlexWOLosses = FlexEstimator(configDict=configDict, datasetID=datasetID, activities=actWOLosses)
+    actWOLosses = vpFlexWOLosses.estimateTechnicalFlexibility()
+
+    print('Sum of uncontrolled charging of avtivities')
+    print(f"With losses: {actWLosses['uncontrolledCharge'].sum()}")
+    print(f"Without losses: {actWOLosses['uncontrolledCharge'].sum()}")
+
+    # Slight deviations are acceptable here because there are park activities that are short and for which the amount
+    # of energy is limited by the available power.
+
+    print('END breakpoint')

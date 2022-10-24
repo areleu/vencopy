@@ -101,7 +101,7 @@ class GridModeler:
         assignGridViaProbabilities() and transactionStartHour() and seed for
         reproduction of random numbers can be specified here.
 
-        :param losses [bool]: Should electric losses in the charging equipment be considered? 
+        :param losses [bool]: Should electric losses in the charging equipment be considered?
         """
         if self.gridModel == 'simple':
             self._assignGridViaPurposes()
@@ -112,12 +112,10 @@ class GridModeler:
             raise(ValueError(f'Specified grid modeling option {self.gridModel} is not implemented. Please choose'
                              f'"simple" or "probability"'))
 
-        if losses:
-            self.activities = self._addGridLosses(acts=self.activities, loss=self.gridConfig['losses'])
-
+        self.activities = self._addGridLosses(acts=self.activities, loss=self.gridConfig['losses'], losses=losses)
         return self.activities
 
-    def _addGridLosses(self, acts: pd.DataFrame, loss: dict):
+    def _addGridLosses(self, acts: pd.DataFrame, loss: dict, losses: bool):
         """ Function applying a reduction of rated power capacities to the rated powers after sampling. The 
         factors for reducing the rated power are given in the gridConfig with keys being floats of rated powers
         and values being floats between 0 and 1. The factor is the LOSS FACTOR not the EFFICIENCY, thus 0.1 applied to
@@ -126,7 +124,11 @@ class GridModeler:
         :param acts [bool]: Should electric losses in the charging equipment be considered?
         :param losses [bool]: Should electric losses in the charging equipment be considered?
         """
-        acts['availablePower'] = acts['ratedPower'] - acts['ratedPower'] * acts['ratedPower'].apply(lambda x: loss[x])
+        if losses:
+            acts['availablePower'] = acts['ratedPower'] - acts['ratedPower'] * acts['ratedPower'].apply(
+                lambda x: loss[x])
+        else:
+            acts['availablePower'] = acts['ratedPower']
         return acts
 
     def writeOutput(self):
