@@ -46,7 +46,7 @@ class GridModeler:
         self.chargeAvailability = self.activities.purposeStr.replace(self.gridAvailabilitySimple)
         # self.chargeAvailability = (~(self.chargeAvailability != True))  # check condition if not, needed?
         self.chargeAvailability = self.chargeAvailability * self.gridConfig['ratedPowerSimple']
-        self.activities['chargingPower'] = self.chargeAvailability
+        self.activities['ratedPower'] = self.chargeAvailability
         print('Grid connection assignment complete')
 
     def _assignGridViaProbabilities(self, setSeed: int):
@@ -68,7 +68,7 @@ class GridModeler:
                 rng = DiscreteAliasUrn(probability, random_state=urng)
                 self.chargeAvailability = rng.rvs(len(subset))
                 self.chargeAvailability = [power[i] for i in self.chargeAvailability]
-                subset.loc[:, ("chargingPower")] = self.chargeAvailability
+                subset.loc[:, ("ratedPower")] = self.chargeAvailability
                 activitiesNoHome.append(subset)
         activitiesNoHome = pd.concat(activitiesNoHome).reset_index(drop=True)
         dataframes = [activitiesHome, activitiesNoHome]
@@ -90,20 +90,18 @@ class GridModeler:
         rng = DiscreteAliasUrn(probability, random_state=urng)
         self.chargeAvailability = rng.rvs(len(households))
         self.chargeAvailability = [power[i] for i in self.chargeAvailability]
-        households.loc[:, ("chargingPower")] = self.chargeAvailability
+        households.loc[:, ("ratedPower")] = self.chargeAvailability
         households.set_index("hhID", inplace=True)
         homeActivities = homeActivities.join(households, on="hhID")
         return homeActivities
 
-    def writeOutput(self):
-        writeOut(dataset=self.activities, outputFolder='gridOutput', fileKey='outputGridModeler', manualLabel='',
-                 datasetID=self.datasetID, localPathConfig=self.localPathConfig, globalConfig=self.globalConfig)
-
-    def assignGrid(self):
+    def assignGrid(self, losses: bool = False):
         """
         Wrapper function for grid assignment. The number of iterations for
         assignGridViaProbabilities() and transactionStartHour() and seed for
         reproduction of random numbers can be specified here.
+
+        :param losses [bool]: Should electric losses in the charging equipment be considered?
         """
         if self.gridModel == 'simple':
             self._assignGridViaPurposes()
@@ -113,6 +111,29 @@ class GridModeler:
         else:
             raise(ValueError(f'Specified grid modeling option {self.gridModel} is not implemented. Please choose'
                              f'"simple" or "probability"'))
+
+        self.activities = self._addGridLosses(acts=self.activities, loss=self.gridConfig['losses'], losses=losses)
+        return self.activities
+
+    def _addGridLosses(self, acts: pd.DataFrame, loss: dict, losses: bool):
+        """ Function applying a reduction of rated power capacities to the rated powers after sampling. The 
+        factors for reducing the rated power are given in the gridConfig with keys being floats of rated powers
+        and values being floats between 0 and 1. The factor is the LOSS FACTOR not the EFFICIENCY, thus 0.1 applied to
+        a rated power of 11 kW will yield an available power of 9.9 kW.
+
+        :param acts [bool]: Should electric losses in the charging equipment be considered?
+        :param losses [bool]: Should electric losses in the charging equipment be considered?
+        """
+        if losses:
+            acts['availablePower'] = acts['ratedPower'] - acts['ratedPower'] * acts['ratedPower'].apply(
+                lambda x: loss[x])
+        else:
+            acts['availablePower'] = acts['ratedPower']
+        return acts
+
+    def writeOutput(self):
+        writeOut(dataset=self.activities, outputFolder='gridOutput', fileKey='outputGridModeler', manualLabel='',
+                 datasetID=self.datasetID, localPathConfig=self.localPathConfig, globalConfig=self.globalConfig)
 
 
 if __name__ == "__main__":
