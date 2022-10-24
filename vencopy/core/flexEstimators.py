@@ -43,7 +43,7 @@ class FlexEstimator:
         self.activities['drain'] = self.activities['tripDistance'] * self.flexConfig['Electric_consumption'] / 100
 
     def _maxChargeVolumePerParkingAct(self):
-        self.activities.loc[self.isPark, 'maxChargeVolume'] = self.activities.loc[self.isPark, 'chargingPower'] * \
+        self.activities.loc[self.isPark, 'maxChargeVolume'] = self.activities.loc[self.isPark, 'availablePower'] * \
             self.activities.loc[self.isPark, 'timedelta'] / pd.Timedelta('1 hour')
 
     def __batteryLevelMax(self, startLevel: float):
@@ -53,11 +53,11 @@ class FlexEstimator:
         until the maximum battery capacity is reached.
         actTemp is the overall collector for each activity's park and trip results, that will then get written to
         self.activities at the very end.
-        
+
         Args:
             startLevel (float): Battery start level for first activity of the activity chain
         """
-        
+
         print('Starting maximum battery level calculation')
         firstActs = self._calcMaxBatFirstAct(startLevel=startLevel)
         firstParkActs = firstActs.loc[~firstActs['parkID'].isna(), :]
@@ -317,7 +317,9 @@ class FlexEstimator:
         self.__batteryLevelMax(startLevel=self.upperBatLev)
         self._uncontrolledCharging()
         self.__batteryLevelMin()
+
         print("Technical flexibility estimation ended")
+        return self.activities
 
 
 class WeekFlexEstimator(FlexEstimator):
@@ -338,15 +340,7 @@ class WeekFlexEstimator(FlexEstimator):
             else:
                 self.thresholdAbsolute = self.upperBatLev
         else:
-            self.useThreshold = False
-        
-    def estimateTechnicalFlexibility(self):
-        self._drain()
-        self.__maxChargeVolumePerParkingActWeek()
-        self._batteryLevelMax(startLevel=self.thresholdAbsolute)
-        self._uncontrolledCharging()
-        self._batteryLevelMin()
-        print("Technical flexibility estimation ended")
+            self.useThreshold = False       
 
     def __maxChargeVolumePerParkingActWeek(self):
         self.__calcTimedeltaONActs(ONIdx=self.activities['isSyntheticONPark'])
@@ -544,6 +538,16 @@ class WeekFlexEstimator(FlexEstimator):
             self.activities.loc[idx, 'minBatteryLevelStart_unlimited'] >= self.lowerBatLev, other=self.lowerBatLev)
         tmpUndershoot = self.activities.loc[idx, 'minBatteryLevelStart_unlimited'] - self.lowerBatLev
         self.activities.loc[idx, 'minUndershoot'] = tmpUndershoot.where(tmpUndershoot >= 0, other=0)
+
+    def estimateTechnicalFlexibility(self):
+        self._drain()
+        self.__maxChargeVolumePerParkingActWeek()
+        self._batteryLevelMax(startLevel=self.thresholdAbsolute)
+        self._uncontrolledCharging()
+        self._batteryLevelMin()
+        
+        print("Technical flexibility estimation ended")
+        return self.activities
 
 
 if __name__ == "__main__":

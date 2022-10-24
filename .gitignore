@@ -10,6 +10,7 @@
 
 # Old folder before time-implementation
 /vencopy/classes 
+/picklefiles/
 
 # log files
 debug.log

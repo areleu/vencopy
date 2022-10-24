@@ -1059,7 +1059,6 @@ class ParseMiD(IntermediateParsing):
                 colName="purposeStr", varName="tripPurpose"
             )
 
-    @profile(immediate=True)
     def process(self, splitOvernightTrips: bool = True):
         """
         Wrapper function for harmonising and filtering the activities dataset as well as adding parking rows.
@@ -1079,7 +1078,9 @@ class ParseMiD(IntermediateParsing):
         self._filterConsistentHours()
         self._harmonizeVariablesGenericIdNames()
         self._addParkingRows(splitOvernightTrips=splitOvernightTrips)
+        
         print("Parsing MiD dataset completed")
+        return self.activities
 
 
 class ParseVF(IntermediateParsing):
@@ -1197,7 +1198,9 @@ class ParseVF(IntermediateParsing):
         self._filterConsistentHours()
         self._harmonizeVariablesGenericIdNames()
         self._addParkingRows()
+
         print("Parsing VF dataset completed")
+        return self.activities
 
 
 class ParseKiD(IntermediateParsing):
@@ -1336,7 +1339,9 @@ class ParseKiD(IntermediateParsing):
         self._filterConsistentHours()
         self._harmonizeVariablesGenericIdNames()
         self._addParkingRows()
+        
         print("Parsing KiD dataset completed")
+        return self.activities
 
 
 if __name__ == '__main__':
