@@ -14,7 +14,6 @@ if __package__ is None or __package__ == "":
     sys.path.append(path.dirname(path.dirname(path.dirname(__file__))))
 
 from pathlib import Path
-
 import pandas as pd
 
 from vencopy.core.dataParsers import ParseKiD, ParseMiD, ParseVF
@@ -307,6 +306,20 @@ class FlexEstimator:
         self.activities['auxiliaryFuelNeed'] = self.activities['residualNeed'] * self.flexConfig[
             'Fuel_consumption'] / self.flexConfig['Electric_consumption']
 
+    def _filterResidualNeed(self, acts: pd.DataFrame, indexCols: list):
+        """Filter out days (genericIDs) that require additional fuel, i.e. for which the trip distance cannot be
+        completely be fulfilled with the available charging power.
+
+        Args:
+            acts (pd.DataFrame): Activities data set containing at least the columns 'genericID' and 'maxResidualNeed'
+        """
+
+        actsIdx = acts.set_index(indexCols)
+        catWeekIDOut = acts.loc[~acts['maxResidualNeed'].isin([None, 0]), indexCols]
+        tplFilt = catWeekIDOut.apply(lambda x: tuple(x), axis=1).unique()
+        actsFilt = actsIdx.loc[~actsIdx.index.isin(tplFilt), :]
+        return actsFilt.reset_index()
+
     def writeOutput(self):
         writeOut(dataset=self.activities, outputFolder='flexOutput', fileKey='outputFlexEstimator', manualLabel='',
                  datasetID=self.datasetID, localPathConfig=self.localPathConfig, globalConfig=self.globalConfig)
@@ -317,6 +330,7 @@ class FlexEstimator:
         self.__batteryLevelMax(startLevel=self.upperBatLev)
         self._uncontrolledCharging()
         self.__batteryLevelMin()
+        self.activities = self._filter(acts=self.activities, indexCols=['genericID'])
 
         print("Technical flexibility estimation ended")
         return self.activities
@@ -545,7 +559,8 @@ class WeekFlexEstimator(FlexEstimator):
         self._batteryLevelMax(startLevel=self.thresholdAbsolute)
         self._uncontrolledCharging()
         self._batteryLevelMin()
-        
+        self.activities = self._filter(acts=self.activities, indexCols=['categoryID', 'weekID'])
+
         print("Technical flexibility estimation ended")
         return self.activities
 
