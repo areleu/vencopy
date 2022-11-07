@@ -47,6 +47,7 @@ class GridModeler:
         # self.chargeAvailability = (~(self.chargeAvailability != True))  # check condition if not, needed?
         self.chargeAvailability = self.chargeAvailability * self.gridConfig['ratedPowerSimple']
         self.activities['ratedPower'] = self.chargeAvailability
+        self.activities = self.adjustPowerShortParking()
         print('Grid connection assignment complete')
 
     def _assignGridViaProbabilities(self, setSeed: int):
@@ -73,6 +74,7 @@ class GridModeler:
         activitiesNoHome = pd.concat(activitiesNoHome).reset_index(drop=True)
         dataframes = [activitiesHome, activitiesNoHome]
         self.activities = pd.concat(dataframes).reset_index(drop=True)
+        self.activities = self.adjustPowerShortParking()
         print('Grid connection assignment complete')
 
     def _homeProbabilityDistribution(self, setSeed: int):
@@ -94,6 +96,14 @@ class GridModeler:
         households.set_index("hhID", inplace=True)
         homeActivities = homeActivities.join(households, on="hhID")
         return homeActivities
+
+    def adjustPowerShortParking(self):
+        """
+        Adjusts charging power to zero if parking duration shorter than 15 minutes.
+        """
+        # parkID != pd.NA and timedelta <= 15 minutes
+        self.activities.loc[((self.activities['parkID'].notna()) & ((self.activities['timedelta'] / np.timedelta64(1, 's')) <= 900)), 'ratedPower'] = 0
+        return self.activities
 
     def assignGrid(self, losses: bool = False):
         """
@@ -153,6 +163,6 @@ if __name__ == "__main__":
     vpData.process()
 
     vpGrid = GridModeler(
-        configDict=configDict, datasetID=datasetID, activities=vpData.activities, gridModel='probability')
+        configDict=configDict, datasetID=datasetID, activities=vpData.activities, gridModel='simple')
     vpGrid.assignGrid()
     vpGrid.writeOutput()
