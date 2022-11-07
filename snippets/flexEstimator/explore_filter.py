@@ -15,7 +15,7 @@ configNames = ("globalConfig", "localPathConfig", "parseConfig", "gridConfig", "
 configDict = loadConfigDict(configNames, basePath=Path(os.getcwd()) / 'vencopy')
 createOutputFolders(configDict=configDict)
 
-vpData = ParseMiD(configDict=configDict, datasetID=datasetID, debug=True)
+vpData = ParseMiD(configDict=configDict, datasetID=datasetID, debug=False)
 vpData.process(splitOvernightTrips=False)
 
 vpGrid = GridModeler(configDict=configDict, datasetID=datasetID, activities=vpData.activities, gridModel='simple')
@@ -28,7 +28,7 @@ vpFlex.estimateTechnicalFlexibility()
 # Testing weekly flexibility estimation
 vpWDB = WeekDiaryBuilder(activities=vpGrid.activities, catCols=['bundesland', 'areaType'])
 vpWDB.summarizeSamplingBases()
-vpWDB.composeWeekActivities(seed=42, nWeeks=500, replace=True)
+vpWDB.composeWeekActivities(seed=42, nWeeks=100, replace=True)
 
 # Estimate charging flexibility based on driving profiles and charge connection
 vpWeFlex = WeekFlexEstimator(configDict=configDict,
@@ -37,6 +37,14 @@ vpWeFlex = WeekFlexEstimator(configDict=configDict,
                              threshold=0.8)
 vpWeFlex.estimateTechnicalFlexibility()
 
-print('Sum of uncontrolled charging of avtivities')
+print('Single day')
+print(f'Length of Grid Modeler before filtering: {len(vpGrid.activities)}')
+print(f'Length of Flex Estimator before filtering: {len(vpFlex.activities)}')
+print(f'Length of Flex Estimator after filtering: {len(vpFlex.activitiesWOResidual)}')
+
+print('Week')
+print(f'Length of Week Diary Builder before filtering: {len(vpWDB.weekActivities)}')
+print(f'Length of Week Flex Estimator after filtering: {len(vpWeFlex.activities)}')
+
 
 print('END breakpoint')
