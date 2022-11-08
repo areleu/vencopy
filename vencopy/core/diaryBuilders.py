@@ -135,17 +135,13 @@ class WeekDiaryBuilder:
     def summarizeSamplingBases(self):
         print(f'There are {len(self.categoryID)} category combinations of the categories {self.catCols}.')
         print(f'There are {len(self.sampleBaseID)} sample bases (each category for every weekday).')
-
         nSBInAct = self.sampleBaseID['sampleBaseID'].isin(self.activities['sampleBaseID']).sum()
         print(f'Of those sample bases, {nSBInAct} category combinations exist in the activities data set')
-
         self.__days = self.activities.groupby(by=['genericID']).first()
         nSamplingBase = self.__days.groupby(by=self.samplingCols).count()
         sampleBaseLength = nSamplingBase.iloc[:, 0]
-
         smallestSampleBase = sampleBaseLength.loc[sampleBaseLength == min(sampleBaseLength)]
         largestSampleBase = sampleBaseLength.loc[sampleBaseLength == max(sampleBaseLength)]
-
         print(f'The number of samples in each sample base ranges from {smallestSampleBase}')
         print(f'to {largestSampleBase}.')
         print(f'The average sample size is approximately {sampleBaseLength.mean().round()}.')
@@ -162,7 +158,6 @@ class WeekDiaryBuilder:
             replace (bool): In sampling, should it be possible to draw more samples than in the sampleBase? See
             docstring of randomSample for details.
         """
-
         if how == 'random':
             sample = self.__randomSample(nWeeks=nWeeks, seed=seed, replace=replace)
         elif how not in ['weighted', 'stratified']:
@@ -187,13 +182,10 @@ class WeekDiaryBuilder:
             pd.DataFrame: A pd.DataFrame with the three columns sampleBaseID, genericID and weekID where weekID is
             a range object for each sampleBase, genericID are the samples.
         """
-
         # Set seed for reproducibiilty for debugging
         if seed:
             np.random.seed(seed=seed)
-
         sample = pd.DataFrame()
-
         for sbID in self.sampleBaseInAct['sampleBaseID']:
             sampleBase = self.activities.loc[self.activities['sampleBaseID'] == sbID, 'genericID'].unique()
             subSample = np.random.choice(sampleBase, replace=replace, size=nWeeks)
@@ -713,7 +705,7 @@ class TimeDiscretiser:
         self.oneActivity.groupby(by=['weekdayStr', 'actID'])._allocateFast()
 
 
-    @profile(immediate=True)
+    @profile(immediate=False)
     def _allocate(self, acts, weekday: str = None):
         """ Allocates the value per bin to the respective time-discrete columns.
         """
@@ -735,7 +727,6 @@ class TimeDiscretiser:
                 else:
                     self.discreteData.loc[id, (vehicleSubset.loc[irow, 'firstBin']):(
                         vehicleSubset.loc[irow, 'lastBin'])] = vehicleSubset.loc[irow, 'valPerBin']
-
         return self.discreteData
 
     @profile(immediate=True)

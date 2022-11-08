@@ -46,11 +46,11 @@ class ProfileAggregator():
         self.maxBatteryLevel = profiles.maxBatteryLevel
         self.minBatteryLevel = profiles.minBatteryLevel
 
-    def _createWeeklyProfiles(self):
+    def __createWeeklyProfiles(self):
         print('Aggregating all profiles to fleet level based on day of the week.')
-        self._aggregateWeightsAndWeekdays(byColumn="tripStartWeekday")
+        self.__aggregateWeightsAndWeekdays(byColumn="tripStartWeekday")
 
-    def _aggregateWeightsAndWeekdays(self, byColumn: str) -> pd.Series:
+    def __aggregateWeightsAndWeekdays(self, byColumn: str) -> pd.Series:
         self.weekdayProfiles = pd.DataFrame(columns=self.profile.columns, index=range(1, 8))
         necessaryColumns = ['genericID', 'tripWeight'] + [byColumn]
         self.activitiesSubset = (
@@ -61,13 +61,13 @@ class ProfileAggregator():
         self.activitiesWeekday = self.activitiesWeekday.set_index('genericID')
         # Compose weekly profile from 7 separate profiles
         if self.profileName in ('drain', 'uncontrolledCharge', 'chargingPower'):
-            self._calculateWeightedAverageFlowProfiles(byColumn=byColumn)
+            self.__calculateWeightedAverageFlowProfiles(byColumn=byColumn)
         else:
-            self._calculateWeightedAverageStateProfiles(byColumn=byColumn)
-        self._composeWeeklyProfile()
+            self.__calculateWeightedAverageStateProfiles(byColumn=byColumn)
+        self.__composeWeeklyProfile()
         self._writeOutput()
 
-    def _calculateWeightedAverageFlowProfiles(self, byColumn):
+    def __calculateWeightedAverageFlowProfiles(self, byColumn):
         for idate in self.activitiesWeekday[byColumn].unique():
             weekdaySubset = self.activitiesWeekday[self.activitiesWeekday[byColumn] == idate].reset_index(drop=True)
             weekdaySubset = weekdaySubset.drop('tripStartWeekday', axis=1)
@@ -78,7 +78,7 @@ class ProfileAggregator():
             weekdaySubsetWAgg = weekdaySubsetW.sum() / sumWeights
             self.weekdayProfiles.iloc[idate-1] = weekdaySubsetWAgg
 
-    def _calculateWeightedAverageStateProfiles(self, byColumn, alpha=10):
+    def __calculateWeightedAverageStateProfiles(self, byColumn, alpha=10):
         pass
         # for idate in self.activitiesWeekday[byColumn].unique():
         #     weekdaySubset = self.activitiesWeekday[self.activitiesWeekday[byColumn] == idate].reset_index(drop=True)
@@ -90,7 +90,7 @@ class ProfileAggregator():
         #     for col in weekdaySubset:
         #         profileMax[col] = max(weekdaySubset[col].nsmallest(nProfilesFilter))
 
-    def _composeWeeklyProfile(self):
+    def __composeWeeklyProfile(self):
         # input is self.weekdayProfiles
         # check if any day of the week is not filled, copy line above in that case
         # FIXME: very ugly function below
@@ -108,7 +108,7 @@ class ProfileAggregator():
                        self.weekdayProfiles[4], self.weekdayProfiles[5], self.weekdayProfiles[6],
                        self.weekdayProfiles[7]], ignore_index=True))
 
-    def _createAnnualProfiles(self):
+    def __createAnnualProfiles(self):
         startWeekday = 1  # (1: Monday, 7: Sunday)
         # shift input profiles to the right weekday and start with first bin of chosen weekday
         self.annualProfile = self.weeklyProfile.iloc[((startWeekday-1)*((len(list(self.timeIndex)))-1)):]
@@ -127,8 +127,8 @@ class ProfileAggregator():
         for profile, profileName in itertools.product(profiles, profileNames):
             self.profileName = profileName
             self.profile = profile
-            self._createWeeklyProfiles()
-            self._createAnnualProfiles()
+            self.__createWeeklyProfiles()
+            self.__createAnnualProfiles()
         print('Run finished')
 
 
