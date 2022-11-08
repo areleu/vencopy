@@ -1,4 +1,9 @@
 
+from vencopy.core.diaryBuilders import WeekDiaryBuilder, DiaryBuilder
+from vencopy.core.dataParsers import ParseMiD
+from vencopy.core.gridModelers import GridModeler
+from vencopy.core.flexEstimators import WeekFlexEstimator
+from vencopy.utils.globalFunctions import loadConfigDict, createOutputFolders
 import sys
 import pickle
 import numpy as np
@@ -10,11 +15,6 @@ from profilehooks import profile
 # Needed to run in VSCode properties currently
 sys.path.append('.')
 
-from vencopy.utils.globalFunctions import loadConfigDict, createOutputFolders
-from vencopy.core.flexEstimators import WeekFlexEstimator
-from vencopy.core.gridModelers import GridModeler
-from vencopy.core.dataParsers import ParseMiD
-from vencopy.core.diaryBuilders import WeekDiaryBuilder, DiaryBuilder
 # from vencopy.core.evaluators import Evaluator
 
 __version__ = '0.2.X'
@@ -72,7 +72,7 @@ def composeSameSampleSizeDict(
         the values.
     """
     actDict = {}
-    profileDict = {}
+    # profileDict = {}
     for s in range(nSample):
         weekActs = weekDiaryBuilder.composeWeekActivities(nWeeks=nWeeks, seed=seed, replace=replace)
         vpWeFlex = WeekFlexEstimator(configDict=configDict, datasetID=datasetID, activities=weekActs,
@@ -80,11 +80,11 @@ def composeSameSampleSizeDict(
         vpWeFlex.estimateTechnicalFlexibility()
         actDict[s] = vpWeFlex.activities
 
-        vpDiary = DiaryBuilder(configDict=configDict, datasetID=datasetID, activities=vpWeFlex.activities,
-                               isWeekDiary=True)
-        vpDiary.createDiaries()
-        profileDict[s] = vpDiary.uncontrolledCharge
-    return actDict, profileDict
+        # vpDiary = DiaryBuilder(configDict=configDict, datasetID=datasetID, activities=vpWeFlex.activities,
+        #                        isWeekDiary=True)
+        # vpDiary.createDiaries()
+        # profileDict[s] = vpDiary.uncontrolledCharge
+    return actDict  # , profileDict
 
 
 def composeMultiThresholdDict(nWeeks: int, weekDiaryBuilder: WeekDiaryBuilder, threshold: list[float],
@@ -177,12 +177,12 @@ if __name__ == '__main__':
     datasetID = 'MiD17'
     configNames = ('globalConfig', 'localPathConfig', 'parseConfig', 'gridConfig', 'flexConfig', 'diaryConfig',
                    'evaluatorConfig')
-    basePath = Path(__file__).parent.parent
+    basePath = Path(__file__).parent.parent.parent / 'vencopy'
     configDict = loadConfigDict(configNames, basePath)
     createOutputFolders(configDict=configDict)
 
     CALC = True
-    FN_ACT = 'acts_sample_areaType_t10_n100_b40_samples10'
+    FN_ACT = 'acts_threshold_areaType_t05-10_n2000_b40'
     FN_PROF = 'profiles_sample_areaType_t10_n100_b40_samples10'
 
     if CALC:
@@ -202,10 +202,14 @@ if __name__ == '__main__':
     if CALC:
         # nWeeks = [10, 50, 100, 500, 1000]
         # sampleDict = composeSampleSizeScanDict(nWeeks=nWeeks, weekDiaryBuilder=vpWDB, replace=True, threshold=0.8)
-        actDict, profileDict = composeSameSampleSizeDict(nWeeks=100, nSample=10, configDict=configDict,
-                                                         weekDiaryBuilder=vpWDB, replace=True, threshold=1)
-        pickle.dump(actDict, open(f'{FN_ACT}.p', 'wb'))
-        pickle.dump(profileDict, open(f'{FN_PROF}.p', 'wb'))
+        # , profileDict
+        # actDict = composeSameSampleSizeDict(nWeeks=1000, nSample=10, configDict=configDict,
+        #                                    weekDiaryBuilder=vpWDB, replace=True, threshold=1)
+        tList = [0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]
+        thresholdDict = composeMultiThresholdDict(nWeeks=2000, weekDiaryBuilder=vpWDB, replace=True, threshold=tList)
+
+        pickle.dump(thresholdDict, open(f'{FN_ACT}.p', 'wb'))
+        # pickle.dump(profileDict, open(f'{FN_PROF}.p', 'wb'))
     else:  # load from pickle
         actDict = pickle.load(open(f'{FN_ACT}.p', 'rb'))
         profDict = pickle.load(open(f'{FN_PROF}.p', 'rb'))
