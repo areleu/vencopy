@@ -625,7 +625,6 @@ class TimeDiscretiser:
         """FIXME: Add docstring
         """
         # FIXME: Continue working for weekly profiles here
-
         self.oneActivity['timestampStartCorrected'] = self.oneActivity['timestampStartCorrected'].apply(
             lambda x: pd.to_datetime(str(x)))
         dayStart = self.oneActivity['timestampStartCorrected'].apply(
@@ -705,15 +704,11 @@ class TimeDiscretiser:
         self.oneActivity.groupby(by=['weekdayStr', 'actID'])._allocateFast()
 
 
-    @profile(immediate=False)
-    def _allocate(self, acts, weekday: str = None):
-        """ Allocates the value per bin to the respective time-discrete columns.
-        """
-
+    def _allocate(self, weekday: str = None):
         # FIXME: Performance improvements by 1. vectorization, 2. not subsetting but concatenating in the end,
         # 3. more efficient treatment of weeks e.g. looping just via days
-        for id in acts['genericID'].unique():
-            vehicleSubset = acts[acts['genericID'] == id].reset_index(drop=True)
+        for id in self.oneActivity.genericID.unique():
+            vehicleSubset = self.oneActivity[self.oneActivity.genericID == id].reset_index(drop=True)
             for irow in range(len(vehicleSubset)):
                 if self.isWeek:
                     # colIdx = (weekday,
@@ -729,7 +724,6 @@ class TimeDiscretiser:
                         vehicleSubset.loc[irow, 'lastBin'])] = vehicleSubset.loc[irow, 'valPerBin']
         return self.discreteData
 
-    @profile(immediate=True)
     def _allocateFast(acts):
         for irow in range(len(vehicleSubset)):
             if self.isWeek:
@@ -745,7 +739,6 @@ class TimeDiscretiser:
             else:
                 self.discreteDataFast.loc[self.discreteDataFast['actID'] == a, (vehicleSubset.loc[irow, 'firstBin']):(
                     vehicleSubset.loc[irow, 'lastBin'])] = vehicleSubset.loc[irow, 'valPerBin']
-
         return self.discreteDataFast
 
     def _writeOutput(self):
