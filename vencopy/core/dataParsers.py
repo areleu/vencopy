@@ -70,7 +70,6 @@ class DataParser:
             print(f"Starting to retrieve local data file from {self.rawDataPath}")
             self._loadData()
         self.rawData = self.rawData.loc[0:2000, :] if debug else self.rawData.copy()
-
         # Storage for original data variable that is being overwritten throughout adding of park rows
         self.tripEndNextDayRaw = None
 
@@ -158,7 +157,7 @@ class DataParser:
 
         :return: None
         """
-        replacementDict = self.createReplacementDict(
+        replacementDict = self._createReplacementDict(
             self.datasetID, self.parseConfig["dataVariables"]
         )
         dataRenamed = self.data.rename(columns=replacementDict)
@@ -347,7 +346,7 @@ class DataParser:
         return dat['tripDoesNotOverlap']
 
     def __overlapPeriods(self, data, period):
-        """ New implementation of identifying trips that overlap with previous trips. This implementation is cleaner
+        """ New implementation of identifying trips that overlap with previous trips.
 
         Args:
             data (pd.DataFrame): Trip data set including the two variables timestampStart and timestampEnd
@@ -359,9 +358,14 @@ class DataParser:
             same index as the MID data.
         """
         dat = data.copy()
-        dat['isSameHHAsPrevTrip'] = dat['hhPersonID'] == dat['hhPersonID'].shift(period)
-        dat['tripStartsAfterPrevTrip'] = dat['timestampStart'] > dat['timestampEnd'].shift(period)
-        dat['tripDoesNotOverlap'] = ~(dat['isSameHHAsPrevTrip'] & ~dat['tripStartsAfterPrevTrip'])
+        if self.datasetID == 'KiD':
+            dat['isSameVehicleAsPrevTrip'] = dat['vehicleID'] == dat['vehicleID'].shift(period)
+            dat['tripStartsAfterPrevTrip'] = dat['timestampStart'] > dat['timestampEnd'].shift(period)
+            dat['tripDoesNotOverlap'] = ~(dat['isSameVehicleAsPrevTrip'] & ~dat['tripStartsAfterPrevTrip'])
+        else:
+            dat['isSameHHAsPrevTrip'] = dat['hhPersonID'] == dat['hhPersonID'].shift(period)
+            dat['tripStartsAfterPrevTrip'] = dat['timestampStart'] > dat['timestampEnd'].shift(period)
+            dat['tripDoesNotOverlap'] = ~(dat['isSameHHAsPrevTrip'] & ~dat['tripStartsAfterPrevTrip'])
         return dat['tripDoesNotOverlap']
 
     def __filterAnalysis(self, filterData: pd.DataFrame):
@@ -421,11 +425,16 @@ class DataParser:
 
     def __addUtilAttributes(self):
         # Adding additional attribute columns for convenience
-        self.activities['hhpid_prev'] = self.activities['hhPersonID'].shift(fill_value=0)
-        self.activities['isFirstActivity'] = self.activities['hhpid_prev'] != self.activities['hhPersonID']
-
-        self.activities['hhpid_next'] = self.activities['hhPersonID'].shift(-1, fill_value=0)
-        self.activities['isLastActivity'] = self.activities['hhpid_next'] != self.activities['hhPersonID']
+        if self.datasetID == 'KiD':
+            self.activities['vehicleID_prev'] = self.activities['vehicleID'].shift(fill_value=0)
+            self.activities['isFirstActivity'] = self.activities['vehicleID_prev'] != self.activities['vehicleID']
+            self.activities['vehicleID_next'] = self.activities['vehicleID'].shift(-1, fill_value=0)
+            self.activities['isLastActivity'] = self.activities['vehicleID_next'] != self.activities['vehicleID']
+        else:
+            self.activities['hhpid_prev'] = self.activities['hhPersonID'].shift(fill_value=0)
+            self.activities['isFirstActivity'] = self.activities['hhpid_prev'] != self.activities['hhPersonID']
+            self.activities['hhpid_next'] = self.activities['hhPersonID'].shift(-1, fill_value=0)
+            self.activities['isLastActivity'] = self.activities['hhpid_next'] != self.activities['hhPersonID']
 
     def __addParkActAfterLastTrip(self):
         # Adding park activities after last trips
@@ -445,10 +454,16 @@ class DataParser:
 
     def __dropRedundantCols(self):
         # Clean-up of temporary redundant columns
-        self.activities.drop(columns=[
-            'isMIVDriver', 'tripStartClock', 'tripEndClock', 'tripStartYear', 'tripStartMonth',
-            'tripStartWeek', 'tripStartHour', 'tripStartMinute', 'tripEndHour', 'tripEndMinute', 'hhpid_prev',  #
-            'hhpid_next', 'colFromIndex'], inplace=True)
+        if self.datasetID == 'KiD':
+            self.activities.drop(columns=[
+                'tripStartClock', 'tripEndClock', 'tripStartYear', 'tripStartMonth',
+                'tripStartWeek', 'tripStartHour', 'tripStartMinute', 'tripEndHour', 'tripEndMinute', 'vehicleID_prev',
+                'vehicleID_next', 'colFromIndex'], inplace=True)
+        else:
+            self.activities.drop(columns=[
+                'isMIVDriver', 'tripStartClock', 'tripEndClock', 'tripStartYear', 'tripStartMonth',
+                'tripStartWeek', 'tripStartHour', 'tripStartMinute', 'tripEndHour', 'tripEndMinute', 'hhpid_prev',
+                'hhpid_next', 'colFromIndex'], inplace=True)
 
     def __removeParkActsAfterOvernightTrips(self):
         # Checking for trips across day-limit and removing respective parking activities
@@ -1134,7 +1149,7 @@ class ParseVF(IntermediateParsing):
 
         :return: None
         """
-        replacementDict = self.createReplacementDict(self.datasetID, self.parseConfig["dataVariables"])
+        replacementDict = self._createReplacementDict(self.datasetID, self.parseConfig["dataVariables"])
         dataRenamed = self.data.rename(columns=replacementDict)
         if self.datasetID == "MiD08":
             dataRenamed["hhPersonID"] = (
@@ -1329,16 +1344,18 @@ class ParseKiD(IntermediateParsing):
         """
         self._selectColumns()
         self._harmonizeVariables()
-        self._convertTypes()
+        self.__convertTypes()
+        self.__excludeHours()
         self.__addStrColumns()
         self._composeStartAndEndTimestamps()
         self.__updateEndTimestamp()
         self._checkFilterDict(self.filterDict)
         self._filter(self.filterDict)
-        self.__excludeHours()
         self._filterConsistentHours()
         self._harmonizeVariablesGenericIdNames()
-        self._addParkingRows()
+        #TODO: adapt _addParkingRows for KiD
+        #IDEA: move harmoniseVariablesGenericIdNames beforehand so all dfs have same ID names 
+        # self._addParkingRows()
         
         print("Parsing KiD dataset completed")
         return self.activities
@@ -1350,7 +1367,7 @@ if __name__ == '__main__':
                    "gridConfig", "flexConfig", "aggregatorConfig", "evaluatorConfig")
     configDict = loadConfigDict(configNames, basePath)
 
-    datasetID = "MiD17"  # options are MiD08, MiD17, KiD
+    datasetID = "KiD"  # options are MiD08, MiD17, KiD
     if datasetID == "MiD17":
         vpData = ParseMiD(configDict=configDict, datasetID=datasetID, debug=False)
     elif datasetID == "KiD":
