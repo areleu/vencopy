@@ -88,3 +88,8 @@ labels:
     technologyLabel: BEV
     outputFileName: vencopy
     strAdd:
+
+validation:
+    path: C:/repos/vencopy_internalRepo/test/validate/
+    tags: [postFlex]   # Options are postFlex, preFlex, postDiscrete 
+    
