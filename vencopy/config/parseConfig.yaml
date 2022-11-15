@@ -209,7 +209,7 @@ filterDicts:
             # tripPurpose: []
         greaterThan:
         smallerThan:
-            tripDistance: []
+            tripDistance: [3000]
     speedThreshold: 10 # Trips with an average speed below this threshold are being filtered out
 
     #    tripData = tripData.loc[(tripData['tripStartClock'] <= tripData['tripEndClock']) |

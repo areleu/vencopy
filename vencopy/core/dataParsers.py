@@ -425,16 +425,10 @@ class DataParser:
 
     def __addUtilAttributes(self):
         # Adding additional attribute columns for convenience
-        if self.datasetID == 'KiD':
-            self.activities['vehicleID_prev'] = self.activities['vehicleID'].shift(fill_value=0)
-            self.activities['isFirstActivity'] = self.activities['vehicleID_prev'] != self.activities['vehicleID']
-            self.activities['vehicleID_next'] = self.activities['vehicleID'].shift(-1, fill_value=0)
-            self.activities['isLastActivity'] = self.activities['vehicleID_next'] != self.activities['vehicleID']
-        else:
-            self.activities['hhpid_prev'] = self.activities['hhPersonID'].shift(fill_value=0)
-            self.activities['isFirstActivity'] = self.activities['hhpid_prev'] != self.activities['hhPersonID']
-            self.activities['hhpid_next'] = self.activities['hhPersonID'].shift(-1, fill_value=0)
-            self.activities['isLastActivity'] = self.activities['hhpid_next'] != self.activities['hhPersonID']
+        self.activities['genericID_prev'] = self.activities['genericID'].shift(fill_value=0)
+        self.activities['isFirstActivity'] = self.activities['genericID_prev'] != self.activities['genericID']
+        self.activities['genericID_next'] = self.activities['genericID'].shift(-1, fill_value=0)
+        self.activities['isLastActivity'] = self.activities['genericID_next'] != self.activities['genericID']
 
     def __addParkActAfterLastTrip(self):
         # Adding park activities after last trips
@@ -454,16 +448,16 @@ class DataParser:
 
     def __dropRedundantCols(self):
         # Clean-up of temporary redundant columns
-        if self.datasetID == 'KiD':
-            self.activities.drop(columns=[
-                'tripStartClock', 'tripEndClock', 'tripStartYear', 'tripStartMonth',
-                'tripStartWeek', 'tripStartHour', 'tripStartMinute', 'tripEndHour', 'tripEndMinute', 'vehicleID_prev',
-                'vehicleID_next', 'colFromIndex'], inplace=True)
-        else:
+        if self.datasetID == 'MiD17':
             self.activities.drop(columns=[
                 'isMIVDriver', 'tripStartClock', 'tripEndClock', 'tripStartYear', 'tripStartMonth',
-                'tripStartWeek', 'tripStartHour', 'tripStartMinute', 'tripEndHour', 'tripEndMinute', 'hhpid_prev',
-                'hhpid_next', 'colFromIndex'], inplace=True)
+                'tripStartWeek', 'tripStartHour', 'tripStartMinute', 'tripEndHour', 'tripEndMinute', 'genericID_prev',
+                'genericID_next', 'colFromIndex'], inplace=True)
+        else:
+            self.activities.drop(columns=[
+                'tripStartClock', 'tripEndClock', 'tripStartYear', 'tripStartMonth',
+                'tripStartWeek', 'tripStartHour', 'tripStartMinute', 'tripEndHour', 'tripEndMinute', 'genericID_prev',
+                'genericID_next', 'colFromIndex'], inplace=True)
 
     def __removeParkActsAfterOvernightTrips(self):
         # Checking for trips across day-limit and removing respective parking activities
@@ -647,8 +641,8 @@ class DataParser:
         trips['prevActID'] = pd.NA
 
         # Update next activity ID
-        hhPersonID = trips['hhPersonID']
-        actIdx = (self.activities['hhPersonID'].isin(hhPersonID) & self.activities['isFirstActivity'])
+        genericID = trips['genericID']
+        actIdx = (self.activities['genericID'].isin(genericID) & self.activities['isFirstActivity'])
         trips['nextActID'] = self.activities.loc[actIdx, 'actID']
 
         # Update previous activity ID of previously first activity
@@ -681,7 +675,7 @@ class DataParser:
         morningTrips['isLastActivity'] = False
 
     def __getPrevFirstAct(self, morningTrips: pd.DataFrame):
-        return (self.activities['hhPersonID'].isin(morningTrips['hhPersonID']) &
+        return (self.activities['genericID'].isin(morningTrips['genericID']) &
                 self.activities['isFirstActivity'])
 
     def __neglectOverlapMorningTrips(self, morningTrips: pd.DataFrame, isPrevFirstActs: pd.DataFrame):
@@ -733,7 +727,7 @@ class DataParser:
         self.activities = self.activities.drop(idxParkTS[idxParkTS].index)
 
         # After removing first parking, set first trip to first activity
-        self.activities.loc[(self.activities['hhPersonID'].isin(firstParkActs.loc[idxParkTS, 'hhPersonID'])) &
+        self.activities.loc[(self.activities['genericID'].isin(firstParkActs.loc[idxParkTS, 'genericID'])) &
                             (self.activities['tripID'] == 1),
                             'isFirstActivity'] = True
 
@@ -744,36 +738,35 @@ class DataParser:
         were 3 occurences of this case all with end times of the overnight trip between 00:00 and 01:00.
 
         """
+        genericID = self.__getGenericIDsToNeglect()
+        self.__neglectZeroTripIDFromActivities(id_neglect=genericID)
+        self.__updateConsolidatedAct(id_neglect=genericID)
 
-        hhpid = self.__getHHPIDsToNeglect()
-        self.__neglectZeroTripIDFromActivities(hhpid_neglect=hhpid)
-        self.__updateConsolidatedAct(hhpid_neglect=hhpid)
-
-    def __getHHPIDsToNeglect(self):
+    def __getGenericIDsToNeglect(self):
         """
         Identifies the household person IDs that should be neglected.
         """
-        hhPersonIDsOvernight = self.activities.loc[self.activities['tripID'] == 0, 'hhPersonID']
-        acts = self.activities.loc[self.activities['hhPersonID'].isin(hhPersonIDsOvernight), :]
+        genericIDsOvernight = self.activities.loc[self.activities['tripID'] == 0, 'genericID']
+        acts = self.activities.loc[self.activities['genericID'].isin(genericIDsOvernight), :]
         actsOvernight = acts.loc[acts['tripID'] == 0, :]
 
         # Next trip after morning part of overnight split
         actsNextTrip = acts.loc[acts['prevActID'] == 0, :]
-        return actsOvernight.loc[~actsOvernight['hhPersonID'].isin(actsNextTrip['hhPersonID']), 'hhPersonID']
+        return actsOvernight.loc[~actsOvernight['genericID'].isin(actsNextTrip['genericID']), 'genericID']
 
-    def __neglectZeroTripIDFromActivities(self, hhpid_neglect: pd.Series):
+    def __neglectZeroTripIDFromActivities(self, id_neglect: pd.Series):
         """
         This method filters out the activities with the given hhpid and tripID 0.
         """
-        boolNeglect = (self.activities['hhPersonID'].isin(hhpid_neglect)) & (self.activities['tripID'] == 0)
+        boolNeglect = (self.activities['genericID'].isin(id_neglect)) & (self.activities['tripID'] == 0)
         self.activities = self.activities.loc[~boolNeglect, :]
 
-    def __updateConsolidatedAct(self, hhpid_neglect: pd.Series):
+    def __updateConsolidatedAct(self, id_neglect: pd.Series):
         """
         This method sets the start timestamp of the firstActivity of all hhpids given as argument to 00:00. Additionally
         the prevActID is set to pd.NA
         """
-        idxConsolidatedTrips = (self.activities['hhPersonID'].isin(hhpid_neglect)) & (self.activities[
+        idxConsolidatedTrips = (self.activities['genericID'].isin(id_neglect)) & (self.activities[
             'isFirstActivity'])
         self.activities.loc[idxConsolidatedTrips, 'timestampStart'] = replace_vec(self.activities.loc[
             idxConsolidatedTrips, 'timestampStart'], hour=0, minute=0)
@@ -783,7 +776,7 @@ class DataParser:
         self.activities = self.activities.drop(columns=['tripEndNextDay'])
 
     def __sortActivities(self):
-        self.activities = self.activities.sort_values(by=['hhPersonID', 'timestampStart'])
+        self.activities = self.activities.sort_values(by=['genericID', 'timestampStart'])
 
     def __setONVarFalseForLastActTrip(self):
         """This function treats the edge case of trips being the last activity in the daily activity chain, i.e. trips
@@ -1351,8 +1344,7 @@ class ParseKiD(IntermediateParsing):
         self._checkFilterDict(self.filterDict)
         self._filter(self.filterDict)
         self._filterConsistentHours()
-        #TODO: adapt _addParkingRows for KiD
-        # self._addParkingRows()
+        self._addParkingRows()
         print("Parsing KiD dataset completed")
         return self.activities
 
