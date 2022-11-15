@@ -1,5 +1,4 @@
 #-*- encoding:utf-8 -*-
-
 # __version__ = '0.1.X'
 # __maintainer__ = 'Niklas Wulff'
 # __contributors__ = 'Fabia Miorelli, Parth Butte'
@@ -80,6 +79,19 @@ gridAvailabilityDistribution:  # Grid model 3: Probabilities given for each loca
         0: 0.6
     '0.0':
         0: 1
+    # KiD additional purposes below
+    'PEOPLE_MOBILITY':
+        11: 0.2
+        22: 0.2
+        0: 0.6
+    'TRANSPORT':
+        11: 0.2
+        22: 0.2
+        0 : 0.6
+    'SERVICES': 
+        11: 0.2
+        22: 0.2
+        0 : 0.6
 
 losses:  # Gives the power that is being lost per rated capacity. See gridModeler for detailed usage.
     0: 0
