@@ -1084,6 +1084,7 @@ class ParseMiD(IntermediateParsing):
 
         self._selectColumns()
         self.__harmonizeVariables()
+        self._harmonizeVariablesGenericIdNames()
         self.__convertTypes()
         self.__addStrColumns()
         self._composeStartAndEndTimestamps()
@@ -1091,9 +1092,7 @@ class ParseMiD(IntermediateParsing):
         self._checkFilterDict(self.filterDict)
         self._filter(self.filterDict)
         self._filterConsistentHours()
-        self._harmonizeVariablesGenericIdNames()
         self._addParkingRows(splitOvernightTrips=splitOvernightTrips)
-        
         print("Parsing MiD dataset completed")
         return self.activities
 
@@ -1204,6 +1203,7 @@ class ParseVF(IntermediateParsing):
         """
         self._selectColumns()
         self.__harmonizeVariables()
+        self._harmonizeVariablesGenericIdNames()
         self.__convertTypes()
         self.__addStrColumns()
         self._composeStartAndEndTimestamps()
@@ -1211,9 +1211,7 @@ class ParseVF(IntermediateParsing):
         self._checkFilterDict(self.filterDict)
         self._filter(self.filterDict)
         self._filterConsistentHours()
-        self._harmonizeVariablesGenericIdNames()
         self._addParkingRows()
-
         print("Parsing VF dataset completed")
         return self.activities
 
@@ -1344,6 +1342,7 @@ class ParseKiD(IntermediateParsing):
         """
         self._selectColumns()
         self._harmonizeVariables()
+        self._harmonizeVariablesGenericIdNames()
         self.__convertTypes()
         self.__excludeHours()
         self.__addStrColumns()
@@ -1352,11 +1351,8 @@ class ParseKiD(IntermediateParsing):
         self._checkFilterDict(self.filterDict)
         self._filter(self.filterDict)
         self._filterConsistentHours()
-        self._harmonizeVariablesGenericIdNames()
         #TODO: adapt _addParkingRows for KiD
-        #IDEA: move harmoniseVariablesGenericIdNames beforehand so all dfs have same ID names 
         # self._addParkingRows()
-        
         print("Parsing KiD dataset completed")
         return self.activities
 
