@@ -14,6 +14,7 @@ if __package__ is None or __package__ == "":
     sys.path.append(path.dirname(path.dirname(path.dirname(__file__))))
 
 from pathlib import Path
+
 import pandas as pd
 
 from vencopy.core.dataParsers import ParseKiD, ParseMiD, ParseVF
@@ -324,11 +325,13 @@ class FlexEstimator:
         """
 
         actsIdx = acts.set_index(indexCols)
+        idxOut = (~actsIdx['maxResidualNeed'].isin([None, 0])) | (~actsIdx['minResidualNeed'].isin([None, 0]))
+
         if len(indexCols) == 1:
-            catWeekIDOut = actsIdx.index[~actsIdx['maxResidualNeed'].isin([None, 0])]
+            catWeekIDOut = actsIdx.index[idxOut]
             actsFilt = actsIdx.loc[~actsIdx.index.isin(catWeekIDOut)]
         else:
-            catWeekIDOut = acts.loc[~acts['maxResidualNeed'].isin([None, 0]), indexCols]
+            catWeekIDOut = acts.loc[idxOut.values, indexCols]
             tplFilt = catWeekIDOut.apply(lambda x: tuple(x), axis=1).unique()
             actsFilt = actsIdx.loc[~actsIdx.index.isin(tplFilt), :]
         return actsFilt.reset_index()
@@ -337,13 +340,27 @@ class FlexEstimator:
         writeOut(dataset=self.activities, outputFolder='flexOutput', fileKey='outputFlexEstimator', manualLabel='',
                  datasetID=self.datasetID, localPathConfig=self.localPathConfig, globalConfig=self.globalConfig)
 
-    def estimateTechnicalFlexibility(self):
+    def estimateTechnicalFlexibility(self, filterFuelNeed: bool=True):
+        """Main run function for the class WeekFlexEstimator. Calculates uncontrolled charging as well as technical
+        boundary constraints for controlled charging and feeding electricity back into the grid on an indvidiual vehicle
+        basis. If filterFuelNeed is True, only electrifiable days are considered.
+
+        Args:
+            filterFuelNeed (bool): If true, it is ensured that all trips can be fulfilled by battery electric vehicles
+            specified by battery size and specific consumption as given in the config. Here, not only trips but cars
+            days are filtered out.
+
+        Returns:
+            pd.DataFrame: Activities data set comprising uncontrolled charging and flexible charging constraints for
+            each car.
+        """
         self._drain()
         self._maxChargeVolumePerParkingAct()
         self.__batteryLevelMax(startLevel=self.upperBatLev)
         self._uncontrolledCharging()
         self.__batteryLevelMin()
-        self.activitiesWOResidual = self._filterResidualNeed(acts=self.activities, indexCols=['genericID'])
+        if filterFuelNeed:
+            self.activities = self._filterResidualNeed(acts=self.activities, indexCols=['genericID'])
 
         print("Technical flexibility estimation ended")
         return self.activities
@@ -566,15 +583,31 @@ class WeekFlexEstimator(FlexEstimator):
         tmpUndershoot = self.activities.loc[idx, 'minBatteryLevelStart_unlimited'] - self.lowerBatLev
         self.activities.loc[idx, 'minUndershoot'] = tmpUndershoot.where(tmpUndershoot >= 0, other=0)
 
-    def estimateTechnicalFlexibility(self):
+    def estimateTechnicalFlexibility(self, filterFuelNeed: bool=True):
+        """Main run function for the class WeekFlexEstimator. Calculates uncontrolled charging as well as technical
+        boundary constraints for controlled charging and feeding electricity back into the grid on an indvidiual vehicle
+        basis. If filterFuelNeed is True, only electrifiable weeks are considered.
+
+        Args:
+            filterFuelNeed (bool): If true, it is ensured that all trips can be fulfilled by battery electric vehicles
+            specified by battery size and specific consumption as given in the config. Here, not only trips but cars
+            weeks are filtered out if "infected" by at least one trip that cannot be electrified.
+
+        Returns:
+            pd.DataFrame: Activities data set comprising uncontrolled charging and flexible charging constraints for
+            each car.
+        """
+
         self._drain()
         self.__maxChargeVolumePerParkingActWeek()
         self._batteryLevelMax(startLevel=self.thresholdAbsolute)
         self._uncontrolledCharging()
         self._batteryLevelMin()
-        self.activities = self._filterResidualNeed(acts=self.activities, indexCols=['categoryID', 'weekID'])
+        if filterFuelNeed:
+            self.activities = self._filterResidualNeed(acts=self.activities, indexCols=['categoryID', 'weekID'])
 
-        print("Technical flexibility estimation ended")
+        print('Technical flexibility estimation for one week ended considering the plugging threshold of ')
+        print(f'{self.thresholdSOC}')
         return self.activities
 
 

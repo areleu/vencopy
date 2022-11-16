@@ -15,7 +15,7 @@ configNames = ("globalConfig", "localPathConfig", "parseConfig", "gridConfig", "
 configDict = loadConfigDict(configNames, basePath=Path(os.getcwd()) / 'vencopy')
 createOutputFolders(configDict=configDict)
 
-vpData = ParseMiD(configDict=configDict, datasetID=datasetID, debug=False)
+vpData = ParseMiD(configDict=configDict, datasetID=datasetID, debug=True)
 vpData.process(splitOvernightTrips=False)
 
 vpGrid = GridModeler(configDict=configDict, datasetID=datasetID, activities=vpData.activities, gridModel='simple')
@@ -39,12 +39,10 @@ vpWeFlex.estimateTechnicalFlexibility()
 
 print('Single day')
 print(f'Length of Grid Modeler before filtering: {len(vpGrid.activities)}')
-print(f'Length of Flex Estimator before filtering: {len(vpFlex.activities)}')
-print(f'Length of Flex Estimator after filtering: {len(vpFlex.activitiesWOResidual)}')
+print(f'Length of Flex Estimator after filtering: {len(vpFlex.activities)}')
 
 print('Week')
 print(f'Length of Week Diary Builder before filtering: {len(vpWDB.weekActivities)}')
 print(f'Length of Week Flex Estimator after filtering: {len(vpWeFlex.activities)}')
-
 
 print('END breakpoint')
