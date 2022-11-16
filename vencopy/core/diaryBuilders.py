@@ -691,7 +691,7 @@ class TimeDiscretiser:
     def _allocateWeek(self):
         """ Wrapper method for allocating respective values per bin to days within a week. Expects that the activities
         are formatted in a way that genericID represents a unique week ID. The function then loops over the 7 weekdays
-        and calls _allocate for each day a total of 7 times. 
+        and calls _allocate for each day a total of 7 times.
 
         """
         # FIXME: Idea for performance improvement: Apply allocate() to groupby-slices with by=['weekday', 'actID']
@@ -703,10 +703,20 @@ class TimeDiscretiser:
         # New implementation
         self.oneActivity.groupby(by=['weekdayStr', 'actID'])._allocateFast()
 
-
     def _allocate(self, weekday: str = None):
-        # FIXME: Performance improvements by 1. vectorization, 2. not subsetting but concatenating in the end,
+        """ Loops over every activity (row) and allocates the respective value per bin (valPerBin) to each column 
+        specified in the columns firstBin and lastBin.
+
+        Args:
+            weekday (str, optional): _description_. Defaults to None.
+
+        Returns:
+            pd.DataFrame: Discretized data set with temporal discretizations in the columns.
+        """
+
+        # FIXME: Performance improvements by 1. not subsetting but concatenating in the end, 2. vectorization,
         # 3. more efficient treatment of weeks e.g. looping just via days
+
         for id in self.oneActivity.genericID.unique():
             vehicleSubset = self.oneActivity[self.oneActivity.genericID == id].reset_index(drop=True)
             for irow in range(len(vehicleSubset)):
@@ -746,6 +756,7 @@ class TimeDiscretiser:
                  fileKey=('outputDiaryBuilder'), manualLabel=str(self.columnToDiscretise),
                  localPathConfig=self.localPathConfig, globalConfig=self.globalConfig)
 
+    @profile(immediate=True)
     def discretise(self, column: str):
         self.columnToDiscretise = column
         print(f"Starting to discretise {self.columnToDiscretise}.")
