@@ -102,7 +102,7 @@ class GridModeler:
         Adjusts charging power to zero if parking duration shorter than 15 minutes.
         """
         # parkID != pd.NA and timedelta <= 15 minutes
-        self.activities.loc[((self.activities['parkID'].notna()) & ((self.activities['timedelta'] / np.timedelta64(1, 's')) <= 900)), 'ratedPower'] = 0
+        self.activities.loc[((self.activities['parkID'].notna()) & ((self.activities['timedelta'] / np.timedelta64(1, 's')) <= self.gridConfig['minimumParkingTime'])), 'ratedPower'] = 0
         return self.activities
 
     def assignGrid(self, losses: bool = False):
