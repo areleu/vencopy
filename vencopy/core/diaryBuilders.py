@@ -714,7 +714,9 @@ class TimeDiscretiser:
             pd.DataFrame: Discretized data set with temporal discretizations in the columns.
         """
 
-        # FIXME: Performance improvements by 1. not subsetting but concatenating in the end, 2. vectorization,
+        # FIXME: Performance improvements by
+        # 1. not subsetting but concatenating in the end,
+        # 2. vectorization,
         # 3. more efficient treatment of weeks e.g. looping just via days
 
         for id in self.oneActivity.genericID.unique():
