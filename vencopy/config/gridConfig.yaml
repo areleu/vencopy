@@ -11,6 +11,7 @@
 # probabilities will be given for each rated charging power at each parking purpose. In the beta release (0.1.X) only
 # chargingInfrastructureMappings is used
 
+minimumParkingTime: 900 # charging power is set to zero if parking time lower than <minimumParkingTime> in seconds
 
 chargingInfrastructureMappings:  # Simple grid model: Explicit mapping given for each location aka parking purpose
     'DRIVING': False
