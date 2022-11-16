@@ -180,3 +180,13 @@ def writeOut(dataset, outputFolder, fileKey, manualLabel, datasetID, localPathCo
     print(('Dataset written to ' + str(createFileString(globalConfig=globalConfig,
                                                         fileKey=fileKey,
                                                         datasetID=datasetID))))
+
+def dumpReferenceData(data: pd.DataFrame, tag: str, path: Path):
+    """_summary_
+
+    Args:
+        data (pd.DataFrame): _description_
+        path (Path): _description_
+    """
+    path.mkdir(exist_ok=True, parents=True)
+    data.to_hdf(path / f'{tag}.h5f', key=tag)
