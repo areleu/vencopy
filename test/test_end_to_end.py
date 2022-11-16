@@ -17,4 +17,3 @@ def test_isFirstActivity(ref, data):
 @pytest.mark.validate
 def test_isLastActivity(ref, data):
     assert ((ref['isLastActivity'].astype(int) - data['isLastActivity'].astype(int)).abs() <= 1e-6).all()
-    
