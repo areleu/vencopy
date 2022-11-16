@@ -404,7 +404,7 @@ class DataParser:
         self.__addUtilAttributes()
         self.__addParkActAfterLastTrip()
         self.__adjustParkAttrs()
-        self.__dropRedundantCols()
+        self._dropRedundantCols()
         self.__removeParkActsAfterOvernightTrips()
         self.__adjustParkTimestamps()
         self.__setTripAttrsNAForParkActs()
@@ -446,18 +446,12 @@ class DataParser:
         self.activities['colFromIndex'] = self.activities.index
         self.activities = self.activities.sort_values(by=['colFromIndex', 'tripID'])
 
-    def __dropRedundantCols(self):
+    def _dropRedundantCols(self):
         # Clean-up of temporary redundant columns
-        if self.datasetID == 'MiD17':
-            self.activities.drop(columns=[
-                'isMIVDriver', 'tripStartClock', 'tripEndClock', 'tripStartYear', 'tripStartMonth',
-                'tripStartWeek', 'tripStartHour', 'tripStartMinute', 'tripEndHour', 'tripEndMinute', 'genericID_prev',
-                'genericID_next', 'colFromIndex'], inplace=True)
-        else:
-            self.activities.drop(columns=[
-                'tripStartClock', 'tripEndClock', 'tripStartYear', 'tripStartMonth',
-                'tripStartWeek', 'tripStartHour', 'tripStartMinute', 'tripEndHour', 'tripEndMinute', 'genericID_prev',
-                'genericID_next', 'colFromIndex'], inplace=True)
+        self.activities.drop(columns=[
+            'tripStartClock', 'tripEndClock', 'tripStartYear', 'tripStartMonth',
+            'tripStartWeek', 'tripStartHour', 'tripStartMinute', 'tripEndHour', 'tripEndMinute', 'genericID_prev',
+            'genericID_next', 'colFromIndex'], inplace=True)
 
     def __removeParkActsAfterOvernightTrips(self):
         # Checking for trips across day-limit and removing respective parking activities
@@ -1067,6 +1061,14 @@ class ParseMiD(IntermediateParsing):
                 colName="purposeStr", varName="tripPurpose"
             )
 
+    def _dropRedundantCols(self):
+        # Clean-up of temporary redundant columns
+        self.activities.drop(columns=[
+            'isMIVDriver', 'tripStartClock', 'tripEndClock', 'tripStartYear', 'tripStartMonth',
+            'tripStartWeek', 'tripStartHour', 'tripStartMinute', 'tripEndHour', 'tripEndMinute', 'genericID_prev',
+            'genericID_next', 'colFromIndex'], inplace=True)
+
+
     def process(self, splitOvernightTrips: bool = True):
         """
         Wrapper function for harmonising and filtering the activities dataset as well as adding parking rows.
@@ -1185,6 +1187,13 @@ class ParseVF(IntermediateParsing):
             self._addStrColumnFromVariable(
                 colName="purposeStr", varName="tripPurpose"
             )
+
+    def _dropRedundantCols(self):
+        # Clean-up of temporary redundant columns
+        self.activities.drop(columns=[
+            'isMIVDriver', 'tripStartClock', 'tripEndClock', 'tripStartYear', 'tripStartMonth',
+            'tripStartWeek', 'tripStartHour', 'tripStartMinute', 'tripEndHour', 'tripEndMinute', 'genericID_prev',
+            'genericID_next', 'colFromIndex'], inplace=True)
 
     # DEPRECATED, WILL BE REMOVED IN NEXT RELEASE
     def copyOverTripNextDay(self):
