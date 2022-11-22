@@ -30,7 +30,7 @@ if __name__ == "__main__":
     createOutputFolders(configDict=configDict)
 
     datasetID = 'MiD17'
-    vpData = ParseMiD(configDict=configDict, datasetID=datasetID, debug=True)
+    vpData = ParseMiD(configDict=configDict, datasetID=datasetID, debug=False)
     vpData.process()
 
     vpGrid = GridModeler(configDict=configDict, datasetID=datasetID, activities=vpData.activities, gridModel='simple')

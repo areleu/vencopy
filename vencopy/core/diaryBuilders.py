@@ -704,7 +704,8 @@ class TimeDiscretiser:
         self.oneActivity.groupby(by=['weekdayStr', 'actID'])._allocateFast()
 
     def _allocate(self, weekday: str = None):
-        """ Loops over every activity (row) and allocates the respective value per bin (valPerBin) to each column 
+        """
+        Loops over every activity (row) and allocates the respective value per bin (valPerBin) to each column 
         specified in the columns firstBin and lastBin.
 
         Args:
@@ -713,14 +714,13 @@ class TimeDiscretiser:
         Returns:
             pd.DataFrame: Discretized data set with temporal discretizations in the columns.
         """
-
         # FIXME: Performance improvements by
         # 1. not subsetting but concatenating in the end,
-        # 2. vectorization,
-        # 3. more efficient treatment of weeks e.g. looping just via days
-
-        for id in self.oneActivity.genericID.unique():
-            vehicleSubset = self.oneActivity[self.oneActivity.genericID == id].reset_index(drop=True)
+        # 2. vectorization
+        df = self.oneActivity.copy()
+        df = df[['genericID', 'firstBin', 'lastBin', 'valPerBin']]
+        for id in df.genericID.unique():
+            vehicleSubset = df[df.genericID == id].reset_index(drop=True)
             for irow in range(len(vehicleSubset)):
                 if self.isWeek:
                     # colIdx = (weekday,
@@ -758,16 +758,18 @@ class TimeDiscretiser:
                  fileKey=('outputDiaryBuilder'), manualLabel=str(self.columnToDiscretise),
                  localPathConfig=self.localPathConfig, globalConfig=self.globalConfig)
 
-    @profile(immediate=True)
     def discretise(self, column: str):
         self.columnToDiscretise = column
         print(f"Starting to discretise {self.columnToDiscretise}.")
+        start_time = time.time()
         self._datasetCleanup()
         self._createDiscretisedStructure()
         self._identifyBinShares()
         self._allocateBinShares()
-        self._writeOutput()
+        # self._writeOutput()
         print(f"Discretisation finished for {self.columnToDiscretise}.")
+        needed_time = time.time()-start_time
+        print(f"Needed time to discretise {self.columnToDiscretise}: {needed_time}")
         self.columnToDiscretise = None
         return self.discreteData
 
