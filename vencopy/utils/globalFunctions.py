@@ -173,13 +173,10 @@ def writeProfilesToCSV(profileDictOut, globalConfig: dict, localPathConfig: dict
                 header=True)
 
 
-def writeOut(dataset, outputFolder, fileKey, manualLabel, datasetID, localPathConfig, globalConfig):
-    dataset.to_csv(Path(localPathConfig['pathAbsolute']['vencoPyRoot']) / globalConfig['pathRelative'][outputFolder] /
-                   createFileString(globalConfig=globalConfig, manualLabel=manualLabel, fileKey=fileKey,
-                                    datasetID=datasetID))
-    print(('Dataset written to ' + str(createFileString(globalConfig=globalConfig,
-                                                        fileKey=fileKey,
-                                                        datasetID=datasetID))))
+def writeOut(data: pd.DataFrame, path: Path):
+    data.to_csv(path)
+    print(f'Dataset written to {path}')
+
 
 def dumpReferenceData(data: pd.DataFrame, tag: str, path: Path):
     """_summary_

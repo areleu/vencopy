@@ -337,8 +337,12 @@ class FlexEstimator:
         return actsFilt.reset_index()
 
     def writeOutput(self):
-        writeOut(dataset=self.activities, outputFolder='flexOutput', fileKey='outputFlexEstimator', manualLabel='',
-                 datasetID=self.datasetID, localPathConfig=self.localPathConfig, globalConfig=self.globalConfig)
+        # FIXME: fix config variables and other parameters
+        writeOut(Path(self.localPathConfig['pathAbsolute']['vencoPyRoot']) / globalConfig['pathRelative'][outputFolder] /
+                   createFileString(globalConfig=globalConfig, manualLabel=manualLabel, fileKey=fileKey,
+                                    datasetID=datasetID))
+        # writeOut(dataset=self.activities, outputFolder='flexOutput', fileKey='outputFlexEstimator', manualLabel='',
+        #          datasetID=self.datasetID, localPathConfig=self.localPathConfig, globalConfig=self.globalConfig)
 
     def estimateTechnicalFlexibility(self, filterFuelNeed: bool = True):
         """Main run function for the class WeekFlexEstimator. Calculates uncontrolled charging as well as technical
