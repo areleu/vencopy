@@ -1,9 +1,9 @@
-__version__ = "0.1.X"
+__version__ = "1.0.0"
 __maintainer__ = "Niklas Wulff"
-__contributors__ = "Fabia Miorelli, Parth Butte"
+__contributors__ = "Fabia Miorelli"
 __email__ = "Niklas.Wulff@dlr.de"
 __birthdate__ = "23.10.2020"
-__status__ = "dev"  # options are: dev, test, prod
+__status__ = "test"  # options are: dev, test, prod
 __license__ = "BSD-3-Clause"
 
 
@@ -47,20 +47,19 @@ if __name__ == "__main__":
     vpFlex = FlexEstimator(configDict=configDict, datasetID=datasetID, activities=vpGrid.activities)
     vpFlex.estimateTechnicalFlexibility()
 
-    if 'postFlex' in configDict['globalConfig']['validation']['tags']:
-        dumpReferenceData(data=vpFlex.activities,
-                          tag='postFlex',
-                          path=Path(configDict['globalConfig']['validation']['path']))
+    # if 'postFlex' in configDict['globalConfig']['validation']['tags']:
+    #     dumpReferenceData(data=vpFlex.activities,
+    #                       tag='postFlex',
+    #                       path=Path(configDict['globalConfig']['validation']['path']))
 
-    # vpDiary = DiaryBuilder(configDict=configDict, datasetID=datasetID, activities=vpFlex.activities)
-    # vpDiary.createDiaries()
+    vpDiary = DiaryBuilder(configDict=configDict, datasetID=datasetID, activities=vpFlex.activities)
+    vpDiary.createDiaries()
 
-    # vpWDB = WeekDiaryBuilder(activities=vpGrid.activities, catCols=['areaType'])
-    # vpWDB.composeWeekActivities(nWeeks=nWeeks, seed=seed, replace=replace)
+    vpWDB = WeekDiaryBuilder(activities=vpGrid.activities, catCols=['areaType'])
+    vpWDB.composeWeekActivities(nWeeks=500, seed=42, replace=True)
 
-    # vpWeFlex = WeekFlexEstimator(configDict=configDict, datasetID=datasetID, activities=weekActs,
-    #                                  threshold=t)
-    # vpWeFlex.estimateTechnicalFlexibility()
+    vpWeFlex = WeekFlexEstimator(configDict=configDict, datasetID=datasetID, activities=vpWDB.activities, threshold=0.8)
+    vpWeFlex.estimateTechnicalFlexibility()
 
     # profiles = ("drain")
     # vpProfile = ProfileAggregator(configDict=configDict, datasetID=datasetID,
