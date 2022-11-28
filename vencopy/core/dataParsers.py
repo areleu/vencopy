@@ -975,11 +975,9 @@ class IntermediateParsing(DataParser):
 
     def _harmonizeVariablesGenericIdNames(self):
         """
-
+        Harmonises ID variables for all datasets.
         """
-        self.data["genericID"] = self.data[
-            str(self.parseConfig["IDVariablesNames"][self.datasetID])
-        ]
+        self.data["genericID"] = (self.data[str(self.parseConfig["IDVariablesNames"][self.datasetID])]).astype(int)
         print("Finished harmonization of ID variables")
 
 
