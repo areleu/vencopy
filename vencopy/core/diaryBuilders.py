@@ -45,14 +45,17 @@ class DiaryBuilder:
             method="select")
 
     def createDiaries(self):
-        # self.drain = self.distributedActivities.discretise(column="drain")
-        # self.chargingPower = self.selectedActivities.discretise(column="chargingPower")
+        start_time = time.time()
+        self.drain = self.distributedActivities.discretise(column="drain")
+        self.chargingPower = self.selectedActivities.discretise(column="availablePower")
         self.uncontrolledCharge = self.distributedActivities.discretise(column="uncontrolledCharge")
-        # self.maxBatteryLevel = self.selectedActivities.discretise(column="maxBatteryLevelStart")
-        # self.minBatteryLevel = self.selectedActivities.discretise(column="minBatteryLevelStart")
+        self.maxBatteryLevel = self.selectedActivities.discretise(column="maxBatteryLevelStart")
+        self.minBatteryLevel = self.selectedActivities.discretise(column="minBatteryLevelStart")
         # # self.residualNeed = self.distributedActivities.discretise(column="residualNeed") # in elec terms kWh elec
         # # self.maxBatteryLevelEnd = self.selectedActivities.discretise(column="maxBatteryLevelEnd")
         # # self.minBatteryLevelEnd = self.selectedActivities.discretise(column="minBatteryLevelEnd")
+        needed_time = time.time()-start_time
+        print(f"Needed time to discretise all columns: {needed_time}")
 
 
 class WeekDiaryBuilder:
@@ -632,8 +635,9 @@ class TimeDiscretiser:
         # self.activities['firstBin'] = self.activities['startTimeFromMidnightSeconds'].apply(
         # lambda x: np.where(x >= self.binFromMidnightSeconds)[0][-1])
         # more efficient below (edge case of value bigger than any bin, index will be -1)
-        self.oneActivity['firstBin'] = self.oneActivity['startTimeFromMidnightSeconds'].apply(
-            lambda x: np.argmax(x < self.binFromMidnightSeconds)-1)
+        self.oneActivity['firstBin'] = (self.oneActivity['startTimeFromMidnightSeconds'].apply(
+            lambda x: np.argmax(x < self.binFromMidnightSeconds)-1)).astype(int)
+        
 
     def _identifyLastBin(self):
         """FIXME: Add docstring
@@ -651,7 +655,7 @@ class TimeDiscretiser:
         # self.activities['lastBin'] = self.activities['endTimeFromMidnightSeconds'].apply(
         #                 lambda x: np.argmax(x < self.binFromMidnightSeconds)-1)
         # Option 3
-        self.oneActivity['lastBin'] = self.oneActivity['firstBin'] + self.oneActivity['nBins'] - 1
+        self.oneActivity['lastBin'] = (self.oneActivity['firstBin'] + self.oneActivity['nBins'] - 1).astype(int)
         # FIXME: more elegant way for lastBin +1 if lastActivity = True -> +1 ?
         self.oneActivity.loc[self.oneActivity['isLastActivity'], 'lastBin'] = (
             self.oneActivity.loc[self.oneActivity['isLastActivity'], 'lastBin'] + 1)
@@ -731,14 +735,11 @@ class TimeDiscretiser:
     def discretise(self, column: str):
         self.columnToDiscretise = column
         print(f"Starting to discretise {self.columnToDiscretise}.")
-        start_time = time.time()
         self._datasetCleanup()
         self._identifyBinShares()
         self._allocateBinShares()
         # self._writeOutput()
         print(f"Discretisation finished for {self.columnToDiscretise}.")
-        needed_time = time.time()-start_time
-        print(f"Needed time to discretise {self.columnToDiscretise}: {needed_time}")
         self.columnToDiscretise = None
         return self.discreteData
 
