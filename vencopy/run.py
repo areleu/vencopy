@@ -47,10 +47,10 @@ if __name__ == "__main__":
     vpFlex = FlexEstimator(configDict=configDict, datasetID=datasetID, activities=vpGrid.activities)
     vpFlex.estimateTechnicalFlexibility()
 
-    if 'postFlex' in configDict['globalConfig']['validation']['tags']:
-        dumpReferenceData(data=vpFlex.activities,
-                          tag='postFlex',
-                          path=Path(configDict['globalConfig']['validation']['path']))
+    # if 'postFlex' in configDict['globalConfig']['validation']['tags']:
+    #     dumpReferenceData(data=vpFlex.activities,
+    #                       tag='postFlex',
+    #                       path=Path(configDict['globalConfig']['validation']['path']))
 
     vpDiary = DiaryBuilder(configDict=configDict, datasetID=datasetID, activities=vpFlex.activities)
     vpDiary.createDiaries()
