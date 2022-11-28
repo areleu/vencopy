@@ -68,7 +68,7 @@ class FlexEstimator:
         actTemp = pd.concat([firstParkActs, firstTripActs])
 
         # Start and end for all trips and parkings in between
-        setActs = range(self.activities['parkID'].max() + 1)
+        setActs = range(int(self.activities['parkID'].max()) + 1)
         tripActsRes = pd.DataFrame()
         for act in setActs:
             print(f'Calculate maximum battery level for act {act}')
@@ -109,7 +109,7 @@ class FlexEstimator:
         actTemp = lastActs
 
         # Start and end for all trips and parkings starting from the last activities, then looping to earlier acts
-        setActs = range(self.activities['parkID'].max() - 1, -1, -1)
+        setActs = range(int(self.activities['parkID'].max()) - 1, -1, -1)
         for act in setActs:
             print(f'Calculate minimum battery level for act {act}')
             tripRows = (self.activities['tripID'] == act) & (~self.activities['isLastActivity'])
@@ -340,7 +340,7 @@ class FlexEstimator:
         writeOut(dataset=self.activities, outputFolder='flexOutput', fileKey='outputFlexEstimator', manualLabel='',
                  datasetID=self.datasetID, localPathConfig=self.localPathConfig, globalConfig=self.globalConfig)
 
-    def estimateTechnicalFlexibility(self, filterFuelNeed: bool=True):
+    def estimateTechnicalFlexibility(self, filterFuelNeed: bool = True):
         """Main run function for the class WeekFlexEstimator. Calculates uncontrolled charging as well as technical
         boundary constraints for controlled charging and feeding electricity back into the grid on an indvidiual vehicle
         basis. If filterFuelNeed is True, only electrifiable days are considered.
@@ -421,7 +421,7 @@ class WeekFlexEstimator(FlexEstimator):
             startLevel=startLevel)
 
         # Start and end for all trips and parkings in between
-        setActs = range(self.activities['actID'].max() + 1)
+        setActs = range(int(self.activities['actID'].max()) + 1)
         for act in setActs:
             print(f'Calculate maximum battery level for actID (park and trip) {act}')
             if act != 0:
@@ -506,7 +506,7 @@ class WeekFlexEstimator(FlexEstimator):
         self.__calcMinBatBeforeLastAct()
 
         # Start and end for all trips and parkings in between
-        setActs = range(self.activities['actID'].max()-1, -1, -1)
+        setActs = range(int(self.activities['actID'].max())-1, -1, -1)
         for act in setActs:
             print(f'Calculate minimum battery level for actID (park and trip) {act}')
             self.__shiftBatLevStart()

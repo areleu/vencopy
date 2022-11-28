@@ -1068,7 +1068,6 @@ class ParseMiD(IntermediateParsing):
             'tripStartWeek', 'tripStartHour', 'tripStartMinute', 'tripEndHour', 'tripEndMinute', 'genericID_prev',
             'genericID_next', 'colFromIndex'], inplace=True)
 
-
     def process(self, splitOvernightTrips: bool = True):
         """
         Wrapper function for harmonising and filtering the activities dataset as well as adding parking rows.

@@ -32,12 +32,12 @@ if __name__ == '__main__':
     datasetID = 'MiD17'
     configNames = ('globalConfig', 'localPathConfig', 'parseConfig', 'gridConfig', 'flexConfig', 'diaryConfig',
                    'evaluatorConfig')
-    basePath = Path(__file__).parent.parent
+    basePath = Path(__file__).parent.parent.parent / 'vencopy'
     configDict = loadConfigDict(configNames, basePath)
     createOutputFolders(configDict=configDict)
 
     CALC = True
-    FN = 'vpWeFlex_acts_areaType_t07n200b40'
+    FN = 'vpWeFlex_acts_areaType_t08n500b30'
 
     if CALC:
         vpData = ParseMiD(configDict=configDict, datasetID=datasetID)
@@ -45,13 +45,13 @@ if __name__ == '__main__':
 
         # Grid model application
         vpGrid = GridModeler(configDict=configDict, datasetID=datasetID, activities=vpData.activities,
-                             gridModel='probability')
+                             gridModel='simple')
         vpGrid.assignGrid()
 
         # Week diary building
         vpWDB = WeekDiaryBuilder(activities=vpGrid.activities, catCols=['areaType'])
         vpWDB.summarizeSamplingBases()
-        vpWDB.composeWeekActivities(seed=42, nWeeks=100, replace=True)
+        vpWDB.composeWeekActivities(seed=42, nWeeks=500, replace=True)
 
         # Estimate charging flexibility based on driving profiles and charge connection
         vpWeFlex = WeekFlexEstimator(configDict=configDict,

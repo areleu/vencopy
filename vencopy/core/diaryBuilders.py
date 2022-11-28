@@ -696,13 +696,12 @@ class TimeDiscretiser:
         """
         # FIXME: Idea for performance improvement: Apply allocate() to groupby-slices with by=['weekday', 'actID']
         for d in self.weekdays:
-            self._allocate(self.oneActivity.loc[self.oneActivity['weekdayStr'] == d, :], weekday=d)
+            self._allocate(weekday=d)  # self.oneActivity.loc[self.oneActivity['weekdayStr'] == d, :]
             # just for performance improvements purposes
-            self._allocateFast(self.oneActivity.loc[self.oneActivity['weekdayStr'] == d, :], weekday=d)
+            # self._allocateFast(self.oneActivity.loc[self.oneActivity['weekdayStr'] == d, :], weekday=d)
 
         # New implementation
-        self.oneActivity.groupby(by=['weekdayStr', 'actID'])._allocateFast()
-
+        # self.oneActivity.groupby(by=['weekdayStr', 'actID'])._allocateFast()
 
     def _allocate(self, weekday: str = None):
         # FIXME: Performance improvements by 1. vectorization, 2. not subsetting but concatenating in the end,
@@ -725,7 +724,7 @@ class TimeDiscretiser:
         return self.discreteData
 
     def _allocateFast(acts):
-        for irow in range(len(vehicleSubset)):
+        for irow in range(len(acts)):
             if self.isWeek:
                 # colIdx = (weekday,
                 #           IDXSLICE[(vehicleSubset.loc[irow, 'firstBin']):(vehicleSubset.loc[irow, 'lastBin'])]

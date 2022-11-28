@@ -1,4 +1,4 @@
-name: VencoPy_env
+name: vencopy
 channels:
   - conda-forge
   - defaults
@@ -6,13 +6,12 @@ dependencies:
   - click
   - jupyterlab
   - matplotlib
-  - openpyxlcon
-  - pandas=1.1.1
+  - openpyxl
+  - pandas
   - python=3.9
   - pyyaml
   - seaborn
   - sphinx
   - sphinx_rtd_theme
-  - xlrd=1.2.0
   - yaml
     
