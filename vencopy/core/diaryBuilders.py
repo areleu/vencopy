@@ -704,12 +704,6 @@ class TimeDiscretiser:
         # self.oneActivity.groupby(by=['weekdayStr', 'actID'])._allocateFast()
 
     def _allocate(self, weekday: str = None):
-<<<<<<< Updated upstream
-        # FIXME: Performance improvements by 1. vectorization, 2. not subsetting but concatenating in the end,
-        # 3. more efficient treatment of weeks e.g. looping just via days
-        for id in self.oneActivity.genericID.unique():
-            vehicleSubset = self.oneActivity[self.oneActivity.genericID == id].reset_index(drop=True)
-=======
         """
         Loops over every activity (row) and allocates the respective value per bin (valPerBin) to each column 
         specified in the columns firstBin and lastBin.
@@ -728,7 +722,6 @@ class TimeDiscretiser:
         df = df[['genericID', 'firstBin', 'lastBin', 'valPerBin']]
         for id in df.genericID.unique():
             vehicleSubset = df[df.genericID == id].reset_index(drop=True)
->>>>>>> Stashed changes
             for irow in range(len(vehicleSubset)):
                 if self.isWeek:
                     # colIdx = (weekday,
