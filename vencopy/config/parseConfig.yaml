@@ -76,7 +76,7 @@ dataVariables:
     hpAge: ["NA", "alter_gr5", "NA", "alter_gr5"]
     hpJob: ["NA", "taet", "NA", "taet"]
     bundesland: ["NA", "BLAND", "NA", "BLAND"]
-    areaType: ["NA", "SKTYP", "NA", "SKTYP"]
+    areaType: ["NA", "SKTYP", "k50", "SKTYP"]
     garage: ["NA", "garage", "NA", "garage"]
 
     #    tripStartLocation: [ 'NA', 'KKZ_SO' ]
@@ -146,6 +146,7 @@ inputDTypes:
         tripDistance: "float"
         travelTime: "int"
         tripStartDate: "str"
+        areaType: "int"
     VF:
         isMIVDriver: "bool"
         vehicleID: "int"
