@@ -21,10 +21,11 @@ make.bat
 # Git version conflict files
 *.py.orig
 
-# Output folders and files such as pickle files
+# Output folders and checkpoint files such as pickle and HDF5 files
 /vencopy/output/*
 /vencopy/snippets/out
 *.p
+*.h5f
 
 # files with local paths
 vencopy/config/localPathConfig.yaml
