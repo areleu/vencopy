@@ -17,7 +17,7 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 from scipy.stats.sampling import DiscreteAliasUrn
-from vencopy.utils.globalFunctions import loadConfigDict, writeOut
+from vencopy.utils.globalFunctions import createFileName, loadConfigDict, writeOut
 from vencopy.core.dataParsers import ParseMiD, ParseKiD, ParseVF
 
 
@@ -142,8 +142,12 @@ class GridModeler:
         return acts
 
     def writeOutput(self):
-        writeOut(dataset=self.activities, outputFolder='gridOutput', fileKey='outputGridModeler', manualLabel='',
-                 datasetID=self.datasetID, localPathConfig=self.localPathConfig, globalConfig=self.globalConfig)
+        root = Path(self.localPathConfig['pathAbsolute']['vencoPyRoot'])
+        folder = self.globalConfig['pathRelative']['gridOutput']
+        fileName = createFileName(globalConfig=self.globalConfig, manualLabel='', file='outputGridModeler',
+                                    datasetID=self.datasetID)
+        writeOut(data = self.activities, path = root / folder / fileName)
+
 
 
 if __name__ == "__main__":

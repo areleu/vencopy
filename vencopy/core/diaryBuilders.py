@@ -20,7 +20,7 @@ import pandas as pd
 from vencopy.core.dataParsers import ParseKiD, ParseMiD, ParseVF
 from vencopy.core.flexEstimators import FlexEstimator
 from vencopy.core.gridModelers import GridModeler
-from vencopy.utils.globalFunctions import loadConfigDict, writeOut
+from vencopy.utils.globalFunctions import createFileName, loadConfigDict, writeOut
 
 IDXSLICE = pd.IndexSlice
 
@@ -755,9 +755,11 @@ class TimeDiscretiser:
         return self.discreteDataFast
 
     def _writeOutput(self):
-        writeOut(dataset=self.discreteData, outputFolder='diaryOutput', datasetID=self.datasetID,
-                 fileKey=('outputDiaryBuilder'), manualLabel=str(self.columnToDiscretise),
-                 localPathConfig=self.localPathConfig, globalConfig=self.globalConfig)
+        root = Path(self.localPathConfig['pathAbsolute']['vencoPyRoot'])
+        folder = self.globalConfig['pathRelative']['diaryOutput']
+        fileName = createFileName(globalConfig=self.globalConfig, manualLabel=self.columnToDiscretise, file='outputDiaryBuilder',
+                                    datasetID=self.datasetID)
+        writeOut(data = self.activities, path = root / folder / fileName)
 
     def discretise(self, column: str):
         self.columnToDiscretise = column

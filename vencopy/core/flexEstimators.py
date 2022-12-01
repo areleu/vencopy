@@ -344,11 +344,6 @@ class FlexEstimator:
                                     datasetID=self.datasetID)
         writeOut(data = self.activities, path = root / folder / fileName)
 
-        # writeOut(dataset=self.activities,
-        #          outputFolder='flexOutput',
-        #          fileKey='outputFlexEstimator',
-        #          manualLabel='',
-        #          datasetID=self.datasetID, localPathConfig=self.localPathConfig, globalConfig=self.globalConfig)
 
     def estimateTechnicalFlexibility(self, filterFuelNeed: bool = True):
         """
