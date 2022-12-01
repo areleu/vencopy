@@ -19,7 +19,7 @@ import pandas as pd
 
 from vencopy.core.dataParsers import ParseKiD, ParseMiD, ParseVF
 from vencopy.core.gridModelers import GridModeler
-from vencopy.utils.globalFunctions import loadConfigDict, writeOut
+from vencopy.utils.globalFunctions import createFileName, loadConfigDict, writeOut
 
 
 class FlexEstimator:
@@ -311,7 +311,8 @@ class FlexEstimator:
             'Fuel_consumption'] / self.flexConfig['Electric_consumption']
 
     def _filterResidualNeed(self, acts: pd.DataFrame, indexCols: list):
-        """Filter out days (genericIDs) that require additional fuel, i.e. for which the trip distance cannot be
+        """
+        Filter out days (genericIDs) that require additional fuel, i.e. for which the trip distance cannot be
         completely be fulfilled with the available charging power. Since additional fuel for a single trip motivates
         filtering out the whole vehicle, indexCol defines the columns that make up one vehicle. If indexCols is
         ['genericID'], all genericIDs that have at least one trip requiring fuel are disregarded. If indexCols is
@@ -337,15 +338,21 @@ class FlexEstimator:
         return actsFilt.reset_index()
 
     def writeOutput(self):
-        # FIXME: fix config variables and other parameters
-        writeOut(Path(self.localPathConfig['pathAbsolute']['vencoPyRoot']) / globalConfig['pathRelative'][outputFolder] /
-                   createFileString(globalConfig=globalConfig, manualLabel=manualLabel, fileKey=fileKey,
-                                    datasetID=datasetID))
-        # writeOut(dataset=self.activities, outputFolder='flexOutput', fileKey='outputFlexEstimator', manualLabel='',
+        root = Path(self.localPathConfig['pathAbsolute']['vencoPyRoot'])
+        folder = self.globalConfig['pathRelative']['flexOutput']
+        fileName = createFileName(globalConfig=self.globalConfig, manualLabel='', file='outputFlexEstimator',
+                                    datasetID=self.datasetID)
+        writeOut(data = self.activities, path = root / folder / fileName)
+
+        # writeOut(dataset=self.activities,
+        #          outputFolder='flexOutput',
+        #          fileKey='outputFlexEstimator',
+        #          manualLabel='',
         #          datasetID=self.datasetID, localPathConfig=self.localPathConfig, globalConfig=self.globalConfig)
 
     def estimateTechnicalFlexibility(self, filterFuelNeed: bool = True):
-        """Main run function for the class WeekFlexEstimator. Calculates uncontrolled charging as well as technical
+        """
+        Main run function for the class WeekFlexEstimator. Calculates uncontrolled charging as well as technical
         boundary constraints for controlled charging and feeding electricity back into the grid on an indvidiual vehicle
         basis. If filterFuelNeed is True, only electrifiable days are considered.
 
@@ -365,7 +372,6 @@ class FlexEstimator:
         self.__batteryLevelMin()
         if filterFuelNeed:
             self.activities = self._filterResidualNeed(acts=self.activities, indexCols=['genericID'])
-
         print("Technical flexibility estimation ended")
         return self.activities
 
@@ -395,13 +401,13 @@ class WeekFlexEstimator(FlexEstimator):
         self._maxChargeVolumePerParkingAct()
 
     def __calcTimedeltaONActs(self, ONIdx: pd.Series):
-        """Calculate the timedelta for week activity chains between two synthetically merged days neglecting the dates (
+        """
+        Calculate the timedelta for week activity chains between two synthetically merged days neglecting the dates (
             year-month-day) and only taking into account the start and end timestamps of the overnight parking activity.
 
         Args:
             ONIdx (pd.Series): Boolean series identifying overnight park activities in the week activity chain
         """
-
         ONActs = self.activities.loc[ONIdx, :]
         tsEndWODate = pd.to_timedelta(ONActs['timestampEnd'].dt.hour, unit='h') + pd.to_timedelta(
             ONActs['timestampEnd'].dt.minute, unit='m') + pd.to_timedelta(1, unit='d')
@@ -435,7 +441,8 @@ class WeekFlexEstimator(FlexEstimator):
             self.__maxBatLevTrips(tripID=act)
 
     def _getFirstActIdx(self):
-        """Method to return the first activities. In the week diary, the activities are reset in strict ascending order
+        """
+        Method to return the first activities. In the week diary, the activities are reset in strict ascending order
         currently neglecting the edge case of overnight trips. Thus all week activity chains have the exact same 
         beginning of the first activity being a park activity with parkID==0, then a trip with tripID==0, then a park
         activity with parkID==1 and so forth.
@@ -446,14 +453,16 @@ class WeekFlexEstimator(FlexEstimator):
         return self.activities['isFirstActivity']
 
     def __shiftBatLevEnd(self):
-        """Shifts the battery level at end of the previous trip to current activity for battery calculation to the next
+        """
+        Shifts the battery level at end of the previous trip to current activity for battery calculation to the next
         activity. This is always called between maxBatLevTrips() and maxBatLevPark() before setting the 
         variables.
         """
         self.activities['maxBatteryLevelEnd_prev'] = self.activities['maxBatteryLevelEnd'].shift(1)
 
     def __maxBatLevTrips(self, tripID: int):
-        """Calculates the maximum battery level for trip activities in the week activity chain.
+        """
+        Calculates the maximum battery level for trip activities in the week activity chain.
         """
         idx = self.activities['tripID'] == tripID
 
@@ -467,7 +476,8 @@ class WeekFlexEstimator(FlexEstimator):
             self.activities.loc[idx, 'maxBatteryLevelEnd_unlimited'] < 0, other=0)
 
     def __maxBatLevPark(self, parkID: int, useThreshold: bool = False):
-        """Calculates the maximum battery level for all park activities of parkID corresponding to parkID in the week 
+        """
+        Calculates the maximum battery level for all park activities of parkID corresponding to parkID in the week 
         activity chain. If useThreshold==True, charging only occurs once the batteryLevel at beginning of the activity 
         falls below the threshold given in self.thresholdAbsolute. 
         """
@@ -498,13 +508,13 @@ class WeekFlexEstimator(FlexEstimator):
         self.activities['maxOvershoot'] = tmpOvershoot.where(tmpOvershoot >= 0, other=0)
 
     def _batteryLevelMin(self):
-        """ Calculate the minimum battery level at the beginning and end of each activity. This represents the case of
+        """
+        Calculate the minimum battery level at the beginning and end of each activity. This represents the case of
         vehicles just being charged for the energy required for the next trip and as late as possible. The loop works
         exactly inverted to the batteryLevelMax() function since later trips influence the energy that has to be
         charged in parking activities before. Thus, activities are looped over from the last activity to first. 
         For week flexibility estimation, it can not always be assured that the last activity is a parking activity. 
         """
-
         print('Starting minimum battery level calculation')
         self.activities.loc[self.activities['isLastActivity'], :] = self._calcMinBatLastAct()
         self.__calcMinBatBeforeLastAct()
@@ -519,7 +529,8 @@ class WeekFlexEstimator(FlexEstimator):
             self.__minBatLevPark(parkID=act)
 
     def __calcMinBatBeforeLastAct(self):
-        """Calculate the minimum battery level attributes only for the activities with the same activityID as the last
+        """
+        Calculate the minimum battery level attributes only for the activities with the same activityID as the last
         activity that are not the last activity. This function is used to start with a clean unified setup in the 
         loop of __batteryLevelMin(). Those activities are all park activities.
         """
@@ -541,13 +552,15 @@ class WeekFlexEstimator(FlexEstimator):
         self.activities.drop(columns=['isLastActivity_next', 'actID_next'])
 
     def __shiftBatLevStart(self):
-        """Shifts the battery level at start of the next trip to current activity for battery calculation. This is 
+        """
+        Shifts the battery level at start of the next trip to current activity for battery calculation. This is 
         always called between minBatLevTrips() and minBatLevPark() before setting the battery level variables.
         """
         self.activities['minBatteryLevelStart_next'] = self.activities['minBatteryLevelStart'].shift(-1)
 
     def __minBatLevTrips(self, tripID: int):
-        """Calculate minimum battery levels for given tripID. The calculated battery levels only suffice for the trips
+        """
+        Calculate minimum battery levels for given tripID. The calculated battery levels only suffice for the trips
         and thus describe a technical lower level for each activity. This function is called looping through the parking
         activities from largest to smallest. The column "minOvershoot" describes electricity volume that can be charged
         beyond the given battery capacity.
@@ -567,7 +580,8 @@ class WeekFlexEstimator(FlexEstimator):
         self.activities.loc[idx, 'minResidualNeed'] = resNeed.where(resNeed >= 0, other=0)
 
     def __minBatLevPark(self, parkID: int):
-        """Calculate minimum battery levels for given parking activities based on the given next trip activities.
+        """
+        Calculate minimum battery levels for given parking activities based on the given next trip activities.
         The calculated battery levels only suffice for the trips and thus describe a technical lower level for
         each activity. This function is called looping through the parking activities from largest to smallest.
         The column "minOvershoot" describes electricity volume that can be charged beyond the given battery
@@ -588,7 +602,8 @@ class WeekFlexEstimator(FlexEstimator):
         self.activities.loc[idx, 'minUndershoot'] = tmpUndershoot.where(tmpUndershoot >= 0, other=0)
 
     def estimateTechnicalFlexibility(self, filterFuelNeed: bool=True):
-        """Main run function for the class WeekFlexEstimator. Calculates uncontrolled charging as well as technical
+        """
+        Main run function for the class WeekFlexEstimator. Calculates uncontrolled charging as well as technical
         boundary constraints for controlled charging and feeding electricity back into the grid on an indvidiual vehicle
         basis. If filterFuelNeed is True, only electrifiable weeks are considered.
 
@@ -609,7 +624,6 @@ class WeekFlexEstimator(FlexEstimator):
         self._batteryLevelMin()
         if filterFuelNeed:
             self.activities = self._filterResidualNeed(acts=self.activities, indexCols=['categoryID', 'weekID'])
-
         print('Technical flexibility estimation for one week ended considering the plugging threshold of ')
         print(f'{self.thresholdSOC}')
         return self.activities
