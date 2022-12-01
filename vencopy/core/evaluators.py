@@ -13,7 +13,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 from vencopy.utils.globalFunctions import (
-    createFileString,
+    createFileName,
     calculateWeightedAverage,
     mergeDataToWeightsAndDays,
     writeProfilesToCSV,
@@ -76,7 +76,7 @@ class Evaluator:
                 dataIn = pd.read_csv(
                     Path(self.localPathConfig["pathAbsolute"]["vencoPyRoot"])
                     / (self.globalConfig["pathRelative"]["diaryOutput"])
-                    / createFileString(
+                    / createFileName(
                         globalConfig=self.globalConfig,
                         fileKey=iFileKey,
                         datasetID=iDat,
@@ -343,7 +343,7 @@ class Evaluator:
         if self.evaluatorConfig["plotConfig"]["show"]:
             plt.show()
         if self.evaluatorConfig["plotConfig"]["save"]:
-            fileName = createFileString(
+            fileName = createFileName(
                 globalConfig=self.globalConfig,
                 fileKey="aggPlotName",
                 manualLabel=self.globalConfig["labels"]["runLabel"],
@@ -434,7 +434,7 @@ class Evaluator:
         plt.legend(loc="upper center")
         plt.tight_layout()
         filePlot = pathOutput / Path(
-            createFileString(
+            createFileName(
                 globalConfig=self.globalConfig,
                 datasetID=flexEstimator.datasetID,
                 fileKey="flexPlotName",
@@ -760,7 +760,7 @@ class Evaluator:
         if write:
             plt.savefig(Path(self.localPathConfig['pathAbsolute']['vencoPyRoot']) /
                              self.globalConfig['pathRelative']['evalOutput'] /
-                             createFileString(globalConfig=self.globalConfig,
+                             createFileName(globalConfig=self.globalConfig,
                                             fileKey='vencoPyOutput',
                                             manualLabel='purposeDist',
                                             filetypeStr='png'),
@@ -807,7 +807,7 @@ class Evaluator:
         if write:
             plt.savefig(Path(self.localPathConfig['pathAbsolute']['vencoPyRoot']) /
                              self.globalConfig['pathRelative']['evalOutput'] /
-                             createFileString(globalConfig=self.globalConfig,
+                             createFileName(globalConfig=self.globalConfig,
                                             fileKey='vencoPyOutput',
                                             manualLabel='powerDist',
                                             filetypeStr='png'),

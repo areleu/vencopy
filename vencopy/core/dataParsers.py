@@ -22,7 +22,7 @@ import numpy as np
 import pandas as pd
 from profilehooks import profile
 
-from vencopy.utils.globalFunctions import loadConfigDict, replace_vec, writeOut
+from vencopy.utils.globalFunctions import createFileName, loadConfigDict, replace_vec, writeOut
 from vencopy.utils.globalFunctions import returnDictBottomKeys, returnDictBottomValues
 
 
@@ -818,9 +818,11 @@ class DataParser:
         raise NotImplementedError('Implement process method for DataParser.')
 
     def writeOutput(self):
-        writeOut(dataset=self.activities, outputFolder='diaryOutput', fileKey='outputDataParser', manualLabel='',
-                 datasetID=self.datasetID, localPathConfig=self.localPathConfig, globalConfig=self.globalConfig)
-
+        root = Path(self.localPathConfig['pathAbsolute']['vencoPyRoot'])
+        folder = self.globalConfig['pathRelative']['parseOutput']
+        fileName = createFileName(globalConfig=self.globalConfig, manualLabel='', file='outputDataParser',
+                                  datasetID=self.datasetID)
+        writeOut(data = self.activities, path = root / folder / fileName)
 
 class IntermediateParsing(DataParser):
     def __init__(self, configDict: dict, datasetID: str, loadEncrypted=False, debug=False):

@@ -23,7 +23,7 @@ from vencopy.core.dataParsers import ParseKiD, ParseMiD, ParseVF
 from vencopy.core.diaryBuilders import DiaryBuilder
 from vencopy.core.flexEstimators import FlexEstimator
 from vencopy.core.gridModelers import GridModeler
-from vencopy.utils.globalFunctions import (createOutputFolders, loadConfigDict,
+from vencopy.utils.globalFunctions import (createFileName, createOutputFolders, loadConfigDict,
                                            writeOut)
 
 
@@ -117,9 +117,12 @@ class ProfileAggregator():
             self.annualProfile.tail(len(self.annualProfile)-((len(list(self.timeIndex)))-1)*365).index, inplace=True)
 
     def _writeOutput(self):
-        writeOut(dataset=self.annualProfile, outputFolder='aggregatorOutput', datasetID=self.datasetID,
-                 fileKey=('outputProfileAggregator'), manualLabel=str(self.profileName),
-                 localPathConfig=self.localPathConfig, globalConfig=self.globalConfig)
+        root = Path(self.localPathConfig['pathAbsolute']['vencoPyRoot'])
+        folder = self.globalConfig['pathRelative']['aggregatorOutput']
+        fileName = createFileName(globalConfig=self.globalConfig, manualLabel='', file='outputProfileAggregator',
+                                  datasetID=self.datasetID)
+        writeOut(data=self.activities, path=root / folder / fileName)
+
 
     def createTimeseries(self):
         profiles = (vpDiary.drain, vpDiary.uncontrolledCharge, vpDiary.chargingPower, vpDiary.maxBatteryLevel, vpDiary.minBatteryLevel)

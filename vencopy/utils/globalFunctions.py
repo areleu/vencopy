@@ -96,8 +96,8 @@ def createOutputFolders(configDict: dict):
             os.mkdir(Path(root / mainDir / subDir))
 
 
-def createFileString(globalConfig: dict, fileKey: str, datasetID: str, manualLabel: str = '',
-                     filetypeStr: str = 'csv'):
+def createFileName(globalConfig: dict, fileNameID: str, datasetID: str, manualLabel: str = '',
+                     suffix: str = 'csv'):
     """
     Generic method used for fileString compilation throughout the VencoPy framework. This method does not write any
     files but just creates the file name including the filetype suffix.
@@ -110,9 +110,9 @@ def createFileString(globalConfig: dict, fileKey: str, datasetID: str, manualLab
     :return: Full name of file to be written.
     """
     if datasetID is None:
-        return f"{globalConfig['files'][fileKey]}_{globalConfig['labels']['runLabel']}_{manualLabel}.{filetypeStr}"
-    return f"{globalConfig['files'][datasetID][fileKey]}_{globalConfig['labels']['runLabel']}_{manualLabel}" \
-           f"{datasetID}.{filetypeStr}"
+        return f"{globalConfig['files'][fileNameID]}_{globalConfig['labels']['runLabel']}_{manualLabel}.{suffix}"
+    return f"{globalConfig['files'][datasetID][fileNameID]}_{globalConfig['labels']['runLabel']}_{manualLabel}" \
+           f"{datasetID}.{suffix}"
 
 
 def mergeVariables(data, variableData, variables):
@@ -160,7 +160,7 @@ def writeProfilesToCSV(profileDictOut, globalConfig: dict, localPathConfig: dict
         dataOut = pd.DataFrame(profileDictOut)
         dataOut.to_csv(Path(
             localPathConfig['pathAbsolute']['vencoPyRoot']) / globalConfig['pathRelative']['flexOutput'] /
-            createFileString(globalConfig=globalConfig,
+            createFileName(globalConfig=globalConfig,
                              fileKey='output',
                              manualLabel=globalConfig['labels']['technologyLabel'],
                              datasetID=datasetID),
@@ -173,13 +173,10 @@ def writeProfilesToCSV(profileDictOut, globalConfig: dict, localPathConfig: dict
                 header=True)
 
 
-def writeOut(dataset, outputFolder, fileKey, manualLabel, datasetID, localPathConfig, globalConfig):
-    dataset.to_csv(Path(localPathConfig['pathAbsolute']['vencoPyRoot']) / globalConfig['pathRelative'][outputFolder] /
-                   createFileString(globalConfig=globalConfig, manualLabel=manualLabel, fileKey=fileKey,
-                                    datasetID=datasetID))
-    print(('Dataset written to ' + str(createFileString(globalConfig=globalConfig,
-                                                        fileKey=fileKey,
-                                                        datasetID=datasetID))))
+def writeOut(data: pd.DataFrame, path: Path):
+    data.to_csv(path)
+    print(f'Dataset written to {path}.')
+
 
 def dumpReferenceData(data: pd.DataFrame, tag: str, path: Path):
     """_summary_
