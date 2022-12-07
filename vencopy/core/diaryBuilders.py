@@ -47,10 +47,10 @@ class DiaryBuilder:
     def createDiaries(self):
         start_time = time.time()
         self.drain = self.distributedActivities.discretise(column="drain")
-        # self.chargingPower = self.selectedActivities.discretise(column="availablePower")
-        # self.uncontrolledCharge = self.distributedActivities.discretise(column="uncontrolledCharge")
-        # self.maxBatteryLevel = self.selectedActivities.discretise(column="maxBatteryLevelStart")
-        # self.minBatteryLevel = self.selectedActivities.discretise(column="minBatteryLevelStart")
+        self.chargingPower = self.selectedActivities.discretise(column="availablePower")
+        self.uncontrolledCharge = self.distributedActivities.discretise(column="uncontrolledCharge")
+        self.maxBatteryLevel = self.selectedActivities.discretise(column="maxBatteryLevelStart")
+        self.minBatteryLevel = self.selectedActivities.discretise(column="minBatteryLevelStart")
         # # self.residualNeed = self.distributedActivities.discretise(column="residualNeed") # in elec terms kWh elec
         # # self.maxBatteryLevelEnd = self.selectedActivities.discretise(column="maxBatteryLevelEnd")
         # # self.minBatteryLevelEnd = self.selectedActivities.discretise(column="minBatteryLevelEnd")
@@ -763,8 +763,8 @@ class TimeDiscretiser:
         root = Path(self.localPathConfig['pathAbsolute']['vencoPyRoot'])
         folder = self.globalConfig['pathRelative']['diaryOutput']
         fileName = createFileName(globalConfig=self.globalConfig, manualLabel=self.columnToDiscretise, file='outputDiaryBuilder',
-                                    datasetID=self.datasetID)
-        writeOut(data = self.activities, path = root / folder / fileName)
+                                  datasetID=self.datasetID)
+        writeOut(data=self.activities, path=root / folder / fileName)
 
     def discretise(self, column: str):
         self.columnToDiscretise = column
@@ -788,7 +788,7 @@ if __name__ == '__main__':
     configDict = loadConfigDict(configNames, basePath=basePath)
 
     if datasetID == "MiD17":
-        vpData = ParseMiD(configDict=configDict, datasetID=datasetID, debug=False)
+        vpData = ParseMiD(configDict=configDict, datasetID=datasetID, debug=True)
     elif datasetID == "KiD":
         vpData = ParseKiD(configDict=configDict, datasetID=datasetID, debug=False)
     elif datasetID == "VF":

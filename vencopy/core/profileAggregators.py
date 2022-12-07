@@ -93,6 +93,36 @@ class ProfileAggregator():
         #     for col in weekdaySubset:
         #         profileMax[col] = max(weekdaySubset[col].nsmallest(nProfilesFilter))
 
+    def socProfileSelection(self, profilesMin: pd.DataFrame, profilesMax: pd.DataFrame, filter, alpha) -> tuple:
+        """
+        Selects the nth highest value for each hour for min (max profiles based on the
+        percentage given in parameter 'alpha'. If alpha = 10, the 10%-biggest (10%-smallest)
+        value is selected, all other values are disregarded.
+        Currently, in the Venco reproduction phase, the hourly values are selected
+        independently of each other. min and max
+        profiles have to have the same number of columns.
+
+        :param profilesMin: Profiles giving minimum hypothetic SOC values to supply the driving demand at each hour
+        :param profilesMax: Profiles giving maximum hypothetic SOC values if vehicle is charged as soon as possible
+        :param filter: Filter method. Currently implemented: 'singleValue'
+        :param alpha: Percentage, giving the amount of profiles whose mobility demand can not be
+               fulfilled after selection.
+        :return: Returns the two profiles 'socMax' and 'socMin' in the same time resolution as input profiles.
+        """
+        profilesMin = profilesMin.convert_dtypes()
+        profilesMax = profilesMax.convert_dtypes()
+        if filter != 'singleValue':
+            raise ValueError('You selected a filter method that is not implemented.')
+        profileMinOut = profilesMin.iloc[0, :].copy()
+        noProfiles = len(profilesMin)
+        noProfilesFilter = int(alpha / 100 * noProfiles)
+        for col in profilesMin:
+            profileMinOut[col] = min(profilesMin[col].nlargest(noProfilesFilter))
+        profileMaxOut = profilesMax.iloc[0, :].copy()
+        for col in profilesMax:
+            profileMaxOut[col] = max(profilesMax[col].nsmallest(noProfilesFilter))
+        return profileMinOut, profileMaxOut
+
     def __composeWeeklyProfile(self):
         # input is self.weekdayProfiles
         # check if any day of the week is not filled, copy line above in that case
