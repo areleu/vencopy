@@ -399,7 +399,7 @@ class DataParser:
         day?
         """
 
-        # FIXME: If split-up to separate class, call not in ParseData but in IntermediateParsing 
+        # FIXME: If split-up to separate class, call not in ParseData but in IntermediateParsing
         self.__copyRows()
         self.__addUtilAttributes()
         self.__addParkActAfterLastTrip()
@@ -500,7 +500,7 @@ class DataParser:
         the beginning. First and last activities have to be treated separately since their dates have to match with 
         their daily activity chain. 
         """
-        
+
         self.activities = self.activities.reset_index()
         parkingActwoFirst, parkingActwoLast = self.__getParkingActsWOFirstAndLast()
 
@@ -509,7 +509,7 @@ class DataParser:
 
         self.__updateTimestampFirstParkAct()
         self.__updateTimestampLastParkAct()
-        
+
         print('Completed park timestamp adjustments')
 
     def __getParkingActsWOFirstAndLast(self) -> (pd.Series, pd.Series):
@@ -822,7 +822,8 @@ class DataParser:
         folder = self.globalConfig['pathRelative']['parseOutput']
         fileName = createFileName(globalConfig=self.globalConfig, manualLabel='', file='outputDataParser',
                                   datasetID=self.datasetID)
-        writeOut(data = self.activities, path = root / folder / fileName)
+        writeOut(data=self.activities, path=root / folder / fileName)
+
 
 class IntermediateParsing(DataParser):
     def __init__(self, configDict: dict, datasetID: str, loadEncrypted=False, debug=False):
@@ -890,6 +891,7 @@ class IntermediateParsing(DataParser):
         """
         self.data = self.rawData.loc[:, self.columns]
 
+    # FIXME: Maybe implement in two separate filtering funcs
     def _filterConsistentHours(self):
         """
         Filtering out records where starting hour is after end hour but trip
@@ -1363,7 +1365,7 @@ if __name__ == '__main__':
                    "gridConfig", "flexConfig", "aggregatorConfig", "evaluatorConfig")
     configDict = loadConfigDict(configNames, basePath)
 
-    datasetID = "KiD"  # options are MiD08, MiD17, KiD
+    datasetID = "MiD17"  # options are MiD08, MiD17, KiD
     if datasetID == "MiD17":
         vpData = ParseMiD(configDict=configDict, datasetID=datasetID, debug=False)
     elif datasetID == "KiD":
@@ -1371,4 +1373,4 @@ if __name__ == '__main__':
     elif datasetID == "VF":
         vpData = ParseVF(configDict=configDict, datasetID=datasetID, debug=False)
     vpData.process()
-    # vpData.writeOutput()
+    vpData.writeOutput()
