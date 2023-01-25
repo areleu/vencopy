@@ -399,7 +399,7 @@ class DataParser:
         day?
         """
 
-        # FIXME: If split-up to separate class, call not in ParseData but in IntermediateParsing 
+        # FIXME: If split-up to separate class, call not in ParseData but in IntermediateParsing
         self.__copyRows()
         self.__addUtilAttributes()
         self.__addParkActAfterLastTrip()
@@ -500,7 +500,7 @@ class DataParser:
         the beginning. First and last activities have to be treated separately since their dates have to match with 
         their daily activity chain. 
         """
-        
+
         self.activities = self.activities.reset_index()
         parkingActwoFirst, parkingActwoLast = self.__getParkingActsWOFirstAndLast()
 
@@ -509,7 +509,7 @@ class DataParser:
 
         self.__updateTimestampFirstParkAct()
         self.__updateTimestampLastParkAct()
-        
+
         print('Completed park timestamp adjustments')
 
     def __getParkingActsWOFirstAndLast(self) -> (pd.Series, pd.Series):
@@ -584,14 +584,17 @@ class DataParser:
         morning trip at the next day. Trip distances are split according to the time the person spent on that trip.
         E.g. if a trip lasts from 23:00 to 2:00 the next day and 100 km, the split-up evening trip will last from
         23:00 to 00:00 of the survey day and 33 km and the morning trip from 00:00 to 2:00 and 66 km. In a next step,
-        the morning trip is appended to the survey day in the first hours. Here, different edge cases occur.
+        the morning trip is appended to the survey day in the first hours.
+
+        Here, different edge cases occur.
         Edge case 1 (N=5 in MiD17): For trips that overlap with night (early morning) trips at the survey day, e.g. from
         0:30 to 1:00 for the above mentioned example, the morning part of the split overnight trip is completely
         disregarded.
         Edge case 2 (N=3 in MiD17): When overnight mornging split-trips end exactly at the time where the first trip of
         the survey day starts (2:00 in the example), both trips are consolidated to one trip with all attributes of the
         survey trip.
-
+        These edge cases are documented and quantified in issue #358 'Sum of all distances of dataParser at end equals 
+        sum of all distances after filtering'.
         """
         # Split overnight trips and add next day distance in the morning (tripID=0)
         isONTrip, overnightTripsAdd = self.__getOvernightActs()
@@ -609,6 +612,7 @@ class DataParser:
         self.__addMorningTrips(morningTrips=morningTrips_add)
         self.__removeFirstParkingAct()
         self.__mergeAdjacentTrips()
+        self.__checkAndAssert()  # Implement DELTA mileage check of overnight morning split trip distances
         self.__dropONCol()
         self.__sortActivities()
 
@@ -736,6 +740,16 @@ class DataParser:
         self.__neglectZeroTripIDFromActivities(id_neglect=genericID)
         self.__updateConsolidatedAct(id_neglect=genericID)
 
+    def __checkAndAssert(self):
+        # Calculates the neglected trip distances from overnight split trips with regular morning trips
+        distance = self.data['tripDistance'].sum() - self.activities.loc[
+            ~self.activities['tripID'].isna(), 'tripDistance'].sum()
+        allTripDistance = self.activities.loc[~self.activities['tripID'].isna(), 'tripDistance'].sum()
+        ratio = distance / allTripDistance
+        print(f'From {allTripDistance} km total mileage in the dataset after filtering, {ratio * 100}% were cropped '
+              f'because they corresponded to split-trips from overnight trips.')
+        assert ratio < 0.01
+
     def __getGenericIDsToNeglect(self):
         """
         Identifies the household person IDs that should be neglected.
@@ -822,7 +836,8 @@ class DataParser:
         folder = self.globalConfig['pathRelative']['parseOutput']
         fileName = createFileName(globalConfig=self.globalConfig, manualLabel='', file='outputDataParser',
                                   datasetID=self.datasetID)
-        writeOut(data = self.activities, path = root / folder / fileName)
+        writeOut(data=self.activities, path=root / folder / fileName)
+
 
 class IntermediateParsing(DataParser):
     def __init__(self, configDict: dict, datasetID: str, loadEncrypted=False, debug=False):
@@ -890,6 +905,7 @@ class IntermediateParsing(DataParser):
         """
         self.data = self.rawData.loc[:, self.columns]
 
+    # FIXME: Maybe implement in two separate filtering funcs
     def _filterConsistentHours(self):
         """
         Filtering out records where starting hour is after end hour but trip
@@ -1363,7 +1379,7 @@ if __name__ == '__main__':
                    "gridConfig", "flexConfig", "aggregatorConfig", "evaluatorConfig")
     configDict = loadConfigDict(configNames, basePath)
 
-    datasetID = "KiD"  # options are MiD08, MiD17, KiD
+    datasetID = "MiD17"  # options are MiD08, MiD17, KiD
     if datasetID == "MiD17":
         vpData = ParseMiD(configDict=configDict, datasetID=datasetID, debug=False)
     elif datasetID == "KiD":
@@ -1371,4 +1387,4 @@ if __name__ == '__main__':
     elif datasetID == "VF":
         vpData = ParseVF(configDict=configDict, datasetID=datasetID, debug=False)
     vpData.process()
-    # vpData.writeOutput()
+    vpData.writeOutput()
