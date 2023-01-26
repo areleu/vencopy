@@ -344,7 +344,6 @@ class FlexEstimator:
                                     datasetID=self.datasetID)
         writeOut(data = self.activities, path = root / folder / fileName)
 
-
     def estimateTechnicalFlexibility(self, filterFuelNeed: bool = True):
         """
         Main run function for the class WeekFlexEstimator. Calculates uncontrolled charging as well as technical
