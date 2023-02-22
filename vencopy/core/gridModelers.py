@@ -148,6 +148,11 @@ class GridModeler:
                                     datasetID=self.datasetID)
         writeOut(data = self.activities, path = root / folder / fileName)
 
+    def removeActsNotEndingHome(self):
+        idxDf = self.activities.loc[(self.activities['purposeStr']!='HOME')&(self.activities['isLastActivity']==True)]
+        # idxToRemove = idxDf.genericID.unique()
+        idxToRemove = idxDf.genericID.index
+        self.activities = self.activities.drop(index=idxToRemove)
 
 
 if __name__ == "__main__":
@@ -169,4 +174,5 @@ if __name__ == "__main__":
     vpGrid = GridModeler(
         configDict=configDict, datasetID=datasetID, activities=vpData.activities, gridModel='simple')
     vpGrid.assignGrid()
+    vpGrid.removeActsNotEndingHome()
     vpGrid.writeOutput()
