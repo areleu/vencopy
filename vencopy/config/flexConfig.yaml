@@ -17,7 +17,7 @@ Electric_consumption_corr: 18.0 # in kWh/100km, assumption for potential correct
 Fuel_consumption_corr: 1.0 # in l/100km, assumption for potential correction after aggregation
 Maximum_SOC: 0.97 # in %
 Minimum_SOC: 0.03 # in %
-Losses_charging: 1 # FIXME: Should be renamed to something like loss factor
+Losses_charging: 1 
 Is_BEV?: 1 # 1=BEV, 0=PHEV (not yet tested)
 SoC_plugging_threshold: 0.8
 

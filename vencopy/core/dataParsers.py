@@ -311,8 +311,6 @@ class DataParser:
 
         :return: None
         """
-        # FIXME: Add timestamp comparison instead of or additionally to variable "travel time",
-        #  look at hhPersonID 80628472
         self.data['averageSpeed'] = self.data['tripDistance'] / (self.data['travelTime'] / 60)
         return self.data['averageSpeed'] > self.parseConfig['filterDicts']['speedThreshold']
 
@@ -398,8 +396,6 @@ class DataParser:
         trips in such a way that the estimated trip distance the next day is appended in the morning hours of the survey
         day?
         """
-
-        # FIXME: If split-up to separate class, call not in ParseData but in IntermediateParsing
         self.__copyRows()
         self.__addUtilAttributes()
         self.__addParkActAfterLastTrip()
@@ -706,8 +702,6 @@ class DataParser:
     def __updateNextActID(self, prevFirstActs: pd.DataFrame, morningTrips: pd.DataFrame):
         nextActs = prevFirstActs.loc[prevFirstActs['prevActID'] == 0, 'actID']
         nextActs.index = morningTrips.index
-
-        # FIXME: @Ben: Why does this throw a settingWithCopyWarning and what would be the nicest way to circumvent?
         ret = morningTrips.copy()
         ret.loc[:, 'nextActID'] = nextActs
         return ret
@@ -905,7 +899,6 @@ class IntermediateParsing(DataParser):
         """
         self.data = self.rawData.loc[:, self.columns]
 
-    # FIXME: Maybe implement in two separate filtering funcs
     def _filterConsistentHours(self):
         """
         Filtering out records where starting hour is after end hour but trip
@@ -1290,8 +1283,6 @@ class ParseKiD(IntermediateParsing):
 
         :return: None
         """
-        # TODO: move convertTypes to INtermediate class and create a new
-        # class for KiD to change commas to dots
         # Filter for dataset specific columns
         conversionDict = self.parseConfig["inputDTypes"][self.datasetID]
         keys = {

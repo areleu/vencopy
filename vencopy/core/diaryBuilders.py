@@ -258,7 +258,6 @@ class WeekDiaryBuilder:
         return acts
 
     def __orderViaWeekday(self, acts) -> pd.DataFrame:
-        # FIXME: Some weekday activities are not in order
         return acts.sort_values(by=['genericID', 'tripStartWeekday', 'timestampStart'])
 
     def __adjustActID(self, acts: pd.DataFrame) -> pd.DataFrame:
@@ -286,7 +285,6 @@ class WeekDiaryBuilder:
             acts (pd.DataFrame): Activity data set, where the week is identified by the column genericID and the
             day via the column tripStartWeekday
         """
-        # FIXME: Correct the end timestamp of remaining park activity after merge
         # Calculate shifted columns for merging last and first day park acts and updating lastAct col
         acts = self.__neglectFirstParkActs(acts=acts)  # only for weekdays TUE-SUN
         acts, nextVars = self.__addNextActVars(acts=acts,
@@ -448,7 +446,6 @@ class WeekDiaryBuilder:
         Returns:
             pd.DataFrame: Activities with updated column actID, prevActID and nextActID
         """
-        # FIXME: Improve performance, currently only this func takes 43 seconds
         acts.loc[~acts['tripID'].isna(), 'actID'] = acts.loc[:, 'tripID']
         acts.loc[~acts['parkID'].isna(), 'actID'] = acts.loc[:, 'parkID']
         acts.loc[~acts['isLastActivity'], 'nextActID'] = acts.loc[:, 'actID'].shift(-1)
@@ -536,7 +533,6 @@ class TimeDiscretiser:
     def _correctDataset(self):
         self._correctValues()
         self._correctTimestamp()
-        # FIXME: need of a recheck that timstampStart(t) == timestampEnd(t-1)?
 
     def _correctValues(self):
         """
@@ -566,7 +562,6 @@ class TimeDiscretiser:
         currently be either day (nCol = 24*60 / dt) or week - determined be self.isWeek (nCol= 7 * 24 * 60 / dt). 
         self.timeIndex is set on instantiation.
         """
-        # FIXME: make more generic to be able to model higher temporal resolution than 1h
         nHours = len(list(self.timeIndex))-1
         hPerDay = int(nHours / len(self.weekdays))
         hours = range(hPerDay)
@@ -607,7 +602,6 @@ class TimeDiscretiser:
         """
         Calculate the profile value for each bin for the 'distribute' method.
         """
-        # FIXME: add double check for edge case treatment for nBins == 0 (happens in uncontrolled Charge)
         self.oneProfile['valPerBin'] = self.oneProfile[self.columnToDiscretise] / self.oneProfile['nBins']
    
 
@@ -665,7 +659,6 @@ class TimeDiscretiser:
         #                 lambda x: np.argmax(x < self.binFromMidnightSeconds)-1)
         # Option 3
         self.oneProfile['lastBin'] = (self.oneProfile['firstBin'] + self.oneProfile['nBins'] - 1).astype(int)
-        # FIXME: more elegant way for lastBin +1 if lastActivity = True -> +1 ?
         self.oneProfile.loc[self.oneProfile['isLastActivity'], 'lastBin'] = (
             self.oneProfile.loc[self.oneProfile['isLastActivity'], 'lastBin'] + 1)
 
@@ -699,7 +692,6 @@ class TimeDiscretiser:
         Implements a strategy to treat overlapping bin, especially important for lower time resolution (e.g. 1h).
         """
         # define other strategies to treat overlapping events here
-        # FIXME: Implement this func, gets important especially for low resolutions (e.g. 1h)
         pass
 
     def _allocateWeek(self):
@@ -708,8 +700,6 @@ class TimeDiscretiser:
         are formatted in a way that genericID represents a unique week ID. The function then loops over the 7 weekdays
         and calls _allocate for each day a total of 7 times.
         """
-        # FIXME: Idea for performance improvement: Apply allocate() to groupby-slices with by=['weekday', 'actID']
-        # loop over weekSubset and weekday?
         weekSubset = self.oneProfile.groupby(by=['weekdayStr', 'actID'])
 
 

@@ -93,7 +93,6 @@ class ProfileAggregator():
     def __composeWeeklyProfile(self):
         # input is self.weekdayProfiles
         # check if any day of the week is not filled, copy line above in that case
-        # FIXME: very ugly function below
         if self.weekdayProfiles.isna().any(axis=1).any():
             indexEmptyRows = self.weekdayProfiles[self.weekdayProfiles.isna().any(axis=1)].index - 1
             for emptyRow in indexEmptyRows:
