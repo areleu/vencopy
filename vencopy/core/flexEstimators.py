@@ -72,7 +72,6 @@ class FlexEstimator:
         tripActsRes = pd.DataFrame()
         for act in setActs:
             print(f'Calculate maximum battery level for act {act}')
-            # FIXME: Possible to get rid of firstAct test?
             tripRows = (self.activities['tripID'] == act) & (~self.activities['isFirstActivity'])
             parkRows = (self.activities['parkID'] == act) & (~self.activities['isFirstActivity'])
             tripActs = self.activities.loc[tripRows, :]
@@ -304,7 +303,6 @@ class FlexEstimator:
         # Setting of battery level variables
         parkActsIdx.loc[multiIdxPark, 'minBatteryLevelEnd'] = nextTripActsIdx.loc[
             multiIdxTrip, 'minBatteryLevelStart'].values
-        # FIXME: This should not be oriented at maxChargeVolume but rather at drain of next trip
         parkActsIdx['minBatteryLevelStart_unlimited'] = parkActsIdx.loc[
             multiIdxPark, 'minBatteryLevelEnd'] - parkActsIdx.loc[multiIdxPark, 'maxChargeVolume']
         parkActsIdx.loc[multiIdxPark, 'minBatteryLevelStart'] = parkActsIdx['minBatteryLevelStart_unlimited'].where(

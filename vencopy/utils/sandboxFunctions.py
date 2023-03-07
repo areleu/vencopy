@@ -191,7 +191,7 @@ def cloneAndWriteProfile(profile, outputConfig, outputPath, noOfHoursOutput, tec
     # Is this handled upstream in the call chain?
     noOfClones = noOfHoursOutput / len(profile) - 1
 
-    # FIXME: the int type cast could have a nasty side effect, as it is behaving like a floor operation
+    # the int type cast could have a nasty side effect, as it is behaving like a floor operation
     # for the float division above. Is this intended?
     profileCloned = profile.append([profile] * int(noOfClones), ignore_index=True)
 
@@ -199,7 +199,7 @@ def cloneAndWriteProfile(profile, outputConfig, outputPath, noOfHoursOutput, tec
         subHours = noOfHoursOutput - len(profileCloned)
         profileCloned = profileCloned.append(profile[range(subHours)], ignore_index=True)
 
-    # FIXME: this .copy() seems to be redundant if createEmptyDataFrame above indeed creates a fresh new empty
+    # this .copy() seems to be redundant if createEmptyDataFrame above indeed creates a fresh new empty
     # dataframe. Am I missing something here?
     profilesOut = df.copy()
     for i in outputConfig['NonNullNodes']:
@@ -378,7 +378,7 @@ def replaceTripPurposes(purp_a: pd.DataFrame, purp_b: pd.DataFrame):
 
 
 ### EXPERIMENTAL SANDBOX PART
-# def fillDayPurposesPerformant(tripData, purposeDataDays):  #FIXME: Ask Ben for performance improvements
+# def fillDayPurposesPerformant(tripData, purposeDataDays):  
 #     # This is an adaptation of fillDayPurposes()
 #
 # def merger(tripData, purposeDataDays):
@@ -419,7 +419,7 @@ def replaceTripPurposes(purp_a: pd.DataFrame, purp_b: pd.DataFrame):
 #             purposeHourStart = determinePurposeStartHour(tripData.loc[idxOld, 'timestampStart'],
 #                                                          tripData.loc[idxOld, 'timestampEnd'])
 #             if iRow['timestampStart'].minute <= 30:
-#                 hoursBetween = range(purposeHourStart, iRow['tripStartHour'])  # FIXME: case differentiation on arrival hour
+#                 hoursBetween = range(purposeHourStart, iRow['tripStartHour'])  
 #             else:
 #                 hoursBetween = range(purposeHourStart,
 #                                      iRow['tripStartHour'] + 1)
