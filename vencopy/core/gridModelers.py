@@ -22,7 +22,7 @@ from vencopy.core.dataParsers import ParseMiD, ParseKiD, ParseVF
 
 
 class GridModeler:
-    def __init__(self, configDict: dict, datasetID: str, activities, gridModel: str):
+    def __init__(self, configDict: dict, datasetID: str, activities, gridModel: str, forceLastTripHome: bool = False):
         self.globalConfig = configDict['globalConfig']
         self.gridConfig = configDict['gridConfig']
         self.flexConfig = configDict['flexConfig']
@@ -30,6 +30,8 @@ class GridModeler:
         self.datasetID = datasetID
         self.gridModel = gridModel
         self.activities = activities
+        if forceLastTripHome:
+            self.removeActsNotEndingHome()
         self.gridAvailabilitySimple = self.gridConfig['chargingInfrastructureMappings']
         self.gridAvailabilityProb = self.gridConfig['gridAvailabilityDistribution']
         self.chargeAvailability = None
@@ -149,11 +151,10 @@ class GridModeler:
         writeOut(data = self.activities, path = root / folder / fileName)
 
     def removeActsNotEndingHome(self):
-        idxDf = self.activities.loc[(self.activities['purposeStr']!='HOME')&(self.activities['isLastActivity']==True)]
-        # idxToRemove = idxDf.genericID.unique()
-        idxToRemove = idxDf.genericID.index
-        self.activities = self.activities.drop(index=idxToRemove)
-
+        lastActsNotHome = self.activities.loc[(self.activities['purposeStr'] != 'HOME') & (
+            self.activities['isLastActivity']), :]
+        idToRemove = lastActsNotHome['genericID'].unique()
+        self.activities = self.activities.loc[~self.activities['genericID'].isin(idToRemove), :]
 
 if __name__ == "__main__":
 
@@ -172,7 +173,10 @@ if __name__ == "__main__":
     vpData.process()
 
     vpGrid = GridModeler(
-        configDict=configDict, datasetID=datasetID, activities=vpData.activities, gridModel='simple')
+        configDict=configDict,
+        datasetID=datasetID,
+        activities=vpData.activities,
+        gridModel='simple',
+        forceLastTripHome=True)
     vpGrid.assignGrid()
-    vpGrid.removeActsNotEndingHome()
     vpGrid.writeOutput()
