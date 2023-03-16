@@ -828,7 +828,7 @@ class DataParser:
     def writeOutput(self):
         root = Path(self.localPathConfig['pathAbsolute']['vencoPyRoot'])
         folder = self.globalConfig['pathRelative']['parseOutput']
-        fileName = createFileName(globalConfig=self.globalConfig, manualLabel='', file='outputDataParser',
+        fileName = createFileName(globalConfig=self.globalConfig, fileNameID='outputDataParser',
                                   datasetID=self.datasetID)
         writeOut(data=self.activities, path=root / folder / fileName)
 

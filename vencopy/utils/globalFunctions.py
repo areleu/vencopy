@@ -103,7 +103,7 @@ def createFileName(globalConfig: dict, fileNameID: str, datasetID: str, manualLa
     files but just creates the file name including the filetype suffix.
 
     :param globalConfig: global config file for paths
-    :param fileKey: Manual specification of fileKey
+    :param fileNameID: ID of respective data file as specified in global config
     :param datasetID: Manual specification of data set ID e.g. 'MiD17'
     :param manualLabel: Optional manual label to add to filename
     :param filetypeStr: filetype to be written to hard disk
