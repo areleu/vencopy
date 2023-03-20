@@ -124,7 +124,7 @@ class GridModeler:
             raise(ValueError(f'Specified grid modeling option {self.gridModel} is not implemented. Please choose'
                              f'"simple" or "probability"'))
 
-        self.activities = self._addGridLosses(acts=self.activities, loss=self.gridConfig['losses'], losses=losses)
+        self.activities = self._addGridLosses(acts=self.activities, loss=self.gridConfig['loss_factor'], losses=losses)
         return self.activities
 
     def _addGridLosses(self, acts: pd.DataFrame, loss: dict, losses: bool):
