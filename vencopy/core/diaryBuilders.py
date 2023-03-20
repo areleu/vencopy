@@ -141,7 +141,7 @@ class WeekDiaryBuilder:
         print(f'There are {len(self.sampleBaseID)} sample bases (each category for every weekday).')
         nSBInAct = self.sampleBaseID['sampleBaseID'].isin(self.activities['sampleBaseID']).sum()
         print(f'Of those sample bases, {nSBInAct} category combinations exist in the activities data set')
-        self.__days = self.activities.groupby(by=['genericID']).first()
+        self.__days = self.activities.groupby(by=['uniqueID']).first()
         nSamplingBase = self.__days.groupby(by=self.samplingCols).count()
         sampleBaseLength = nSamplingBase.iloc[:, 0]
         smallestSampleBase = sampleBaseLength.loc[sampleBaseLength == min(sampleBaseLength)]
@@ -154,7 +154,7 @@ class WeekDiaryBuilder:
     def __assignWeeks(self, nWeeks: int, how: str = 'random', seed: int = None, replace: bool = False):
         """
         Interface function to generate nWeeks weeks from the specified sample base. Here, the mapping of the
-        genericID to the respective weekID is generated
+        uniqueID to the respective weekID is generated
 
         Args:
             nWeeks (int): Number of weeks to sample from the sample bases defined by the elements of catCol
@@ -173,7 +173,7 @@ class WeekDiaryBuilder:
     def __randomSample(self, nWeeks: int, seed: int = None, replace: bool = False) -> pd.DataFrame:
         """
         Pulls nWeeks samples from each sample base. Each sample represents one day and is identified by one
-        genericID. The weekdays are already differentiated within the sample bases thus sampleBase 1 may represent MON
+        uniqueID. The weekdays are already differentiated within the sample bases thus sampleBase 1 may represent MON
         while sampleBase 2 represents TUE. Per default only as many samples can be drawn from the sample base as there
         are days in the original data set (no bootstrapping, replace=False). This can be overwritten by replace=True.
 
@@ -185,18 +185,18 @@ class WeekDiaryBuilder:
             zurücklegen). Defaults to False.
 
         Returns:
-            pd.DataFrame: A pd.DataFrame with the three columns sampleBaseID, genericID and weekID where weekID is
-            a range object for each sampleBase, genericID are the samples.
+            pd.DataFrame: A pd.DataFrame with the three columns sampleBaseID, uniqueID and weekID where weekID is
+            a range object for each sampleBase, uniqueID are the samples.
         """
         # Set seed for reproducibiilty for debugging
         if seed:
             np.random.seed(seed=seed)
         sample = pd.DataFrame()
         for sbID in self.sampleBaseInAct['sampleBaseID']:
-            sampleBase = self.activities.loc[self.activities['sampleBaseID'] == sbID, 'genericID'].unique()
+            sampleBase = self.activities.loc[self.activities['sampleBaseID'] == sbID, 'uniqueID'].unique()
             subSample = np.random.choice(sampleBase, replace=replace, size=nWeeks)
             df = pd.DataFrame.from_dict({'sampleBaseID': sbID,
-                                         'genericID': subSample,
+                                         'uniqueID': subSample,
                                          'weekID': list(range(nWeeks))})
             sample = pd.concat([sample, df])
         return sample
@@ -204,7 +204,7 @@ class WeekDiaryBuilder:
     def composeWeekActivities(self, nWeeks: int = 10, seed: int = None, replace: bool = False):
         """
         Wrapper function to call function for sampling each person (day mobility) to a specific week in a
-        specified category. activityID and genericID are adapted to cover the weekly pattern of the sampled mobility
+        specified category. activityID and uniqueID are adapted to cover the weekly pattern of the sampled mobility
         days within each week.
 
         Args:
@@ -216,8 +216,8 @@ class WeekDiaryBuilder:
         print(f'Composing weeks for {nWeeks} choices from each sample base.')
         self.sampleSize = nWeeks
         self.dayWeekMap = self.__assignWeeks(nWeeks=nWeeks, seed=seed, replace=replace)
-        weekActs = self.__merge(dayWeekMap=self.dayWeekMap, dayActs=self.activities, index_col='genericID')
-        weekActs = self.__adjustGenericID(acts=weekActs)
+        weekActs = self.__merge(dayWeekMap=self.dayWeekMap, dayActs=self.activities, index_col='uniqueID')
+        weekActs = self.__adjustUniqueID(acts=weekActs)
         weekActs = self.__orderViaWeekday(acts=weekActs)
         weekActs = self.__adjustActID(acts=weekActs)
         self.weekActivities = weekActs
@@ -242,23 +242,23 @@ class WeekDiaryBuilder:
         merged = dayWeekMapIdx.merge(dayActsIdx, left_index=True, right_index=True)
         return merged.reset_index(index_col)
 
-    def __adjustGenericID(self, acts: pd.DataFrame) -> pd.DataFrame:
+    def __adjustUniqueID(self, acts: pd.DataFrame) -> pd.DataFrame:
         """
         Replaces the generic ID that characterized a specific person living in a specific household (MiD) or
-        a specific vehicle (KID) and its respective daily travel patterns with a combination of 7 genericIDs -
+        a specific vehicle (KID) and its respective daily travel patterns with a combination of 7 uniqueIDs -
         one for every day of the week determined by the categories given in catCols in the class instantiation.
-        The genericID column does not have to be stored elsewhere since hhPersonID exists as a separate column.
+        The uniqueID column does not have to be stored elsewhere since hhPersonID exists as a separate column.
 
         Args:
-            acts (pd.DataFrame): Activity data set at least with the columns 'genericID' and 'weekID'
+            acts (pd.DataFrame): Activity data set at least with the columns 'uniqueID' and 'weekID'
         """
-        acts['dayGenericID'] = acts['genericID']
-        # acts['genericID'] = (acts['categoryID'].apply(str) + acts['weekID'].apply(str)).apply(int)
-        acts['genericID'] = (acts['categoryID'].apply(str) + acts['weekID'].apply(str))
+        acts['dayUniqueID'] = acts['uniqueID']
+        # acts['uniqueID'] = (acts['categoryID'].apply(str) + acts['weekID'].apply(str)).apply(int)
+        acts['uniqueID'] = (acts['categoryID'].apply(str) + acts['weekID'].apply(str))
         return acts
 
     def __orderViaWeekday(self, acts) -> pd.DataFrame:
-        return acts.sort_values(by=['genericID', 'tripStartWeekday', 'timestampStart'])
+        return acts.sort_values(by=['uniqueID', 'tripStartWeekday', 'timestampStart'])
 
     def __adjustActID(self, acts: pd.DataFrame) -> pd.DataFrame:
         """
@@ -282,13 +282,13 @@ class WeekDiaryBuilder:
         day to one activity spanning two days.
 
         Args:
-            acts (pd.DataFrame): Activity data set, where the week is identified by the column genericID and the
+            acts (pd.DataFrame): Activity data set, where the week is identified by the column uniqueID and the
             day via the column tripStartWeekday
         """
         # Calculate shifted columns for merging last and first day park acts and updating lastAct col
         acts = self.__neglectFirstParkActs(acts=acts)  # only for weekdays TUE-SUN
         acts, nextVars = self.__addNextActVars(acts=acts,
-                                               vars=['genericID', 'parkID', 'timestampStart', 'timestampEnd',
+                                               vars=['uniqueID', 'parkID', 'timestampStart', 'timestampEnd',
                                                      'tripPurpose'])
         acts = self.__adjustEndTimestamp(acts=acts)
         acts = self.__addONParkVariable(acts=acts)
@@ -329,7 +329,7 @@ class WeekDiaryBuilder:
     def __neglectFirstParkActs(self, acts: pd.DataFrame) -> pd.DataFrame:
         """
         Removes all first parking activities with two exceptions: First parking on Mondays will be kept since
-        they form the first activities of the week (genericID). Also, first parking activities directly after trips
+        they form the first activities of the week (uniqueID). Also, first parking activities directly after trips
         that end exactly at 00:00 are kept.
 
         Args:
@@ -385,14 +385,14 @@ class WeekDiaryBuilder:
 
         Args:
             acts (pd.DataFrame): Activity data set that has to at least have the columns 'isLastActivity',
-            'genericID' and 'nextGenericID'. The last one should be available from before by
-            acts['genericID'].shift(-1)
+            'uniqueID' and 'nextUniqueID'. The last one should be available from before by
+            acts['uniqueID'].shift(-1)
 
         Returns:
             pd.DataFrame: The activity data set with an ammended column 'isLastActivity' updated for the week chain
         """
 
-        isLastWeekAct = (acts['isLastActivity']) & (acts['genericID'] != acts['genericID_next'])
+        isLastWeekAct = (acts['isLastActivity']) & (acts['uniqueID'] != acts['uniqueID_next'])
         acts.loc[:, 'isLastActivity'] = isLastWeekAct
         return acts
 
@@ -402,12 +402,12 @@ class WeekDiaryBuilder:
     def __reassignParkIDs(self, acts: pd.DataFrame) -> pd.DataFrame:
         """
         Resets the activitiy IDs of the day park chain (increasing acts per Day) with continuously increasing
-        actvity IDs per week identified by genericID. The day activity IDs will be stored in a separate column
+        actvity IDs per week identified by uniqueID. The day activity IDs will be stored in a separate column
         'dayActID'
 
         Args:
             acts (pd.DataFrame): The park activities of the activity data set at least with the columns
-            'genericID' and 'actID'
+            'uniqueID' and 'actID'
 
         Returns:
             pd.DataFrame: Activities data set with week actIDs and a new column 'dayActID' with the day
@@ -415,18 +415,18 @@ class WeekDiaryBuilder:
         """
         parkIdx = ~acts['parkID'].isna()
         acts.loc[parkIdx, 'dayActID'] = acts['parkID']  # backupping day activity IDs
-        acts.loc[parkIdx, 'parkID'] = acts.loc[parkIdx, ['genericID', 'parkID']].groupby(
-            by='genericID').apply(lambda week: pd.Series(range(len(week)))).values
+        acts.loc[parkIdx, 'parkID'] = acts.loc[parkIdx, ['uniqueID', 'parkID']].groupby(
+            by='uniqueID').apply(lambda week: pd.Series(range(len(week)))).values
         return acts
 
     def __reassignTripIDs(self, acts: pd.DataFrame) -> pd.DataFrame:
         """
         Resets the activitiy IDs of the day trip chain (increasing acts per day) with continuously increasing
-        actvity IDs per week identified by genericID. The day activity IDs will be stored in a separate column
+        actvity IDs per week identified by uniqueID. The day activity IDs will be stored in a separate column
         'dayActID'
         Args:
             acts (pd.DataFrame): The trip activities of the activity data set at least with the columns
-            'genericID', 'tripID' and 'actID'
+            'uniqueID', 'tripID' and 'actID'
         Returns:
             pd.DataFrame: Activities data set with week actIDs and a new column 'dayActID' with the day
             activity IDs.
@@ -434,8 +434,8 @@ class WeekDiaryBuilder:
         tripIdx = ~acts['tripID'].isna()
         acts.loc[tripIdx, 'dayActID'] = acts['tripID']
 
-        acts.loc[tripIdx, 'tripID'] = acts.loc[tripIdx, ['genericID', 'parkID']].groupby(
-            by='genericID').apply(lambda week: pd.Series(range(len(week)))).values
+        acts.loc[tripIdx, 'tripID'] = acts.loc[tripIdx, ['uniqueID', 'parkID']].groupby(
+            by='uniqueID').apply(lambda week: pd.Series(range(len(week)))).values
         return acts
 
     def __reassignActIDs(self, acts: pd.DataFrame) -> pd.DataFrame:
@@ -522,7 +522,7 @@ class TimeDiscretiser:
         Removes additional columns not used in the TimeDiscretiser class.
         Only keeps timestamp start and end, unique ID, and the column to discretise.
         """
-        necessaryColumns = ['tripID', 'timestampStart', 'timestampEnd', 'genericID',
+        necessaryColumns = ['tripID', 'timestampStart', 'timestampEnd', 'uniqueID',
                             'parkID', 'isFirstActivity', 'isLastActivity', 'timedelta',
                             'actID', 'nextActID', 'prevActID'] + [self.columnToDiscretise]
         if self.isWeek:
@@ -566,7 +566,7 @@ class TimeDiscretiser:
         hPerDay = int(nHours / len(self.weekdays))
         hours = range(hPerDay)
         self.discreteData = pd.DataFrame(
-            index=self.oneProfile.genericID.unique(), columns=pd.MultiIndex.from_product([self.weekdays, hours]))
+            index=self.oneProfile.uniqueID.unique(), columns=pd.MultiIndex.from_product([self.weekdays, hours]))
         self.discreteDataFast = self.discreteData.copy()  # Only for performance analysis
 
 
@@ -697,7 +697,7 @@ class TimeDiscretiser:
     def _allocateWeek(self):
         """
         Wrapper method for allocating respective values per bin to days within a week. Expects that the activities
-        are formatted in a way that genericID represents a unique week ID. The function then loops over the 7 weekdays
+        are formatted in a way that uniqueID represents a unique week ID. The function then loops over the 7 weekdays
         and calls _allocate for each day a total of 7 times.
         """
         weekSubset = self.oneProfile.groupby(by=['weekdayStr', 'actID'])
@@ -713,14 +713,14 @@ class TimeDiscretiser:
             pd.DataFrame: Discretized data set with temporal discretizations in the columns.
         """
         trips = self.oneProfile.copy()
-        trips = trips[['genericID', 'firstBin', 'lastBin', 'valPerBin']]
-        trips['genericID'] = trips["genericID"].astype(int)
-        self.discreteData = trips.groupby(by="genericID").apply(self.assignBins)
+        trips = trips[['uniqueID', 'firstBin', 'lastBin', 'valPerBin']]
+        trips['uniqueID'] = trips["uniqueID"].astype(int)
+        self.discreteData = trips.groupby(by="uniqueID").apply(self.assignBins)
 
 
     def assignBins(self, vehicleTrips):
         """
-        Assigns values for every genericID based on first and last bin.
+        Assigns values for every uniqueID based on first and last bin.
         """
         s = pd.Series(index=range(self.nTimeSlots), dtype=float)
         for _ , itrip in vehicleTrips.iterrows():
@@ -732,8 +732,8 @@ class TimeDiscretiser:
 
     # DEPRECATED
     # def _oldAllocate(self):
-    #     for id in self.oneProfile.genericID.unique():
-    #         vehicleSubset = self.oneProfile[self.oneProfile.genericID == id].reset_index(drop=True)
+    #     for id in self.oneProfile.uniqueID.unique():
+    #         vehicleSubset = self.oneProfile[self.oneProfile.uniqueID == id].reset_index(drop=True)
     #         for irow in range(len(vehicleSubset)):
     #                 self.discreteData.loc[id, (vehicleSubset.loc[irow, 'firstBin']):(
     #                     vehicleSubset.loc[irow, 'lastBin'])] = vehicleSubset.loc[irow, 'valPerBin']

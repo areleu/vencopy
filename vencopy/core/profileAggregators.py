@@ -38,8 +38,8 @@ class ProfileAggregator():
         self.deltaTime = configDict['diaryConfig']['TimeDelta']
         self.timeIndex = list(pd.timedelta_range(start='00:00:00', end='24:00:00', freq=f'{self.deltaTime}T'))
         self.profiles = profiles
-        self.weights = self.activities.loc[:, ['genericID', 'tripWeight']].drop_duplicates(
-            subset=['genericID']).reset_index(drop=True).set_index('genericID')
+        self.weights = self.activities.loc[:, ['uniqueID', 'tripWeight']].drop_duplicates(
+            subset=['uniqueID']).reset_index(drop=True).set_index('uniqueID')
         self.drain = profiles.drain
         self.chargingPower = profiles.chargingPower
         self.uncontrolledCharge = profiles.uncontrolledCharge
@@ -52,13 +52,13 @@ class ProfileAggregator():
 
     def __aggregateWeightsAndWeekdays(self, byColumn: str) -> pd.Series:
         self.weekdayProfiles = pd.DataFrame(columns=self.profile.columns, index=range(1, 8))
-        necessaryColumns = ['genericID', 'tripWeight'] + [byColumn]
+        necessaryColumns = ['uniqueID', 'tripWeight'] + [byColumn]
         self.activitiesSubset = (
-            self.activities[necessaryColumns].copy().drop_duplicates(subset=['genericID']).reset_index(drop=True))
-        self.profile['genericID'] = self.profile.index
-        self.activitiesWeekday = pd.merge(self.profile, self.activitiesSubset, on='genericID', how='inner')
-        self.profile.drop('genericID', axis=1, inplace=True)
-        self.activitiesWeekday = self.activitiesWeekday.set_index('genericID')
+            self.activities[necessaryColumns].copy().drop_duplicates(subset=['uniqueID']).reset_index(drop=True))
+        self.profile['uniqueID'] = self.profile.index
+        self.activitiesWeekday = pd.merge(self.profile, self.activitiesSubset, on='uniqueID', how='inner')
+        self.profile.drop('uniqueID', axis=1, inplace=True)
+        self.activitiesWeekday = self.activitiesWeekday.set_index('uniqueID')
         # Compose weekly profile from 7 separate profiles
         if self.profileName in ('drain', 'uncontrolledCharge', 'chargingPower'):
             self.__calculateWeightedAverageFlowProfiles(byColumn=byColumn)
