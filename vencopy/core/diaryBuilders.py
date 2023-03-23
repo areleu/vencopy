@@ -27,11 +27,11 @@ IDXSLICE = pd.IndexSlice
 
 
 class DiaryBuilder:
-    def __init__(self, configDict: dict, datasetID: str, activities: pd.DataFrame, isWeekDiary: bool = False):
+    def __init__(self, configDict: dict, activities: pd.DataFrame, isWeekDiary: bool = False):
         self.diaryConfig = configDict['diaryConfig']
         self.globalConfig = configDict['globalConfig']
         self.localPathConfig = configDict['localPathConfig']
-        self.datasetID = datasetID
+        self.datasetID = configDict["globalConfig"]["dataset"]
         self.activities = activities
         self.deltaTime = configDict['diaryConfig']['TimeDelta']
         self.isWeekDiary = isWeekDiary
