@@ -14,6 +14,8 @@ if __package__ is None or __package__ == "":
     sys.path.append(path.dirname(path.dirname(path.dirname(__file__))))
 
 from pathlib import Path
+from profilehooks import profile
+
 import pandas as pd
 from vencopy.utils.globalFunctions import createFileName, writeOut
 
@@ -43,6 +45,7 @@ class FlexEstimator:
         self.activities.loc[self.isPark, 'maxChargeVolume'] = self.activities.loc[self.isPark, 'availablePower'] * \
             self.activities.loc[self.isPark, 'timedelta'] / pd.Timedelta('1 hour')
 
+    @profile(immediate=True)
     def __batteryLevelMax(self, startLevel: float):
         """
         Calculate the maximum battery level at the beginning and end of each activity. This represents the case of
@@ -144,8 +147,13 @@ class FlexEstimator:
         firstAct = self.activities.loc[idx, :].copy()
 
         firstAct.loc[:, 'maxBatteryLevelStart'] = startLevel
-        firstAct.loc[self.isPark, 'maxBatteryLevelEnd'] = firstAct['maxBatteryLevelStart']
-        firstAct.loc[self.isPark, 'maxOvershoot'] = firstAct['maxChargeVolume']
+        firstAct.loc[self.isPark, 'maxBatteryLevelEnd_unlimited'] = firstAct['maxBatteryLevelStart'] + firstAct[
+            'maxChargeVolume']
+        firstAct.loc[self.isPark, 'maxBatteryLevelEnd'] = firstAct.loc[
+            self.isPark, 'maxBatteryLevelEnd_unlimited'].where(firstAct.loc[
+                self.isPark, 'maxBatteryLevelEnd_unlimited'] <= self.upperBatLev, other=self.upperBatLev)
+        firstAct.loc[self.isPark, 'maxOvershoot'] = firstAct['maxBatteryLevelEnd_unlimited'] - firstAct[
+            'maxBatteryLevelEnd']
         firstAct.loc[self.isTrip, 'maxBatteryLevelEnd_unlimited'] = firstAct.loc[
             self.isTrip, 'maxBatteryLevelStart'] - firstAct.loc[self.isTrip, 'drain']
         firstAct.loc[self.isTrip, 'maxBatteryLevelEnd'] = firstAct.loc[
@@ -238,10 +246,12 @@ class FlexEstimator:
         return tripActsIdx.reset_index()
 
     def __calcBatLevParkMax(self, actID: int, parkActs: pd.DataFrame, prevTripActs: pd.DataFrame = None):
-        """FIXME: Add docstring
+        """ Calculate the maximum SOC of the given parking activities for the activity ID given by actID. Previous trip
+        activities are used as boundary for maxBatteryLevelStart. This function is called multiple times once per 
+        activity ID. It is then applied to all activities with the given activity ID in a vectorized manner. 
 
         Args:
-            actID (int): _description_
+            actID (int): Activity ID in current loop
             parkActs (pd.DataFrame): _description_
             prevTripActs (pd.DataFrame, optional): _description_. Defaults to None.
 
@@ -346,8 +356,8 @@ class FlexEstimator:
         root = Path(self.localPathConfig['pathAbsolute']['vencoPyRoot'])
         folder = self.globalConfig['pathRelative']['flexOutput']
         fileName = createFileName(globalConfig=self.globalConfig, manualLabel='', file='outputFlexEstimator',
-                                    datasetID=self.datasetID)
-        writeOut(data = self.activities, path = root / folder / fileName)
+                                  datasetID=self.datasetID)
+        writeOut(data=self.activities, path=root / folder / fileName)
 
     def estimateTechnicalFlexibility(self, filterFuelNeed: bool = True):
         """
@@ -366,7 +376,7 @@ class FlexEstimator:
         """
         self._drain()
         self._maxChargeVolumePerParkingAct()
-        self.__batteryLevelMax(startLevel=self.upperBatLev)
+        self.__batteryLevelMax(startLevel=self.upperBatLev/2)
         self._uncontrolledCharging()
         self.__batteryLevelMin()
         if filterFuelNeed:
@@ -600,7 +610,7 @@ class WeekFlexEstimator(FlexEstimator):
         tmpUndershoot = self.activities.loc[idx, 'minBatteryLevelStart_unlimited'] - self.lowerBatLev
         self.activities.loc[idx, 'minUndershoot'] = tmpUndershoot.where(tmpUndershoot >= 0, other=0)
 
-    def estimateTechnicalFlexibility(self, filterFuelNeed: bool=True):
+    def estimateTechnicalFlexibility(self, filterFuelNeed: bool = True):
         """
         Main run function for the class WeekFlexEstimator. Calculates uncontrolled charging as well as technical
         boundary constraints for controlled charging and feeding electricity back into the grid on an indvidiual vehicle
@@ -618,7 +628,7 @@ class WeekFlexEstimator(FlexEstimator):
 
         self._drain()
         self.__maxChargeVolumePerParkingActWeek()
-        self._batteryLevelMax(startLevel=self.thresholdAbsolute)
+        self._batteryLevelMax(startLevel=self.upperBatLev)
         self._uncontrolledCharging()
         self._batteryLevelMin()
         if filterFuelNeed:
