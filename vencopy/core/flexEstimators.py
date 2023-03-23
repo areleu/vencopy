@@ -148,8 +148,13 @@ class FlexEstimator:
         firstAct = self.activities.loc[idx, :].copy()
 
         firstAct.loc[:, 'maxBatteryLevelStart'] = startLevel
-        firstAct.loc[self.isPark, 'maxBatteryLevelEnd'] = firstAct['maxBatteryLevelStart']
-        firstAct.loc[self.isPark, 'maxOvershoot'] = firstAct['maxChargeVolume']
+        firstAct.loc[self.isPark, 'maxBatteryLevelEnd_unlimited'] = firstAct['maxBatteryLevelStart'] + firstAct[
+            'maxChargeVolume']
+        firstAct.loc[self.isPark, 'maxBatteryLevelEnd'] = firstAct.loc[
+            self.isPark, 'maxBatteryLevelEnd_unlimited'].where(firstAct.loc[
+                self.isPark, 'maxBatteryLevelEnd_unlimited'] <= self.upperBatLev, other=self.upperBatLev)
+        firstAct.loc[self.isPark, 'maxOvershoot'] = firstAct['maxBatteryLevelEnd_unlimited'] - firstAct[
+            'maxBatteryLevelEnd']
         firstAct.loc[self.isTrip, 'maxBatteryLevelEnd_unlimited'] = firstAct.loc[
             self.isTrip, 'maxBatteryLevelStart'] - firstAct.loc[self.isTrip, 'drain']
         firstAct.loc[self.isTrip, 'maxBatteryLevelEnd'] = firstAct.loc[
@@ -370,7 +375,7 @@ class FlexEstimator:
         """
         self._drain()
         self._maxChargeVolumePerParkingAct()
-        self.__batteryLevelMax(startLevel=self.upperBatLev)
+        self.__batteryLevelMax(startLevel=self.upperBatLev / 2)
         self._uncontrolledCharging()
         self.__batteryLevelMin()
         if filterFuelNeed:
