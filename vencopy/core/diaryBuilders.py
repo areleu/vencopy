@@ -72,7 +72,9 @@ class DiaryBuilder:
 
 
 class WeekDiaryBuilder:
-    def __init__(self, activities: pd.DataFrame, catCols: list[str], seed: Optional[int] = None):
+    def __init__(
+        self, activities: pd.DataFrame, catCols: list[str], seed: Optional[int] = None
+    ):
         """
         Class that synthesizes weekly activity chains from daily activity chains. This is done for a specific set of
         categories that is determined by columns in the activities data set. The cross-product of the unique entries
@@ -198,7 +200,11 @@ class WeekDiaryBuilder:
         )
 
     def __assignWeeks(
-        self, nWeeks: int, how: str = "random", seed: Optional[int] = None, replace: bool = False
+        self,
+        nWeeks: int,
+        how: str = "random",
+        seed: Optional[int] = None,
+        replace: bool = False,
     ):
         """
         Interface function to generate nWeeks weeks from the specified sample base. Here, the mapping of the
@@ -439,7 +445,9 @@ class WeekDiaryBuilder:
         week, i.e. Mondays.
         """
         return (
-            (~acts["parkID"].isna()) & (acts["isFirstActivity"]) & ~(acts["tripStartWeekday"] == 1)
+            (~acts["parkID"].isna())
+            & (acts["isFirstActivity"])
+            & ~(acts["tripStartWeekday"] == 1)
         )
 
     def __getLastParkActsWOSun(self, acts) -> pd.Series:
@@ -456,7 +464,9 @@ class WeekDiaryBuilder:
             the week, i.e. Sundays.
         """
         return (
-            (~acts["parkID"].isna()) & (acts["isLastActivity"]) & ~(acts["tripStartWeekday"] == 7)
+            (~acts["parkID"].isna())
+            & (acts["isLastActivity"])
+            & ~(acts["tripStartWeekday"] == 7)
         )
 
     def __updateLastWeekActs(self, acts: pd.DataFrame) -> pd.DataFrame:
@@ -731,7 +741,8 @@ class TimeDiscretiser:
         activity would have a 8.2 in the column nBins.
         """
         self.oneProfile["activityDuration"] = (
-            self.oneProfile["timestampEndCorrected"] - self.oneProfile["timestampStartCorrected"]
+            self.oneProfile["timestampEndCorrected"]
+            - self.oneProfile["timestampStartCorrected"]
         )
         self._dropNoLengthEvents()
         self.oneProfile["nBins"] = self.oneProfile["activityDuration"] / (
@@ -835,7 +846,8 @@ class TimeDiscretiser:
         """
         self.oneProfile.drop(
             self.oneProfile[
-                self.oneProfile.timestampStartCorrected == self.oneProfile.timestampEndCorrected
+                self.oneProfile.timestampStartCorrected
+                == self.oneProfile.timestampEndCorrected
             ].index
         )
 
