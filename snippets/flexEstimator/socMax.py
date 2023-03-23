@@ -6,6 +6,7 @@ __license__ = "BSD-3-Clause"
 
 
 import os
+import numpy as np
 import pandas as pd
 
 # print(os.getcwd())
@@ -13,7 +14,7 @@ import pandas as pd
 data = pd.read_csv('./snippets/flexEstimator/testDay.csv')
 # data = pd.read_csv('./testDay.csv')
 socStart = 50
-upper = 200
+upper = 140
 lower = 150
 
 
@@ -21,28 +22,39 @@ def algo(data: pd.DataFrame, socStart: int, lower: int, upper: int):
     delta = -data.drain.fillna(0) + data.maxChargeVolume.fillna(0)
     cDelta = delta.cumsum() + socStart
 
-    while True:
-        viol = cDelta[cDelta > upper]
-        if len(viol) == 0:
-            break
-        idx = viol.index[0]
-        viol = viol.iloc[0]
-        viol = viol - upper
-        delta.loc[idx] -= viol
-        cDelta = delta.cumsum() + socStart
-
-    print(cDelta)
+    deltaSign = delta.apply(np.sign)
 
     while True:
-        viol = cDelta[cDelta < lower]
-        if len(viol) == 0:
+        overshoot = cDelta[cDelta > upper]
+        undershoot = cDelta[cDelta < lower]
+        if len(overshoot) + len(undershoot) == 0:
             break
-        idx = viol.index[0]
-        viol = viol.iloc[0]
-        viol = lower - viol
-        delta.loc[idx] += viol
-        cDelta = delta.cumsum() + socStart
 
+        if len(overshoot) > 0:
+            idx = overshoot.index[0]
+            overshoot = overshoot.iloc[0]
+            overshoot = overshoot - upper
+            sigDelta = np.sign(delta.loc[idx])
+            delta.loc[idx] -= overshoot
+            assert sigDelta == deltaSign.loc[idx]
+            cDelta = delta.cumsum() + socStart
+
+        if len(undershoot) > 0:
+            idx = undershoot.index[0]
+            undershoot = undershoot.iloc[0]
+            undershoot = lower - undershoot
+            sigDelta = np.sign(delta.loc[idx])
+            delta.loc[idx] += undershoot
+            if abs(delta.loc[idx]) < 1e-6:
+                delta.loc[idx] = 0
+            assert sigDelta == deltaSign.loc[idx]
+            cDelta = delta.cumsum() + socStart
+
+            if cDelta[idx] > upper:
+                raise ArithmeticError(f'Infeasible upper ({upper}) and lower ({lower}) constraints for maximum battery '
+                                      f'level. Last battery level: {cDelta}')
+
+    print(delta)
     print(cDelta)
 
 
