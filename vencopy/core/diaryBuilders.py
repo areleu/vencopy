@@ -616,7 +616,6 @@ class TimeDiscretiser:
         """
         Identifies every first bin for each activity (trip or parking).
         """
-        # TODO: Continue working for weekly profiles here
         self.oneProfile['timestampStartCorrected'] = self.oneProfile['timestampStartCorrected'].apply(
             lambda x: pd.to_datetime(str(x)))
         dayStart = self.oneProfile['timestampStartCorrected'].apply(
@@ -627,7 +626,7 @@ class TimeDiscretiser:
         bins = pd.DataFrame({'index': self.timeDelta})
         bins.drop(bins.tail(1).index, inplace=True)  # remove last element, which is zero
         self.binFromMidnightSeconds = bins['index'].apply(lambda x: x.seconds)
-        # self.activities['firstBin'] = self.activities['startTimeFromMidnightSeconds'].apply(
+        # self.oneProfile['firstBin'] = self.oneProfile['startTimeFromMidnightSeconds'].apply(
         # lambda x: np.where(x >= self.binFromMidnightSeconds)[0][-1])
         # FIXME: more efficient below (edge case of value bigger than any bin, index will be -1)
         self.oneProfile['firstBin'] = (self.oneProfile['startTimeFromMidnightSeconds'].apply(
@@ -739,5 +738,4 @@ class TimeDiscretiser:
         print(f"Discretisation finished for {self.columnToDiscretise}.")
         self.columnToDiscretise = None
         return self.discreteData
-
 
