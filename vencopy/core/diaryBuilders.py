@@ -543,7 +543,7 @@ class TimeDiscretiser:
 
     def _correctTimestamp(self):
         """
-        Ruonds timestampt to predifined resolution.
+        Rounds timestamps to predifined resolution.
         """
         self.oneProfile['timestampStartCorrected'] = self.oneProfile['timestampStart'].dt.round(f'{self.dt}min')
         self.oneProfile['timestampEndCorrected'] = self.oneProfile['timestampEnd'].dt.round(f'{self.dt}min')
