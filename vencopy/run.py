@@ -26,13 +26,14 @@ from vencopy.utils.globalFunctions import dumpReferenceData, loadConfigDict, cre
 if __name__ == "__main__":
     # Set dataset and config to analyze, create output folders
     # datasetID options: 'MiD08' - 'MiD17' - 'KiD' - 'VF'
-    datasetID = "MiD17"
+
     basePath = Path(__file__).parent
     configNames = ("globalConfig", "localPathConfig", "parseConfig", "diaryConfig",
                    "gridConfig", "flexConfig", "aggregatorConfig", "evaluatorConfig")
     configDict = loadConfigDict(configNames, basePath=basePath)
     createOutputFolders(configDict=configDict)
-
+    
+    datasetID = configDict["globalConfig"]["dataset"]
     if datasetID == "MiD17":
         vpData = ParseMiD(configDict=configDict, datasetID=datasetID, debug=True)
     elif datasetID == "KiD":

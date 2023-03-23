@@ -137,13 +137,13 @@ class ProfileAggregator():
 if __name__ == '__main__':
 
     startTime = time.time()
-    datasetID = "MiD17"
     basePath = Path(__file__).parent.parent
     configNames = ("globalConfig", "localPathConfig", "parseConfig", "diaryConfig",
                    "gridConfig", "flexConfig", "aggregatorConfig", "evaluatorConfig")
     configDict = loadConfigDict(configNames, basePath=basePath)
     createOutputFolders(configDict=configDict)
 
+    datasetID = configDict["globalConfig"]["dataset"]
     if datasetID == "MiD17":
         vpData = ParseMiD(configDict=configDict, datasetID=datasetID, debug=False)
     elif datasetID == "KiD":
