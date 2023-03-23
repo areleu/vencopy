@@ -95,7 +95,7 @@ class FlexEstimator:
 
             actTemp = pd.concat([actTemp, tripActsRes], ignore_index=True)
             prevTripActs = tripActsRes  # Redundant?
-        self.activities = actTemp.sort_values(by=['genericID', 'actID', 'parkID'])
+        self.activities = actTemp.sort_values(by=['uniqueID', 'actID', 'parkID'])
 
     def __batteryLevelMin(self):
         """
@@ -131,7 +131,7 @@ class FlexEstimator:
             nextTripActs = actTemp.loc[~actTemp['tripID'].isna(), :]
             parkActsRes = self.__calcBatLevParkMin(actID=act, parkActs=parkActs, nextTripActs=nextTripActs)
             actTemp = pd.concat([actTemp, parkActsRes], ignore_index=True)
-        self.activities = actTemp.sort_values(by=['genericID', 'actID', 'parkID'], ignore_index=True)
+        self.activities = actTemp.sort_values(by=['uniqueID', 'actID', 'parkID'], ignore_index=True)
 
     def _calcMaxBatFirstAct(self, startLevel: float) -> pd.DataFrame:
         """Calculate maximum battery levels at beginning and end of the first activities. If overnight trips are split
@@ -199,14 +199,14 @@ class FlexEstimator:
         # Setting trip activity battery start level to battery end level of previous parking
 
         # Index setting of trip activities to be updated
-        activeHHPersonIDs = tripActs.loc[:, 'genericID']
+        activeHHPersonIDs = tripActs.loc[:, 'uniqueID']
         multiIdxTrip = [(id, actID, None) for id in activeHHPersonIDs]
-        tripActsIdx = tripActs.set_index(['genericID', 'tripID', 'parkID'])
+        tripActsIdx = tripActs.set_index(['uniqueID', 'tripID', 'parkID'])
 
         # Index setting of previous park activities as basis for the update
         prevParkIDs = tripActs.loc[:, 'prevActID']
         multiIdxPark = [(id, None, act) for id, act in zip(activeHHPersonIDs, prevParkIDs)]
-        prevParkActsIdx = prevParkActs.set_index(['genericID', 'tripID', 'parkID'])
+        prevParkActsIdx = prevParkActs.set_index(['uniqueID', 'tripID', 'parkID'])
 
         # Calculation of battery level at start and end of trip
         tripActsIdx.loc[multiIdxTrip, 'maxBatteryLevelStart'] = prevParkActsIdx.loc[
@@ -224,13 +224,13 @@ class FlexEstimator:
 
     def __calcBatLevTripMin(self, actID: int, tripActs: pd.DataFrame, nextParkActs: pd.DataFrame = None):
         # Setting trip activity battery start level to battery end level of previous parking
-        activeHHPersonIDs = tripActs.loc[:, 'genericID']
+        activeHHPersonIDs = tripActs.loc[:, 'uniqueID']
         multiIdxTrip = [(id, actID, None) for id in activeHHPersonIDs]
         # Index the previous park activity via integer index because loc park indices vary
-        tripActsIdx = tripActs.set_index(['genericID', 'tripID', 'parkID'])
+        tripActsIdx = tripActs.set_index(['uniqueID', 'tripID', 'parkID'])
         nextParkIDs = tripActs.loc[:, 'nextActID']
         multiIdxPark = [(id, None, act) for id, act in zip(activeHHPersonIDs, nextParkIDs)]
-        nextParkActsIdx = nextParkActs.set_index(['genericID', 'tripID', 'parkID'])
+        nextParkActsIdx = nextParkActs.set_index(['uniqueID', 'tripID', 'parkID'])
         tripActsIdx.loc[multiIdxTrip, 'minBatteryLevelEnd'] = nextParkActsIdx.loc[
             multiIdxPark, 'minBatteryLevelStart'].values
         # Setting minimum battery end level for trip
@@ -258,14 +258,14 @@ class FlexEstimator:
         """
         # Setting next park activity battery start level to battery end level of current trip
         # Index setting of park activities to be updated
-        activeHHPersonIDs = parkActs.loc[:, 'genericID']
+        activeHHPersonIDs = parkActs.loc[:, 'uniqueID']
         multiIdxPark = [(id, None, actID) for id in activeHHPersonIDs]
-        parkActsIdx = parkActs.set_index(['genericID', 'tripID', 'parkID'])
+        parkActsIdx = parkActs.set_index(['uniqueID', 'tripID', 'parkID'])
 
         # Index setting of previous trip activities used to update
         prevTripIDs = parkActs.loc[:, 'prevActID']
         multiIdxTrip = [(id, act, None) for id, act in zip(activeHHPersonIDs, prevTripIDs)]
-        prevTripActsIdx = prevTripActs.set_index(['genericID', 'tripID', 'parkID'])
+        prevTripActsIdx = prevTripActs.set_index(['uniqueID', 'tripID', 'parkID'])
 
         # Calculation of battery level at start and end of park activity
         parkActsIdx.loc[multiIdxPark, 'maxBatteryLevelStart'] = prevTripActsIdx.loc[
@@ -295,14 +295,14 @@ class FlexEstimator:
             _type_: _description_
         """
         # Setting next park activity battery start level to battery end level of current trip
-        activeHHPersonIDs = parkActs.loc[:, 'genericID']
+        activeHHPersonIDs = parkActs.loc[:, 'uniqueID']
         multiIdxPark = [(id, None, actID) for id in activeHHPersonIDs]
-        parkActsIdx = parkActs.set_index(['genericID', 'tripID', 'parkID'])
+        parkActsIdx = parkActs.set_index(['uniqueID', 'tripID', 'parkID'])
 
         # Preliminary defs
         nextTripIDs = parkActs.loc[:, 'nextActID']
         multiIdxTrip = [(id, act, None) for id, act in zip(activeHHPersonIDs, nextTripIDs)]
-        nextTripActsIdx = nextTripActs.set_index(['genericID', 'tripID', 'parkID'])
+        nextTripActsIdx = nextTripActs.set_index(['uniqueID', 'tripID', 'parkID'])
 
         # Setting of battery level variables
         parkActsIdx.loc[multiIdxPark, 'minBatteryLevelEnd'] = nextTripActsIdx.loc[
@@ -325,15 +325,15 @@ class FlexEstimator:
 
     def _filterResidualNeed(self, acts: pd.DataFrame, indexCols: list):
         """
-        Filter out days (genericIDs) that require additional fuel, i.e. for which the trip distance cannot be
+        Filter out days (uniqueIDs) that require additional fuel, i.e. for which the trip distance cannot be
         completely be fulfilled with the available charging power. Since additional fuel for a single trip motivates
         filtering out the whole vehicle, indexCol defines the columns that make up one vehicle. If indexCols is
-        ['genericID'], all genericIDs that have at least one trip requiring fuel are disregarded. If indexCols is
+        ['uniqueID'], all uniqueIDs that have at least one trip requiring fuel are disregarded. If indexCols is
         ['categoryID', 'weekID'] each unique combination of categoryID and weekID (each "week") for which fuel is
         required in at least one trip is disregarded.
 
         Args:
-            acts (pd.DataFrame): Activities data set containing at least the columns 'genericID' and 'maxResidualNeed'
+            acts (pd.DataFrame): Activities data set containing at least the columns 'uniqueID' and 'maxResidualNeed'
             indexCols (list): Columns that define a "day", i.e. all unique combinations where at least one activity
                 requires residual fuel are disregarded.
         """
@@ -378,7 +378,7 @@ class FlexEstimator:
         self._uncontrolledCharging()
         self.__batteryLevelMin()
         if filterFuelNeed:
-            self.activities = self._filterResidualNeed(acts=self.activities, indexCols=['genericID'])
+            self.activities = self._filterResidualNeed(acts=self.activities, indexCols=['uniqueID'])
         print("Technical flexibility estimation ended")
         return self.activities
 
