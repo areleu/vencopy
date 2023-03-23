@@ -42,11 +42,12 @@ if __name__ == "__main__":
         configDict=configDict,
         activities=vpData.activities,
         gridModel="simple",
+        forceLastTripHome=True
     )
     vpGrid.assignGrid()
 
     vpFlex = FlexEstimator(
-        configDict=configDict, activities=vpGrid.activities, forceLastTripHome=True
+        configDict=configDict, activities=vpGrid.activities
     )
     vpFlex.estimateTechnicalFlexibility()
 
