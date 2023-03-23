@@ -42,7 +42,7 @@ if __name__ == "__main__":
         configDict=configDict,
         activities=vpData.activities,
         gridModel="simple",
-        forceLastTripHome=True
+        forceLastTripHome=False
     )
     vpGrid.assignGrid()
 

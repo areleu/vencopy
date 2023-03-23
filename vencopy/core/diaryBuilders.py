@@ -13,6 +13,7 @@ if __package__ is None or __package__ == '':
 
 from pathlib import Path
 
+import time
 import numpy as np
 import pandas as pd
 from vencopy.utils.globalFunctions import createFileName, writeOut
