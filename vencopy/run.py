@@ -14,36 +14,28 @@ if __package__ is None or __package__ == "":
 
     sys.path.append(path.dirname(path.dirname(__file__)))
 
+import time
 from pathlib import Path
 from vencopy.core.dataParsers import parseData
-from vencopy.core.diaryBuilders import WeekDiaryBuilder, DiaryBuilder
+from vencopy.core.diaryBuilders import DiaryBuilder
 from vencopy.core.gridModelers import GridModeler
-from vencopy.core.flexEstimators import FlexEstimator, WeekFlexEstimator
+from vencopy.core.flexEstimators import FlexEstimator
 from vencopy.core.profileAggregators import ProfileAggregator
 
 # from vencopy.core.evaluators import Evaluator
 from vencopy.utils.globalFunctions import (
-    dumpReferenceData,
     loadConfigDict,
     createOutputFolders,
 )
 
 if __name__ == "__main__":
+    startTime = time.time()
+
     basePath = Path(__file__).parent
-    configNames = (
-        "globalConfig",
-        "localPathConfig",
-        "parseConfig",
-        "diaryConfig",
-        "gridConfig",
-        "flexConfig",
-        "aggregatorConfig",
-        "evaluatorConfig",
-    )
-    configDict = loadConfigDict(configNames, basePath=basePath)
+    configDict = loadConfigDict(basePath=basePath)
     createOutputFolders(configDict=configDict)
 
-    vpData = parseData(configDict)
+    vpData = parseData(configDict=configDict)
     vpData.process()
 
     vpGrid = GridModeler(
@@ -53,27 +45,16 @@ if __name__ == "__main__":
     )
     vpGrid.assignGrid()
 
-    vpFlex = FlexEstimator(configDict=configDict, activities=vpGrid.activities)
+    vpFlex = FlexEstimator(
+        configDict=configDict, activities=vpGrid.activities, forceLastTripHome=True
+    )
     vpFlex.estimateTechnicalFlexibility()
 
     vpDiary = DiaryBuilder(configDict=configDict, activities=vpFlex.activities)
     vpDiary.createDiaries()
 
-    vpWDB = WeekDiaryBuilder(activities=vpGrid.activities, catCols=["areaType"])
-    vpWDB.composeWeekActivities(nWeeks=500, seed=42, replace=True)
-
-    vpWeFlex = WeekFlexEstimator(
-        configDict=configDict,
-        activities=vpWDB.activities,
-        threshold=0.8,
-    )
-    vpWeFlex.estimateTechnicalFlexibility()
-
     vpProfile = ProfileAggregator(
-        configDict=configDict,
-        activities=vpDiary.activities,
-        profiles=vpDiary,
-        cluster=True,
+        configDict=configDict, activities=vpDiary.activities, profiles=vpDiary
     )
     vpProfile.createTimeseries()
 
@@ -83,3 +64,6 @@ if __name__ == "__main__":
     # vpEval.hourlyAggregates = vpEval.calcVariableSpecAggregates(by=["tripStartWeekday"])
     # vpEval.plotAggregates()
     # vpEval.plotProfiles(flexEstimator=vpFlex)
+
+    elapsedTime = time.time() - startTime
+    print("Elapsed time:", elapsedTime)

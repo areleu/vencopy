@@ -14,17 +14,16 @@ if __package__ is None or __package__ == "":
     sys.path.append(path.dirname(path.dirname(path.dirname(__file__))))
 
 import pprint
+from typing import Any
 import warnings
 from pathlib import Path
 from zipfile import ZipFile
 
 import numpy as np
 import pandas as pd
-from profilehooks import profile
 
 from vencopy.utils.globalFunctions import (
     createFileName,
-    loadConfigDict,
     replace_vec,
     writeOut,
 )
@@ -1655,26 +1654,9 @@ class ParseKiD(IntermediateParsing):
         return self.activities
 
 
-def parseData(configDict):
+def parseData(configDict: dict) -> Any[ParseMiD, ParseKiD, ParseVF]:
     datasetID = configDict["globalConfig"]["dataset"]
     debug = configDict["globalConfig"]["debug"]
     delegate = {"MiD17": ParseMiD, "KiD": ParseKiD, "VF": ParseVF}
     return delegate[datasetID](configDict=configDict, datasetID=datasetID, debug=debug)
 
-
-if __name__ == "__main__":
-    basePath = Path(__file__).parent.parent
-    configNames = (
-        "globalConfig",
-        "localPathConfig",
-        "parseConfig",
-        "diaryConfig",
-        "gridConfig",
-        "flexConfig",
-        "aggregatorConfig",
-        "evaluatorConfig",
-    )
-    configDict = loadConfigDict(configNames, basePath)
-    vpData = parseData(configDict)
-    vpData.process()
-    vpData.writeOutput()

@@ -12,7 +12,7 @@ from pathlib import Path
 import os
 
 
-def loadConfigDict(configNames: tuple, basePath):
+def loadConfigDict(basePath):
     # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
     """
     Generic function to load and open yaml config files
@@ -20,6 +20,16 @@ def loadConfigDict(configNames: tuple, basePath):
     :param configNames: Tuple containing names of config files to be loaded
     :return: Dictionary with opened yaml config files
     """
+    configNames = (
+        "globalConfig",
+        "localPathConfig",
+        "parseConfig",
+        "diaryConfig",
+        "gridConfig",
+        "flexConfig",
+        "aggregatorConfig",
+        "evaluatorConfig",
+    )
     configPath = basePath / 'config'
     configDict = {}
     for configName in configNames:
