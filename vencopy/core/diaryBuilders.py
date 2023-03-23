@@ -742,6 +742,10 @@ class TimeDiscretiser:
         """
         Calculate the profile value for each bin for the 'distribute' method.
         """
+        if self.oneProfile["nBins"].any() == 0:
+            raise ArithmeticError(
+                "The total number of bins is zero, which caused a division by zero. This should not happen because events with lenght zero should have been dropped."
+            )
         self.oneProfile["valPerBin"] = (
             self.oneProfile[self.columnToDiscretise] / self.oneProfile["nBins"]
         )
