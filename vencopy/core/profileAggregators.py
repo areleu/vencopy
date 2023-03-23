@@ -124,7 +124,7 @@ class ProfileAggregator():
 
 
     def createTimeseries(self):
-        profiles = (vpDiary.drain, vpDiary.uncontrolledCharge, vpDiary.chargingPower, vpDiary.maxBatteryLevel, vpDiary.minBatteryLevel)
+        profiles = (self.drain, self.uncontrolledCharge, self.chargingPower, self.maxBatteryLevel, self.minBatteryLevel)
         profileNames = ('drain', 'chargingPower', 'uncontrolledCharge', 'maxBatteryLevel', 'minBatteryLevel')
         for profile, profileName in itertools.product(profiles, profileNames):
             self.profileName = profileName
@@ -134,36 +134,3 @@ class ProfileAggregator():
         print('Run finished')
 
 
-if __name__ == '__main__':
-
-    startTime = time.time()
-    basePath = Path(__file__).parent.parent
-    configNames = ("globalConfig", "localPathConfig", "parseConfig", "diaryConfig",
-                   "gridConfig", "flexConfig", "aggregatorConfig", "evaluatorConfig")
-    configDict = loadConfigDict(configNames, basePath=basePath)
-    createOutputFolders(configDict=configDict)
-
-    datasetID = configDict["globalConfig"]["dataset"]
-    if datasetID == "MiD17":
-        vpData = ParseMiD(configDict=configDict, datasetID=datasetID, debug=False)
-    elif datasetID == "KiD":
-        vpData = ParseKiD(configDict=configDict, datasetID=datasetID, debug=False)
-    elif datasetID == "VF":
-        vpData = ParseVF(configDict=configDict, datasetID=datasetID, debug=False)
-    vpData.process()
-
-    vpGrid = GridModeler(configDict=configDict, datasetID=datasetID, activities=vpData.activities, gridModel='simple')
-    vpGrid.assignGrid()
-
-    vpFlex = FlexEstimator(configDict=configDict, datasetID=datasetID, activities=vpGrid.activities)
-    vpFlex.estimateTechnicalFlexibility()
-
-    vpDiary = DiaryBuilder(configDict=configDict, datasetID=datasetID, activities=vpFlex.activities)
-    vpDiary.createDiaries()
-
-    vpProfile = ProfileAggregator(configDict=configDict,
-                                  activities=vpFlex.activities, profiles=vpDiary)
-    vpProfile.createTimeseries()
-
-    elapsedTime = time.time() - startTime
-    print('Elapsed time:', elapsedTime)

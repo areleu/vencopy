@@ -17,8 +17,7 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 from scipy.stats.sampling import DiscreteAliasUrn
-from vencopy.utils.globalFunctions import createFileName, loadConfigDict, writeOut
-from vencopy.core.dataParsers import ParseMiD, ParseKiD, ParseVF
+from vencopy.utils.globalFunctions import createFileName, writeOut
 
 
 class GridModeler:
@@ -156,26 +155,4 @@ class GridModeler:
         idToRemove = lastActsNotHome['uniqueID'].unique()
         self.activities = self.activities.loc[~self.activities['uniqueID'].isin(idToRemove), :]
 
-if __name__ == "__main__":
 
-    basePath = Path(__file__).parent.parent
-    configNames = ("globalConfig", "localPathConfig", "parseConfig", "diaryConfig",
-                   "gridConfig", "flexConfig", "aggregatorConfig", "evaluatorConfig")
-    configDict = loadConfigDict(configNames, basePath=basePath)
-    
-    datasetID = configDict["globalConfig"]["dataset"]
-    if datasetID == "MiD17":
-        vpData = ParseMiD(configDict=configDict, datasetID=datasetID, debug=False)
-    elif datasetID == "KiD":
-        vpData = ParseKiD(configDict=configDict, datasetID=datasetID, debug=False)
-    elif datasetID == "VF":
-        vpData = ParseVF(configDict=configDict, datasetID=datasetID, debug=False)
-    vpData.process()
-
-    vpGrid = GridModeler(
-        configDict=configDict,
-        activities=vpData.activities,
-        gridModel='simple',
-        forceLastTripHome=True)
-    vpGrid.assignGrid()
-    vpGrid.writeOutput()

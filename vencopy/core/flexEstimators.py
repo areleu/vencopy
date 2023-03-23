@@ -14,12 +14,8 @@ if __package__ is None or __package__ == "":
     sys.path.append(path.dirname(path.dirname(path.dirname(__file__))))
 
 from pathlib import Path
-
 import pandas as pd
-
-from vencopy.core.dataParsers import ParseKiD, ParseMiD, ParseVF
-from vencopy.core.gridModelers import GridModeler
-from vencopy.utils.globalFunctions import createFileName, loadConfigDict, writeOut
+from vencopy.utils.globalFunctions import createFileName, writeOut
 
 
 class FlexEstimator:
@@ -631,27 +627,3 @@ class WeekFlexEstimator(FlexEstimator):
         print(f'{self.thresholdSOC}')
         return self.activities
 
-
-if __name__ == "__main__":
-
-    basePath = Path(__file__).parent.parent
-    configNames = ("globalConfig", "localPathConfig", "parseConfig", "diaryConfig",
-                   "gridConfig", "flexConfig", "aggregatorConfig", "evaluatorConfig")
-    configDict = loadConfigDict(configNames, basePath)
-
-    datasetID = configDict["globalConfig"]["dataset"]
-    if datasetID == "MiD17":
-        vpData = ParseMiD(configDict=configDict, datasetID=datasetID)
-    elif datasetID == "KiD":
-        vpData = ParseKiD(configDict=configDict, datasetID=datasetID)
-    elif datasetID == "VF":
-        vpData = ParseVF(configDict=configDict, datasetID=datasetID)
-    vpData.process()
-
-    vpGrid = GridModeler(configDict=configDict, datasetID=datasetID, activities=vpData.activities,
-                         gridModel='simple', forceLastTripHome=True)
-    vpGrid.assignGrid()
-
-    vpFlex = FlexEstimator(configDict=configDict, datasetID=datasetID, activities=vpGrid.activities)
-    vpFlex.estimateTechnicalFlexibility()
-    vpFlex.writeOutput()

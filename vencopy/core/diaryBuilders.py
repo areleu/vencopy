@@ -11,19 +11,11 @@ if __package__ is None or __package__ == '':
     from os import path
     sys.path.append(path.dirname(path.dirname(path.dirname(__file__))))
 
-import time
 from pathlib import Path
-from matplotlib import collections
-from profilehooks import profile
 
 import numpy as np
 import pandas as pd
-from vencopy.core.dataParsers import ParseKiD, ParseMiD, ParseVF
-from vencopy.core.flexEstimators import FlexEstimator
-from vencopy.core.gridModelers import GridModeler
-from vencopy.utils.globalFunctions import createFileName, loadConfigDict, writeOut
-
-IDXSLICE = pd.IndexSlice
+from vencopy.utils.globalFunctions import createFileName, writeOut
 
 
 class DiaryBuilder:
@@ -758,31 +750,3 @@ class TimeDiscretiser:
         return self.discreteData
 
 
-if __name__ == '__main__':
-
-    startTime = time.time()
-    basePath = Path(__file__).parent.parent
-    configNames = ("globalConfig", "localPathConfig", "parseConfig", "diaryConfig",
-                   "gridConfig", "flexConfig", "aggregatorConfig", "evaluatorConfig")
-    configDict = loadConfigDict(configNames, basePath=basePath)
-
-    datasetID = configDict["globalConfig"]["dataset"]
-    if datasetID == "MiD17":
-        vpData = ParseMiD(configDict=configDict, datasetID=datasetID, debug=True)
-    elif datasetID == "KiD":
-        vpData = ParseKiD(configDict=configDict, datasetID=datasetID, debug=False)
-    elif datasetID == "VF":
-        vpData = ParseVF(configDict=configDict, datasetID=datasetID, debug=False)
-    vpData.process()
-
-    vpGrid = GridModeler(configDict=configDict, datasetID=datasetID, activities=vpData.activities, gridModel='simple')
-    vpGrid.assignGrid()
-
-    vpFlex = FlexEstimator(configDict=configDict, datasetID=datasetID, activities=vpGrid.activities)
-    vpFlex.estimateTechnicalFlexibility()
-
-    vpDiary = DiaryBuilder(configDict=configDict, datasetID=datasetID, activities=vpFlex.activities)
-    vpDiary.createDiaries()
-
-    elapsedTime = time.time() - startTime
-    print('Elapsed time:', elapsedTime)

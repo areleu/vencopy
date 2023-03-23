@@ -20,11 +20,9 @@ from zipfile import ZipFile
 
 import numpy as np
 import pandas as pd
-from profilehooks import profile
 
 from vencopy.utils.globalFunctions import (
     createFileName,
-    loadConfigDict,
     replace_vec,
     writeOut,
 )
@@ -1661,20 +1659,3 @@ def parseData(configDict):
     delegate = {"MiD17": ParseMiD, "KiD": ParseKiD, "VF": ParseVF}
     return delegate[datasetID](configDict=configDict, datasetID=datasetID, debug=debug)
 
-
-if __name__ == "__main__":
-    basePath = Path(__file__).parent.parent
-    configNames = (
-        "globalConfig",
-        "localPathConfig",
-        "parseConfig",
-        "diaryConfig",
-        "gridConfig",
-        "flexConfig",
-        "aggregatorConfig",
-        "evaluatorConfig",
-    )
-    configDict = loadConfigDict(configNames, basePath)
-    vpData = parseData(configDict)
-    vpData.process()
-    vpData.writeOutput()
