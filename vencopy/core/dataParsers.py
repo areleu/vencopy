@@ -1657,8 +1657,9 @@ class ParseKiD(IntermediateParsing):
 
 def parseData(configDict):
     datasetID = configDict["globalConfig"]["dataset"]
+    debug = configDict["globalConfig"]["debug"]
     delegate = {"MiD17": ParseMiD, "KiD": ParseKiD, "VF": ParseVF}
-    return delegate[datasetID](configDict=configDict, datasetID=datasetID, debug=False)
+    return delegate[datasetID](configDict=configDict, datasetID=datasetID, debug=debug)
 
 
 if __name__ == "__main__":

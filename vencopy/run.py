@@ -19,8 +19,8 @@ from vencopy.core.dataParsers import parseData
 from vencopy.core.diaryBuilders import WeekDiaryBuilder, DiaryBuilder
 from vencopy.core.gridModelers import GridModeler
 from vencopy.core.flexEstimators import FlexEstimator, WeekFlexEstimator
+from vencopy.core.profileAggregators import ProfileAggregator
 
-# from vencopy.core.profileAggregators import ProfileAggregator
 # from vencopy.core.evaluators import Evaluator
 from vencopy.utils.globalFunctions import (
     dumpReferenceData,
@@ -29,9 +29,6 @@ from vencopy.utils.globalFunctions import (
 )
 
 if __name__ == "__main__":
-    # Set dataset and config to analyze, create output folders
-    # datasetID options: 'MiD08' - 'MiD17' - 'KiD' - 'VF'
-
     basePath = Path(__file__).parent
     configNames = (
         "globalConfig",
@@ -51,25 +48,15 @@ if __name__ == "__main__":
 
     vpGrid = GridModeler(
         configDict=configDict,
-        datasetID=datasetID,
         activities=vpData.activities,
         gridModel="simple",
     )
     vpGrid.assignGrid()
 
-    vpFlex = FlexEstimator(
-        configDict=configDict, datasetID=datasetID, activities=vpGrid.activities
-    )
+    vpFlex = FlexEstimator(configDict=configDict, activities=vpGrid.activities)
     vpFlex.estimateTechnicalFlexibility()
 
-    # if 'postFlex' in configDict['globalConfig']['validation']['tags']:
-    #     dumpReferenceData(data=vpFlex.activities,
-    #                       tag='postFlex',
-    #                       path=Path(configDict['globalConfig']['validation']['path']))
-
-    vpDiary = DiaryBuilder(
-        configDict=configDict, datasetID=datasetID, activities=vpFlex.activities
-    )
+    vpDiary = DiaryBuilder(configDict=configDict, activities=vpFlex.activities)
     vpDiary.createDiaries()
 
     vpWDB = WeekDiaryBuilder(activities=vpGrid.activities, catCols=["areaType"])
@@ -77,21 +64,22 @@ if __name__ == "__main__":
 
     vpWeFlex = WeekFlexEstimator(
         configDict=configDict,
-        datasetID=datasetID,
         activities=vpWDB.activities,
         threshold=0.8,
     )
     vpWeFlex.estimateTechnicalFlexibility()
 
-    # profiles = ("drain")
-    # vpProfile = ProfileAggregator(configDict=configDict, datasetID=datasetID,
-    #                               activities=vpDiary.activities, profiles=profiles, cluster=True)
-    # vpProfile.createTimeseries()
+    vpProfile = ProfileAggregator(
+        configDict=configDict,
+        activities=vpDiary.activities,
+        profiles=vpDiary,
+        cluster=True,
+    )
+    vpProfile.createTimeseries()
 
     # Evaluate drive and trip purpose profile
     # vpEval = Evaluator(configDict=configDict, parseData=pd.Series(data=vpData, index=[datasetID]))
     # vpEval.plotParkingAndPowers(vpGrid=vpGrid)
     # vpEval.hourlyAggregates = vpEval.calcVariableSpecAggregates(by=["tripStartWeekday"])
     # vpEval.plotAggregates()
-
     # vpEval.plotProfiles(flexEstimator=vpFlex)

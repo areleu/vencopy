@@ -23,8 +23,8 @@ from vencopy.utils.globalFunctions import createFileName, loadConfigDict, writeO
 
 
 class FlexEstimator:
-    def __init__(self, configDict: dict, datasetID: str, activities: pd.DataFrame):
-        self.datasetID = datasetID
+    def __init__(self, configDict: dict, activities: pd.DataFrame):
+        self.datasetID = configDict["globalConfig"]["dataset"]
         self.flexConfig = configDict['flexConfig']
         self.globalConfig = configDict['globalConfig']
         self.localPathConfig = configDict['localPathConfig']
@@ -380,8 +380,8 @@ class FlexEstimator:
 
 
 class WeekFlexEstimator(FlexEstimator):
-    def __init__(self, configDict: dict, datasetID: str, activities: pd.DataFrame, threshold: float = None):
-        super().__init__(configDict=configDict, datasetID=datasetID, activities=activities)
+    def __init__(self, configDict: dict, activities: pd.DataFrame, threshold: float = None):
+        super().__init__(configDict=configDict, activities=activities)
         self.threshold = None
         self.thresholdSOC = None
         self.thresholdAbsolute = None
