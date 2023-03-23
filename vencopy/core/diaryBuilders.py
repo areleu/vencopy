@@ -626,11 +626,10 @@ class TimeDiscretiser:
         bins = pd.DataFrame({'index': self.timeDelta})
         bins.drop(bins.tail(1).index, inplace=True)  # remove last element, which is zero
         self.binFromMidnightSeconds = bins['index'].apply(lambda x: x.seconds)
-        # self.oneProfile['firstBin'] = self.oneProfile['startTimeFromMidnightSeconds'].apply(
-        # lambda x: np.where(x >= self.binFromMidnightSeconds)[0][-1])
-        # FIXME: more efficient below (edge case of value bigger than any bin, index will be -1)
         self.oneProfile['firstBin'] = (self.oneProfile['startTimeFromMidnightSeconds'].apply(
             lambda x: np.argmax(x < self.binFromMidnightSeconds)-1)).astype(int)
+        if self.oneProfile['firstBin'].any() > self.nTimeSlots:
+            raise ArithmeticError("First bin value is bigger than total number of bins.")
         
 
     def _identifyLastBin(self):
