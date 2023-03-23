@@ -640,16 +640,6 @@ class TimeDiscretiser:
         dayEnd = self.oneProfile['timestampEndCorrected'].apply(
             lambda x: pd.Timestamp(year=x.year, month=x.month, day=x.day))
         self.oneProfile['dailyTimeDeltaEnd'] = self.oneProfile['timestampEndCorrected'] - dayEnd
-        # Option 1
-        # activitiesLength = self.activities['timedelta'].apply(lambda x: x.seconds)
-        # self.activities['endTimeFromMidnightSeconds'] =
-        #   self.activities['startTimeFromMidnightSeconds'] + activitiesLength
-        # Option 2
-        # self.activities['endTimeFromMidnightSeconds'] = self.activities['dailyTimeDeltaEnd'].apply(
-        #               lambda x: x.seconds)
-        # self.activities['lastBin'] = self.activities['endTimeFromMidnightSeconds'].apply(
-        #                 lambda x: np.argmax(x < self.binFromMidnightSeconds)-1)
-        # Option 3
         self.oneProfile['lastBin'] = (self.oneProfile['firstBin'] + self.oneProfile['nBins'] - 1).astype(int)
         self.oneProfile.loc[self.oneProfile['isLastActivity'], 'lastBin'] = (
             self.oneProfile.loc[self.oneProfile['isLastActivity'], 'lastBin'] + 1)
