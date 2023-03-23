@@ -14,6 +14,7 @@ if __package__ is None or __package__ == "":
     sys.path.append(path.dirname(path.dirname(path.dirname(__file__))))
 
 import pprint
+from typing import Any
 import warnings
 from pathlib import Path
 from zipfile import ZipFile
@@ -1653,7 +1654,7 @@ class ParseKiD(IntermediateParsing):
         return self.activities
 
 
-def parseData(configDict):
+def parseData(configDict: dict) -> Any[ParseMiD, ParseKiD, ParseVF]:
     datasetID = configDict["globalConfig"]["dataset"]
     debug = configDict["globalConfig"]["debug"]
     delegate = {"MiD17": ParseMiD, "KiD": ParseKiD, "VF": ParseVF}
