@@ -421,10 +421,10 @@ class DataParser:
 
     def __addUtilAttributes(self):
         # Adding additional attribute columns for convenience
-        self.activities['genericID_prev'] = self.activities['genericID'].shift(fill_value=0)
-        self.activities['isFirstActivity'] = self.activities['genericID_prev'] != self.activities['genericID']
-        self.activities['genericID_next'] = self.activities['genericID'].shift(-1, fill_value=0)
-        self.activities['isLastActivity'] = self.activities['genericID_next'] != self.activities['genericID']
+        self.activities['uniqueID_prev'] = self.activities['uniqueID'].shift(fill_value=0)
+        self.activities['isFirstActivity'] = self.activities['uniqueID_prev'] != self.activities['uniqueID']
+        self.activities['uniqueID_next'] = self.activities['uniqueID'].shift(-1, fill_value=0)
+        self.activities['isLastActivity'] = self.activities['uniqueID_next'] != self.activities['uniqueID']
 
     def __addParkActAfterLastTrip(self):
         # Adding park activities after last trips
@@ -446,8 +446,8 @@ class DataParser:
         # Clean-up of temporary redundant columns
         self.activities.drop(columns=[
             'tripStartClock', 'tripEndClock', 'tripStartYear', 'tripStartMonth',
-            'tripStartWeek', 'tripStartHour', 'tripStartMinute', 'tripEndHour', 'tripEndMinute', 'genericID_prev',
-            'genericID_next', 'colFromIndex'], inplace=True)
+            'tripStartWeek', 'tripStartHour', 'tripStartMinute', 'tripEndHour', 'tripEndMinute', 'uniqueID_prev',
+            'uniqueID_next', 'colFromIndex'], inplace=True)
 
     def __removeParkActsAfterOvernightTrips(self):
         # Checking for trips across day-limit and removing respective parking activities
@@ -635,8 +635,8 @@ class DataParser:
         trips['prevActID'] = pd.NA
 
         # Update next activity ID
-        genericID = trips['genericID']
-        actIdx = (self.activities['genericID'].isin(genericID) & self.activities['isFirstActivity'])
+        uniqueID = trips['uniqueID']
+        actIdx = (self.activities['uniqueID'].isin(uniqueID) & self.activities['isFirstActivity'])
         trips['nextActID'] = self.activities.loc[actIdx, 'actID']
 
         # Update previous activity ID of previously first activity
@@ -669,7 +669,7 @@ class DataParser:
         morningTrips['isLastActivity'] = False
 
     def __getPrevFirstAct(self, morningTrips: pd.DataFrame):
-        return (self.activities['genericID'].isin(morningTrips['genericID']) &
+        return (self.activities['uniqueID'].isin(morningTrips['uniqueID']) &
                 self.activities['isFirstActivity'])
 
     def __neglectOverlapMorningTrips(self, morningTrips: pd.DataFrame, isPrevFirstActs: pd.DataFrame):
@@ -719,7 +719,7 @@ class DataParser:
         self.activities = self.activities.drop(idxParkTS[idxParkTS].index)
 
         # After removing first parking, set first trip to first activity
-        self.activities.loc[(self.activities['genericID'].isin(firstParkActs.loc[idxParkTS, 'genericID'])) &
+        self.activities.loc[(self.activities['uniqueID'].isin(firstParkActs.loc[idxParkTS, 'uniqueID'])) &
                             (self.activities['tripID'] == 1),
                             'isFirstActivity'] = True
 
@@ -730,9 +730,9 @@ class DataParser:
         were 3 occurences of this case all with end times of the overnight trip between 00:00 and 01:00.
 
         """
-        genericID = self.__getGenericIDsToNeglect()
-        self.__neglectZeroTripIDFromActivities(id_neglect=genericID)
-        self.__updateConsolidatedAct(id_neglect=genericID)
+        uniqueID = self.__getUniqueIDsToNeglect()
+        self.__neglectZeroTripIDFromActivities(id_neglect=uniqueID)
+        self.__updateConsolidatedAct(id_neglect=uniqueID)
 
     def __checkAndAssert(self):
         # Calculates the neglected trip distances from overnight split trips with regular morning trips
@@ -744,23 +744,23 @@ class DataParser:
               f'because they corresponded to split-trips from overnight trips.')
         assert ratio < 0.01
 
-    def __getGenericIDsToNeglect(self):
+    def __getUniqueIDsToNeglect(self):
         """
         Identifies the household person IDs that should be neglected.
         """
-        genericIDsOvernight = self.activities.loc[self.activities['tripID'] == 0, 'genericID']
-        acts = self.activities.loc[self.activities['genericID'].isin(genericIDsOvernight), :]
+        uniqueIDsOvernight = self.activities.loc[self.activities['tripID'] == 0, 'uniqueID']
+        acts = self.activities.loc[self.activities['uniqueID'].isin(uniqueIDsOvernight), :]
         actsOvernight = acts.loc[acts['tripID'] == 0, :]
 
         # Next trip after morning part of overnight split
         actsNextTrip = acts.loc[acts['prevActID'] == 0, :]
-        return actsOvernight.loc[~actsOvernight['genericID'].isin(actsNextTrip['genericID']), 'genericID']
+        return actsOvernight.loc[~actsOvernight['uniqueID'].isin(actsNextTrip['uniqueID']), 'uniqueID']
 
     def __neglectZeroTripIDFromActivities(self, id_neglect: pd.Series):
         """
         This method filters out the activities with the given hhpid and tripID 0.
         """
-        boolNeglect = (self.activities['genericID'].isin(id_neglect)) & (self.activities['tripID'] == 0)
+        boolNeglect = (self.activities['uniqueID'].isin(id_neglect)) & (self.activities['tripID'] == 0)
         self.activities = self.activities.loc[~boolNeglect, :]
 
     def __updateConsolidatedAct(self, id_neglect: pd.Series):
@@ -768,7 +768,7 @@ class DataParser:
         This method sets the start timestamp of the firstActivity of all hhpids given as argument to 00:00. Additionally
         the prevActID is set to pd.NA
         """
-        idxConsolidatedTrips = (self.activities['genericID'].isin(id_neglect)) & (self.activities[
+        idxConsolidatedTrips = (self.activities['uniqueID'].isin(id_neglect)) & (self.activities[
             'isFirstActivity'])
         self.activities.loc[idxConsolidatedTrips, 'timestampStart'] = replace_vec(self.activities.loc[
             idxConsolidatedTrips, 'timestampStart'], hour=0, minute=0)
@@ -778,7 +778,7 @@ class DataParser:
         self.activities = self.activities.drop(columns=['tripEndNextDay'])
 
     def __sortActivities(self):
-        self.activities = self.activities.sort_values(by=['genericID', 'timestampStart'])
+        self.activities = self.activities.sort_values(by=['uniqueID', 'timestampStart'])
 
     def __setONVarFalseForLastActTrip(self):
         """This function treats the edge case of trips being the last activity in the daily activity chain, i.e. trips
@@ -984,11 +984,11 @@ class IntermediateParsing(DataParser):
             endsFollowingDay, "timestampEnd"
         ] + pd.offsets.Day(1)
 
-    def _harmonizeVariablesGenericIdNames(self):
+    def _harmonizeVariablesuniqueIDNames(self):
         """
         Harmonises ID variables for all datasets.
         """
-        self.data["genericID"] = (self.data[str(self.parseConfig["IDVariablesNames"][self.datasetID])]).astype(int)
+        self.data["uniqueID"] = (self.data[str(self.parseConfig["IDVariablesNames"][self.datasetID])]).astype(int)
         print("Finished harmonization of ID variables")
 
 
@@ -1074,8 +1074,8 @@ class ParseMiD(IntermediateParsing):
         # Clean-up of temporary redundant columns
         self.activities.drop(columns=[
             'isMIVDriver', 'tripStartClock', 'tripEndClock', 'tripStartYear', 'tripStartMonth',
-            'tripStartWeek', 'tripStartHour', 'tripStartMinute', 'tripEndHour', 'tripEndMinute', 'genericID_prev',
-            'genericID_next', 'colFromIndex'], inplace=True)
+            'tripStartWeek', 'tripStartHour', 'tripStartMinute', 'tripEndHour', 'tripEndMinute', 'uniqueID_prev',
+            'uniqueID_next', 'colFromIndex'], inplace=True)
 
     def process(self, splitOvernightTrips: bool = True):
         """
@@ -1087,7 +1087,7 @@ class ParseMiD(IntermediateParsing):
 
         self._selectColumns()
         self.__harmonizeVariables()
-        self._harmonizeVariablesGenericIdNames()
+        self._harmonizeVariablesuniqueIDNames()
         self.__convertTypes()
         self.__addStrColumns()
         self._composeStartAndEndTimestamps()
@@ -1200,8 +1200,8 @@ class ParseVF(IntermediateParsing):
         # Clean-up of temporary redundant columns
         self.activities.drop(columns=[
             'isMIVDriver', 'tripStartClock', 'tripEndClock', 'tripStartYear', 'tripStartMonth',
-            'tripStartWeek', 'tripStartHour', 'tripStartMinute', 'tripEndHour', 'tripEndMinute', 'genericID_prev',
-            'genericID_next', 'colFromIndex'], inplace=True)
+            'tripStartWeek', 'tripStartHour', 'tripStartMinute', 'tripEndHour', 'tripEndMinute', 'uniqueID_prev',
+            'uniqueID_next', 'colFromIndex'], inplace=True)
 
     # DEPRECATED, WILL BE REMOVED IN NEXT RELEASE
     def copyOverTripNextDay(self):
@@ -1213,7 +1213,7 @@ class ParseVF(IntermediateParsing):
         """
         self._selectColumns()
         self.__harmonizeVariables()
-        self._harmonizeVariablesGenericIdNames()
+        self._harmonizeVariablesUniqueIDNames()
         self.__convertTypes()
         self.__addStrColumns()
         self._composeStartAndEndTimestamps()
@@ -1350,7 +1350,7 @@ class ParseKiD(IntermediateParsing):
         """
         self._selectColumns()
         self._harmonizeVariables()
-        self._harmonizeVariablesGenericIdNames()
+        self._harmonizeVariablesUniqueIDNames()
         self.__convertTypes()
         self.__excludeHours()
         self.__addStrColumns()
