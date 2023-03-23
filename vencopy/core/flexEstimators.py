@@ -639,7 +639,7 @@ if __name__ == "__main__":
                    "gridConfig", "flexConfig", "aggregatorConfig", "evaluatorConfig")
     configDict = loadConfigDict(configNames, basePath)
 
-    datasetID = "MiD17"  # options are MiD08, MiD17, KiD and VF
+    datasetID = configDict["globalConfig"]["dataset"]
     if datasetID == "MiD17":
         vpData = ParseMiD(configDict=configDict, datasetID=datasetID)
     elif datasetID == "KiD":
