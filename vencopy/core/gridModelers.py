@@ -22,12 +22,12 @@ from vencopy.core.dataParsers import ParseMiD, ParseKiD, ParseVF
 
 
 class GridModeler:
-    def __init__(self, configDict: dict, datasetID: str, activities, gridModel: str, forceLastTripHome: bool = False):
+    def __init__(self, configDict: dict, activities, gridModel: str, forceLastTripHome: bool = False):
         self.globalConfig = configDict['globalConfig']
         self.gridConfig = configDict['gridConfig']
         self.flexConfig = configDict['flexConfig']
         self.localPathConfig = configDict['localPathConfig']
-        self.datasetID = datasetID
+        self.datasetID = configDict["globalConfig"]["dataset"]
         self.gridModel = gridModel
         self.activities = activities
         if forceLastTripHome:
@@ -158,12 +158,12 @@ class GridModeler:
 
 if __name__ == "__main__":
 
-    datasetID = "MiD17"
     basePath = Path(__file__).parent.parent
     configNames = ("globalConfig", "localPathConfig", "parseConfig", "diaryConfig",
                    "gridConfig", "flexConfig", "aggregatorConfig", "evaluatorConfig")
     configDict = loadConfigDict(configNames, basePath=basePath)
-
+    
+    datasetID = configDict["globalConfig"]["dataset"]
     if datasetID == "MiD17":
         vpData = ParseMiD(configDict=configDict, datasetID=datasetID, debug=False)
     elif datasetID == "KiD":
@@ -174,7 +174,6 @@ if __name__ == "__main__":
 
     vpGrid = GridModeler(
         configDict=configDict,
-        datasetID=datasetID,
         activities=vpData.activities,
         gridModel='simple',
         forceLastTripHome=True)

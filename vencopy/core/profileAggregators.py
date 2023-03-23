@@ -28,12 +28,12 @@ from vencopy.utils.globalFunctions import (createFileName, createOutputFolders, 
 
 
 class ProfileAggregator():
-    def __init__(self, configDict: dict, datasetID: str,
+    def __init__(self, configDict: dict, 
                  activities: pd.DataFrame, profiles: DiaryBuilder):
         self.aggregatorConfig = configDict['aggregatorConfig']
         self.globalConfig = configDict['globalConfig']
         self.localPathConfig = configDict['localPathConfig']
-        self.datasetID = datasetID
+        self.datasetID = configDict["globalConfig"]["dataset"]
         self.activities = activities
         self.deltaTime = configDict['diaryConfig']['TimeDelta']
         self.timeIndex = list(pd.timedelta_range(start='00:00:00', end='24:00:00', freq=f'{self.deltaTime}T'))
@@ -137,13 +137,13 @@ class ProfileAggregator():
 if __name__ == '__main__':
 
     startTime = time.time()
-    datasetID = "MiD17"
     basePath = Path(__file__).parent.parent
     configNames = ("globalConfig", "localPathConfig", "parseConfig", "diaryConfig",
                    "gridConfig", "flexConfig", "aggregatorConfig", "evaluatorConfig")
     configDict = loadConfigDict(configNames, basePath=basePath)
     createOutputFolders(configDict=configDict)
 
+    datasetID = configDict["globalConfig"]["dataset"]
     if datasetID == "MiD17":
         vpData = ParseMiD(configDict=configDict, datasetID=datasetID, debug=False)
     elif datasetID == "KiD":
@@ -161,7 +161,7 @@ if __name__ == '__main__':
     vpDiary = DiaryBuilder(configDict=configDict, datasetID=datasetID, activities=vpFlex.activities)
     vpDiary.createDiaries()
 
-    vpProfile = ProfileAggregator(configDict=configDict, datasetID=datasetID,
+    vpProfile = ProfileAggregator(configDict=configDict,
                                   activities=vpFlex.activities, profiles=vpDiary)
     vpProfile.createTimeseries()
 

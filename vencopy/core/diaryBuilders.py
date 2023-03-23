@@ -27,11 +27,11 @@ IDXSLICE = pd.IndexSlice
 
 
 class DiaryBuilder:
-    def __init__(self, configDict: dict, datasetID: str, activities: pd.DataFrame, isWeekDiary: bool = False):
+    def __init__(self, configDict: dict, activities: pd.DataFrame, isWeekDiary: bool = False):
         self.diaryConfig = configDict['diaryConfig']
         self.globalConfig = configDict['globalConfig']
         self.localPathConfig = configDict['localPathConfig']
-        self.datasetID = datasetID
+        self.datasetID = configDict["globalConfig"]["dataset"]
         self.activities = activities
         self.deltaTime = configDict['diaryConfig']['TimeDelta']
         self.isWeekDiary = isWeekDiary
@@ -761,12 +761,12 @@ class TimeDiscretiser:
 if __name__ == '__main__':
 
     startTime = time.time()
-    datasetID = "MiD17"
     basePath = Path(__file__).parent.parent
     configNames = ("globalConfig", "localPathConfig", "parseConfig", "diaryConfig",
                    "gridConfig", "flexConfig", "aggregatorConfig", "evaluatorConfig")
     configDict = loadConfigDict(configNames, basePath=basePath)
 
+    datasetID = configDict["globalConfig"]["dataset"]
     if datasetID == "MiD17":
         vpData = ParseMiD(configDict=configDict, datasetID=datasetID, debug=True)
     elif datasetID == "KiD":
