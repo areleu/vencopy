@@ -82,7 +82,8 @@ class DataParser:
         else:
             print(f"Starting to retrieve local data file from {self.rawDataPath}")
             self._loadData()
-        self.rawData = self.rawData.loc[0:2000, :] if debug else self.rawData.copy()
+        nDebugLines = configDict["globalConfig"]["nDebugLines"]
+        self.rawData = self.rawData.loc[0:nDebugLines-1, :] if debug else self.rawData.copy()
         # Storage for original data variable that is being overwritten throughout adding of park rows
         self.tripEndNextDayRaw = None
 
@@ -388,24 +389,6 @@ class DataParser:
         ret.name = "noOverlapPrevTrips"
         return ret
 
-    # DEPRECATED WILL BE REMOVED ON NEXT RELEASE
-    def __overlapPeriodsOld(self, data, period):
-        dat = data.copy()
-        dat["isSameHHAsPrevTrip"] = dat["hhPersonID"] == dat["hhPersonID"].shift(period)
-        dat.loc[dat["tripEndNextDay"], "tripEndHour"] = (
-            dat.loc[dat["tripEndNextDay"], "tripEndHour"] + 24
-        )
-        dat["tripStartsAfterPrevTrip"] = (
-            dat["tripStartHour"] > dat["tripEndHour"].shift(period)
-        ) | (
-            (dat["tripStartHour"] == dat["tripEndHour"].shift(period))
-            & (dat["tripStartMinute"] >= dat["tripEndMinute"].shift(period))
-        )
-        dat["tripDoesNotOverlap"] = ~(
-            dat["isSameHHAsPrevTrip"] & ~dat["tripStartsAfterPrevTrip"]
-        )
-        return dat["tripDoesNotOverlap"]
-
     def __overlapPeriods(self, data, period):
         """New implementation of identifying trips that overlap with previous trips.
 
@@ -571,45 +554,6 @@ class DataParser:
             & self.activities["parkID"]
         )
         self.activities = self.activities.loc[~indexMultiDayActivity, :]
-
-    # DEPRECATED WILL BE REMOVED IN NEXT RELEASE
-    def __adjustParkTimestamps_old(self):
-        # Setting timestamps
-        self.activities = self.activities.reset_index()
-        parkingAct = self.activities["parkID"].fillna(0).astype(bool)
-        parkingAct = parkingAct.loc[parkingAct]
-        parkingActwoLast = parkingAct.iloc[:-1]
-        parkingActwoFirst = parkingAct.iloc[1:]
-
-        # Updating park end timestamps
-        set_ts = self.activities.loc[parkingActwoLast.index + 1, "timestampStart"]
-        set_ts.index = self.activities.loc[parkingActwoLast.index, "timestampEnd"].index
-        self.activities.loc[parkingActwoLast.index, "timestampEnd"] = set_ts
-
-        # Updating park start timestamps
-        set_ts = self.activities.loc[parkingActwoFirst.index - 1, "timestampEnd"]
-        set_ts.index = self.activities.loc[
-            parkingActwoFirst.index, "timestampStart"
-        ].index
-        self.activities.loc[parkingActwoFirst.index, "timestampStart"] = set_ts
-
-        # Updating park start timestamps for first activity
-        idxActs = (
-            self.activities["parkID"].fillna(0).astype(bool)
-            & self.activities["isFirstActivity"]
-        )
-        self.activities.loc[idxActs, "timestampStart"] = self.activities.loc[
-            idxActs, "timestampEnd"
-        ].apply(lambda x: x.replace(hour=0, minute=0))
-
-        # Updating park end timestamps for last activity
-        idxActs = (
-            self.activities["parkID"].fillna(0).astype(bool)
-            & self.activities["isLastActivity"]
-        )
-        self.activities.loc[idxActs, "timestampEnd"] = self.activities.loc[
-            idxActs, "timestampStart"
-        ].apply(lambda x: x.replace(hour=0, minute=0) + pd.Timedelta(1, "d"))
 
     def __adjustParkTimestamps(self):
         """Adjust the start and end timestamps of the newly added rows. This is done via range index, that is reset at

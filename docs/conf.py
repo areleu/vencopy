@@ -41,7 +41,7 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.autosectionlabel',
               'rst2pdf.pdfbuilder']
 
-pdf_documents = [('index','vencopy','vencopypdf','Fabia'),] 
+pdf_documents = [('index', 'vencopy', 'vencopypdf', 'Fabia'),] 
 
 source_suffix = {
     '.rst': 'restructuredtext',

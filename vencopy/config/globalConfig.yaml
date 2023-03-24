@@ -11,6 +11,7 @@
 
 dataset: MiD17 # options are MiD08, MiD17, KiD
 debug: True
+nDebugLines: 2000
 
 pathRelative:
     plots: ./output/evaluator/

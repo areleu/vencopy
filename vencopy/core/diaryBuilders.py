@@ -1,14 +1,15 @@
-__version__ = '0.4.X'
-__maintainer__ = 'Niklas Wulff'
-__contributors__ = 'Fabia Miorelli'
-__email__ = 'Niklas.Wulff@dlr.de'
-__birthdate__ = '01.07.2022'
-__status__ = 'dev'  # options are: dev, test, prod
-__license__ = 'BSD-3-Clause'
+__version__ = "0.4.X"
+__maintainer__ = "Niklas Wulff"
+__contributors__ = "Fabia Miorelli"
+__email__ = "Niklas.Wulff@dlr.de"
+__birthdate__ = "01.07.2022"
+__status__ = "dev"  # options are: dev, test, prod
+__license__ = "BSD-3-Clause"
 
-if __package__ is None or __package__ == '':
+if __package__ is None or __package__ == "":
     import sys
     from os import path
+
     sys.path.append(path.dirname(path.dirname(path.dirname(__file__))))
 
 from pathlib import Path
@@ -16,43 +17,64 @@ from pathlib import Path
 import time
 import numpy as np
 import pandas as pd
+from typing import Optional
 from vencopy.utils.globalFunctions import createFileName, writeOut
 
 
 class DiaryBuilder:
-    def __init__(self, configDict: dict, activities: pd.DataFrame, isWeekDiary: bool = False):
-        self.diaryConfig = configDict['diaryConfig']
-        self.globalConfig = configDict['globalConfig']
-        self.localPathConfig = configDict['localPathConfig']
+    def __init__(
+        self, configDict: dict, activities: pd.DataFrame, isWeekDiary: bool = False
+    ):
+        self.diaryConfig = configDict["diaryConfig"]
+        self.globalConfig = configDict["globalConfig"]
+        self.localPathConfig = configDict["localPathConfig"]
         self.datasetID = configDict["globalConfig"]["dataset"]
         self.activities = activities
-        self.deltaTime = configDict['diaryConfig']['TimeDelta']
+        self.deltaTime = configDict["diaryConfig"]["TimeDelta"]
         self.isWeekDiary = isWeekDiary
         self.distributedActivities = TimeDiscretiser(
-            datasetID=self.datasetID, globalConfig=self.globalConfig,
-            localPathConfig=self.localPathConfig, activities=self.activities, dt=self.deltaTime, isWeek=isWeekDiary,
-            method="distribute")
+            datasetID=self.datasetID,
+            globalConfig=self.globalConfig,
+            localPathConfig=self.localPathConfig,
+            activities=self.activities,
+            dt=self.deltaTime,
+            isWeek=isWeekDiary,
+            method="distribute",
+        )
         self.selectedActivities = TimeDiscretiser(
-            datasetID=self.datasetID, globalConfig=self.globalConfig,
-            localPathConfig=self.localPathConfig, activities=self.activities, dt=self.deltaTime, isWeek=isWeekDiary,
-            method="select")
+            datasetID=self.datasetID,
+            globalConfig=self.globalConfig,
+            localPathConfig=self.localPathConfig,
+            activities=self.activities,
+            dt=self.deltaTime,
+            isWeek=isWeekDiary,
+            method="select",
+        )
 
     def createDiaries(self):
         start_time = time.time()
         self.drain = self.distributedActivities.discretise(column="drain")
         self.chargingPower = self.selectedActivities.discretise(column="availablePower")
-        self.uncontrolledCharge = self.distributedActivities.discretise(column="uncontrolledCharge")
-        self.maxBatteryLevel = self.selectedActivities.discretise(column="maxBatteryLevelStart")
-        self.minBatteryLevel = self.selectedActivities.discretise(column="minBatteryLevelStart")
+        self.uncontrolledCharge = self.distributedActivities.discretise(
+            column="uncontrolledCharge"
+        )
+        self.maxBatteryLevel = self.selectedActivities.discretise(
+            column="maxBatteryLevelStart"
+        )
+        self.minBatteryLevel = self.selectedActivities.discretise(
+            column="minBatteryLevelStart"
+        )
         # # self.residualNeed = self.distributedActivities.discretise(column="residualNeed") # in elec terms kWh elec
         # # self.maxBatteryLevelEnd = self.selectedActivities.discretise(column="maxBatteryLevelEnd")
         # # self.minBatteryLevelEnd = self.selectedActivities.discretise(column="minBatteryLevelEnd")
-        needed_time = time.time()-start_time
+        needed_time = time.time() - start_time
         print(f"Needed time to discretise all columns: {needed_time}")
 
 
 class WeekDiaryBuilder:
-    def __init__(self, activities: pd.DataFrame, catCols: list[str], seed: int = None):
+    def __init__(
+        self, activities: pd.DataFrame, catCols: list[str], seed: Optional[int] = None
+    ):
         """
         Class that synthesizes weekly activity chains from daily activity chains. This is done for a specific set of
         categories that is determined by columns in the activities data set. The cross-product of the unique entries
@@ -73,17 +95,26 @@ class WeekDiaryBuilder:
         self.weekActivities = None
 
         self.samplingCols = catCols.copy()
-        self.samplingCols.append('tripStartWeekday')
+        self.samplingCols.append("tripStartWeekday")
 
         # Combinatorics of categories and weekdays
-        self.categories = self.__retrieveUniqueCategories(acts=self.activities, catCols=self.catCols)
-        self.categoryID = self.__createCategoryIndex(uCats=self.categories, catNames=self.catCols)
-        self.sampleBaseID = self.__createSampleBases(cats=self.categories, samplingCols=self.samplingCols)
+        self.categories = self.__retrieveUniqueCategories(
+            acts=self.activities, catCols=self.catCols
+        )
+        self.categoryID = self.__createCategoryIndex(
+            uCats=self.categories, catNames=self.catCols
+        )
+        self.sampleBaseID = self.__createSampleBases(
+            cats=self.categories, samplingCols=self.samplingCols
+        )
 
         # Merging uniqueIDs to activities - assigning day activity chains to sampling bases
-        self.activities = self.__assignCategoryID(acts=self.activities, catIDs=self.categoryID,
-                                                  catCols=self.catCols)
-        self.activities = self.__assignSamplingBaseID(acts=self.activities, sampleBaseIDs=self.sampleBaseID)
+        self.activities = self.__assignCategoryID(
+            acts=self.activities, catIDs=self.categoryID, catCols=self.catCols
+        )
+        self.activities = self.__assignSamplingBaseID(
+            acts=self.activities, sampleBaseIDs=self.sampleBaseID
+        )
         self.sampleBaseInAct = self.__subsetSampleBase()
 
         # Will be set in composeWeekActivities, called after instantiation
@@ -94,29 +125,31 @@ class WeekDiaryBuilder:
 
     def __createCategoryIndex(self, uCats: list, catNames: list[str]):
         mIdx = pd.MultiIndex.from_product(uCats, names=catNames)
-        return self.__dfFromMultiIndex(multiIndex=mIdx, colname='categoryID')
+        return self.__dfFromMultiIndex(multiIndex=mIdx, colname="categoryID")
 
     def __createSampleBases(self, cats: list[set], samplingCols: list[str]):
         levels = cats.copy()
         levels.append(self.weekdayIDs)
         mIdx = pd.MultiIndex.from_product(levels, names=samplingCols)
-        return self.__dfFromMultiIndex(multiIndex=mIdx, colname='sampleBaseID')
+        return self.__dfFromMultiIndex(multiIndex=mIdx, colname="sampleBaseID")
 
-    def __dfFromMultiIndex(self, multiIndex: pd.MultiIndex, colname: str = 'value'):
+    def __dfFromMultiIndex(self, multiIndex: pd.MultiIndex, colname: str = "value"):
         df = pd.DataFrame(index=multiIndex)
         df = df.reset_index()
         df[colname] = df.index
         return df.set_index(multiIndex.names)
 
-    def __assignCategoryID(self, acts: pd.DataFrame, catIDs: pd.Series, catCols: list[str]):
+    def __assignCategoryID(
+        self, acts: pd.DataFrame, catIDs: pd.Series, catCols: list[str]
+    ):
         acts.set_index(list(catIDs.index.names), inplace=True)
-        acts = acts.merge(catIDs, left_index=True, right_index=True, how='left')
+        acts = acts.merge(catIDs, left_index=True, right_index=True, how="left")
         return acts.reset_index(catCols)
 
     def __assignSamplingBaseID(self, acts: pd.DataFrame, sampleBaseIDs: pd.Series):
         idxCols = list(sampleBaseIDs.index.names)  # List of index column names
         acts.set_index(idxCols, inplace=True)
-        acts = acts.merge(sampleBaseIDs, left_index=True, right_index=True, how='left')
+        acts = acts.merge(sampleBaseIDs, left_index=True, right_index=True, how="left")
         return acts.reset_index(idxCols)
 
     def __subsetSampleBase(self):
@@ -127,24 +160,52 @@ class WeekDiaryBuilder:
             pd.Series: A subset of self.sampleBaseID representing only the sample bases for the categories that
             exist and are thus not empty.
         """
-        return self.sampleBaseID.loc[self.sampleBaseID['sampleBaseID'].isin(self.activities['sampleBaseID'])]
+        return self.sampleBaseID.loc[
+            self.sampleBaseID["sampleBaseID"].isin(self.activities["sampleBaseID"])
+        ]
 
     def summarizeSamplingBases(self):
-        print(f'There are {len(self.categoryID)} category combinations of the categories {self.catCols}.')
-        print(f'There are {len(self.sampleBaseID)} sample bases (each category for every weekday).')
-        nSBInAct = self.sampleBaseID['sampleBaseID'].isin(self.activities['sampleBaseID']).sum()
-        print(f'Of those sample bases, {nSBInAct} category combinations exist in the activities data set')
-        self.__days = self.activities.groupby(by=['uniqueID']).first()
+        print(
+            f"There are {len(self.categoryID)} category combinations of the categories {self.catCols}."
+        )
+        print(
+            f"There are {len(self.sampleBaseID)} sample bases (each category for every weekday)."
+        )
+        nSBInAct = (
+            self.sampleBaseID["sampleBaseID"]
+            .isin(self.activities["sampleBaseID"])
+            .sum()
+        )
+        print(
+            f"Of those sample bases, {nSBInAct} category combinations exist in the activities data set"
+        )
+        self.__days = self.activities.groupby(by=["uniqueID"]).first()
         nSamplingBase = self.__days.groupby(by=self.samplingCols).count()
         sampleBaseLength = nSamplingBase.iloc[:, 0]
-        smallestSampleBase = sampleBaseLength.loc[sampleBaseLength == min(sampleBaseLength)]
-        largestSampleBase = sampleBaseLength.loc[sampleBaseLength == max(sampleBaseLength)]
-        print(f'The number of samples in each sample base ranges from {smallestSampleBase}')
-        print(f'to {largestSampleBase}.')
-        print(f'The average sample size is approximately {sampleBaseLength.mean().round()}.')
-        print(f'The median sample size is approximately {sampleBaseLength.median().round()}.')
+        smallestSampleBase = sampleBaseLength.loc[
+            sampleBaseLength == min(sampleBaseLength)
+        ]
+        largestSampleBase = sampleBaseLength.loc[
+            sampleBaseLength == max(sampleBaseLength)
+        ]
+        print(
+            f"The number of samples in each sample base ranges from {smallestSampleBase}"
+        )
+        print(f"to {largestSampleBase}.")
+        print(
+            f"The average sample size is approximately {sampleBaseLength.mean().round()}."
+        )
+        print(
+            f"The median sample size is approximately {sampleBaseLength.median().round()}."
+        )
 
-    def __assignWeeks(self, nWeeks: int, how: str = 'random', seed: int = None, replace: bool = False):
+    def __assignWeeks(
+        self,
+        nWeeks: int,
+        how: str = "random",
+        seed: Optional[int] = None,
+        replace: bool = False,
+    ):
         """
         Interface function to generate nWeeks weeks from the specified sample base. Here, the mapping of the
         uniqueID to the respective weekID is generated
@@ -156,14 +217,18 @@ class WeekDiaryBuilder:
             replace (bool): In sampling, should it be possible to draw more samples than in the sampleBase? See
             docstring of randomSample for details.
         """
-        if how == 'random':
+        if how == "random":
             sample = self.__randomSample(nWeeks=nWeeks, seed=seed, replace=replace)
-        elif how not in ['weighted', 'stratified']:
-            raise NotImplementedError(f'The requested method {how} is not implemented. Please select "random", '
-                                      f'"weighted" or "stratified".')
+        elif how not in ["weighted", "stratified"]:
+            raise NotImplementedError(
+                f'The requested method {how} is not implemented. Please select "random", '
+                f'"weighted" or "stratified".'
+            )
         return sample
 
-    def __randomSample(self, nWeeks: int, seed: int = None, replace: bool = False) -> pd.DataFrame:
+    def __randomSample(
+        self, nWeeks: int, seed: Optional[int] = None, replace: bool = False
+    ) -> pd.DataFrame:
         """
         Pulls nWeeks samples from each sample base. Each sample represents one day and is identified by one
         uniqueID. The weekdays are already differentiated within the sample bases thus sampleBase 1 may represent MON
@@ -185,16 +250,24 @@ class WeekDiaryBuilder:
         if seed:
             np.random.seed(seed=seed)
         sample = pd.DataFrame()
-        for sbID in self.sampleBaseInAct['sampleBaseID']:
-            sampleBase = self.activities.loc[self.activities['sampleBaseID'] == sbID, 'uniqueID'].unique()
+        for sbID in self.sampleBaseInAct["sampleBaseID"]:
+            sampleBase = self.activities.loc[
+                self.activities["sampleBaseID"] == sbID, "uniqueID"
+            ].unique()
             subSample = np.random.choice(sampleBase, replace=replace, size=nWeeks)
-            df = pd.DataFrame.from_dict({'sampleBaseID': sbID,
-                                         'uniqueID': subSample,
-                                         'weekID': list(range(nWeeks))})
+            df = pd.DataFrame.from_dict(
+                {
+                    "sampleBaseID": sbID,
+                    "uniqueID": subSample,
+                    "weekID": list(range(nWeeks)),
+                }
+            )
             sample = pd.concat([sample, df])
         return sample
 
-    def composeWeekActivities(self, nWeeks: int = 10, seed: int = None, replace: bool = False):
+    def composeWeekActivities(
+        self, nWeeks: int = 10, seed: Optional[int] = None, replace: bool = False
+    ):
         """
         Wrapper function to call function for sampling each person (day mobility) to a specific week in a
         specified category. activityID and uniqueID are adapted to cover the weekly pattern of the sampled mobility
@@ -206,17 +279,21 @@ class WeekDiaryBuilder:
             replace (bool): In sampling, should it be possible to draw more samples than in the sampleBase? See
             docstring of randomSample for details.
         """
-        print(f'Composing weeks for {nWeeks} choices from each sample base.')
+        print(f"Composing weeks for {nWeeks} choices from each sample base.")
         self.sampleSize = nWeeks
         self.dayWeekMap = self.__assignWeeks(nWeeks=nWeeks, seed=seed, replace=replace)
-        weekActs = self.__merge(dayWeekMap=self.dayWeekMap, dayActs=self.activities, index_col='uniqueID')
+        weekActs = self.__merge(
+            dayWeekMap=self.dayWeekMap, dayActs=self.activities, index_col="uniqueID"
+        )
         weekActs = self.__adjustUniqueID(acts=weekActs)
         weekActs = self.__orderViaWeekday(acts=weekActs)
         weekActs = self.__adjustActID(acts=weekActs)
         self.weekActivities = weekActs
         return weekActs
 
-    def __merge(self, dayWeekMap: pd.DataFrame, dayActs: pd.DataFrame, index_col: str) -> pd.DataFrame:
+    def __merge(
+        self, dayWeekMap: pd.DataFrame, dayActs: pd.DataFrame, index_col: str
+    ) -> pd.DataFrame:
         """
         Utility function to merge two dataframes on a column, via more performant index merging. Indices will
         be reset before returning the merged DataFrame.
@@ -245,13 +322,13 @@ class WeekDiaryBuilder:
         Args:
             acts (pd.DataFrame): Activity data set at least with the columns 'uniqueID' and 'weekID'
         """
-        acts['dayUniqueID'] = acts['uniqueID']
+        acts["dayUniqueID"] = acts["uniqueID"]
         # acts['uniqueID'] = (acts['categoryID'].apply(str) + acts['weekID'].apply(str)).apply(int)
-        acts['uniqueID'] = (acts['categoryID'].apply(str) + acts['weekID'].apply(str))
+        acts["uniqueID"] = acts["categoryID"].apply(str) + acts["weekID"].apply(str)
         return acts
 
     def __orderViaWeekday(self, acts) -> pd.DataFrame:
-        return acts.sort_values(by=['uniqueID', 'tripStartWeekday', 'timestampStart'])
+        return acts.sort_values(by=["uniqueID", "tripStartWeekday", "timestampStart"])
 
     def __adjustActID(self, acts: pd.DataFrame) -> pd.DataFrame:
         """
@@ -266,7 +343,7 @@ class WeekDiaryBuilder:
         acts = self.__reassignTripIDs(acts=acts)
         acts = self.__reassignActIDs(acts=acts)
 
-        print('Finished weekly activity ID chaining')
+        print("Finished weekly activity ID chaining")
         return acts
 
     def __mergeParkActs(self, acts: pd.DataFrame) -> pd.DataFrame:
@@ -280,26 +357,35 @@ class WeekDiaryBuilder:
         """
         # Calculate shifted columns for merging last and first day park acts and updating lastAct col
         acts = self.__neglectFirstParkActs(acts=acts)  # only for weekdays TUE-SUN
-        acts, nextVars = self.__addNextActVars(acts=acts,
-                                               vars=['uniqueID', 'parkID', 'timestampStart', 'timestampEnd',
-                                                     'tripPurpose'])
+        acts, nextVars = self.__addNextActVars(
+            acts=acts,
+            vars=[
+                "uniqueID",
+                "parkID",
+                "timestampStart",
+                "timestampEnd",
+                "tripPurpose",
+            ],
+        )
         acts = self.__adjustEndTimestamp(acts=acts)
         acts = self.__addONParkVariable(acts=acts)
         # OLD implementation was here acts = self.__neglectFirstParkActs(acts=acts)
         acts = self.__updateLastWeekActs(acts=acts)
         acts = self.__removeNextActVarCols(acts=acts, nextVars=nextVars)
-        print('Finished last and first daily parking to one parking activity')
+        print("Finished last and first daily parking to one parking activity")
         return acts
 
-    def __addNextActVars(self, acts: pd.DataFrame, vars: list[str]) -> tuple[pd.DataFrame, list[str]]:
-        vars_next = [v + '_next' for v in vars]
+    def __addNextActVars(
+        self, acts: pd.DataFrame, vars: list[str]
+    ) -> tuple[pd.DataFrame, list[str]]:
+        vars_next = [v + "_next" for v in vars]
         acts[vars_next] = acts[vars].shift(-1)
         return acts, vars_next
 
     def __adjustEndTimestamp(self, acts: pd.DataFrame) -> pd.DataFrame:
-        acts.loc[self.__getLastParkActsWOSun(acts),
-                 'timestampEnd'] = acts.loc[self.__getLastParkActsWOSun(acts),
-                                            'timestampStart_next']
+        acts.loc[self.__getLastParkActsWOSun(acts), "timestampEnd"] = acts.loc[
+            self.__getLastParkActsWOSun(acts), "timestampStart_next"
+        ]
         return acts
 
     def __addONParkVariable(self, acts: pd.DataFrame) -> pd.DataFrame:
@@ -315,8 +401,8 @@ class WeekDiaryBuilder:
         Returns:
             pd.DataFrame: Activity data set with the added column 'isSyntheticONPark'
         """
-        acts['isSyntheticONPark'] = False
-        acts.loc[self.__getLastParkActsWOSun(acts), 'isSyntheticONPark'] = True
+        acts["isSyntheticONPark"] = False
+        acts.loc[self.__getLastParkActsWOSun(acts), "isSyntheticONPark"] = True
         return acts
 
     def __neglectFirstParkActs(self, acts: pd.DataFrame) -> pd.DataFrame:
@@ -333,13 +419,17 @@ class WeekDiaryBuilder:
         """
         # Exclude the second edge case of previous trip activities ending exactly at 00:00. In that case the
         # previous activity is a trip not a park, so the identification goes via type checking of shifted parkID.
-        acts['prevParkID'] = acts['parkID'].shift(1)
-        idxToNeglect = (self.__getFirstParkActsWOMon(acts)) & ~(acts['prevParkID'].isna())
+        acts["prevParkID"] = acts["parkID"].shift(1)
+        idxToNeglect = (self.__getFirstParkActsWOMon(acts)) & ~(
+            acts["prevParkID"].isna()
+        )
 
         # Set isFirstActivity to False for the above mentioned edge case
-        idxSetFirstActFalse = (acts['isFirstActivity']) & ~(acts['tripStartWeekday'] == 1)
-        acts.loc[idxSetFirstActFalse, 'isFirstActivity'] = False
-        return acts.loc[~idxToNeglect, :].drop(columns=['prevParkID'])
+        idxSetFirstActFalse = (acts["isFirstActivity"]) & ~(
+            acts["tripStartWeekday"] == 1
+        )
+        acts.loc[idxSetFirstActFalse, "isFirstActivity"] = False
+        return acts.loc[~idxToNeglect, :].drop(columns=["prevParkID"])
 
     def __getFirstParkActsWOMon(self, acts: pd.DataFrame) -> pd.Series:
         """
@@ -354,7 +444,11 @@ class WeekDiaryBuilder:
             pd.Series: A boolean Series which is True for all first activities except the ones on the first day of the
         week, i.e. Mondays.
         """
-        return (~acts['parkID'].isna()) & (acts['isFirstActivity']) & ~(acts['tripStartWeekday'] == 1)
+        return (
+            (~acts["parkID"].isna())
+            & (acts["isFirstActivity"])
+            & ~(acts["tripStartWeekday"] == 1)
+        )
 
     def __getLastParkActsWOSun(self, acts) -> pd.Series:
         """
@@ -369,7 +463,11 @@ class WeekDiaryBuilder:
             pd.Series: A boolean Series which is True for all last activities except the ones on the first day of
             the week, i.e. Sundays.
         """
-        return (~acts['parkID'].isna()) & (acts['isLastActivity']) & ~(acts['tripStartWeekday'] == 7)
+        return (
+            (~acts["parkID"].isna())
+            & (acts["isLastActivity"])
+            & ~(acts["tripStartWeekday"] == 7)
+        )
 
     def __updateLastWeekActs(self, acts: pd.DataFrame) -> pd.DataFrame:
         """
@@ -385,11 +483,15 @@ class WeekDiaryBuilder:
             pd.DataFrame: The activity data set with an ammended column 'isLastActivity' updated for the week chain
         """
 
-        isLastWeekAct = (acts['isLastActivity']) & (acts['uniqueID'] != acts['uniqueID_next'])
-        acts.loc[:, 'isLastActivity'] = isLastWeekAct
+        isLastWeekAct = (acts["isLastActivity"]) & (
+            acts["uniqueID"] != acts["uniqueID_next"]
+        )
+        acts.loc[:, "isLastActivity"] = isLastWeekAct
         return acts
 
-    def __removeNextActVarCols(self, acts: pd.DataFrame, nextVars: list[str]) -> pd.DataFrame:
+    def __removeNextActVarCols(
+        self, acts: pd.DataFrame, nextVars: list[str]
+    ) -> pd.DataFrame:
         return acts.drop(columns=nextVars)
 
     def __reassignParkIDs(self, acts: pd.DataFrame) -> pd.DataFrame:
@@ -406,10 +508,14 @@ class WeekDiaryBuilder:
             pd.DataFrame: Activities data set with week actIDs and a new column 'dayActID' with the day
             activity IDs.
         """
-        parkIdx = ~acts['parkID'].isna()
-        acts.loc[parkIdx, 'dayActID'] = acts['parkID']  # backupping day activity IDs
-        acts.loc[parkIdx, 'parkID'] = acts.loc[parkIdx, ['uniqueID', 'parkID']].groupby(
-            by='uniqueID').apply(lambda week: pd.Series(range(len(week)))).values
+        parkIdx = ~acts["parkID"].isna()
+        acts.loc[parkIdx, "dayActID"] = acts["parkID"]  # backupping day activity IDs
+        acts.loc[parkIdx, "parkID"] = (
+            acts.loc[parkIdx, ["uniqueID", "parkID"]]
+            .groupby(by="uniqueID")
+            .apply(lambda week: pd.Series(range(len(week))))
+            .values
+        )
         return acts
 
     def __reassignTripIDs(self, acts: pd.DataFrame) -> pd.DataFrame:
@@ -424,11 +530,15 @@ class WeekDiaryBuilder:
             pd.DataFrame: Activities data set with week actIDs and a new column 'dayActID' with the day
             activity IDs.
         """
-        tripIdx = ~acts['tripID'].isna()
-        acts.loc[tripIdx, 'dayActID'] = acts['tripID']
+        tripIdx = ~acts["tripID"].isna()
+        acts.loc[tripIdx, "dayActID"] = acts["tripID"]
 
-        acts.loc[tripIdx, 'tripID'] = acts.loc[tripIdx, ['uniqueID', 'parkID']].groupby(
-            by='uniqueID').apply(lambda week: pd.Series(range(len(week)))).values
+        acts.loc[tripIdx, "tripID"] = (
+            acts.loc[tripIdx, ["uniqueID", "parkID"]]
+            .groupby(by="uniqueID")
+            .apply(lambda week: pd.Series(range(len(week))))
+            .values
+        )
         return acts
 
     def __reassignActIDs(self, acts: pd.DataFrame) -> pd.DataFrame:
@@ -439,19 +549,27 @@ class WeekDiaryBuilder:
         Returns:
             pd.DataFrame: Activities with updated column actID, prevActID and nextActID
         """
-        acts.loc[~acts['tripID'].isna(), 'actID'] = acts.loc[:, 'tripID']
-        acts.loc[~acts['parkID'].isna(), 'actID'] = acts.loc[:, 'parkID']
-        acts.loc[~acts['isLastActivity'], 'nextActID'] = acts.loc[:, 'actID'].shift(-1)
-        acts.loc[~acts['isFirstActivity'], 'prevActID'] = acts.loc[:, 'actID'].shift(1)
+        acts.loc[~acts["tripID"].isna(), "actID"] = acts.loc[:, "tripID"]
+        acts.loc[~acts["parkID"].isna(), "actID"] = acts.loc[:, "parkID"]
+        acts.loc[~acts["isLastActivity"], "nextActID"] = acts.loc[:, "actID"].shift(-1)
+        acts.loc[~acts["isFirstActivity"], "prevActID"] = acts.loc[:, "actID"].shift(1)
         return acts
 
 
 class TimeDiscretiser:
-    def __init__(self, activities: pd.DataFrame, dt: int, datasetID: str, method: str, globalConfig: dict,
-                 localPathConfig: dict, isWeek: bool = False):
+    def __init__(
+        self,
+        activities: pd.DataFrame,
+        dt: int,
+        datasetID: str,
+        method: str,
+        globalConfig: dict,
+        localPathConfig: dict,
+        isWeek: bool = False,
+    ):
         """
         Class for discretisation of activities to fixed temporal resolution
-        
+
         Activities is a pandas Series with a unique ID in the index, ts is a pandas dataframe with two
         columns: timestampStart and timestampEnd, dt is a pandas TimeDelta object
         specifying the fixed resolution that the discretisation should output. Method
@@ -481,15 +599,21 @@ class TimeDiscretiser:
         self.oneProfile = None
         self.localPathConfig = localPathConfig
         self.globalConfig = globalConfig
-        self.quantum = pd.Timedelta(value=1, unit='min')
+        self.quantum = pd.Timedelta(value=1, unit="min")
         self.dt = dt  # e.g. 15 min
         self.isWeek = isWeek
-        self.nTimeSlots = int(self._nSlotsPerInterval(interval=pd.Timedelta(value=self.dt, unit='min')))
+        self.nTimeSlots = int(
+            self._nSlotsPerInterval(interval=pd.Timedelta(value=self.dt, unit="min"))
+        )
         if isWeek:
-            self.timeDelta = (pd.timedelta_range(start='00:00:00', end='168:00:00', freq=f'{self.dt}T'))
-            self.weekdays = self.activities['weekdayStr'].unique()
+            self.timeDelta = pd.timedelta_range(
+                start="00:00:00", end="168:00:00", freq=f"{self.dt}T"
+            )
+            self.weekdays = self.activities["weekdayStr"].unique()
         else:  # is Day
-            self.timeDelta = (pd.timedelta_range(start='00:00:00', end='24:00:00', freq=f'{self.dt}T'))
+            self.timeDelta = pd.timedelta_range(
+                start="00:00:00", end="24:00:00", freq=f"{self.dt}T"
+            )
         self.timeIndex = list(self.timeDelta)
         self.discreteData = None
 
@@ -499,27 +623,45 @@ class TimeDiscretiser:
         The minimum resolution is 1 min, case for resolution below 1 min.
         Then check if an integer number of intervals fits into one day (15 min equals 96 intervals)
         """
-        if interval.seconds/60 < self.quantum.seconds/60:
-            raise(ValueError(f'The specified resolution is not a multiple of {self.quantum} minute, '
-                             f'which is the minmum possible resolution'))
-        quot = (interval.seconds/3600/24)
-        quotDay = pd.Timedelta(value=24, unit='h') / interval
-        if ((1/quot) % int(1/quot) == 0):  # or (quot % int(1) == 0):
+        if interval.seconds / 60 < self.quantum.seconds / 60:
+            raise (
+                ValueError(
+                    f"The specified resolution is not a multiple of {self.quantum} minute, "
+                    f"which is the minmum possible resolution"
+                )
+            )
+        quot = interval.seconds / 3600 / 24
+        quotDay = pd.Timedelta(value=24, unit="h") / interval
+        if (1 / quot) % int(1 / quot) == 0:  # or (quot % int(1) == 0):
             return quotDay
         else:
-            raise(ValueError(f'The specified resolution does not fit into a day.'
-                             f'There cannot be {quotDay} finite intervals in a day'))
+            raise (
+                ValueError(
+                    f"The specified resolution does not fit into a day."
+                    f"There cannot be {quotDay} finite intervals in a day"
+                )
+            )
 
     def _datasetCleanup(self):
         """
         Removes additional columns not used in the TimeDiscretiser class.
         Only keeps timestamp start and end, unique ID, and the column to discretise.
         """
-        necessaryColumns = ['tripID', 'timestampStart', 'timestampEnd', 'uniqueID',
-                            'parkID', 'isFirstActivity', 'isLastActivity', 'timedelta',
-                            'actID', 'nextActID', 'prevActID'] + [self.columnToDiscretise]
+        necessaryColumns = [
+            "tripID",
+            "timestampStart",
+            "timestampEnd",
+            "uniqueID",
+            "parkID",
+            "isFirstActivity",
+            "isLastActivity",
+            "timedelta",
+            "actID",
+            "nextActID",
+            "prevActID",
+        ] + [self.columnToDiscretise]
         if self.isWeek:
-            necessaryColumns = necessaryColumns + ['weekdayStr']
+            necessaryColumns = necessaryColumns + ["weekdayStr"]
         self.oneProfile = self.activities[necessaryColumns].copy()
         self._correctDataset()
 
@@ -534,34 +676,43 @@ class TimeDiscretiser:
         - uncontrolledCharge profile: instead of removing rows with tripID, assign 0 to rows with tripID
         - residualNeed profile: pads NaN with 0s
         """
-        if self.columnToDiscretise == 'drain':
-            self.oneProfile['drain'] = self.oneProfile['drain'].fillna(0)
-        elif self.columnToDiscretise == 'uncontrolledCharge':
-            self.oneProfile['uncontrolledCharge'] = self.oneProfile['uncontrolledCharge'].fillna(0)
-        elif self.columnToDiscretise == 'residualNeed':
-            self.oneProfile['residualNeed'] = self.oneProfile['residualNeed'].fillna(0)
+        if self.columnToDiscretise == "drain":
+            self.oneProfile["drain"] = self.oneProfile["drain"].fillna(0)
+        elif self.columnToDiscretise == "uncontrolledCharge":
+            self.oneProfile["uncontrolledCharge"] = self.oneProfile[
+                "uncontrolledCharge"
+            ].fillna(0)
+        elif self.columnToDiscretise == "residualNeed":
+            self.oneProfile["residualNeed"] = self.oneProfile["residualNeed"].fillna(0)
         return self.oneProfile
 
     def _correctTimestamp(self):
         """
         Rounds timestamps to predifined resolution.
         """
-        self.oneProfile['timestampStartCorrected'] = self.oneProfile['timestampStart'].dt.round(f'{self.dt}min')
-        self.oneProfile['timestampEndCorrected'] = self.oneProfile['timestampEnd'].dt.round(f'{self.dt}min')
+        self.oneProfile["timestampStartCorrected"] = self.oneProfile[
+            "timestampStart"
+        ].dt.round(f"{self.dt}min")
+        self.oneProfile["timestampEndCorrected"] = self.oneProfile[
+            "timestampEnd"
+        ].dt.round(f"{self.dt}min")
 
     def _createDiscretisedStructureWeek(self):
         """
-        Create an empty dataframe with columns each representing one timedelta (e.g. one 15-min slot). Scope can 
-        currently be either day (nCol = 24*60 / dt) or week - determined be self.isWeek (nCol= 7 * 24 * 60 / dt). 
+        Create an empty dataframe with columns each representing one timedelta (e.g. one 15-min slot). Scope can
+        currently be either day (nCol = 24*60 / dt) or week - determined be self.isWeek (nCol= 7 * 24 * 60 / dt).
         self.timeIndex is set on instantiation.
         """
-        nHours = len(list(self.timeIndex))-1
+        nHours = len(list(self.timeIndex)) - 1
         hPerDay = int(nHours / len(self.weekdays))
         hours = range(hPerDay)
         self.discreteData = pd.DataFrame(
-            index=self.oneProfile.uniqueID.unique(), columns=pd.MultiIndex.from_product([self.weekdays, hours]))
-        self.discreteDataFast = self.discreteData.copy()  # Only for performance analysis
-
+            index=self.oneProfile.uniqueID.unique(),
+            columns=pd.MultiIndex.from_product([self.weekdays, hours]),
+        )
+        self.discreteDataFast = (
+            self.discreteData.copy()
+        )  # Only for performance analysis
 
     def _identifyBinShares(self):
         """
@@ -571,39 +722,50 @@ class TimeDiscretiser:
         self._calculateValueBins()
         self._identifyBins()
         # wrapper for method:
-        if self.method == 'distribute':
+        if self.method == "distribute":
             self._valueDistribute()
-        elif self.method == 'select':
+        elif self.method == "select":
             self._valueSelect()
         else:
-            raise(ValueError(
-                f'Specified method {self.method} is not implemented please specify "distribute" or "select".'))
+            raise (
+                ValueError(
+                    f'Specified method {self.method} is not implemented please specify "distribute" or "select".'
+                )
+            )
 
     def _calculateValueBins(self):
         """
         Updates the activity duration based on the rounded timstamps.
         Calculates the multiple of dt of the activity duration and stores it to column nBins. E.g. a 2h-activity
         with a dt of 15 mins would have a 8 in the column. Seems like this is still precise, e.g. a 2h and 3 min
-        activity would have a 8.2 in the column nBins. 
+        activity would have a 8.2 in the column nBins.
         """
-        self.oneProfile['activityDuration'] = (self.oneProfile['timestampEndCorrected'] - self.oneProfile['timestampStartCorrected'])
+        self.oneProfile["activityDuration"] = (
+            self.oneProfile["timestampEndCorrected"]
+            - self.oneProfile["timestampStartCorrected"]
+        )
         self._dropNoLengthEvents()
-        self.oneProfile['nBins'] = self.oneProfile['activityDuration'] / (pd.Timedelta(value=self.dt, unit='min'))
-
+        self.oneProfile["nBins"] = self.oneProfile["activityDuration"] / (
+            pd.Timedelta(value=self.dt, unit="min")
+        )
 
     def _valueDistribute(self):
         """
         Calculate the profile value for each bin for the 'distribute' method.
         """
-        self.oneProfile['valPerBin'] = self.oneProfile[self.columnToDiscretise] / self.oneProfile['nBins']
-   
+        if self.oneProfile["nBins"].any() == 0:
+            raise ArithmeticError(
+                "The total number of bins is zero, which caused a division by zero. This should not happen because events with lenght zero should have been dropped."
+            )
+        self.oneProfile["valPerBin"] = (
+            self.oneProfile[self.columnToDiscretise] / self.oneProfile["nBins"]
+        )
 
     def _valueSelect(self):
         """
         Calculate the profile value for each bin for the 'select' method.
         """
-        self.oneProfile['valPerBin'] = self.oneProfile[self.columnToDiscretise]
-
+        self.oneProfile["valPerBin"] = self.oneProfile[self.columnToDiscretise]
 
     def _identifyBins(self):
         """
@@ -616,33 +778,49 @@ class TimeDiscretiser:
         """
         Identifies every first bin for each activity (trip or parking).
         """
-        self.oneProfile['timestampStartCorrected'] = self.oneProfile['timestampStartCorrected'].apply(
-            lambda x: pd.to_datetime(str(x)))
-        dayStart = self.oneProfile['timestampStartCorrected'].apply(
-            lambda x: pd.Timestamp(year=x.year, month=x.month, day=x.day))
-        self.oneProfile['dailyTimeDeltaStart'] = self.oneProfile['timestampStartCorrected'] - dayStart
-        self.oneProfile['startTimeFromMidnightSeconds'] = self.oneProfile['dailyTimeDeltaStart'].apply(
-            lambda x: x.seconds)
-        bins = pd.DataFrame({'index': self.timeDelta})
-        bins.drop(bins.tail(1).index, inplace=True)  # remove last element, which is zero
-        self.binFromMidnightSeconds = bins['index'].apply(lambda x: x.seconds)
-        # self.oneProfile['firstBin'] = self.oneProfile['startTimeFromMidnightSeconds'].apply(
-        # lambda x: np.where(x >= self.binFromMidnightSeconds)[0][-1])
-        # FIXME: more efficient below (edge case of value bigger than any bin, index will be -1)
-        self.oneProfile['firstBin'] = (self.oneProfile['startTimeFromMidnightSeconds'].apply(
-            lambda x: np.argmax(x < self.binFromMidnightSeconds)-1)).astype(int)
-        
+        self.oneProfile["timestampStartCorrected"] = self.oneProfile[
+            "timestampStartCorrected"
+        ].apply(lambda x: pd.to_datetime(str(x)))
+        dayStart = self.oneProfile["timestampStartCorrected"].apply(
+            lambda x: pd.Timestamp(year=x.year, month=x.month, day=x.day)
+        )
+        self.oneProfile["dailyTimeDeltaStart"] = (
+            self.oneProfile["timestampStartCorrected"] - dayStart
+        )
+        self.oneProfile["startTimeFromMidnightSeconds"] = self.oneProfile[
+            "dailyTimeDeltaStart"
+        ].apply(lambda x: x.seconds)
+        bins = pd.DataFrame({"index": self.timeDelta})
+        bins.drop(
+            bins.tail(1).index, inplace=True
+        )  # remove last element, which is zero
+        self.binFromMidnightSeconds = bins["index"].apply(lambda x: x.seconds)
+        self.oneProfile["firstBin"] = (
+            self.oneProfile["startTimeFromMidnightSeconds"].apply(
+                lambda x: np.argmax(x < self.binFromMidnightSeconds) - 1
+            )
+        ).astype(int)
+        if self.oneProfile["firstBin"].any() > self.nTimeSlots:
+            raise ArithmeticError(
+                "First bin value is bigger than total number of bins."
+            )
 
     def _identifyLastBin(self):
         """
         Identifies every last bin for each activity (trip or parking).
         """
-        dayEnd = self.oneProfile['timestampEndCorrected'].apply(
-            lambda x: pd.Timestamp(year=x.year, month=x.month, day=x.day))
-        self.oneProfile['dailyTimeDeltaEnd'] = self.oneProfile['timestampEndCorrected'] - dayEnd
-        self.oneProfile['lastBin'] = (self.oneProfile['firstBin'] + self.oneProfile['nBins'] - 1).astype(int)
-        self.oneProfile.loc[self.oneProfile['isLastActivity'], 'lastBin'] = (
-            self.oneProfile.loc[self.oneProfile['isLastActivity'], 'lastBin'] + 1)
+        dayEnd = self.oneProfile["timestampEndCorrected"].apply(
+            lambda x: pd.Timestamp(year=x.year, month=x.month, day=x.day)
+        )
+        self.oneProfile["dailyTimeDeltaEnd"] = (
+            self.oneProfile["timestampEndCorrected"] - dayEnd
+        )
+        self.oneProfile["lastBin"] = (
+            self.oneProfile["firstBin"] + self.oneProfile["nBins"] - 1
+        ).astype(int)
+        self.oneProfile.loc[self.oneProfile["isLastActivity"], "lastBin"] = (
+            self.oneProfile.loc[self.oneProfile["isLastActivity"], "lastBin"] + 1
+        )
 
     def _allocateBinShares(self):
         """
@@ -666,8 +844,12 @@ class TimeDiscretiser:
         Implements a strategy for overlapping bins if time resolution high enough so that the event becomes negligible, i.e. drops events
         with no lenght (timestampStartCorrected = timestampEndCorrected or activitsDuration = 0), which cause division by zero in nBins calculation.
         """
-        self.oneProfile.drop(self.oneProfile[self.oneProfile.timestampStartCorrected == self.oneProfile.timestampEndCorrected].index)
-
+        self.oneProfile.drop(
+            self.oneProfile[
+                self.oneProfile.timestampStartCorrected
+                == self.oneProfile.timestampEndCorrected
+            ].index
+        )
 
     def _overlappingActivities(self):
         """
@@ -682,12 +864,11 @@ class TimeDiscretiser:
         are formatted in a way that uniqueID represents a unique week ID. The function then loops over the 7 weekdays
         and calls _allocate for each day a total of 7 times.
         """
-        weekSubset = self.oneProfile.groupby(by=['weekdayStr', 'actID'])
-
+        weekSubset = self.oneProfile.groupby(by=["weekdayStr", "actID"])
 
     def _allocate(self):
         """
-        Loops over every activity (row) and allocates the respective value per bin (valPerBin) to each column 
+        Loops over every activity (row) and allocates the respective value per bin (valPerBin) to each column
         specified in the columns firstBin and lastBin.
         Args:
             weekday (str, optional): _description_. Defaults to None.
@@ -695,21 +876,20 @@ class TimeDiscretiser:
             pd.DataFrame: Discretized data set with temporal discretizations in the columns.
         """
         trips = self.oneProfile.copy()
-        trips = trips[['uniqueID', 'firstBin', 'lastBin', 'valPerBin']]
-        trips['uniqueID'] = trips["uniqueID"].astype(int)
+        trips = trips[["uniqueID", "firstBin", "lastBin", "valPerBin"]]
+        trips["uniqueID"] = trips["uniqueID"].astype(int)
         self.discreteData = trips.groupby(by="uniqueID").apply(self.assignBins)
-
 
     def assignBins(self, vehicleTrips):
         """
         Assigns values for every uniqueID based on first and last bin.
         """
         s = pd.Series(index=range(self.nTimeSlots), dtype=float)
-        for _ , itrip in vehicleTrips.iterrows():
-            start = itrip['firstBin']
-            end = itrip['lastBin']
-            value = itrip['valPerBin']
-            s.loc[start: end] = value
+        for _, itrip in vehicleTrips.iterrows():
+            start = itrip["firstBin"]
+            end = itrip["lastBin"]
+            value = itrip["valPerBin"]
+            s.loc[start:end] = value
         return s
 
     # DEPRECATED
@@ -722,14 +902,18 @@ class TimeDiscretiser:
     #     return self.discreteData
 
     def _writeOutput(self):
-        root = Path(self.localPathConfig['pathAbsolute']['vencoPyRoot'])
-        folder = self.globalConfig['pathRelative']['diaryOutput']
-        fileName = createFileName(globalConfig=self.globalConfig, manualLabel=self.columnToDiscretise, file='outputDiaryBuilder',
-                                    datasetID=self.datasetID)
-        writeOut(data = self.activities, path = root / folder / fileName)
+        root = Path(self.localPathConfig["pathAbsolute"]["vencoPyRoot"])
+        folder = self.globalConfig["pathRelative"]["diaryOutput"]
+        fileName = createFileName(
+            globalConfig=self.globalConfig,
+            manualLabel=self.columnToDiscretise,
+            file="outputDiaryBuilder",
+            datasetID=self.datasetID,
+        )
+        writeOut(data=self.activities, path=root / folder / fileName)
 
     def discretise(self, column: str):
-        self.columnToDiscretise = column
+        self.columnToDiscretise: Optional[str] = column
         print(f"Starting to discretise {self.columnToDiscretise}.")
         self._datasetCleanup()
         self._identifyBinShares()
@@ -738,4 +922,3 @@ class TimeDiscretiser:
         print(f"Discretisation finished for {self.columnToDiscretise}.")
         self.columnToDiscretise = None
         return self.discreteData
-
