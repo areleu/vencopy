@@ -7,16 +7,38 @@ __license__ = "BSD-3-Clause"
 
 import os
 import pandas as pd
+from pathlib import Path
 
 from snippets.flexEstimator.socMax import algo
+
+from vencopy.core.dataParsers import parseData
+from vencopy.core.gridModelers import GridModeler
+from vencopy.core.flexEstimators import FlexEstimator
+from vencopy.utils.globalFunctions import loadConfigDict
+
 # print(os.getcwd())
 
 data = pd.read_csv('./snippets/flexEstimator/testDay.csv')
 # data = pd.read_csv('./testDay.csv')
 socStart = 50
-upper = 200
-lower = 150
+upper = 50
+lower = 0
 
+configDict = loadConfigDict(basePath=Path('./vencopy/'))
 
-algo(data, socStart=socStart, lower=lower, upper=upper)
-# print(data)
+vpData = parseData(configDict=configDict)
+vpData.process()
+
+vpGrid = GridModeler(
+    configDict=configDict,
+    activities=vpData.activities,
+    gridModel="simple",
+    forceLastTripHome=True
+)
+vpGrid.assignGrid()
+
+vpFlex = FlexEstimator(configDict=configDict, activities=vpGrid.activities)
+vpFlex._drain()
+vpFlex._maxChargeVolumePerParkingAct()
+
+vpFlex.activities.groupby(by=['hhPersonID']).apply(lambda x: algo(x, socStart=socStart, lower=lower, upper=upper))

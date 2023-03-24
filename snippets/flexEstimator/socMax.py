@@ -13,9 +13,6 @@ import pandas as pd
 
 data = pd.read_csv('./snippets/flexEstimator/testDay.csv')
 # data = pd.read_csv('./testDay.csv')
-socStart = 50
-upper = 140
-lower = 150
 
 
 def algo(data: pd.DataFrame, socStart: int, lower: int, upper: int):
@@ -58,5 +55,5 @@ def algo(data: pd.DataFrame, socStart: int, lower: int, upper: int):
     print(cDelta)
 
 
-algo(data, socStart=socStart, lower=lower, upper=upper)
+# algo(data, socStart=socStart, lower=lower, upper=upper)
 # print(data)

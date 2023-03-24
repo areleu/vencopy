@@ -436,8 +436,7 @@ class WeekFlexEstimator(FlexEstimator):
             startLevel (float): Battery level at beginning of first activity for each activity chain
         """
         print('Starting maximum battery level calculation')
-        self.activities.loc[self.activities['isFirstActivity'], :] = self._calcMaxBatFirstAct(
-            startLevel=startLevel)
+        self.activities.loc[self.activities['isFirstActivity'], :] = self._calcMaxBatFirstAct(startLevel=startLevel)
 
         # Start and end for all trips and parkings in between
         setActs = range(int(self.activities['actID'].max()) + 1)
