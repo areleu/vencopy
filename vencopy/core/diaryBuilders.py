@@ -737,8 +737,7 @@ class TimeDiscretiser:
         """
         Updates the activity duration based on the rounded timstamps.
         Calculates the multiple of dt of the activity duration and stores it to column nBins. E.g. a 2h-activity
-        with a dt of 15 mins would have a 8 in the column. Seems like this is still precise, e.g. a 2h and 3 min
-        activity would have a 8.2 in the column nBins.
+        with a dt of 15 mins would have a 8 in the column.
         """
         self.oneProfile["activityDuration"] = (
             self.oneProfile["timestampEndCorrected"]
@@ -748,6 +747,8 @@ class TimeDiscretiser:
         self.oneProfile["nBins"] = self.oneProfile["activityDuration"] / (
             pd.Timedelta(value=self.dt, unit="min")
         )
+        if not self.oneProfile["nBins"].apply(float.is_integer).all():
+            raise Exception("Not all bin counts are integers.")
 
     def _valueDistribute(self):
         """
@@ -835,21 +836,27 @@ class TimeDiscretiser:
 
     def _checkBinValues(self):
         """
-        Verifies that all bins get a value assigned, otherwise pads with 0.
+        Verifies that all bins get a value assigned, otherwise raise an error.
         """
-        pass
+        if self.discreteData.isna().any().any():
+            raise Exception("There are NaN in the dataset.")
 
     def _dropNoLengthEvents(self):
         """
         Implements a strategy for overlapping bins if time resolution high enough so that the event becomes negligible, i.e. drops events
         with no lenght (timestampStartCorrected = timestampEndCorrected or activitsDuration = 0), which cause division by zero in nBins calculation.
         """
+        startLength = len(self.oneProfile)
         self.oneProfile.drop(
             self.oneProfile[
                 self.oneProfile.timestampStartCorrected
                 == self.oneProfile.timestampEndCorrected
             ].index
         )
+        endLength = len(self.oneProfile)
+        droppedProfiles = startLength - endLength
+        print(f"Activities dropped: {droppedProfiles}")
+
 
     def _overlappingActivities(self):
         """
@@ -892,15 +899,6 @@ class TimeDiscretiser:
             s.loc[start:end] = value
         return s
 
-    # DEPRECATED
-    # def _oldAllocate(self):
-    #     for id in self.oneProfile.uniqueID.unique():
-    #         vehicleSubset = self.oneProfile[self.oneProfile.uniqueID == id].reset_index(drop=True)
-    #         for irow in range(len(vehicleSubset)):
-    #                 self.discreteData.loc[id, (vehicleSubset.loc[irow, 'firstBin']):(
-    #                     vehicleSubset.loc[irow, 'lastBin'])] = vehicleSubset.loc[irow, 'valPerBin']
-    #     return self.discreteData
-
     def _writeOutput(self):
         root = Path(self.localPathConfig["pathAbsolute"]["vencoPyRoot"])
         folder = self.globalConfig["pathRelative"]["diaryOutput"]
@@ -918,7 +916,7 @@ class TimeDiscretiser:
         self._datasetCleanup()
         self._identifyBinShares()
         self._allocateBinShares()
-        # self._writeOutput()
+        self._writeOutput()
         print(f"Discretisation finished for {self.columnToDiscretise}.")
         self.columnToDiscretise = None
         return self.discreteData
