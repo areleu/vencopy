@@ -69,7 +69,7 @@ class FlexEstimator:
         # Start and end for all trips and parkings in between
         setActs = range(int(self.activities['parkID'].max()) + 1)
         tripActsRes = pd.DataFrame()
-        for act in setActs:
+        for act in setActs:  # implementable via groupby with actIDs as groups?
             print(f'Calculate maximum battery level for act {act}')
             tripRows = (self.activities['tripID'] == act) & (~self.activities['isFirstActivity'])
             parkRows = (self.activities['parkID'] == act) & (~self.activities['isFirstActivity'])
@@ -245,6 +245,7 @@ class FlexEstimator:
         tripActsIdx.loc[multiIdxTrip, 'minResidualNeed'] = resNeed.where(resNeed >= 0, other=0)
         return tripActsIdx.reset_index()
 
+    # FIXME: Implement more abstract consolidated func of this and calcBatLevTripMax()
     def __calcBatLevParkMax(self, actID: int, parkActs: pd.DataFrame, prevTripActs: pd.DataFrame = None):
         """ Calculate the maximum SOC of the given parking activities for the activity ID given by actID. Previous trip
         activities are used as boundary for maxBatteryLevelStart. This function is called multiple times once per 

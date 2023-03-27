@@ -10,8 +10,8 @@
 # This config holds all relative paths and filenames for VencoPy
 
 dataset: MiD17 # options are MiD08, MiD17, KiD
-debug: True
-nDebugLines: 2000
+debug: False
+nDebugLines: 20000
 
 pathRelative:
     plots: ./output/evaluator/
