@@ -860,13 +860,28 @@ class TimeDiscretiser:
     def _dropNoLengthEvents(self):
         """
         Implements a strategy for overlapping bins if time resolution high enough so that the event becomes negligible, i.e. drops events
-        with no lenght (timestampStartCorrected = timestampEndCorrected or activitsDuration = 0), which cause division by zero in nBins calculation.
+        with no lenght (timestampStartCorrected = timestampEndCorrected or activityDuration = 0), which cause division by zero in nBins calculation.
         """
         startLength = len(self.oneProfile)
-        self.oneProfile = self.oneProfile.drop(self.oneProfile[self.oneProfile.activityDuration == pd.Timedelta(0)].index)
+        noLengthActivitiesIDs = self.oneProfile[self.oneProfile.activityDuration == pd.Timedelta(0)].index.to_list()
+        self.IDsWithNoLengthActivities = self.oneProfile.loc[noLengthActivitiesIDs]['uniqueID'].unique()
+        self.oneProfile = self.oneProfile.drop(noLengthActivitiesIDs)
         endLength = len(self.oneProfile)
-        droppedProfiles = startLength - endLength
-        print(f"Activities dropped: {droppedProfiles}")
+        droppedActivities = startLength - endLength
+        print(f"{droppedActivities} zero-length activities dropped from {len(self.IDsWithNoLengthActivities)} IDs.")
+        self._removeActivitiesIfColumnToDiscretiseNoValues()
+
+    def _removeActivitiesIfColumnToDiscretiseNoValues(self):
+        startLength = len(self.oneProfile)
+        subsetNoLengthActivitiesIDsOnly = self.oneProfile.loc[self.oneProfile.uniqueID.isin(self.IDsWithNoLengthActivities)]
+        subsetNoLengthActivitiesIDsOnly = subsetNoLengthActivitiesIDsOnly.set_index("uniqueID", drop=False)
+        subsetNoLengthActivitiesIDsOnly.index.names = ['uniqueIDindex']
+        IDsWithSumZero = subsetNoLengthActivitiesIDsOnly.groupby(["uniqueID"])[self.columnToDiscretise].sum()
+        IDsToDrop = IDsWithSumZero[IDsWithSumZero == 0].index
+        self.oneProfile = self.oneProfile.loc[self.oneProfile.uniqueID.isin(IDsToDrop)]
+        endLength = len(self.oneProfile)
+        droppedActivities = startLength - endLength
+        print(f"Additional {droppedActivities} activities dropped as the sum of all {self.columnToDiscretise} activities for the specific ID was zero.")
 
 
     def _overlappingActivities(self):
