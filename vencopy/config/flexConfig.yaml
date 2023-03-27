@@ -15,6 +15,7 @@ Electric_consumption: 18.0 # in kWh/100km, input assumption for specific electri
 Fuel_consumption: 1.0 # in l/100km, input assumption for specific fuel consumption for auxiliary fuel
 Electric_consumption_corr: 18.0 # in kWh/100km, assumption for potential correction after aggregation
 Fuel_consumption_corr: 1.0 # in l/100km, assumption for potential correction after aggregation
+Start_SOC: 0.5
 Maximum_SOC: 0.97 # in %
 Minimum_SOC: 0.03 # in %
 Is_BEV?: 1 # 1=BEV, 0=PHEV (not yet tested)

@@ -21,15 +21,15 @@ from vencopy.utils.globalFunctions import createFileName, writeOut
 
 
 class GridModeler:
-    def __init__(self, configDict: dict, activities, gridModel: str, forceLastTripHome: bool = False):
+    def __init__(self, configDict: dict, activities):
         self.globalConfig = configDict['globalConfig']
         self.gridConfig = configDict['gridConfig']
         self.flexConfig = configDict['flexConfig']
         self.localPathConfig = configDict['localPathConfig']
-        self.datasetID = configDict["globalConfig"]["dataset"]
-        self.gridModel = gridModel
+        self.datasetID = configDict['globalConfig']['dataset']
+        self.gridModel = self.gridConfig['gridModel']
         self.activities = activities
-        if forceLastTripHome:
+        if self.gridConfig['forceLastTripHome']:
             self.removeActsNotEndingHome()
         self.gridAvailabilitySimple = self.gridConfig['chargingInfrastructureMappings']
         self.gridAvailabilityProb = self.gridConfig['gridAvailabilityDistribution']
@@ -103,7 +103,8 @@ class GridModeler:
         Adjusts charging power to zero if parking duration shorter than 15 minutes.
         """
         # parkID != pd.NA and timedelta <= 15 minutes
-        self.activities.loc[((self.activities['parkID'].notna()) & ((self.activities['timedelta'] / np.timedelta64(1, 's')) <= self.gridConfig['minimumParkingTime'])), 'ratedPower'] = 0
+        self.activities.loc[((self.activities['parkID'].notna()) & (
+            (self.activities['timedelta'] / np.timedelta64(1, 's')) <= self.gridConfig['minimumParkingTime'])), 'ratedPower'] = 0
         return self.activities
 
     def assignGrid(self, losses: bool = False):
@@ -123,10 +124,10 @@ class GridModeler:
             raise(ValueError(f'Specified grid modeling option {self.gridModel} is not implemented. Please choose'
                              f'"simple" or "probability"'))
 
-        self.activities = self._addGridLosses(acts=self.activities, loss=self.gridConfig['loss_factor'], losses=losses)
+        self.activities = self._addGridLosses(acts=self.activities)
         return self.activities
 
-    def _addGridLosses(self, acts: pd.DataFrame, loss: dict, losses: bool):
+    def _addGridLosses(self, acts: pd.DataFrame):
         """ Function applying a reduction of rated power capacities to the rated powers after sampling. The 
         factors for reducing the rated power are given in the gridConfig with keys being floats of rated powers
         and values being floats between 0 and 1. The factor is the LOSS FACTOR not the EFFICIENCY, thus 0.1 applied to
@@ -135,9 +136,9 @@ class GridModeler:
         :param acts [bool]: Should electric losses in the charging equipment be considered?
         :param losses [bool]: Should electric losses in the charging equipment be considered?
         """
-        if losses:
+        if self.gridConfig['losses']:
             acts['availablePower'] = acts['ratedPower'] - acts['ratedPower'] * acts['ratedPower'].apply(
-                lambda x: loss[x])
+                lambda x: self.gridConfig['loss_factor'][x])
         else:
             acts['availablePower'] = acts['ratedPower']
         return acts
@@ -146,13 +147,11 @@ class GridModeler:
         root = Path(self.localPathConfig['pathAbsolute']['vencoPyRoot'])
         folder = self.globalConfig['pathRelative']['gridOutput']
         fileName = createFileName(globalConfig=self.globalConfig, manualLabel='', file='outputGridModeler',
-                                    datasetID=self.datasetID)
-        writeOut(data = self.activities, path = root / folder / fileName)
+                                  datasetID=self.datasetID)
+        writeOut(data=self.activities, path=root / folder / fileName)
 
     def removeActsNotEndingHome(self):
         lastActsNotHome = self.activities.loc[(self.activities['purposeStr'] != 'HOME') & (
             self.activities['isLastActivity']), :]
         idToRemove = lastActsNotHome['uniqueID'].unique()
         self.activities = self.activities.loc[~self.activities['uniqueID'].isin(idToRemove), :]
-
-

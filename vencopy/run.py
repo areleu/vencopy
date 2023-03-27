@@ -40,9 +40,7 @@ if __name__ == "__main__":
 
     vpGrid = GridModeler(
         configDict=configDict,
-        activities=vpData.activities,
-        gridModel="simple",
-        forceLastTripHome=False
+        activities=vpData.activities
     )
     vpGrid.assignGrid()
 

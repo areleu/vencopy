@@ -370,6 +370,7 @@ class FlexEstimator:
             filterFuelNeed (bool): If true, it is ensured that all trips can be fulfilled by battery electric vehicles
             specified by battery size and specific consumption as given in the config. Here, not only trips but cars
             days are filtered out.
+            startBatteryLevel (float): Initial battery level of every activity chain.  
 
         Returns:
             pd.DataFrame: Activities data set comprising uncontrolled charging and flexible charging constraints for
@@ -377,7 +378,7 @@ class FlexEstimator:
         """
         self._drain()
         self._maxChargeVolumePerParkingAct()
-        self.__batteryLevelMax(startLevel=self.upperBatLev/2)
+        self.__batteryLevelMax(startLevel=self.upperBatLev * self.flexConfig['Start_SOC'])
         self._uncontrolledCharging()
         self.__batteryLevelMin()
         if filterFuelNeed:
