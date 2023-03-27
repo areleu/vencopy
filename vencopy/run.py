@@ -36,7 +36,7 @@ if __name__ == "__main__":
     createOutputFolders(configDict=configDict)
 
     vpData = parseData(configDict=configDict)
-    vpData.process()
+    vpData.process(splitOvernightTrips=True)
 
     vpGrid = GridModeler(
         configDict=configDict,

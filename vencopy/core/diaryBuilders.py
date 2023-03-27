@@ -748,7 +748,23 @@ class TimeDiscretiser:
             pd.Timedelta(value=self.dt, unit="min")
         )
         if not self.oneProfile["nBins"].apply(float.is_integer).all():
-            raise Exception("Not all bin counts are integers.")
+            raise ValueError("Not all bin counts are integers.")
+        # self._dropNBinsLengthZero()
+
+    def _dropNBinsLengthZero(self):
+        """
+        Drops line when nBins is zero, which cause division by zero in nBins calculation.
+        """
+        startLength = len(self.oneProfile)
+        self.oneProfile.drop(
+            self.oneProfile[
+                self.oneProfile.nBins
+                == 0
+            ].index
+        )
+        endLength = len(self.oneProfile)
+        droppedProfiles = startLength - endLength
+        print(f"Activities dropped: {droppedProfiles}")
 
     def _valueDistribute(self):
         """
@@ -756,7 +772,7 @@ class TimeDiscretiser:
         """
         if self.oneProfile["nBins"].any() == 0:
             raise ArithmeticError(
-                "The total number of bins is zero, which caused a division by zero. This should not happen because events with lenght zero should have been dropped."
+                "The total number of bins is zero for one activity, which caused a division by zero. This should not happen because events with length zero should have been dropped."
             )
         self.oneProfile["valPerBin"] = (
             self.oneProfile[self.columnToDiscretise] / self.oneProfile["nBins"]
@@ -847,12 +863,7 @@ class TimeDiscretiser:
         with no lenght (timestampStartCorrected = timestampEndCorrected or activitsDuration = 0), which cause division by zero in nBins calculation.
         """
         startLength = len(self.oneProfile)
-        self.oneProfile.drop(
-            self.oneProfile[
-                self.oneProfile.timestampStartCorrected
-                == self.oneProfile.timestampEndCorrected
-            ].index
-        )
+        self.oneProfile = self.oneProfile.drop(self.oneProfile[self.oneProfile.activityDuration == pd.Timedelta(0)].index)
         endLength = len(self.oneProfile)
         droppedProfiles = startLength - endLength
         print(f"Activities dropped: {droppedProfiles}")
