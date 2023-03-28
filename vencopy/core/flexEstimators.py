@@ -35,7 +35,8 @@ class FlexEstimator:
         self.isLastAct = self.activities['isLastActivity'].fillna(0).astype(bool)
         self.activities[['maxBatteryLevelStart', 'maxBatteryLevelEnd', 'minBatteryLevelStart',
                          'minBatteryLevelEnd', 'maxBatteryLevelEnd_unlimited', 'minBatteryLevelEnd_unlimited',
-                         'maxResidualNeed', 'minResidualNeed', 'maxOvershoot', 'minOvershoot']] = None
+                         'maxResidualNeed', 'minResidualNeed', 'maxOvershoot', 'minUndershoot',
+                         'auxiliaryFuelNeed']] = None
         self.activitiesWOResidual = None
 
     def _drain(self):
@@ -94,6 +95,7 @@ class FlexEstimator:
             prevTripActs = tripActsRes  # Redundant?
         self.activities = actTemp.sort_values(by=['uniqueID', 'actID', 'parkID'])
 
+    @profile(immediate=True)
     def __batteryLevelMin(self):
         """
         Calculate the minimum battery level at the beginning and end of each activity. This represents the case of
@@ -297,17 +299,17 @@ class FlexEstimator:
         Returns:
             _type_: _description_
         """
-        # Setting next park activity battery start level to battery end level of current trip
+        # Composing park activity index to be set
         activeHHPersonIDs = parkActs.loc[:, 'uniqueID']
         multiIdxPark = [(id, None, actID) for id in activeHHPersonIDs]
         parkActsIdx = parkActs.set_index(['uniqueID', 'tripID', 'parkID'])
 
-        # Preliminary defs
+        # Composing trip activity index to get battery level from
         nextTripIDs = parkActs.loc[:, 'nextActID']
         multiIdxTrip = [(id, act, None) for id, act in zip(activeHHPersonIDs, nextTripIDs)]
         nextTripActsIdx = nextTripActs.set_index(['uniqueID', 'tripID', 'parkID'])
 
-        # Setting of battery level variables
+        # Setting next park activity battery start level to battery end level of current trip
         parkActsIdx.loc[multiIdxPark, 'minBatteryLevelEnd'] = nextTripActsIdx.loc[
             multiIdxTrip, 'minBatteryLevelStart'].values
         parkActsIdx['minBatteryLevelStart_unlimited'] = parkActsIdx.loc[
@@ -360,7 +362,7 @@ class FlexEstimator:
                                   datasetID=self.datasetID)
         writeOut(data=self.activities, path=root / folder / fileName)
 
-    def estimateTechnicalFlexibility(self, filterFuelNeed: bool = True):
+    def estimateTechnicalFlexibility(self):
         """
         Main run function for the class WeekFlexEstimator. Calculates uncontrolled charging as well as technical
         boundary constraints for controlled charging and feeding electricity back into the grid on an indvidiual vehicle
@@ -381,7 +383,8 @@ class FlexEstimator:
         self.__batteryLevelMax(startLevel=self.upperBatLev * self.flexConfig['Start_SOC'])
         self._uncontrolledCharging()
         self.__batteryLevelMin()
-        if filterFuelNeed:
+        self._auxFuelNeed()
+        if self.flexConfig['filterFuelNeed']:
             self.activities = self._filterResidualNeed(acts=self.activities, indexCols=['uniqueID'])
         print("Technical flexibility estimation ended")
         return self.activities
