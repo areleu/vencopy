@@ -809,21 +809,23 @@ class TimeDiscretiser:
         self.oneProfile["startTimeFromMidnightSeconds"] = self.oneProfile[
             "dailyTimeDeltaStart"
         ].apply(lambda x: x.seconds)
-        bins = pd.DataFrame({"index": self.timeDelta})
+        # FIXME: move it out of function globally
+        bins = pd.DataFrame({"binTimestamp": self.timeDelta})
         bins.drop(
             bins.tail(1).index, inplace=True
         )  # remove last element, which is zero
-        self.binFromMidnightSeconds = bins["index"].apply(lambda x: x.seconds)
+        self.binFromMidnightSeconds = bins["binTimestamp"].apply(lambda x: x.seconds)
+        self.binFromMidnightSeconds = self.binFromMidnightSeconds + (self.dt * 60)
         self.oneProfile["firstBin"] = (
             self.oneProfile["startTimeFromMidnightSeconds"].apply(
-                lambda x: np.argmax(x < self.binFromMidnightSeconds) - 1
+                lambda x: np.argmax(x < self.binFromMidnightSeconds) 
             )
         ).astype(int)
         if self.oneProfile["firstBin"].any() > self.nTimeSlots:
             raise ArithmeticError(
                 "One of first bin values is bigger than total number of bins."
             )
-        if self.oneProfile["firstBin"].unique() < 0:
+        if self.oneProfile["firstBin"].unique().any() < 0:
             raise ArithmeticError(
                 "One of first bin values is smaller than 0."
             )
@@ -845,14 +847,11 @@ class TimeDiscretiser:
         self.oneProfile["lastBin"] = (
             self.oneProfile["firstBin"] + self.oneProfile["nBins"] - 1
         ).astype(int)
-        self.oneProfile.loc[self.oneProfile["isLastActivity"], "lastBin"] = (
-            self.oneProfile.loc[self.oneProfile["isLastActivity"], "lastBin"] + 1
-        )
         if self.oneProfile["lastBin"].any() > self.nTimeSlots:
             raise ArithmeticError(
                 "One of first bin values is bigger than total number of bins."
             )
-        if self.oneProfile["lastBin"].unique() < 0:
+        if self.oneProfile["lastBin"].unique().any() < 0:
             raise ArithmeticError(
                 "One of first bin values is smaller than 0."
             )
