@@ -899,11 +899,10 @@ class TimeDiscretiser:
         subsetNoLengthActivitiesIDsOnly.index.names = ['uniqueIDindex']
         IDsWithSumZero = subsetNoLengthActivitiesIDsOnly.groupby(["uniqueID"])[self.columnToDiscretise].sum()
         IDsToDrop = IDsWithSumZero[IDsWithSumZero == 0].index
-        self.oneProfile = self.oneProfile.loc[self.oneProfile.uniqueID.isin(IDsToDrop)]
+        self.oneProfile = self.oneProfile.loc[~self.oneProfile.uniqueID.isin(IDsToDrop)]
         endLength = len(self.oneProfile)
         droppedActivities = startLength - endLength
         print(f"Additional {droppedActivities} activities dropped as the sum of all {self.columnToDiscretise} activities for the specific ID was zero.")
-
 
     def _overlappingActivities(self):
         """
