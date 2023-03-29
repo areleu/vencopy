@@ -952,7 +952,7 @@ class TimeDiscretiser:
         fileName = createFileName(
             globalConfig=self.globalConfig,
             manualLabel=self.columnToDiscretise,
-            file="outputDiaryBuilder",
+            fileNameID="outputDiaryBuilder",
             datasetID=self.datasetID,
         )
         writeOut(data=self.activities, path=root / folder / fileName)
@@ -963,7 +963,7 @@ class TimeDiscretiser:
         self._datasetCleanup()
         self._identifyBinShares()
         self._allocateBinShares()
-        self._writeOutput()
+        #self._writeOutput()
         print(f"Discretisation finished for {self.columnToDiscretise}.")
         self.columnToDiscretise = None
         return self.discreteData
