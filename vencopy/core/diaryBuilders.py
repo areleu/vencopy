@@ -643,6 +643,11 @@ class TimeDiscretiser:
             )
 
     def _datasetCleanup(self):
+        self._removeColumns()
+        self._correctValues()
+        self._correctTimestamp()
+
+    def _removeColumns(self):
         """
         Removes additional columns not used in the TimeDiscretiser class.
         Only keeps timestamp start and end, unique ID, and the column to discretise.
@@ -663,11 +668,7 @@ class TimeDiscretiser:
         if self.isWeek:
             necessaryColumns = necessaryColumns + ["weekdayStr"]
         self.oneProfile = self.activities[necessaryColumns].copy()
-        self._correctDataset()
-
-    def _correctDataset(self):
-        self._correctValues()
-        self._correctTimestamp()
+        return self.oneProfile        
 
     def _correctValues(self):
         """
@@ -696,6 +697,7 @@ class TimeDiscretiser:
         self.oneProfile["timestampEndCorrected"] = self.oneProfile[
             "timestampEnd"
         ].dt.round(f"{self.dt}min")
+        return self.oneProfile
 
     def _createDiscretisedStructureWeek(self):
         """
@@ -749,7 +751,7 @@ class TimeDiscretiser:
         )
         if not self.oneProfile["nBins"].apply(float.is_integer).all():
             raise ValueError("Not all bin counts are integers.")
-        # self._dropNBinsLengthZero()
+        self._dropNBinsLengthZero()
 
     def _dropNBinsLengthZero(self):
         """
@@ -764,7 +766,7 @@ class TimeDiscretiser:
         )
         endLength = len(self.oneProfile)
         droppedProfiles = startLength - endLength
-        print(f"Activities dropped: {droppedProfiles}")
+        print(f"{droppedProfiles} activities dropped because bin lenght equals zero.")
 
     def _valueDistribute(self):
         """
@@ -819,7 +821,15 @@ class TimeDiscretiser:
         ).astype(int)
         if self.oneProfile["firstBin"].any() > self.nTimeSlots:
             raise ArithmeticError(
-                "First bin value is bigger than total number of bins."
+                "One of first bin values is bigger than total number of bins."
+            )
+        if self.oneProfile["firstBin"].unique() < 0:
+            raise ArithmeticError(
+                "One of first bin values is smaller than 0."
+            )
+        if self.oneProfile["firstBin"].isna().any():
+            raise ArithmeticError(
+                "One of first bin values is NaN."
             )
 
     def _identifyLastBin(self):
@@ -838,6 +848,18 @@ class TimeDiscretiser:
         self.oneProfile.loc[self.oneProfile["isLastActivity"], "lastBin"] = (
             self.oneProfile.loc[self.oneProfile["isLastActivity"], "lastBin"] + 1
         )
+        if self.oneProfile["lastBin"].any() > self.nTimeSlots:
+            raise ArithmeticError(
+                "One of first bin values is bigger than total number of bins."
+            )
+        if self.oneProfile["lastBin"].unique() < 0:
+            raise ArithmeticError(
+                "One of first bin values is smaller than 0."
+            )
+        if self.oneProfile["lastBin"].isna().any():
+            raise ArithmeticError(
+                "One of first bin values is NaN."
+            )
 
     def _allocateBinShares(self):
         """
