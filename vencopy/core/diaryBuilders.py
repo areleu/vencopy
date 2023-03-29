@@ -643,6 +643,11 @@ class TimeDiscretiser:
             )
 
     def _datasetCleanup(self):
+        self._removeColumns()
+        self._correctValues()
+        self._correctTimestamp()
+
+    def _removeColumns(self):
         """
         Removes additional columns not used in the TimeDiscretiser class.
         Only keeps timestamp start and end, unique ID, and the column to discretise.
@@ -663,11 +668,7 @@ class TimeDiscretiser:
         if self.isWeek:
             necessaryColumns = necessaryColumns + ["weekdayStr"]
         self.oneProfile = self.activities[necessaryColumns].copy()
-        self._correctDataset()
-
-    def _correctDataset(self):
-        self._correctValues()
-        self._correctTimestamp()
+        return self.oneProfile        
 
     def _correctValues(self):
         """
@@ -696,6 +697,7 @@ class TimeDiscretiser:
         self.oneProfile["timestampEndCorrected"] = self.oneProfile[
             "timestampEnd"
         ].dt.round(f"{self.dt}min")
+        return self.oneProfile
 
     def _createDiscretisedStructureWeek(self):
         """
@@ -737,8 +739,7 @@ class TimeDiscretiser:
         """
         Updates the activity duration based on the rounded timstamps.
         Calculates the multiple of dt of the activity duration and stores it to column nBins. E.g. a 2h-activity
-        with a dt of 15 mins would have a 8 in the column. Seems like this is still precise, e.g. a 2h and 3 min
-        activity would have a 8.2 in the column nBins.
+        with a dt of 15 mins would have a 8 in the column.
         """
         self.oneProfile["activityDuration"] = (
             self.oneProfile["timestampEndCorrected"]
@@ -748,6 +749,24 @@ class TimeDiscretiser:
         self.oneProfile["nBins"] = self.oneProfile["activityDuration"] / (
             pd.Timedelta(value=self.dt, unit="min")
         )
+        if not self.oneProfile["nBins"].apply(float.is_integer).all():
+            raise ValueError("Not all bin counts are integers.")
+        self._dropNBinsLengthZero()
+
+    def _dropNBinsLengthZero(self):
+        """
+        Drops line when nBins is zero, which cause division by zero in nBins calculation.
+        """
+        startLength = len(self.oneProfile)
+        self.oneProfile.drop(
+            self.oneProfile[
+                self.oneProfile.nBins
+                == 0
+            ].index
+        )
+        endLength = len(self.oneProfile)
+        droppedProfiles = startLength - endLength
+        print(f"{droppedProfiles} activities dropped because bin lenght equals zero.")
 
     def _valueDistribute(self):
         """
@@ -755,7 +774,7 @@ class TimeDiscretiser:
         """
         if self.oneProfile["nBins"].any() == 0:
             raise ArithmeticError(
-                "The total number of bins is zero, which caused a division by zero. This should not happen because events with lenght zero should have been dropped."
+                "The total number of bins is zero for one activity, which caused a division by zero. This should not happen because events with length zero should have been dropped."
             )
         self.oneProfile["valPerBin"] = (
             self.oneProfile[self.columnToDiscretise] / self.oneProfile["nBins"]
@@ -790,19 +809,29 @@ class TimeDiscretiser:
         self.oneProfile["startTimeFromMidnightSeconds"] = self.oneProfile[
             "dailyTimeDeltaStart"
         ].apply(lambda x: x.seconds)
-        bins = pd.DataFrame({"index": self.timeDelta})
+        # FIXME: move it out of function globally
+        bins = pd.DataFrame({"binTimestamp": self.timeDelta})
         bins.drop(
             bins.tail(1).index, inplace=True
         )  # remove last element, which is zero
-        self.binFromMidnightSeconds = bins["index"].apply(lambda x: x.seconds)
+        self.binFromMidnightSeconds = bins["binTimestamp"].apply(lambda x: x.seconds)
+        self.binFromMidnightSeconds = self.binFromMidnightSeconds + (self.dt * 60)
         self.oneProfile["firstBin"] = (
             self.oneProfile["startTimeFromMidnightSeconds"].apply(
-                lambda x: np.argmax(x < self.binFromMidnightSeconds) - 1
+                lambda x: np.argmax(x < self.binFromMidnightSeconds) 
             )
         ).astype(int)
         if self.oneProfile["firstBin"].any() > self.nTimeSlots:
             raise ArithmeticError(
-                "First bin value is bigger than total number of bins."
+                "One of first bin values is bigger than total number of bins."
+            )
+        if self.oneProfile["firstBin"].unique().any() < 0:
+            raise ArithmeticError(
+                "One of first bin values is smaller than 0."
+            )
+        if self.oneProfile["firstBin"].isna().any():
+            raise ArithmeticError(
+                "One of first bin values is NaN."
             )
 
     def _identifyLastBin(self):
@@ -818,9 +847,18 @@ class TimeDiscretiser:
         self.oneProfile["lastBin"] = (
             self.oneProfile["firstBin"] + self.oneProfile["nBins"] - 1
         ).astype(int)
-        self.oneProfile.loc[self.oneProfile["isLastActivity"], "lastBin"] = (
-            self.oneProfile.loc[self.oneProfile["isLastActivity"], "lastBin"] + 1
-        )
+        if self.oneProfile["lastBin"].any() > self.nTimeSlots:
+            raise ArithmeticError(
+                "One of first bin values is bigger than total number of bins."
+            )
+        if self.oneProfile["lastBin"].unique().any() < 0:
+            raise ArithmeticError(
+                "One of first bin values is smaller than 0."
+            )
+        if self.oneProfile["lastBin"].isna().any():
+            raise ArithmeticError(
+                "One of first bin values is NaN."
+            )
 
     def _allocateBinShares(self):
         """
@@ -835,21 +873,36 @@ class TimeDiscretiser:
 
     def _checkBinValues(self):
         """
-        Verifies that all bins get a value assigned, otherwise pads with 0.
+        Verifies that all bins get a value assigned, otherwise raise an error.
         """
-        pass
+        if self.discreteData.isna().any().any():
+            raise Exception("There are NaN in the dataset.")
 
     def _dropNoLengthEvents(self):
         """
         Implements a strategy for overlapping bins if time resolution high enough so that the event becomes negligible, i.e. drops events
-        with no lenght (timestampStartCorrected = timestampEndCorrected or activitsDuration = 0), which cause division by zero in nBins calculation.
+        with no lenght (timestampStartCorrected = timestampEndCorrected or activityDuration = 0), which cause division by zero in nBins calculation.
         """
-        self.oneProfile.drop(
-            self.oneProfile[
-                self.oneProfile.timestampStartCorrected
-                == self.oneProfile.timestampEndCorrected
-            ].index
-        )
+        startLength = len(self.oneProfile)
+        noLengthActivitiesIDs = self.oneProfile[self.oneProfile.activityDuration == pd.Timedelta(0)].index.to_list()
+        self.IDsWithNoLengthActivities = self.oneProfile.loc[noLengthActivitiesIDs]['uniqueID'].unique()
+        self.oneProfile = self.oneProfile.drop(noLengthActivitiesIDs)
+        endLength = len(self.oneProfile)
+        droppedActivities = startLength - endLength
+        print(f"{droppedActivities} zero-length activities dropped from {len(self.IDsWithNoLengthActivities)} IDs.")
+        self._removeActivitiesIfColumnToDiscretiseNoValues()
+
+    def _removeActivitiesIfColumnToDiscretiseNoValues(self):
+        startLength = len(self.oneProfile)
+        subsetNoLengthActivitiesIDsOnly = self.oneProfile.loc[self.oneProfile.uniqueID.isin(self.IDsWithNoLengthActivities)]
+        subsetNoLengthActivitiesIDsOnly = subsetNoLengthActivitiesIDsOnly.set_index("uniqueID", drop=False)
+        subsetNoLengthActivitiesIDsOnly.index.names = ['uniqueIDindex']
+        IDsWithSumZero = subsetNoLengthActivitiesIDsOnly.groupby(["uniqueID"])[self.columnToDiscretise].sum()
+        IDsToDrop = IDsWithSumZero[IDsWithSumZero == 0].index
+        self.oneProfile = self.oneProfile.loc[~self.oneProfile.uniqueID.isin(IDsToDrop)]
+        endLength = len(self.oneProfile)
+        droppedActivities = startLength - endLength
+        print(f"Additional {droppedActivities} activities dropped as the sum of all {self.columnToDiscretise} activities for the specific ID was zero.")
 
     def _overlappingActivities(self):
         """
@@ -892,22 +945,13 @@ class TimeDiscretiser:
             s.loc[start:end] = value
         return s
 
-    # DEPRECATED
-    # def _oldAllocate(self):
-    #     for id in self.oneProfile.uniqueID.unique():
-    #         vehicleSubset = self.oneProfile[self.oneProfile.uniqueID == id].reset_index(drop=True)
-    #         for irow in range(len(vehicleSubset)):
-    #                 self.discreteData.loc[id, (vehicleSubset.loc[irow, 'firstBin']):(
-    #                     vehicleSubset.loc[irow, 'lastBin'])] = vehicleSubset.loc[irow, 'valPerBin']
-    #     return self.discreteData
-
     def _writeOutput(self):
         root = Path(self.localPathConfig["pathAbsolute"]["vencoPyRoot"])
         folder = self.globalConfig["pathRelative"]["diaryOutput"]
         fileName = createFileName(
             globalConfig=self.globalConfig,
             manualLabel=self.columnToDiscretise,
-            file="outputDiaryBuilder",
+            fileNameID="outputDiaryBuilder",
             datasetID=self.datasetID,
         )
         writeOut(data=self.activities, path=root / folder / fileName)
@@ -918,7 +962,7 @@ class TimeDiscretiser:
         self._datasetCleanup()
         self._identifyBinShares()
         self._allocateBinShares()
-        # self._writeOutput()
+        #self._writeOutput()
         print(f"Discretisation finished for {self.columnToDiscretise}.")
         self.columnToDiscretise = None
         return self.discreteData
