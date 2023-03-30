@@ -596,7 +596,7 @@ class TimeDiscretiser:
         self.activities = activities
         self.datasetID = datasetID
         self.method = method
-        self.oneProfile = None
+        self.dataToDiscretise = None
         self.localPathConfig = localPathConfig
         self.globalConfig = globalConfig
         self.quantum = pd.Timedelta(value=1, unit="min")
@@ -667,8 +667,8 @@ class TimeDiscretiser:
         ] + [self.columnToDiscretise]
         if self.isWeek:
             necessaryColumns = necessaryColumns + ["weekdayStr"]
-        self.oneProfile = self.activities[necessaryColumns].copy()
-        return self.oneProfile        
+        self.dataToDiscretise = self.activities[necessaryColumns].copy()
+        return self.dataToDiscretise        
 
     def _correctValues(self):
         """
@@ -678,26 +678,26 @@ class TimeDiscretiser:
         - residualNeed profile: pads NaN with 0s
         """
         if self.columnToDiscretise == "drain":
-            self.oneProfile["drain"] = self.oneProfile["drain"].fillna(0)
+            self.dataToDiscretise["drain"] = self.dataToDiscretise["drain"].fillna(0)
         elif self.columnToDiscretise == "uncontrolledCharge":
-            self.oneProfile["uncontrolledCharge"] = self.oneProfile[
+            self.dataToDiscretise["uncontrolledCharge"] = self.dataToDiscretise[
                 "uncontrolledCharge"
             ].fillna(0)
         elif self.columnToDiscretise == "residualNeed":
-            self.oneProfile["residualNeed"] = self.oneProfile["residualNeed"].fillna(0)
-        return self.oneProfile
+            self.dataToDiscretise["residualNeed"] = self.dataToDiscretise["residualNeed"].fillna(0)
+        return self.dataToDiscretise
 
     def _correctTimestamp(self):
         """
         Rounds timestamps to predifined resolution.
         """
-        self.oneProfile["timestampStartCorrected"] = self.oneProfile[
+        self.dataToDiscretise["timestampStartCorrected"] = self.dataToDiscretise[
             "timestampStart"
         ].dt.round(f"{self.dt}min")
-        self.oneProfile["timestampEndCorrected"] = self.oneProfile[
+        self.dataToDiscretise["timestampEndCorrected"] = self.dataToDiscretise[
             "timestampEnd"
         ].dt.round(f"{self.dt}min")
-        return self.oneProfile
+        return self.dataToDiscretise
 
     def _createDiscretisedStructureWeek(self):
         """
@@ -709,7 +709,7 @@ class TimeDiscretiser:
         hPerDay = int(nHours / len(self.weekdays))
         hours = range(hPerDay)
         self.discreteData = pd.DataFrame(
-            index=self.oneProfile.uniqueID.unique(),
+            index=self.dataToDiscretise.uniqueID.unique(),
             columns=pd.MultiIndex.from_product([self.weekdays, hours]),
         )
         self.discreteDataFast = (
@@ -741,15 +741,15 @@ class TimeDiscretiser:
         Calculates the multiple of dt of the activity duration and stores it to column nBins. E.g. a 2h-activity
         with a dt of 15 mins would have a 8 in the column.
         """
-        self.oneProfile["activityDuration"] = (
-            self.oneProfile["timestampEndCorrected"]
-            - self.oneProfile["timestampStartCorrected"]
+        self.dataToDiscretise["activityDuration"] = (
+            self.dataToDiscretise["timestampEndCorrected"]
+            - self.dataToDiscretise["timestampStartCorrected"]
         )
         self._dropNoLengthEvents()
-        self.oneProfile["nBins"] = self.oneProfile["activityDuration"] / (
+        self.dataToDiscretise["nBins"] = self.dataToDiscretise["activityDuration"] / (
             pd.Timedelta(value=self.dt, unit="min")
         )
-        if not self.oneProfile["nBins"].apply(float.is_integer).all():
+        if not self.dataToDiscretise["nBins"].apply(float.is_integer).all():
             raise ValueError("Not all bin counts are integers.")
         self._dropNBinsLengthZero()
 
@@ -757,14 +757,14 @@ class TimeDiscretiser:
         """
         Drops line when nBins is zero, which cause division by zero in nBins calculation.
         """
-        startLength = len(self.oneProfile)
-        self.oneProfile.drop(
-            self.oneProfile[
-                self.oneProfile.nBins
+        startLength = len(self.dataToDiscretise)
+        self.dataToDiscretise.drop(
+            self.dataToDiscretise[
+                self.dataToDiscretise.nBins
                 == 0
             ].index
         )
-        endLength = len(self.oneProfile)
+        endLength = len(self.dataToDiscretise)
         droppedProfiles = startLength - endLength
         print(f"{droppedProfiles} activities dropped because bin lenght equals zero.")
 
@@ -772,19 +772,19 @@ class TimeDiscretiser:
         """
         Calculate the profile value for each bin for the 'distribute' method.
         """
-        if self.oneProfile["nBins"].any() == 0:
+        if self.dataToDiscretise["nBins"].any() == 0:
             raise ArithmeticError(
                 "The total number of bins is zero for one activity, which caused a division by zero. This should not happen because events with length zero should have been dropped."
             )
-        self.oneProfile["valPerBin"] = (
-            self.oneProfile[self.columnToDiscretise] / self.oneProfile["nBins"]
+        self.dataToDiscretise["valPerBin"] = (
+            self.dataToDiscretise[self.columnToDiscretise] / self.dataToDiscretise["nBins"]
         )
 
     def _valueSelect(self):
         """
         Calculate the profile value for each bin for the 'select' method.
         """
-        self.oneProfile["valPerBin"] = self.oneProfile[self.columnToDiscretise]
+        self.dataToDiscretise["valPerBin"] = self.dataToDiscretise[self.columnToDiscretise]
 
     def _identifyBins(self):
         """
@@ -797,16 +797,16 @@ class TimeDiscretiser:
         """
         Identifies every first bin for each activity (trip or parking).
         """
-        self.oneProfile["timestampStartCorrected"] = self.oneProfile[
+        self.dataToDiscretise["timestampStartCorrected"] = self.dataToDiscretise[
             "timestampStartCorrected"
         ].apply(lambda x: pd.to_datetime(str(x)))
-        dayStart = self.oneProfile["timestampStartCorrected"].apply(
+        dayStart = self.dataToDiscretise["timestampStartCorrected"].apply(
             lambda x: pd.Timestamp(year=x.year, month=x.month, day=x.day)
         )
-        self.oneProfile["dailyTimeDeltaStart"] = (
-            self.oneProfile["timestampStartCorrected"] - dayStart
+        self.dataToDiscretise["dailyTimeDeltaStart"] = (
+            self.dataToDiscretise["timestampStartCorrected"] - dayStart
         )
-        self.oneProfile["startTimeFromMidnightSeconds"] = self.oneProfile[
+        self.dataToDiscretise["startTimeFromMidnightSeconds"] = self.dataToDiscretise[
             "dailyTimeDeltaStart"
         ].apply(lambda x: x.seconds)
         # FIXME: move it out of function globally
@@ -816,20 +816,20 @@ class TimeDiscretiser:
         )  # remove last element, which is zero
         self.binFromMidnightSeconds = bins["binTimestamp"].apply(lambda x: x.seconds)
         self.binFromMidnightSeconds = self.binFromMidnightSeconds + (self.dt * 60)
-        self.oneProfile["firstBin"] = (
-            self.oneProfile["startTimeFromMidnightSeconds"].apply(
+        self.dataToDiscretise["firstBin"] = (
+            self.dataToDiscretise["startTimeFromMidnightSeconds"].apply(
                 lambda x: np.argmax(x < self.binFromMidnightSeconds) 
             )
         ).astype(int)
-        if self.oneProfile["firstBin"].any() > self.nTimeSlots:
+        if self.dataToDiscretise["firstBin"].any() > self.nTimeSlots:
             raise ArithmeticError(
                 "One of first bin values is bigger than total number of bins."
             )
-        if self.oneProfile["firstBin"].unique().any() < 0:
+        if self.dataToDiscretise["firstBin"].unique().any() < 0:
             raise ArithmeticError(
                 "One of first bin values is smaller than 0."
             )
-        if self.oneProfile["firstBin"].isna().any():
+        if self.dataToDiscretise["firstBin"].isna().any():
             raise ArithmeticError(
                 "One of first bin values is NaN."
             )
@@ -838,24 +838,24 @@ class TimeDiscretiser:
         """
         Identifies every last bin for each activity (trip or parking).
         """
-        dayEnd = self.oneProfile["timestampEndCorrected"].apply(
+        dayEnd = self.dataToDiscretise["timestampEndCorrected"].apply(
             lambda x: pd.Timestamp(year=x.year, month=x.month, day=x.day)
         )
-        self.oneProfile["dailyTimeDeltaEnd"] = (
-            self.oneProfile["timestampEndCorrected"] - dayEnd
+        self.dataToDiscretise["dailyTimeDeltaEnd"] = (
+            self.dataToDiscretise["timestampEndCorrected"] - dayEnd
         )
-        self.oneProfile["lastBin"] = (
-            self.oneProfile["firstBin"] + self.oneProfile["nBins"] - 1
+        self.dataToDiscretise["lastBin"] = (
+            self.dataToDiscretise["firstBin"] + self.dataToDiscretise["nBins"] - 1
         ).astype(int)
-        if self.oneProfile["lastBin"].any() > self.nTimeSlots:
+        if self.dataToDiscretise["lastBin"].any() > self.nTimeSlots:
             raise ArithmeticError(
                 "One of first bin values is bigger than total number of bins."
             )
-        if self.oneProfile["lastBin"].unique().any() < 0:
+        if self.dataToDiscretise["lastBin"].unique().any() < 0:
             raise ArithmeticError(
                 "One of first bin values is smaller than 0."
             )
-        if self.oneProfile["lastBin"].isna().any():
+        if self.dataToDiscretise["lastBin"].isna().any():
             raise ArithmeticError(
                 "One of first bin values is NaN."
             )
@@ -883,24 +883,24 @@ class TimeDiscretiser:
         Implements a strategy for overlapping bins if time resolution high enough so that the event becomes negligible, i.e. drops events
         with no lenght (timestampStartCorrected = timestampEndCorrected or activityDuration = 0), which cause division by zero in nBins calculation.
         """
-        startLength = len(self.oneProfile)
-        noLengthActivitiesIDs = self.oneProfile[self.oneProfile.activityDuration == pd.Timedelta(0)].index.to_list()
-        self.IDsWithNoLengthActivities = self.oneProfile.loc[noLengthActivitiesIDs]['uniqueID'].unique()
-        self.oneProfile = self.oneProfile.drop(noLengthActivitiesIDs)
-        endLength = len(self.oneProfile)
+        startLength = len(self.dataToDiscretise)
+        noLengthActivitiesIDs = self.dataToDiscretise[self.dataToDiscretise.activityDuration == pd.Timedelta(0)].index.to_list()
+        self.IDsWithNoLengthActivities = self.dataToDiscretise.loc[noLengthActivitiesIDs]['uniqueID'].unique()
+        self.dataToDiscretise = self.dataToDiscretise.drop(noLengthActivitiesIDs)
+        endLength = len(self.dataToDiscretise)
         droppedActivities = startLength - endLength
         print(f"{droppedActivities} zero-length activities dropped from {len(self.IDsWithNoLengthActivities)} IDs.")
         self._removeActivitiesIfColumnToDiscretiseNoValues()
 
     def _removeActivitiesIfColumnToDiscretiseNoValues(self):
-        startLength = len(self.oneProfile)
-        subsetNoLengthActivitiesIDsOnly = self.oneProfile.loc[self.oneProfile.uniqueID.isin(self.IDsWithNoLengthActivities)]
+        startLength = len(self.dataToDiscretise)
+        subsetNoLengthActivitiesIDsOnly = self.dataToDiscretise.loc[self.dataToDiscretise.uniqueID.isin(self.IDsWithNoLengthActivities)]
         subsetNoLengthActivitiesIDsOnly = subsetNoLengthActivitiesIDsOnly.set_index("uniqueID", drop=False)
         subsetNoLengthActivitiesIDsOnly.index.names = ['uniqueIDindex']
         IDsWithSumZero = subsetNoLengthActivitiesIDsOnly.groupby(["uniqueID"])[self.columnToDiscretise].sum()
         IDsToDrop = IDsWithSumZero[IDsWithSumZero == 0].index
-        self.oneProfile = self.oneProfile.loc[~self.oneProfile.uniqueID.isin(IDsToDrop)]
-        endLength = len(self.oneProfile)
+        self.dataToDiscretise = self.dataToDiscretise.loc[~self.dataToDiscretise.uniqueID.isin(IDsToDrop)]
+        endLength = len(self.dataToDiscretise)
         droppedActivities = startLength - endLength
         print(f"Additional {droppedActivities} activities dropped as the sum of all {self.columnToDiscretise} activities for the specific ID was zero.")
 
@@ -917,7 +917,7 @@ class TimeDiscretiser:
         are formatted in a way that uniqueID represents a unique week ID. The function then loops over the 7 weekdays
         and calls _allocate for each day a total of 7 times.
         """
-        weekSubset = self.oneProfile.groupby(by=["weekdayStr", "actID"])
+        weekSubset = self.dataToDiscretise.groupby(by=["weekdayStr", "actID"])
 
     def _allocate(self):
         """
@@ -928,7 +928,7 @@ class TimeDiscretiser:
         Returns:
             pd.DataFrame: Discretized data set with temporal discretizations in the columns.
         """
-        trips = self.oneProfile.copy()
+        trips = self.dataToDiscretise.copy()
         trips = trips[["uniqueID", "firstBin", "lastBin", "valPerBin"]]
         trips["uniqueID"] = trips["uniqueID"].astype(int)
         self.discreteData = trips.groupby(by="uniqueID").apply(self.assignBins)
@@ -943,6 +943,16 @@ class TimeDiscretiser:
             end = itrip["lastBin"]
             value = itrip["valPerBin"]
             s.loc[start:end] = value
+        return s
+
+    def assignBinsNp(self, vehicleTrips):
+        # FIXME: impliment edge case of firstBin=0
+        s = np.arange(self.nTimeSlots)
+        for _ , itrip in vehicleTrips.iterrows():
+            start = itrip['firstBin'] - 1 
+            end = itrip['lastBin']
+            value = itrip['valPerBin']
+            s[start: end] = value
         return s
 
     def _writeOutput(self):
