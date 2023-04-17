@@ -39,7 +39,7 @@ files:
         outputGridModeler: vencopyOutputGridModeler
         outputFlexEstimator: vencopyOutputFlexEstimator
         outputDiaryBuilder: vencopyOutputDiaryBuilder
-        outputProfileAggregator: vencopyOutputDiaryBuilder
+        outputProfileAggregator: vencopyOutputProfileAggregator
         filteredDataset: filteredDataset
         purposesProcessed: inputProfiles_Purpose  # inputProfiles_Purpose_RUNLABEL_MiD17.csv
         inputDataDriveProfiles: inputProfiles_Drive  # inputProfiles_Drive_RUNLABEL_MiD17.csv
