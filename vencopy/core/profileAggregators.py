@@ -126,7 +126,7 @@ class ProfileAggregator():
     def createTimeseries(self):
         profiles = (self.drain, self.uncontrolledCharge, self.chargingPower, self.maxBatteryLevel, self.minBatteryLevel)
         profileNames = ('drain', 'chargingPower', 'uncontrolledCharge', 'maxBatteryLevel', 'minBatteryLevel')
-        for profile, profileName in itertools.product(profiles, profileNames):
+        for profile, profileName in zip(profiles, profileNames):
             self.profileName = profileName
             self.profile = profile
             self.__createWeeklyProfiles()
