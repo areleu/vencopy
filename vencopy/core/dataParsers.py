@@ -1601,6 +1601,6 @@ class ParseKiD(IntermediateParsing):
 def parseData(configDict: dict) -> Union[ParseMiD, ParseKiD, ParseVF]:
     datasetID = configDict["globalConfig"]["dataset"]
     debug = configDict["globalConfig"]["debug"]
-    delegate = {"MiD17": ParseMiD, "KiD": ParseKiD, "VF": ParseVF, "VMo4Orte": ParseVM4}
+    delegate = {"MiD17": ParseMiD, "KiD": ParseKiD, "VF": ParseVF}
     return delegate[datasetID](configDict=configDict, datasetID=datasetID, debug=debug)
 
