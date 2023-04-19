@@ -1157,7 +1157,7 @@ class IntermediateParsing(DataParser):
             endsFollowingDay, "timestampEnd"
         ] + pd.offsets.Day(1)
 
-    def _harmonizeVariablesuniqueIDNames(self):
+    def _harmonizeVariablesUniqueIDNames(self):
         """
         Harmonises ID variables for all datasets.
         """
@@ -1283,7 +1283,7 @@ class ParseMiD(IntermediateParsing):
 
         self._selectColumns()
         self.__harmonizeVariables()
-        self._harmonizeVariablesuniqueIDNames()
+        self._harmonizeVariablesUniqueIDNames()
         self.__convertTypes()
         self.__addStrColumns()
         self._composeStartAndEndTimestamps()
@@ -1601,6 +1601,6 @@ class ParseKiD(IntermediateParsing):
 def parseData(configDict: dict) -> Union[ParseMiD, ParseKiD, ParseVF]:
     datasetID = configDict["globalConfig"]["dataset"]
     debug = configDict["globalConfig"]["debug"]
-    delegate = {"MiD17": ParseMiD, "KiD": ParseKiD, "VF": ParseVF}
+    delegate = {"MiD17": ParseMiD, "KiD": ParseKiD, "VF": ParseVF, "VMo4Orte": ParseVM4}
     return delegate[datasetID](configDict=configDict, datasetID=datasetID, debug=debug)
 
