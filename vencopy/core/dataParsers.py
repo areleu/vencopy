@@ -67,8 +67,7 @@ class DataParser:
         self.globalConfig = configDict["globalConfig"]
         self.datasetID = self.__checkDatasetID(datasetID, self.parseConfig)
         filepath = (
-            Path(self.localPathConfig["pathAbsolute"][self.datasetID])
-            / self.globalConfig["files"][self.datasetID]["tripsDataRaw"]
+            Path(self.localPathConfig["pathAbsolute"][self.datasetID]) / self.globalConfig["files"][self.datasetID]["tripsDataRaw"]
         )
         self.rawDataPath = filepath
         self.rawData = None
@@ -83,7 +82,7 @@ class DataParser:
             print(f"Starting to retrieve local data file from {self.rawDataPath}")
             self._loadData()
         nDebugLines = configDict["globalConfig"]["nDebugLines"]
-        self.rawData = self.rawData.loc[0:nDebugLines-1, :] if debug else self.rawData.copy()
+        self.rawData = self.rawData.loc[0: nDebugLines - 1, :] if debug else self.rawData.copy()
         # Storage for original data variable that is being overwritten throughout adding of park rows
         self.tripEndNextDayRaw = None
 
@@ -572,7 +571,7 @@ class DataParser:
 
         print("Completed park timestamp adjustments")
 
-    def __getParkingActsWOFirstAndLast(self) -> (pd.Series, pd.Series):
+    def __getParkingActsWOFirstAndLast(self) -> Union(pd.Series, pd.Series):
         """Return all parking activities except for the last one (return argument 1) and the first one (return argument
         2)
 
@@ -1501,7 +1500,6 @@ class ParseKiD(IntermediateParsing):
 
         :return: None
         """
-        # Filter for dataset specific columns
         conversionDict = self.parseConfig["inputDTypes"][self.datasetID]
         keys = {iCol for iCol in conversionDict.keys() if iCol in self.data.columns}
         self.varDataTypeDict = {
@@ -1524,10 +1522,6 @@ class ParseKiD(IntermediateParsing):
                         added in a separate column
         :return: None
         """
-        # from tripStartDate retrieve tripStartWeekday, tripStartWeek,
-        # tripStartYear, tripStartMonth, tripStartDay
-        # from tripStartClock retrieve tripStartHour, tripStartMinute
-        # from tripEndClock retrieve tripEndHour, tripEndMinute
         self.data["tripStartDate"] = pd.to_datetime(
             self.data["tripStartDate"], format="%d.%m.%Y"
         )
@@ -1556,7 +1550,8 @@ class ParseKiD(IntermediateParsing):
             self._addStrColumnFromVariable(colName="purposeStr", varName="tripPurpose")
 
     def __updateEndTimestamp(self):
-        """Separate implementation for the KID data set than for the other two data sets. Overwrites parent method.
+        """
+        Separate implementation for the KID data set than for the other two data sets. Overwrites parent method.
 
         :return: None
         """
@@ -1603,4 +1598,3 @@ def parseData(configDict: dict) -> Union[ParseMiD, ParseKiD, ParseVF]:
     debug = configDict["globalConfig"]["debug"]
     delegate = {"MiD17": ParseMiD, "KiD": ParseKiD, "VF": ParseVF}
     return delegate[datasetID](configDict=configDict, datasetID=datasetID, debug=debug)
-
