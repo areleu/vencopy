@@ -129,6 +129,7 @@ class ProfileAggregator():
         fileName = createFileName(globalConfig=self.globalConfig, manualLabel=('_' + self.profileName), fileNameID='outputProfileAggregator',
                                   datasetID=self.datasetID)
         writeOut(data=self.activities, path=root / folder / fileName)
+        #TODO: add test to check that where there is drain there is no charging availability at single profile level
 
     def createTimeseries(self):
         profiles = (self.drain, self.uncontrolledCharge,
