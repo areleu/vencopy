@@ -73,7 +73,7 @@ class FlexEstimator:
 
         # Start and end for all trips and parkings in between
         setActs = range(int(self.activities['parkID'].max()) + 1)
-        tripActsRes = pd.DataFrame()
+        tripActsRes = pd.DataFrame()  # Redundant?
         for act in setActs:  # implementable via groupby with actIDs as groups?
             print(f'Calculate maximum battery level for act {act}')
             tripRows = (self.activities['tripID'] == act) & (
@@ -100,9 +100,8 @@ class FlexEstimator:
                     actID=act, parkActs=parkActs, prevTripActs=prevTripActs)
                 actTemp = pd.concat([actTemp, parkActsRes], ignore_index=True)
 
-                prevParkActs = actTemp.loc[
-                    (actTemp['nextActID'] == act) & (
-                        ~actTemp['parkID'].isna()), :]
+                prevParkActs = actTemp.loc[(actTemp['nextActID'] == act) & (
+                    ~actTemp['parkID'].isna()), :]
                 tripActsRes = self.__calcBatLevTripMax(
                     actID=act, tripActs=tripActs, prevParkActs=prevParkActs)
 
