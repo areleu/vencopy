@@ -121,14 +121,15 @@ class GridModeler:
             seed = 42
             self._assignGridViaProbabilities(setSeed=seed)
         else:
-            raise(ValueError(f'Specified grid modeling option {self.gridModel} is not implemented. Please choose'
-                             f'"simple" or "probability"'))
+            raise (ValueError(f'Specified grid modeling option {self.gridModel} is not implemented. Please choose'
+                              f'"simple" or "probability"'))
 
         self.activities = self._addGridLosses(acts=self.activities)
         return self.activities
 
     def _addGridLosses(self, acts: pd.DataFrame):
-        """ Function applying a reduction of rated power capacities to the rated powers after sampling. The 
+        """
+        Function applying a reduction of rated power capacities to the rated powers after sampling. The
         factors for reducing the rated power are given in the gridConfig with keys being floats of rated powers
         and values being floats between 0 and 1. The factor is the LOSS FACTOR not the EFFICIENCY, thus 0.1 applied to
         a rated power of 11 kW will yield an available power of 9.9 kW.
@@ -137,8 +138,9 @@ class GridModeler:
         :param losses [bool]: Should electric losses in the charging equipment be considered?
         """
         if self.gridConfig['losses']:
-            acts['availablePower'] = acts['ratedPower'] - acts['ratedPower'] * acts['ratedPower'].apply(
-                lambda x: self.gridConfig['loss_factor'][x])
+            acts['availablePower'] = acts['ratedPower'] - (
+                acts['ratedPower'] * acts['ratedPower'].apply(
+                    lambda x: self.gridConfig['loss_factor'][f'rated_power_{str(x)}']))
         else:
             acts['availablePower'] = acts['ratedPower']
         return acts

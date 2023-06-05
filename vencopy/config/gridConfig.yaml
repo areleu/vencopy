@@ -78,8 +78,8 @@ gridAvailabilityDistribution:  # Grid model 3: Probabilities given for each loca
         0 : 0.6
 
 loss_factor:  # Gives the power that is being lost per rated capacity. See gridModeler for detailed usage.
-    0: 0
-    3.6: 0.1
-    11: 0.1      
-    22: 0.1
-    50: 0.2
+    rated_power_0: 0
+    rated_power_3.6: 0.1
+    rated_power_11: 0.1      
+    rated_power_22: 0.1
+    rated_power_50: 0.2
