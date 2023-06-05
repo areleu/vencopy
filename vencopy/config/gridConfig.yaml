@@ -11,6 +11,9 @@
 # chargingInfrastructureMappings is used
 
 minimumParkingTime: 900 # charging power is set to zero if parking time lower than <minimumParkingTime> in seconds
+gridModel: "simple"  # Options are "simple" and "probability"
+losses: True  # Take into account charging station losses 
+forceLastTripHome: True  # Require that all last trips end home
 
 chargingInfrastructureMappings:  # Simple grid model: Explicit mapping given for each location aka parking purpose
     'DRIVING': False
@@ -18,35 +21,15 @@ chargingInfrastructureMappings:  # Simple grid model: Explicit mapping given for
     'WORK': True
     'SCHOOL': False
     'SHOPPING': True
-    'LEISURE': False
-    'OTHER': False
-    'NA': False
+    'LEISURE': True
+    'OTHER': True
+    'NA': True
     # KiD additional purposes below
     'PEOPLE_MOBILITY': False
     'TRANSPORT': False
     'SERVICES': False
 
 ratedPowerSimple: 11
-
-# MOVE TO GRID MODELER TUTORIAL to show implementation of discrete mapping in probabilities
-# gridAvailabilityProbability:  # Grid model 2: Probabilities given for each location aka trip purpose and capacity
-##   PURPOSE:
-##       POWER: PROBABILITY
-#    'DRIVING':
-#        0: 1
-#    'HOME':
-#        11: 1
-#    'WORK':
-#        11: 1
-#    'SCHOOL':
-#        0: 1
-#    'SHOPPING':
-#        0: 1
-#    'LEISURE':
-#        0: 1
-#    'OTHER':
-#        0: 1
-#        1: 0
 
 gridAvailabilityDistribution:  # Grid model 3: Probabilities given for each location aka trip purpose and capacity
     'DRIVING':
@@ -94,9 +77,9 @@ gridAvailabilityDistribution:  # Grid model 3: Probabilities given for each loca
         22: 0.2
         0 : 0.6
 
-losses:  # Gives the power that is being lost per rated capacity. See gridModeler for detailed usage.
-    0: 0
-    3.6: 0.1
-    11: 0.1      
-    22: 0.1
-    50: 0.2
+loss_factor:  # Gives the power that is being lost per rated capacity. See gridModeler for detailed usage.
+    rated_power_0: 0
+    rated_power_3.6: 0.1
+    rated_power_11: 0.1      
+    rated_power_22: 0.1
+    rated_power_50: 0.2

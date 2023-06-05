@@ -12,7 +12,7 @@ from pathlib import Path
 import os
 
 
-def loadConfigDict(configNames: tuple, basePath):
+def loadConfigDict(basePath):
     # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
     """
     Generic function to load and open yaml config files
@@ -20,6 +20,16 @@ def loadConfigDict(configNames: tuple, basePath):
     :param configNames: Tuple containing names of config files to be loaded
     :return: Dictionary with opened yaml config files
     """
+    configNames = (
+        "globalConfig",
+        "localPathConfig",
+        "parseConfig",
+        "diaryConfig",
+        "gridConfig",
+        "flexConfig",
+        "aggregatorConfig",
+        "evaluatorConfig",
+    )
     configPath = basePath / 'config'
     configDict = {}
     for configName in configNames:
@@ -103,7 +113,7 @@ def createFileName(globalConfig: dict, fileNameID: str, datasetID: str, manualLa
     files but just creates the file name including the filetype suffix.
 
     :param globalConfig: global config file for paths
-    :param fileKey: Manual specification of fileKey
+    :param fileNameID: ID of respective data file as specified in global config
     :param datasetID: Manual specification of data set ID e.g. 'MiD17'
     :param manualLabel: Optional manual label to add to filename
     :param filetypeStr: filetype to be written to hard disk

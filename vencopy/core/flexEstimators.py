@@ -14,17 +14,15 @@ if __package__ is None or __package__ == "":
     sys.path.append(path.dirname(path.dirname(path.dirname(__file__))))
 
 from pathlib import Path
+from profilehooks import profile
 
 import pandas as pd
-
-from vencopy.core.dataParsers import ParseKiD, ParseMiD, ParseVF
-from vencopy.core.gridModelers import GridModeler
-from vencopy.utils.globalFunctions import createFileName, loadConfigDict, writeOut
+from vencopy.utils.globalFunctions import createFileName, writeOut
 
 
 class FlexEstimator:
-    def __init__(self, configDict: dict, datasetID: str, activities: pd.DataFrame):
-        self.datasetID = datasetID
+    def __init__(self, configDict: dict, activities: pd.DataFrame):
+        self.datasetID = configDict["globalConfig"]["dataset"]
         self.flexConfig = configDict['flexConfig']
         self.globalConfig = configDict['globalConfig']
         self.localPathConfig = configDict['localPathConfig']
@@ -37,7 +35,8 @@ class FlexEstimator:
         self.isLastAct = self.activities['isLastActivity'].fillna(0).astype(bool)
         self.activities[['maxBatteryLevelStart', 'maxBatteryLevelEnd', 'minBatteryLevelStart',
                          'minBatteryLevelEnd', 'maxBatteryLevelEnd_unlimited', 'minBatteryLevelEnd_unlimited',
-                         'maxResidualNeed', 'minResidualNeed', 'maxOvershoot', 'minOvershoot']] = None
+                         'maxResidualNeed', 'minResidualNeed', 'maxOvershoot', 'minUndershoot',
+                         'auxiliaryFuelNeed']] = None
         self.activitiesWOResidual = None
 
     def _drain(self):
@@ -47,88 +46,120 @@ class FlexEstimator:
         self.activities.loc[self.isPark, 'maxChargeVolume'] = self.activities.loc[self.isPark, 'availablePower'] * \
             self.activities.loc[self.isPark, 'timedelta'] / pd.Timedelta('1 hour')
 
+    @profile(immediate=False)
     def __batteryLevelMax(self, startLevel: float):
         """
-        Calculate the maximum battery level at the beginning and end of each activity. This represents the case of
-        vehicle users always connecting when charging is available and charging as soon as possible as fast as possible
-        until the maximum battery capacity is reached.
-        actTemp is the overall collector for each activity's park and trip results, that will then get written to
-        self.activities at the very end.
+        Calculate the maximum battery level at the beginning and end of each 
+        activity. This represents the case of vehicle users always connecting 
+        when charging is available and charging as soon as possible as fast as
+        possible until the maximum battery capacity is reached. actTemp is the
+        overall collector for each activity's park and trip results, that will
+        then get written to self.activities at the very end.
 
         Args:
-            startLevel (float): Battery start level for first activity of the activity chain
+            startLevel (float): Battery start level for first activity of the 
+            activity chain
         """
 
         print('Starting maximum battery level calculation')
         firstActs = self._calcMaxBatFirstAct(startLevel=startLevel)
         firstParkActs = firstActs.loc[~firstActs['parkID'].isna(), :]
 
-        # The second condition is needed to circumvent duplicates with tripIDs=1 which are initiated above
-        firstTripActs = firstActs.loc[(~firstActs['tripID'].isna()) & (firstActs['isFirstActivity']), :]
+        # The second condition is needed to circumvent duplicates with tripIDs=1
+        # which are initiated above
+        firstTripActs = firstActs.loc[(~firstActs['tripID'].isna()) & (
+            firstActs['isFirstActivity']), :]
         actTemp = pd.concat([firstParkActs, firstTripActs])
 
         # Start and end for all trips and parkings in between
         setActs = range(int(self.activities['parkID'].max()) + 1)
-        tripActsRes = pd.DataFrame()
-        for act in setActs:
+        tripActsRes = pd.DataFrame()  # Redundant?
+        for act in setActs:  # implementable via groupby with actIDs as groups?
             print(f'Calculate maximum battery level for act {act}')
-            # FIXME: Possible to get rid of firstAct test?
-            tripRows = (self.activities['tripID'] == act) & (~self.activities['isFirstActivity'])
-            parkRows = (self.activities['parkID'] == act) & (~self.activities['isFirstActivity'])
+            tripRows = (self.activities['tripID'] == act) & (
+                ~self.activities['isFirstActivity'])
+            parkRows = (self.activities['parkID'] == act) & (
+                ~self.activities['isFirstActivity'])
             tripActs = self.activities.loc[tripRows, :]
             parkActs = self.activities.loc[parkRows, :]
 
-            # Filtering for the previous trips that have the current activity as next activity
-            prevTripActs = actTemp.loc[(actTemp['nextActID'] == act) & (~actTemp['tripID'].isna()), :]
+            # Filtering for the previous trips that have the current activity as
+            # next activity
+            prevTripActs = actTemp.loc[
+                (actTemp['nextActID'] == act) & (~actTemp['tripID'].isna()), :]
 
-            if act == 1:  # firstAct trips with tripID==0 (overnight morning splits) are handled in firstAct above
-                tripActsRes = self.__calcBatLevTripMax(actID=act, tripActs=tripActs, prevParkActs=firstParkActs)
+            # firstAct trips with tripID==0 (overnight morning splits) are
+            # handled in _calcMaxBatFirstAct above
+            if act == 1:
+                tripActsRes = self.__calcBatLevTripMax(
+                    actID=act, tripActs=tripActs, prevParkActs=firstParkActs)
 
             elif act != 0:
                 # Park activities start off a new activity index e.g. parkAct 1 is always before tripAct 1
-                parkActsRes = self.__calcBatLevParkMax(actID=act, parkActs=parkActs, prevTripActs=prevTripActs)
+                parkActsRes = self.__calcBatLevParkMax(
+                    actID=act, parkActs=parkActs, prevTripActs=prevTripActs)
                 actTemp = pd.concat([actTemp, parkActsRes], ignore_index=True)
 
-                prevParkActs = actTemp.loc[(actTemp['nextActID'] == act) & (~actTemp['parkID'].isna()), :]
-                tripActsRes = self.__calcBatLevTripMax(actID=act, tripActs=tripActs, prevParkActs=prevParkActs)
+                prevParkActs = actTemp.loc[(actTemp['nextActID'] == act) & (
+                    ~actTemp['parkID'].isna()), :]
+                tripActsRes = self.__calcBatLevTripMax(
+                    actID=act, tripActs=tripActs, prevParkActs=prevParkActs)
 
             actTemp = pd.concat([actTemp, tripActsRes], ignore_index=True)
             prevTripActs = tripActsRes  # Redundant?
-        self.activities = actTemp.sort_values(by=['genericID', 'actID', 'parkID'])
+        self.activities = actTemp.sort_values(
+            by=['uniqueID', 'actID', 'parkID'])
+        return self.activities.loc[
+            self.activities['isLastActivity'], [
+                'hhPersonID', 'maxBatteryLevelEnd']].set_index('hhPersonID')
 
+    @profile(immediate=True)
     def __batteryLevelMin(self):
         """
-        Calculate the minimum battery level at the beginning and end of each activity. This represents the case of
-        vehicles just being charged for the energy required for the next trip and as late as possible. The loop works
-        exactly inverted to the batteryLevelMax() function since later trips influence the energy that has to be
-        charged in parking activities before. Thus, activities are looped over from the last activity to first.
+        Calculate the minimum battery level at the beginning and end of each 
+        activity. This represents the case of vehicles just being charged for 
+        the energy required for the next trip and as late as possible. The loop 
+        works exactly inverted to the batteryLevelMax() function since later 
+        trips influence the energy that has to be charged in parking activities
+        before. Thus, activities are looped over from the last activity to 
+        first.
         """
 
         print('Starting minimum battery level calculation')
-        lastActs = self._calcMinBatLastAct()
+        isPark = ~(self.activities['parkID'].isna())
+        isTrip = ~(self.activities['tripID'].isna())
+        lastActs = self._calcMinBatLastAct(isPark=isPark, isTrip=isTrip)
         actTemp = lastActs
 
-        # Start and end for all trips and parkings starting from the last activities, then looping to earlier acts
+        # Start and end for all trips and parkings starting from the last
+        # activities, then looping to earlier acts
         setActs = range(int(self.activities['parkID'].max()) - 1, -1, -1)
         for act in setActs:
             print(f'Calculate minimum battery level for act {act}')
-            tripRows = (self.activities['tripID'] == act) & (~self.activities['isLastActivity'])
-            parkRows = (self.activities['parkID'] == act) & (~self.activities['isLastActivity'])
+            tripRows = (self.activities['tripID'] == act) & (
+                ~self.activities['isLastActivity'])
+            parkRows = (self.activities['parkID'] == act) & (
+                ~self.activities['isLastActivity'])
             tripActs = self.activities.loc[tripRows, :]
             parkActs = self.activities.loc[parkRows, :]
             nextParkActs = actTemp.loc[~actTemp['parkID'].isna(), :]
             # if act == self.activities['parkID'].max() - 1:
-            #    tripActsRes = self.calcBatLevTripMin(actID=act, tripActs=tripActs, nextParkActs=lastActs)
+            #    tripActsRes = self.calcBatLevTripMin(
+            #       actID=act, tripActs=tripActs, nextParkActs=lastActs)
             #    actTemp = pd.concat([actTemp, tripActsRes], ignore_index=True)
             #    nextTripActs = actTemp.loc[~actTemp['tripID'].isna(), :]
-            #    parkActsRes = self.calcBatLevParkMin(actID=act, parkActs=parkActs, nextTripActs=nextTripActs)
+            #    parkActsRes = self.calcBatLevParkMin(
+            #       actID=act, parkActs=parkActs, nextTripActs=nextTripActs)
             # else:
-            tripActsRes = self.__calcBatLevTripMin(actID=act, tripActs=tripActs, nextParkActs=nextParkActs)
+            tripActsRes = self.__calcBatLevTripMin(
+                actID=act, tripActs=tripActs, nextParkActs=nextParkActs)
             actTemp = pd.concat([actTemp, tripActsRes], ignore_index=True)
             nextTripActs = actTemp.loc[~actTemp['tripID'].isna(), :]
-            parkActsRes = self.__calcBatLevParkMin(actID=act, parkActs=parkActs, nextTripActs=nextTripActs)
+            parkActsRes = self.__calcBatLevParkMin(
+                actID=act, parkActs=parkActs, nextTripActs=nextTripActs)
             actTemp = pd.concat([actTemp, parkActsRes], ignore_index=True)
-        self.activities = actTemp.sort_values(by=['genericID', 'actID', 'parkID'], ignore_index=True)
+        self.activities = actTemp.sort_values(
+            by=['uniqueID', 'actID', 'parkID'], ignore_index=True)
 
     def _calcMaxBatFirstAct(self, startLevel: float) -> pd.DataFrame:
         """Calculate maximum battery levels at beginning and end of the first activities. If overnight trips are split
@@ -146,18 +177,27 @@ class FlexEstimator:
         idx = self.__getFirstActIdx()
         firstAct = self.activities.loc[idx, :].copy()
 
-        firstAct.loc[:, 'maxBatteryLevelStart'] = startLevel
-        firstAct.loc[self.isPark, 'maxBatteryLevelEnd'] = firstAct['maxBatteryLevelStart']
-        firstAct.loc[self.isPark, 'maxOvershoot'] = firstAct['maxChargeVolume']
-        firstAct.loc[self.isTrip, 'maxBatteryLevelEnd_unlimited'] = firstAct.loc[
-            self.isTrip, 'maxBatteryLevelStart'] - firstAct.loc[self.isTrip, 'drain']
-        firstAct.loc[self.isTrip, 'maxBatteryLevelEnd'] = firstAct.loc[
-            self.isTrip, 'maxBatteryLevelEnd_unlimited'].where(firstAct.loc[
-                self.isTrip, 'maxBatteryLevelEnd_unlimited'] >= self.lowerBatLev, other=self.lowerBatLev)
-        res = firstAct.loc[self.isTrip, 'maxBatteryLevelEnd'] - firstAct.loc[
-            self.isTrip, 'maxBatteryLevelEnd_unlimited']
-        firstAct.loc[self.isTrip, 'maxResidualNeed'] = res.where(firstAct.loc[
-            self.isTrip, 'maxBatteryLevelEnd_unlimited'] < self.lowerBatLev, other=0)
+        fa = firstAct.set_index('uniqueID')
+        fa['maxBatteryLevelStart'] = startLevel
+        fa = fa.reset_index('uniqueID')
+        fa.index = firstAct.index
+        firstAct = fa
+
+        isPark = ~firstAct['parkID'].isna()
+        isTrip = ~firstAct['tripID'].isna()
+
+        firstAct.loc[isPark, 'maxBatteryLevelEnd_unlimited'] = firstAct['maxBatteryLevelStart'] + firstAct[
+            'maxChargeVolume']
+        firstAct.loc[isPark, 'maxBatteryLevelEnd'] = firstAct.loc[isPark, 'maxBatteryLevelEnd_unlimited'].where(
+            firstAct.loc[isPark, 'maxBatteryLevelEnd_unlimited'] <= self.upperBatLev, other=self.upperBatLev)
+        firstAct.loc[isPark, 'maxOvershoot'] = firstAct['maxBatteryLevelEnd_unlimited'] - firstAct['maxBatteryLevelEnd']
+        firstAct.loc[isTrip, 'maxBatteryLevelEnd_unlimited'] = firstAct.loc[
+            isTrip, 'maxBatteryLevelStart'] - firstAct.loc[isTrip, 'drain']
+        firstAct.loc[isTrip, 'maxBatteryLevelEnd'] = firstAct.loc[isTrip, 'maxBatteryLevelEnd_unlimited'].where(
+            firstAct.loc[isTrip, 'maxBatteryLevelEnd_unlimited'] >= self.lowerBatLev, other=self.lowerBatLev)
+        res = firstAct.loc[isTrip, 'maxBatteryLevelEnd'] - firstAct.loc[isTrip, 'maxBatteryLevelEnd_unlimited']
+        firstAct.loc[isTrip, 'maxResidualNeed'] = res.where(firstAct.loc[
+            isTrip, 'maxBatteryLevelEnd_unlimited'] < self.lowerBatLev, other=0)
         return firstAct
 
     def __getFirstActIdx(self) -> pd.Series:
@@ -170,7 +210,7 @@ class FlexEstimator:
         """
         return (self.activities['isFirstActivity']) | (self.activities['parkID'] == 1)
 
-    def _calcMinBatLastAct(self) -> pd.DataFrame:
+    def _calcMinBatLastAct(self, isPark: pd.Series, isTrip: pd.Series) -> pd.DataFrame:
         """Calculate the minimum battery levels for the last activity in the data set determined by the maximum activity
         ID. 
 
@@ -181,30 +221,29 @@ class FlexEstimator:
 
         # Last activities - parking and trips
         lastAct = self.activities.loc[self.activities['isLastActivity'], :].copy()
-        lastAct.loc[self.isPark, 'minBatteryLevelEnd'] = self.lowerBatLev
-        lastAct.loc[self.isPark, 'minBatteryLevelStart'] = self.lowerBatLev
-        lastAct.loc[self.isTrip, 'minBatteryLevelEnd'] = self.lowerBatLev
-        lastAct.loc[self.isTrip, 'minBatteryLevelStart_unlimited'] = self.lowerBatLev + lastAct.loc[self.isTrip,
-                                                                                                    'drain']
-        lastAct.loc[self.isTrip, 'minBatteryLevelStart'] = lastAct.loc[
-            self.isTrip, 'minBatteryLevelStart_unlimited'].where(lastAct.loc[
-                self.isTrip, 'minBatteryLevelStart_unlimited'] <= self.upperBatLev, other=self.upperBatLev)
-        resNeed = lastAct.loc[self.isTrip, 'minBatteryLevelStart_unlimited'] - self.upperBatLev
-        lastAct.loc[self.isTrip, 'residualNeed'] = resNeed.where(resNeed >= 0, other=0)
+        lastAct.loc[isPark, 'minBatteryLevelEnd'] = self.lowerBatLev
+        lastAct.loc[isPark, 'minBatteryLevelStart'] = self.lowerBatLev
+        lastAct.loc[isTrip, 'minBatteryLevelEnd'] = self.lowerBatLev
+        lastAct.loc[isTrip, 'minBatteryLevelStart_unlimited'] = self.lowerBatLev + lastAct.loc[isTrip, 'drain']
+        lastAct.loc[isTrip, 'minBatteryLevelStart'] = lastAct.loc[
+            isTrip, 'minBatteryLevelStart_unlimited'].where(lastAct.loc[
+                isTrip, 'minBatteryLevelStart_unlimited'] <= self.upperBatLev, other=self.upperBatLev)
+        resNeed = lastAct.loc[isTrip, 'minBatteryLevelStart_unlimited'] - self.upperBatLev
+        lastAct.loc[isTrip, 'residualNeed'] = resNeed.where(resNeed >= 0, other=0)
         return lastAct
 
     def __calcBatLevTripMax(self, actID: int, tripActs: pd.DataFrame, prevParkActs: pd.DataFrame = None):
         # Setting trip activity battery start level to battery end level of previous parking
 
         # Index setting of trip activities to be updated
-        activeHHPersonIDs = tripActs.loc[:, 'genericID']
+        activeHHPersonIDs = tripActs.loc[:, 'uniqueID']
         multiIdxTrip = [(id, actID, None) for id in activeHHPersonIDs]
-        tripActsIdx = tripActs.set_index(['genericID', 'tripID', 'parkID'])
+        tripActsIdx = tripActs.set_index(['uniqueID', 'tripID', 'parkID'])
 
         # Index setting of previous park activities as basis for the update
         prevParkIDs = tripActs.loc[:, 'prevActID']
         multiIdxPark = [(id, None, act) for id, act in zip(activeHHPersonIDs, prevParkIDs)]
-        prevParkActsIdx = prevParkActs.set_index(['genericID', 'tripID', 'parkID'])
+        prevParkActsIdx = prevParkActs.set_index(['uniqueID', 'tripID', 'parkID'])
 
         # Calculation of battery level at start and end of trip
         tripActsIdx.loc[multiIdxTrip, 'maxBatteryLevelStart'] = prevParkActsIdx.loc[
@@ -222,13 +261,13 @@ class FlexEstimator:
 
     def __calcBatLevTripMin(self, actID: int, tripActs: pd.DataFrame, nextParkActs: pd.DataFrame = None):
         # Setting trip activity battery start level to battery end level of previous parking
-        activeHHPersonIDs = tripActs.loc[:, 'genericID']
+        activeHHPersonIDs = tripActs.loc[:, 'uniqueID']
         multiIdxTrip = [(id, actID, None) for id in activeHHPersonIDs]
         # Index the previous park activity via integer index because loc park indices vary
-        tripActsIdx = tripActs.set_index(['genericID', 'tripID', 'parkID'])
+        tripActsIdx = tripActs.set_index(['uniqueID', 'tripID', 'parkID'])
         nextParkIDs = tripActs.loc[:, 'nextActID']
         multiIdxPark = [(id, None, act) for id, act in zip(activeHHPersonIDs, nextParkIDs)]
-        nextParkActsIdx = nextParkActs.set_index(['genericID', 'tripID', 'parkID'])
+        nextParkActsIdx = nextParkActs.set_index(['uniqueID', 'tripID', 'parkID'])
         tripActsIdx.loc[multiIdxTrip, 'minBatteryLevelEnd'] = nextParkActsIdx.loc[
             multiIdxPark, 'minBatteryLevelStart'].values
         # Setting minimum battery end level for trip
@@ -241,17 +280,30 @@ class FlexEstimator:
         tripActsIdx.loc[multiIdxTrip, 'minResidualNeed'] = resNeed.where(resNeed >= 0, other=0)
         return tripActsIdx.reset_index()
 
+    # FIXME: Implement more abstract consolidated func of this and calcBatLevTripMax()
     def __calcBatLevParkMax(self, actID: int, parkActs: pd.DataFrame, prevTripActs: pd.DataFrame = None):
+        """ Calculate the maximum SOC of the given parking activities for the activity ID given by actID. Previous trip
+        activities are used as boundary for maxBatteryLevelStart. This function is called multiple times once per 
+        activity ID. It is then applied to all activities with the given activity ID in a vectorized manner. 
+
+        Args:
+            actID (int): Activity ID in current loop
+            parkActs (pd.DataFrame): _description_
+            prevTripActs (pd.DataFrame, optional): _description_. Defaults to None.
+
+        Returns:
+            _type_: _description_
+        """
         # Setting next park activity battery start level to battery end level of current trip
         # Index setting of park activities to be updated
-        activeHHPersonIDs = parkActs.loc[:, 'genericID']
+        activeHHPersonIDs = parkActs.loc[:, 'uniqueID']
         multiIdxPark = [(id, None, actID) for id in activeHHPersonIDs]
-        parkActsIdx = parkActs.set_index(['genericID', 'tripID', 'parkID'])
+        parkActsIdx = parkActs.set_index(['uniqueID', 'tripID', 'parkID'])
 
         # Index setting of previous trip activities used to update
         prevTripIDs = parkActs.loc[:, 'prevActID']
         multiIdxTrip = [(id, act, None) for id, act in zip(activeHHPersonIDs, prevTripIDs)]
-        prevTripActsIdx = prevTripActs.set_index(['genericID', 'tripID', 'parkID'])
+        prevTripActsIdx = prevTripActs.set_index(['uniqueID', 'tripID', 'parkID'])
 
         # Calculation of battery level at start and end of park activity
         parkActsIdx.loc[multiIdxPark, 'maxBatteryLevelStart'] = prevTripActsIdx.loc[
@@ -280,20 +332,19 @@ class FlexEstimator:
         Returns:
             _type_: _description_
         """
-        # Setting next park activity battery start level to battery end level of current trip
-        activeHHPersonIDs = parkActs.loc[:, 'genericID']
+        # Composing park activity index to be set
+        activeHHPersonIDs = parkActs.loc[:, 'uniqueID']
         multiIdxPark = [(id, None, actID) for id in activeHHPersonIDs]
-        parkActsIdx = parkActs.set_index(['genericID', 'tripID', 'parkID'])
+        parkActsIdx = parkActs.set_index(['uniqueID', 'tripID', 'parkID'])
 
-        # Preliminary defs
+        # Composing trip activity index to get battery level from
         nextTripIDs = parkActs.loc[:, 'nextActID']
         multiIdxTrip = [(id, act, None) for id, act in zip(activeHHPersonIDs, nextTripIDs)]
-        nextTripActsIdx = nextTripActs.set_index(['genericID', 'tripID', 'parkID'])
+        nextTripActsIdx = nextTripActs.set_index(['uniqueID', 'tripID', 'parkID'])
 
-        # Setting of battery level variables
+        # Setting next park activity battery start level to battery end level of current trip
         parkActsIdx.loc[multiIdxPark, 'minBatteryLevelEnd'] = nextTripActsIdx.loc[
             multiIdxTrip, 'minBatteryLevelStart'].values
-        # FIXME: This should not be oriented at maxChargeVolume but rather at drain of next trip
         parkActsIdx['minBatteryLevelStart_unlimited'] = parkActsIdx.loc[
             multiIdxPark, 'minBatteryLevelEnd'] - parkActsIdx.loc[multiIdxPark, 'maxChargeVolume']
         parkActsIdx.loc[multiIdxPark, 'minBatteryLevelStart'] = parkActsIdx['minBatteryLevelStart_unlimited'].where(
@@ -306,21 +357,28 @@ class FlexEstimator:
         self.activities.loc[~self.activities['parkID'].isna(), 'uncontrolledCharge'] = self.activities[
             'maxBatteryLevelEnd'] - self.activities['maxBatteryLevelStart']
 
+        # FIXME: Steps for implementing additional timestamp column for maximum power uncontrolled charging
+        # 1  Calculate self.upperBatLev - maxBatteryLevelStart
+        # 2  If this is smaller than available charged energy (if full power charging would end earlier than
+        #    timestampEnd), calculate the timestamp at which full power charging reaches self.upperBatLev
+        # 3  Divide difference from 1 by max available power to get time for full power charging
+        # 4  Add time from 3 to timestampStart
+
     def _auxFuelNeed(self):
         self.activities['auxiliaryFuelNeed'] = self.activities['residualNeed'] * self.flexConfig[
             'Fuel_consumption'] / self.flexConfig['Electric_consumption']
 
     def _filterResidualNeed(self, acts: pd.DataFrame, indexCols: list):
         """
-        Filter out days (genericIDs) that require additional fuel, i.e. for which the trip distance cannot be
+        Filter out days (uniqueIDs) that require additional fuel, i.e. for which the trip distance cannot be
         completely be fulfilled with the available charging power. Since additional fuel for a single trip motivates
         filtering out the whole vehicle, indexCol defines the columns that make up one vehicle. If indexCols is
-        ['genericID'], all genericIDs that have at least one trip requiring fuel are disregarded. If indexCols is
+        ['uniqueID'], all uniqueIDs that have at least one trip requiring fuel are disregarded. If indexCols is
         ['categoryID', 'weekID'] each unique combination of categoryID and weekID (each "week") for which fuel is
         required in at least one trip is disregarded.
 
         Args:
-            acts (pd.DataFrame): Activities data set containing at least the columns 'genericID' and 'maxResidualNeed'
+            acts (pd.DataFrame): Activities data set containing at least the columns 'uniqueID' and 'maxResidualNeed'
             indexCols (list): Columns that define a "day", i.e. all unique combinations where at least one activity
                 requires residual fuel are disregarded.
         """
@@ -341,11 +399,10 @@ class FlexEstimator:
         root = Path(self.localPathConfig['pathAbsolute']['vencoPyRoot'])
         folder = self.globalConfig['pathRelative']['flexOutput']
         fileName = createFileName(globalConfig=self.globalConfig, manualLabel='', file='outputFlexEstimator',
-                                    datasetID=self.datasetID)
-        writeOut(data = self.activities, path = root / folder / fileName)
+                                  datasetID=self.datasetID)
+        writeOut(data=self.activities, path=root / folder / fileName)
 
-
-    def estimateTechnicalFlexibility(self, filterFuelNeed: bool = True):
+    def estimateTechnicalFlexibility_noBoundaryConstraints(self):
         """
         Main run function for the class WeekFlexEstimator. Calculates uncontrolled charging as well as technical
         boundary constraints for controlled charging and feeding electricity back into the grid on an indvidiual vehicle
@@ -355,6 +412,7 @@ class FlexEstimator:
             filterFuelNeed (bool): If true, it is ensured that all trips can be fulfilled by battery electric vehicles
             specified by battery size and specific consumption as given in the config. Here, not only trips but cars
             days are filtered out.
+            startBatteryLevel (float): Initial battery level of every activity chain.  
 
         Returns:
             pd.DataFrame: Activities data set comprising uncontrolled charging and flexible charging constraints for
@@ -362,18 +420,67 @@ class FlexEstimator:
         """
         self._drain()
         self._maxChargeVolumePerParkingAct()
-        self.__batteryLevelMax(startLevel=self.upperBatLev)
+        self.__batteryLevelMax(startLevel=self.upperBatLev * self.flexConfig['Start_SOC'])
         self._uncontrolledCharging()
         self.__batteryLevelMin()
-        if filterFuelNeed:
-            self.activities = self._filterResidualNeed(acts=self.activities, indexCols=['genericID'])
+        self._auxFuelNeed()
+        if self.flexConfig['filterFuelNeed']:
+            self.activities = self._filterResidualNeed(acts=self.activities, indexCols=['uniqueID'])
         print("Technical flexibility estimation ended")
         return self.activities
 
+    def estimateTechnicalFlexibility_iteration(self, nIter: int = 3):
+        """
+        Main run function for the class WeekFlexEstimator. Calculates uncontrolled charging as well as technical
+        boundary constraints for controlled charging and feeding electricity back into the grid on an indvidiual vehicle
+        basis. If filterFuelNeed is True, only electrifiable days are considered.
+
+        Args:
+            filterFuelNeed (bool): If true, it is ensured that all trips can be fulfilled by battery electric vehicles
+            specified by battery size and specific consumption as given in the config. Here, not only trips but cars
+            days are filtered out.
+            startBatteryLevel (float): Initial battery level of every activity chain.  
+
+        Returns:
+            pd.DataFrame: Activities data set comprising uncontrolled charging and flexible charging constraints for
+            each car.
+        """
+        self._drain()
+        self._maxChargeVolumePerParkingAct()
+
+        # Initial battery level for first iteration loop per hhPersonID in index
+        batteryLevelEnd = self.__getStartLevel(
+            startLevel=self.upperBatLev * self.flexConfig['Start_SOC'])
+        for i in range(nIter):
+            batteryLevelEnd = self.__batteryLevelMax(startLevel=batteryLevelEnd)
+            self._uncontrolledCharging()
+            self.__batteryLevelMin()
+
+            delta = abs(
+                self.activities.loc[
+                    self.activities['isLastActivity'],
+                    'maxBatteryLevelEnd'].values - self.activities.loc[
+                        self.activities['isFirstActivity'],
+                    'maxBatteryLevelStart'].values).sum()
+            print(f'Finished ITERATION {i} / {nIter-1}.'
+                  f'Delta battery level is {delta}.')
+
+        self._auxFuelNeed()
+        if self.flexConfig['filterFuelNeed']:
+            self.activities = self._filterResidualNeed(
+                acts=self.activities, indexCols=['uniqueID'])
+        print("Technical flexibility estimation ended")
+        return self.activities
+
+    def __getStartLevel(self, startLevel: float):
+        lActs = self.activities.loc[self.activities['isLastActivity'], ['hhPersonID', 'maxBatteryLevelEnd']]
+        lActs['maxBatteryLevelEnd'] = startLevel
+        return lActs.set_index('hhPersonID')
+
 
 class WeekFlexEstimator(FlexEstimator):
-    def __init__(self, configDict: dict, datasetID: str, activities: pd.DataFrame, threshold: float = None):
-        super().__init__(configDict=configDict, datasetID=datasetID, activities=activities)
+    def __init__(self, configDict: dict, activities: pd.DataFrame, threshold: float = None):
+        super().__init__(configDict=configDict, activities=activities)
         self.threshold = None
         self.thresholdSOC = None
         self.thresholdAbsolute = None
@@ -422,8 +529,7 @@ class WeekFlexEstimator(FlexEstimator):
             startLevel (float): Battery level at beginning of first activity for each activity chain
         """
         print('Starting maximum battery level calculation')
-        self.activities.loc[self.activities['isFirstActivity'], :] = self._calcMaxBatFirstAct(
-            startLevel=startLevel)
+        self.activities.loc[self.activities['isFirstActivity'], :] = self._calcMaxBatFirstAct(startLevel=startLevel)
 
         # Start and end for all trips and parkings in between
         setActs = range(int(self.activities['actID'].max()) + 1)
@@ -596,7 +702,7 @@ class WeekFlexEstimator(FlexEstimator):
         tmpUndershoot = self.activities.loc[idx, 'minBatteryLevelStart_unlimited'] - self.lowerBatLev
         self.activities.loc[idx, 'minUndershoot'] = tmpUndershoot.where(tmpUndershoot >= 0, other=0)
 
-    def estimateTechnicalFlexibility(self, filterFuelNeed: bool=True):
+    def estimateTechnicalFlexibility(self, filterFuelNeed: bool = True):
         """
         Main run function for the class WeekFlexEstimator. Calculates uncontrolled charging as well as technical
         boundary constraints for controlled charging and feeding electricity back into the grid on an indvidiual vehicle
@@ -614,7 +720,7 @@ class WeekFlexEstimator(FlexEstimator):
 
         self._drain()
         self.__maxChargeVolumePerParkingActWeek()
-        self._batteryLevelMax(startLevel=self.thresholdAbsolute)
+        self._batteryLevelMax(startLevel=self.upperBatLev)
         self._uncontrolledCharging()
         self._batteryLevelMin()
         if filterFuelNeed:
@@ -622,28 +728,3 @@ class WeekFlexEstimator(FlexEstimator):
         print('Technical flexibility estimation for one week ended considering the plugging threshold of ')
         print(f'{self.thresholdSOC}')
         return self.activities
-
-
-if __name__ == "__main__":
-
-    basePath = Path(__file__).parent.parent
-    configNames = ("globalConfig", "localPathConfig", "parseConfig", "diaryConfig",
-                   "gridConfig", "flexConfig", "aggregatorConfig", "evaluatorConfig")
-    configDict = loadConfigDict(configNames, basePath)
-
-    datasetID = "MiD17"  # options are MiD08, MiD17, KiD and VF
-    if datasetID == "MiD17":
-        vpData = ParseMiD(configDict=configDict, datasetID=datasetID)
-    elif datasetID == "KiD":
-        vpData = ParseKiD(configDict=configDict, datasetID=datasetID)
-    elif datasetID == "VF":
-        vpData = ParseVF(configDict=configDict, datasetID=datasetID)
-    vpData.process()
-
-    vpGrid = GridModeler(configDict=configDict, datasetID=datasetID, activities=vpData.activities,
-                         gridModel='simple')
-    vpGrid.assignGrid()
-
-    vpFlex = FlexEstimator(configDict=configDict, datasetID=datasetID, activities=vpGrid.activities)
-    vpFlex.estimateTechnicalFlexibility()
-    vpFlex.writeOutput()

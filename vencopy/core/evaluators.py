@@ -81,9 +81,9 @@ class Evaluator:
                         fileKey=iFileKey,
                         datasetID=iDat,
                     ),
-                    dtype={"genericID": int},
-                    # index_col=['genericID', 'tripStartWeekday'])
-                    index_col=["genericID"],
+                    dtype={"uniqueID": int},
+                    # index_col=['uniqueID', 'tripStartWeekday'])
+                    index_col=["uniqueID"],
                 )
                 ret[iDat] = dataIn
         return ret
@@ -117,10 +117,10 @@ class Evaluator:
                 self.inputData[iDat], self.parseData[iDat]
             )
             weights = weightData.loc[
-                :, ["genericID", "tripStartWeekday", "tripWeight"]
+                :, ["uniqueID", "tripStartWeekday", "tripWeight"]
             ]
             weights = weights.convert_dtypes()
-            ret[iDat] = weights.set_index(["genericID"], drop=True)
+            ret[iDat] = weights.set_index(["uniqueID"], drop=True)
         return ret
 
     def calculateMobilityQuota(self, dataset: str) -> None:
@@ -146,7 +146,7 @@ class Evaluator:
         """
         for iDat in self.datasetIDs:
             self.data[iDat] = self.inputData[iDat].set_index(
-                ["genericID", "tripStartWeekday"], drop=True
+                ["uniqueID", "tripStartWeekday"], drop=True
             )
             self.data[iDat].dropna(inplace=True)
 
@@ -160,7 +160,7 @@ class Evaluator:
         ret = {}
         for idx, iDat in self.inputData.items():
             iDatRaw = (
-                iDat.drop(columns=["genericID"])
+                iDat.drop(columns=["uniqueID"])
                 .set_index("tripStartWeekday", append=True)
                 .stack()
             )  # 'tripWeight', 'tripScaleFactor'
@@ -668,7 +668,7 @@ class Evaluator:
             io=pathToFile, sheet_name=sheetname, header=1, engine="openpyxl"
         )
         data = dataIn.groupby(by=["day"]).sum().drop(columns="hour")
-        # FIXME: ax = plt.subplots()
+        # ax = plt.subplots()
         data.plot()
         plt.show()
         print(data)
@@ -691,7 +691,7 @@ class Evaluator:
         # Plot for purposes
         # purposeList = list(purposeDict)
         purposeList = list(np.unique(purposes.loc[:, :].values))
-        # purposes = purposes.set_index(['genericID']).transpose()
+        # purposes = purposes.set_index(['uniqueID']).transpose()
         purposes = purposes.transpose()
         totalTripPurpose = pd.DataFrame()
 
@@ -771,7 +771,7 @@ class Evaluator:
         charingPower: Dataframe holding hourly charging station power
         """
         # Plot for charging station
-        # capacity = pd.read_csv(self.outputFilePath, keep_default_na=False, index_col='genericID')
+        # capacity = pd.read_csv(self.outputFilePath, keep_default_na=False, index_col='uniqueID')
         capacity = charingPower.transpose()
         capacityList = list(np.unique(capacity.loc[:, :].values))
 

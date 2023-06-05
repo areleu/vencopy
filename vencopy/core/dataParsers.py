@@ -7,27 +7,38 @@ __status__ = "dev"  # options are: dev, test, prod
 
 
 # ----- imports & packages ------
-if __package__ is None or __package__ == '':
+if __package__ is None or __package__ == "":
     import sys
     from os import path
 
     sys.path.append(path.dirname(path.dirname(path.dirname(__file__))))
 
 import pprint
+from typing import Union
 import warnings
 from pathlib import Path
 from zipfile import ZipFile
 
 import numpy as np
 import pandas as pd
-from profilehooks import profile
 
-from vencopy.utils.globalFunctions import createFileName, loadConfigDict, replace_vec, writeOut
+from vencopy.utils.globalFunctions import (
+    createFileName,
+    replace_vec,
+    writeOut,
+)
 from vencopy.utils.globalFunctions import returnDictBottomKeys, returnDictBottomValues
 
 
 class DataParser:
-    def __init__(self, configDict: dict, datasetID: str, fpInZip=None, loadEncrypted=False, debug=False):
+    def __init__(
+        self,
+        configDict: dict,
+        datasetID: str,
+        fpInZip=None,
+        loadEncrypted=False,
+        debug=False,
+    ):
         """
         Basic class for parsing a mobility survey trip data set. Currently both
         German travel surveys MiD 2008 and MiD 2017 are pre-configured and one
@@ -55,8 +66,9 @@ class DataParser:
         self.localPathConfig = configDict["localPathConfig"]
         self.globalConfig = configDict["globalConfig"]
         self.datasetID = self.__checkDatasetID(datasetID, self.parseConfig)
-        filepath = (Path(self.localPathConfig["pathAbsolute"][self.datasetID])
-                    / self.globalConfig["files"][self.datasetID]["tripsDataRaw"])
+        filepath = (
+            Path(self.localPathConfig["pathAbsolute"][self.datasetID]) / self.globalConfig["files"][self.datasetID]["tripsDataRaw"]
+        )
         self.rawDataPath = filepath
         self.rawData = None
         self.data = None
@@ -69,7 +81,8 @@ class DataParser:
         else:
             print(f"Starting to retrieve local data file from {self.rawDataPath}")
             self._loadData()
-        self.rawData = self.rawData.loc[0:2000, :] if debug else self.rawData.copy()
+        nDebugLines = configDict["globalConfig"]["nDebugLines"]
+        self.rawData = self.rawData.loc[0: nDebugLines - 1, :] if debug else self.rawData.copy()
         # Storage for original data variable that is being overwritten throughout adding of park rows
         self.tripEndNextDayRaw = None
 
@@ -86,15 +99,22 @@ class DataParser:
         # file even as the ending matches) readable for the user?
         # Should we have a manual error treatment here?
         if self.rawDataPath.suffix == ".dta":
-            self.rawData = pd.read_stata(self.rawDataPath, convert_categoricals=False, convert_dates=False,
-                                         preserve_dtypes=False)
+            self.rawData = pd.read_stata(
+                self.rawDataPath,
+                convert_categoricals=False,
+                convert_dates=False,
+                preserve_dtypes=False,
+            )
         # This has not been tested before the beta release
         elif self.rawDataPath.suffix == ".csv":
             self.rawData = pd.read_csv(self.rawDataPath)
         else:
             Exception(
-                f"Data type {self.rawDataPath.suffix} not yet specified. Available types so far are .dta and .csv")
-        print(f"Finished loading {len(self.rawData)} rows of raw data of type {self.rawDataPath.suffix}")
+                f"Data type {self.rawDataPath.suffix} not yet specified. Available types so far are .dta and .csv"
+            )
+        print(
+            f"Finished loading {len(self.rawData)} rows of raw data of type {self.rawDataPath.suffix}"
+        )
         return self.rawData
 
     def _loadEncryptedData(self, pathToZip, pathInZip):
@@ -112,22 +132,28 @@ class DataParser:
         """
         with ZipFile(pathToZip) as myzip:
             if ".dta" in pathInZip:
-                self.rawData = pd.read_stata(myzip.open(
-                    pathInZip, pwd=bytes(self.parseConfig["encryptionPW"], encoding="utf-8"),),
-                    convert_categoricals=False, convert_dates=False, preserve_dtypes=False,)
+                self.rawData = pd.read_stata(
+                    myzip.open(
+                        pathInZip,
+                        pwd=bytes(self.parseConfig["encryptionPW"], encoding="utf-8"),
+                    ),
+                    convert_categoricals=False,
+                    convert_dates=False,
+                    preserve_dtypes=False,
+                )
             else:  # if '.csv' in pathInZip:
                 self.rawData = pd.read_csv(
                     myzip.open(
                         pathInZip,
-                        pwd=bytes(
-                            self.parseConfig["encryptionPW"], encoding="utf-8"
-                        ),
+                        pwd=bytes(self.parseConfig["encryptionPW"], encoding="utf-8"),
                     ),
                     sep=";",
                     decimal=",",
                 )
 
-        print(f"Finished loading {len(self.rawData)} rows of raw data of type {self.rawDataPath.suffix}")
+        print(
+            f"Finished loading {len(self.rawData)} rows of raw data of type {self.rawDataPath.suffix}"
+        )
 
     def __checkDatasetID(self, datasetID: str, parseConfig: dict) -> str:
         """
@@ -192,8 +218,9 @@ class DataParser:
         :return: None
         """
         assert all(
-            isinstance(val, list) for val in returnDictBottomValues(baseDict=self.filterDict)
-        ), ("All values in filter dictionaries have to be lists, but are not")
+            isinstance(val, list)
+            for val in returnDictBottomValues(baseDict=self.filterDict)
+        ), "All values in filter dictionaries have to be lists, but are not"
 
     def _filter(self, filterDict: dict = None):
         """
@@ -204,7 +231,9 @@ class DataParser:
 
         :return: None
         """
-        print(f'Starting filtering, applying {len(returnDictBottomKeys(filterDict))} filters.')
+        print(
+            f"Starting filtering, applying {len(returnDictBottomKeys(filterDict))} filters."
+        )
         simpleFilter = pd.DataFrame(index=self.data.index)
         sophFilter = pd.DataFrame(index=self.data.index)
         # Future releases: as discussed before we could indeed work here with a plug and pray approach.
@@ -215,28 +244,38 @@ class DataParser:
 
         # Simple filters checking single columns for specified values
         for iKey, iVal in filterDict.items():
-            if iKey == 'include' and iVal:
-                simpleFilter = simpleFilter.join(self.__setIncludeFilter(iVal, self.data.index))
-            elif iKey == 'exclude' and iVal:
-                simpleFilter = simpleFilter.join(self.__setExcludeFilter(iVal, self.data.index))
-            elif iKey == 'greaterThan' and iVal:
-                simpleFilter = simpleFilter.join(self.__setGreaterThanFilter(iVal, self.data.index))
-            elif iKey == 'smallerThan' and iVal:
-                simpleFilter = simpleFilter.join(self.__setSmallerThanFilter(iVal, self.data.index))
-            elif iKey not in ['include', 'exclude', 'greaterThan', 'smallerThan']:
-                warnings.warn(f'A filter dictionary was defined in the parseConfig with an unknown filtering key.'
-                              f'Current filtering keys comprise include, exclude, smallerThan and greaterThan.'
-                              f'Continuing with ignoring the dictionary {iKey}')
+            if iKey == "include" and iVal:
+                simpleFilter = simpleFilter.join(
+                    self.__setIncludeFilter(iVal, self.data.index)
+                )
+            elif iKey == "exclude" and iVal:
+                simpleFilter = simpleFilter.join(
+                    self.__setExcludeFilter(iVal, self.data.index)
+                )
+            elif iKey == "greaterThan" and iVal:
+                simpleFilter = simpleFilter.join(
+                    self.__setGreaterThanFilter(iVal, self.data.index)
+                )
+            elif iKey == "smallerThan" and iVal:
+                simpleFilter = simpleFilter.join(
+                    self.__setSmallerThanFilter(iVal, self.data.index)
+                )
+            elif iKey not in ["include", "exclude", "greaterThan", "smallerThan"]:
+                warnings.warn(
+                    f"A filter dictionary was defined in the parseConfig with an unknown filtering key."
+                    f"Current filtering keys comprise include, exclude, smallerThan and greaterThan."
+                    f"Continuing with ignoring the dictionary {iKey}"
+                )
 
         # Application of simple value-based filters
-        self.dataSimple = self.data[simpleFilter.all(axis='columns')]
+        self.dataSimple = self.data[simpleFilter.all(axis="columns")]
 
         # More sophisticated filtering functions
         sophFilter = sophFilter.join(self.__filterInconsistentSpeedTrips())
         sophFilter = sophFilter.join(self.__filterOverlappingTrips())
 
         # Application of sophisticated filters
-        self.data = self.dataSimple.loc[sophFilter.all(axis='columns'), :]
+        self.data = self.dataSimple.loc[sophFilter.all(axis="columns"), :]
         self.__filterAnalysis(simpleFilter.join(sophFilter))
 
     def __setIncludeFilter(self, includeFilterDict: dict, dataIndex) -> pd.DataFrame:
@@ -277,15 +316,23 @@ class DataParser:
         :param dataIndex: Index for the data frame
         :return:
         """
-        greaterThanFilterCols = pd.DataFrame(index=dataIndex, columns=greaterThanFilterDict.keys())
+        greaterThanFilterCols = pd.DataFrame(
+            index=dataIndex, columns=greaterThanFilterDict.keys()
+        )
         for greaterCol, greaterElements in greaterThanFilterDict.items():
-            greaterThanFilterCols[greaterCol] = (self.data[greaterCol] >= greaterElements.pop())
+            greaterThanFilterCols[greaterCol] = (
+                self.data[greaterCol] >= greaterElements.pop()
+            )
             if len(greaterElements) > 0:
-                warnings.warn(f"You specified more than one value as lower limit for filtering column {greaterCol}."
-                              f"Only considering the last element given in the parseConfig.")
+                warnings.warn(
+                    f"You specified more than one value as lower limit for filtering column {greaterCol}."
+                    f"Only considering the last element given in the parseConfig."
+                )
         return greaterThanFilterCols
 
-    def __setSmallerThanFilter(self, smallerThanFilterDict: dict, dataIndex) -> pd.DataFrame:
+    def __setSmallerThanFilter(
+        self, smallerThanFilterDict: dict, dataIndex
+    ) -> pd.DataFrame:
         """
         Read-in function for smallerThan filter dict from parseConfig.yaml
 
@@ -295,12 +342,18 @@ class DataParser:
         :return: Returns a data frame of trips covering
                  a distance of less than 1000 km
         """
-        smallerThanFilterCols = pd.DataFrame(index=dataIndex, columns=smallerThanFilterDict.keys())
+        smallerThanFilterCols = pd.DataFrame(
+            index=dataIndex, columns=smallerThanFilterDict.keys()
+        )
         for smallerCol, smallerElements in smallerThanFilterDict.items():
-            smallerThanFilterCols[smallerCol] = (self.data[smallerCol] <= smallerElements.pop())
+            smallerThanFilterCols[smallerCol] = (
+                self.data[smallerCol] <= smallerElements.pop()
+            )
             if len(smallerElements) > 0:
-                warnings.warn(f"You specified more than one value as upper limit for filtering column {smallerCol}."
-                              f"Only considering the last element given in the parseConfig.")
+                warnings.warn(
+                    f"You specified more than one value as upper limit for filtering column {smallerCol}."
+                    f"Only considering the last element given in the parseConfig."
+                )
         return smallerThanFilterCols
 
     def __filterInconsistentSpeedTrips(self):
@@ -311,10 +364,13 @@ class DataParser:
 
         :return: None
         """
-        # FIXME: Add timestamp comparison instead of or additionally to variable "travel time",
-        #  look at hhPersonID 80628472
-        self.data['averageSpeed'] = self.data['tripDistance'] / (self.data['travelTime'] / 60)
-        return self.data['averageSpeed'] > self.parseConfig['filterDicts']['speedThreshold']
+        self.data["averageSpeed"] = self.data["tripDistance"] / (
+            self.data["travelTime"] / 60
+        )
+        return (
+            self.data["averageSpeed"]
+            > self.parseConfig["filterDicts"]["speedThreshold"]
+        )
 
     def __filterOverlappingTrips(self):
         """
@@ -326,27 +382,14 @@ class DataParser:
         lst = []
         for p in range(1, periods + 1):
             ser = self.__overlapPeriods(self.data, period=p)
-            ser.name = ser.name + f' p={p}'
+            ser.name = ser.name + f" p={p}"
             lst.append(ser)
         ret = pd.concat(lst, axis=1).all(axis=1)
-        ret.name = 'noOverlapPrevTrips'
+        ret.name = "noOverlapPrevTrips"
         return ret
 
-    # DEPRECATED WILL BE REMOVED ON NEXT RELEASE
-    def __overlapPeriodsOld(self, data, period):
-        dat = data.copy()
-        dat['isSameHHAsPrevTrip'] = dat['hhPersonID'] == dat['hhPersonID'].shift(period)
-        dat.loc[dat['tripEndNextDay'], 'tripEndHour'] = dat.loc[dat['tripEndNextDay'], 'tripEndHour'] + 24
-        dat['tripStartsAfterPrevTrip'] = (
-            (dat['tripStartHour'] > dat['tripEndHour'].shift(period)) | (
-                (dat['tripStartHour'] == dat['tripEndHour'].shift(period)) & (
-                    dat['tripStartMinute'] >= dat['tripEndMinute'].shift(period)))
-        )
-        dat['tripDoesNotOverlap'] = ~(dat['isSameHHAsPrevTrip'] & ~dat['tripStartsAfterPrevTrip'])
-        return dat['tripDoesNotOverlap']
-
     def __overlapPeriods(self, data, period):
-        """ New implementation of identifying trips that overlap with previous trips.
+        """New implementation of identifying trips that overlap with previous trips.
 
         Args:
             data (pd.DataFrame): Trip data set including the two variables timestampStart and timestampEnd
@@ -358,15 +401,27 @@ class DataParser:
             same index as the MID data.
         """
         dat = data.copy()
-        if self.datasetID == 'KiD':
-            dat['isSameVehicleAsPrevTrip'] = dat['vehicleID'] == dat['vehicleID'].shift(period)
-            dat['tripStartsAfterPrevTrip'] = dat['timestampStart'] > dat['timestampEnd'].shift(period)
-            dat['tripDoesNotOverlap'] = ~(dat['isSameVehicleAsPrevTrip'] & ~dat['tripStartsAfterPrevTrip'])
+        if self.datasetID == "KiD":
+            dat["isSameVehicleAsPrevTrip"] = dat["vehicleID"] == dat["vehicleID"].shift(
+                period
+            )
+            dat["tripStartsAfterPrevTrip"] = dat["timestampStart"] > dat[
+                "timestampEnd"
+            ].shift(period)
+            dat["tripDoesNotOverlap"] = ~(
+                dat["isSameVehicleAsPrevTrip"] & ~dat["tripStartsAfterPrevTrip"]
+            )
         else:
-            dat['isSameHHAsPrevTrip'] = dat['hhPersonID'] == dat['hhPersonID'].shift(period)
-            dat['tripStartsAfterPrevTrip'] = dat['timestampStart'] > dat['timestampEnd'].shift(period)
-            dat['tripDoesNotOverlap'] = ~(dat['isSameHHAsPrevTrip'] & ~dat['tripStartsAfterPrevTrip'])
-        return dat['tripDoesNotOverlap']
+            dat["isSameHHAsPrevTrip"] = dat["hhPersonID"] == dat["hhPersonID"].shift(
+                period
+            )
+            dat["tripStartsAfterPrevTrip"] = dat["timestampStart"] > dat[
+                "timestampEnd"
+            ].shift(period)
+            dat["tripDoesNotOverlap"] = ~(
+                dat["isSameHHAsPrevTrip"] & ~dat["tripStartsAfterPrevTrip"]
+            )
+        return dat["tripDoesNotOverlap"]
 
     def __filterAnalysis(self, filterData: pd.DataFrame):
         """
@@ -376,14 +431,20 @@ class DataParser:
         :param filterData:
         :return: None
         """
-        lenData = sum(filterData.all(axis='columns'))
+        lenData = sum(filterData.all(axis="columns"))
         boolDict = {iCol: sum(filterData[iCol]) for iCol in filterData}
-        print('The following values were taken into account after simple threshold filtering:')
+        print(
+            "The following values were taken into account after simple threshold filtering:"
+        )
         pprint.pprint(boolDict)
         # print(f'{filterData["averageSpeed"].sum()} trips have plausible average speeds')
         # print(f'{(~filterData["tripDoesNotOverlap"]).sum()} trips overlap and were thus filtered out')
-        print(f"All filters combined yielded that a total of {lenData} trips are taken into account")
-        print(f'This corresponds to {lenData / len(filterData)* 100} percent of the original data')
+        print(
+            f"All filters combined yielded that a total of {lenData} trips are taken into account"
+        )
+        print(
+            f"This corresponds to {lenData / len(filterData)* 100} percent of the original data"
+        )
 
     def _addParkingRows(self, splitOvernightTrips: bool = True):
         """Wrapper function generating park activity rows between the trip data from the original MID dataset. Some
@@ -394,12 +455,10 @@ class DataParser:
         to the activity list before the first parking activity (0:00-1:30). The trip distance is split between the two
         based on the time.
 
-        :param splitOvernightTrips: Should trips that end on the consecutive day (not the survey day) be split in two 
+        :param splitOvernightTrips: Should trips that end on the consecutive day (not the survey day) be split in two
         trips in such a way that the estimated trip distance the next day is appended in the morning hours of the survey
         day?
         """
-
-        # FIXME: If split-up to separate class, call not in ParseData but in IntermediateParsing 
         self.__copyRows()
         self.__addUtilAttributes()
         self.__addParkActAfterLastTrip()
@@ -413,94 +472,94 @@ class DataParser:
         self.__addTimeDeltaCol()
         self.__uniqueIndex()
 
-        print(f'Finished activity composition with {self.activities["tripID"].fillna(0).astype(bool).sum()} trips '
-              f'and {self.activities["parkID"].fillna(0).astype(bool).sum()} parking activites')
+        print(
+            f'Finished activity composition with {self.activities["tripID"].fillna(0).astype(bool).sum()} trips '
+            f'and {self.activities["parkID"].fillna(0).astype(bool).sum()} parking activites'
+        )
 
     def __copyRows(self):
         # Adding skeleton duplicate rows for parking activities
-        self.activities = pd.concat([self.data]*2).sort_index(ignore_index=True)
-        self.activities['parkID'] = self.activities['tripID']
-        self.activities.loc[range(0, len(self.activities), 2), 'tripID'] = pd.NA
-        self.activities.loc[range(1, len(self.activities), 2), 'parkID'] = pd.NA
+        self.activities = pd.concat([self.data] * 2).sort_index(ignore_index=True)
+        self.activities["parkID"] = self.activities["tripID"]
+        self.activities.loc[range(0, len(self.activities), 2), "tripID"] = pd.NA
+        self.activities.loc[range(1, len(self.activities), 2), "parkID"] = pd.NA
 
     def __addUtilAttributes(self):
         # Adding additional attribute columns for convenience
-        self.activities['genericID_prev'] = self.activities['genericID'].shift(fill_value=0)
-        self.activities['isFirstActivity'] = self.activities['genericID_prev'] != self.activities['genericID']
-        self.activities['genericID_next'] = self.activities['genericID'].shift(-1, fill_value=0)
-        self.activities['isLastActivity'] = self.activities['genericID_next'] != self.activities['genericID']
+        self.activities["uniqueID_prev"] = self.activities["uniqueID"].shift(
+            fill_value=0
+        )
+        self.activities["isFirstActivity"] = (
+            self.activities["uniqueID_prev"] != self.activities["uniqueID"]
+        )
+        self.activities["uniqueID_next"] = self.activities["uniqueID"].shift(
+            -1, fill_value=0
+        )
+        self.activities["isLastActivity"] = (
+            self.activities["uniqueID_next"] != self.activities["uniqueID"]
+        )
 
     def __addParkActAfterLastTrip(self):
         # Adding park activities after last trips
         newIndex = self.activities.index[self.activities.isLastActivity]
         dfAdd = self.activities.loc[newIndex, :]
-        dfAdd['tripID'] = pd.NA
-        self.activities.loc[newIndex, 'isLastActivity'] = False
-        dfAdd['parkID'] = self.activities.loc[newIndex, 'tripID'] + 1
+        dfAdd["tripID"] = pd.NA
+        self.activities.loc[newIndex, "isLastActivity"] = False
+        dfAdd["parkID"] = self.activities.loc[newIndex, "tripID"] + 1
         self.activities = pd.concat([self.activities, dfAdd]).sort_index()
 
     def __adjustParkAttrs(self):
         # Setting trip attribute values to zero where tripID == NaN (i.e. for all parking activities)
-        self.activities.loc[self.activities['tripID'].isna(),
-                            ['tripDistance', 'travelTime', 'tripIsIntermodal']] = pd.NA
-        self.activities['colFromIndex'] = self.activities.index
-        self.activities = self.activities.sort_values(by=['colFromIndex', 'tripID'])
+        self.activities.loc[
+            self.activities["tripID"].isna(),
+            ["tripDistance", "travelTime", "tripIsIntermodal"],
+        ] = pd.NA
+        self.activities["colFromIndex"] = self.activities.index
+        self.activities = self.activities.sort_values(by=["colFromIndex", "tripID"])
 
     def _dropRedundantCols(self):
         # Clean-up of temporary redundant columns
-        self.activities.drop(columns=[
-            'tripStartClock', 'tripEndClock', 'tripStartYear', 'tripStartMonth',
-            'tripStartWeek', 'tripStartHour', 'tripStartMinute', 'tripEndHour', 'tripEndMinute', 'genericID_prev',
-            'genericID_next', 'colFromIndex'], inplace=True)
+        self.activities.drop(
+            columns=[
+                "tripStartClock",
+                "tripEndClock",
+                "tripStartYear",
+                "tripStartMonth",
+                "tripStartWeek",
+                "tripStartHour",
+                "tripStartMinute",
+                "tripEndHour",
+                "tripEndMinute",
+                "uniqueID_prev",
+                "uniqueID_next",
+                "colFromIndex",
+            ],
+            inplace=True,
+        )
 
     def __removeParkActsAfterOvernightTrips(self):
         # Checking for trips across day-limit and removing respective parking activities
-        indexOvernight = (self.activities['isLastActivity'] & self.activities['tripEndNextDay'])
+        indexOvernight = (
+            self.activities["isLastActivity"] & self.activities["tripEndNextDay"]
+        )
         indexOvernight = indexOvernight.loc[indexOvernight]
-        self.activities.loc[indexOvernight.index, 'isLastActivity'] = True
+        self.activities.loc[indexOvernight.index, "isLastActivity"] = True
         self.activities = self.activities.reset_index()
 
         # Get rid of park activities after overnight trips
-        indexMultiDayActivity = (self.activities['isLastActivity'] &
-                                 self.activities['tripEndNextDay'] &
-                                 self.activities['parkID'])
+        indexMultiDayActivity = (
+            self.activities["isLastActivity"]
+            & self.activities["tripEndNextDay"]
+            & self.activities["parkID"]
+        )
         self.activities = self.activities.loc[~indexMultiDayActivity, :]
-
-    # DEPRECATED WILL BE REMOVED IN NEXT RELEASE
-    def __adjustParkTimestamps_old(self):
-        # Setting timestamps
-        self.activities = self.activities.reset_index()
-        parkingAct = self.activities['parkID'].fillna(0).astype(bool)
-        parkingAct = parkingAct.loc[parkingAct]
-        parkingActwoLast = parkingAct.iloc[:-1]
-        parkingActwoFirst = parkingAct.iloc[1:]
-
-        # Updating park end timestamps
-        set_ts = self.activities.loc[parkingActwoLast.index + 1, 'timestampStart']
-        set_ts.index = self.activities.loc[parkingActwoLast.index, 'timestampEnd'].index
-        self.activities.loc[parkingActwoLast.index, 'timestampEnd'] = set_ts
-
-        # Updating park start timestamps
-        set_ts = self.activities.loc[parkingActwoFirst.index - 1, 'timestampEnd']
-        set_ts.index = self.activities.loc[parkingActwoFirst.index, 'timestampStart'].index
-        self.activities.loc[parkingActwoFirst.index, 'timestampStart'] = set_ts
-
-        # Updating park start timestamps for first activity
-        idxActs = self.activities['parkID'].fillna(0).astype(bool) & self.activities['isFirstActivity']
-        self.activities.loc[idxActs, 'timestampStart'] = self.activities.loc[
-            idxActs, 'timestampEnd'].apply(lambda x: x.replace(hour=0, minute=0))
-
-        # Updating park end timestamps for last activity
-        idxActs = self.activities['parkID'].fillna(0).astype(bool) & self.activities['isLastActivity']
-        self.activities.loc[idxActs, 'timestampEnd'] = self.activities.loc[
-            idxActs, 'timestampStart'].apply(lambda x: x.replace(hour=0, minute=0) + pd.Timedelta(1, 'd'))
 
     def __adjustParkTimestamps(self):
         """Adjust the start and end timestamps of the newly added rows. This is done via range index, that is reset at
-        the beginning. First and last activities have to be treated separately since their dates have to match with 
-        their daily activity chain. 
+        the beginning. First and last activities have to be treated separately since their dates have to match with
+        their daily activity chain.
         """
-        
+
         self.activities = self.activities.reset_index()
         parkingActwoFirst, parkingActwoLast = self.__getParkingActsWOFirstAndLast()
 
@@ -509,8 +568,8 @@ class DataParser:
 
         self.__updateTimestampFirstParkAct()
         self.__updateTimestampLastParkAct()
-        
-        print('Completed park timestamp adjustments')
+
+        print("Completed park timestamp adjustments")
 
     def __getParkingActsWOFirstAndLast(self) -> (pd.Series, pd.Series):
         """Return all parking activities except for the last one (return argument 1) and the first one (return argument
@@ -520,56 +579,66 @@ class DataParser:
             pd.Series: Parking activity indices without the last one
             pd.Series: Parking activity indices without the first one
         """
-        parkingAct = ~self.activities['parkID'].isna()
+        parkingAct = ~self.activities["parkID"].isna()
         parkingAct = parkingAct.loc[parkingAct]
         return parkingAct.iloc[1:], parkingAct.iloc[:-1]
 
     def __updateParkActStart(self, parkingActwoFirst: pd.Series):
-        """ Updating park start timestamps for newly added rows
-        """
-        set_ts = self.activities.loc[parkingActwoFirst.index - 1, 'timestampEnd']
-        set_ts.index = self.activities.loc[parkingActwoFirst.index, 'timestampStart'].index
-        self.activities.loc[parkingActwoFirst.index, 'timestampStart'] = set_ts
+        """Updating park start timestamps for newly added rows"""
+        set_ts = self.activities.loc[parkingActwoFirst.index - 1, "timestampEnd"]
+        set_ts.index = self.activities.loc[
+            parkingActwoFirst.index, "timestampStart"
+        ].index
+        self.activities.loc[parkingActwoFirst.index, "timestampStart"] = set_ts
 
     def __updateParkActEnd(self, parkingActwoLast: pd.Series):
-        """ Updating park end timestamps for newly added rows
-        """
-        set_ts = self.activities.loc[parkingActwoLast.index + 1, 'timestampStart']
-        set_ts.index = self.activities.loc[parkingActwoLast.index, 'timestampEnd'].index
-        self.activities.loc[parkingActwoLast.index, 'timestampEnd'] = set_ts
+        """Updating park end timestamps for newly added rows"""
+        set_ts = self.activities.loc[parkingActwoLast.index + 1, "timestampStart"]
+        set_ts.index = self.activities.loc[parkingActwoLast.index, "timestampEnd"].index
+        self.activities.loc[parkingActwoLast.index, "timestampEnd"] = set_ts
 
     def __updateTimestampFirstParkAct(self):
-        """ Updating park end timestamps for last activity in new park rows
-        """
-        idxActs = ~(self.activities['parkID'].isna()) & (self.activities['isFirstActivity'])
-        self.activities.loc[idxActs, 'timestampStart'] = replace_vec(self.activities.loc[idxActs, 'timestampEnd'],
-                                                                     hour=0, minute=0)
+        """Updating park end timestamps for last activity in new park rows"""
+        idxActs = ~(self.activities["parkID"].isna()) & (
+            self.activities["isFirstActivity"]
+        )
+        self.activities.loc[idxActs, "timestampStart"] = replace_vec(
+            self.activities.loc[idxActs, "timestampEnd"], hour=0, minute=0
+        )
 
     def __updateTimestampLastParkAct(self):
-        """ Updating park end timestamps for last activity in new park rows
-        """
-        idxActs = ~(self.activities['parkID'].isna()) & (self.activities['isLastActivity'])
-        self.activities.loc[idxActs, 'timestampEnd'] = replace_vec(self.activities.loc[idxActs, 'timestampStart'],
-                                                                   hour=0, minute=0) + pd.Timedelta(1, 'd')
+        """Updating park end timestamps for last activity in new park rows"""
+        idxActs = ~(self.activities["parkID"].isna()) & (
+            self.activities["isLastActivity"]
+        )
+        self.activities.loc[idxActs, "timestampEnd"] = replace_vec(
+            self.activities.loc[idxActs, "timestampStart"], hour=0, minute=0
+        ) + pd.Timedelta(1, "d")
 
     def __setTripAttrsNAForParkActs(self):
         # Set tripEndNextDay to False for all park activities
-        self.activities.loc[self.activities['tripID'].isna(), 'tripEndNextDay'] = pd.NA
+        self.activities.loc[self.activities["tripID"].isna(), "tripEndNextDay"] = pd.NA
 
     def __addNextAndPrevIDs(self):
-        self.activities.loc[~self.activities['tripID'].isna(), 'actID'] = self.activities['tripID']
-        self.activities.loc[~self.activities['parkID'].isna(), 'actID'] = self.activities['parkID']
-        self.activities.loc[~self.activities['isLastActivity'], 'nextActID'] = self.activities.loc[
-            :, 'actID'].shift(-1)
-        self.activities.loc[~self.activities['isFirstActivity'], 'prevActID'] = self.activities.loc[
-            :, 'actID'].shift(1)
+        self.activities.loc[
+            ~self.activities["tripID"].isna(), "actID"
+        ] = self.activities["tripID"]
+        self.activities.loc[
+            ~self.activities["parkID"].isna(), "actID"
+        ] = self.activities["parkID"]
+        self.activities.loc[
+            ~self.activities["isLastActivity"], "nextActID"
+        ] = self.activities.loc[:, "actID"].shift(-1)
+        self.activities.loc[
+            ~self.activities["isFirstActivity"], "prevActID"
+        ] = self.activities.loc[:, "actID"].shift(1)
 
     def __ONSplitDecider(self, split: bool):
         """Boolean function that differentiates if overnight trips should be split (split==True) or not (split==False).
         In the latter case, overnight trips identified by the variable 'tripEndNextDay' are excluded from the data set.
 
         Args:
-            split (bool): Should trips that end on the consecutive day (not the survey day) be split in two trips in 
+            split (bool): Should trips that end on the consecutive day (not the survey day) be split in two trips in
             such a way that the estimated trip distance the next day is appended in the morning hours of the survey day?
         """
         if split:
@@ -579,180 +648,264 @@ class DataParser:
             self.__neglectONTrips()
 
     def __splitOvernightTrips(self):
-        """ Wrapper function for treating edge case trips ending not in the 24 hours of the survey day but stretch
+        """Wrapper function for treating edge case trips ending not in the 24 hours of the survey day but stretch
         to the next day. Those overnight (ON) are split up into an evening trip at the regular survey day and a
         morning trip at the next day. Trip distances are split according to the time the person spent on that trip.
         E.g. if a trip lasts from 23:00 to 2:00 the next day and 100 km, the split-up evening trip will last from
         23:00 to 00:00 of the survey day and 33 km and the morning trip from 00:00 to 2:00 and 66 km. In a next step,
-        the morning trip is appended to the survey day in the first hours. Here, different edge cases occur.
+        the morning trip is appended to the survey day in the first hours.
+
+        Here, different edge cases occur.
         Edge case 1 (N=5 in MiD17): For trips that overlap with night (early morning) trips at the survey day, e.g. from
         0:30 to 1:00 for the above mentioned example, the morning part of the split overnight trip is completely
         disregarded.
         Edge case 2 (N=3 in MiD17): When overnight mornging split-trips end exactly at the time where the first trip of
         the survey day starts (2:00 in the example), both trips are consolidated to one trip with all attributes of the
         survey trip.
-
+        These edge cases are documented and quantified in issue #358 'Sum of all distances of dataParser at end equals
+        sum of all distances after filtering'.
         """
         # Split overnight trips and add next day distance in the morning (tripID=0)
         isONTrip, overnightTripsAdd = self.__getOvernightActs()
         overnightTripsAddTS = self.__adjustONTimestamps(trips=overnightTripsAdd)
         self.__setAllLastActEndTSToZero()
         morningTrips = self.__setONTripIDZero(trips=overnightTripsAddTS)
-        morningTrips = self.__adjustMorningTripDistance(overnightTrips=overnightTripsAdd, morningTrips=morningTrips)
+        morningTrips = self.__adjustMorningTripDistance(
+            overnightTrips=overnightTripsAdd, morningTrips=morningTrips
+        )
         self.__adjustEveningTripDistance(morningTrips=morningTrips, isONTrip=isONTrip)
         self.__setFirstLastActs(morningTrips=morningTrips)
-        isPrevFirstActs = self.__getPrevFirstAct(morningTrips=morningTrips)  # Activities that were previously firstActs
-        morningTrips_noOverlap, isPrevFirstActs = self.__neglectOverlapMorningTrips(morningTrips=morningTrips,
-                                                                                    isPrevFirstActs=isPrevFirstActs)
-        morningTrips_add = self.__setNextParkingTSStart(morningTrips=morningTrips_noOverlap, isONTrip=isONTrip,
-                                                        isPrevFirstActs=isPrevFirstActs)
+        isPrevFirstActs = self.__getPrevFirstAct(
+            morningTrips=morningTrips
+        )  # Activities that were previously firstActs
+        morningTrips_noOverlap, isPrevFirstActs = self.__neglectOverlapMorningTrips(
+            morningTrips=morningTrips, isPrevFirstActs=isPrevFirstActs
+        )
+        morningTrips_add = self.__setNextParkingTSStart(
+            morningTrips=morningTrips_noOverlap,
+            isONTrip=isONTrip,
+            isPrevFirstActs=isPrevFirstActs,
+        )
         self.__addMorningTrips(morningTrips=morningTrips_add)
         self.__removeFirstParkingAct()
         self.__mergeAdjacentTrips()
+        self.__checkAndAssert()  # Implement DELTA mileage check of overnight morning split trip distances
         self.__dropONCol()
         self.__sortActivities()
 
     def __getOvernightActs(self):
-        indexOvernightActs = (self.activities['isLastActivity'] & self.activities['tripEndNextDay'] &
-                              ~((self.activities['timestampEnd'].dt.hour == 0) &  # assure that the overnight trip does
-                                (self.activities['timestampEnd'].dt.minute == 0)))  # not exactly end at 00:00
+        indexOvernightActs = (
+            self.activities["isLastActivity"]
+            & self.activities["tripEndNextDay"]
+            & ~(
+                (self.activities["timestampEnd"].dt.hour == 0)
+                & (  # assure that the overnight trip does
+                    self.activities["timestampEnd"].dt.minute == 0
+                )
+            )
+        )  # not exactly end at 00:00
         return indexOvernightActs, self.activities.loc[indexOvernightActs, :]
 
     def __adjustONTimestamps(self, trips: pd.DataFrame):
         tripsRes = trips.copy()
-        tripsRes['timestampEnd'] = tripsRes.loc[:, 'timestampEnd'] - pd.Timedelta(1, 'd')
-        tripsRes['timestampStart'] = replace_vec(tripsRes.loc[:, 'timestampEnd'], hour=0, minute=0)
+        tripsRes["timestampEnd"] = tripsRes.loc[:, "timestampEnd"] - pd.Timedelta(
+            1, "d"
+        )
+        tripsRes["timestampStart"] = replace_vec(
+            tripsRes.loc[:, "timestampEnd"], hour=0, minute=0
+        )
         return tripsRes
 
     def __setAllLastActEndTSToZero(self):
         # Set timestamp end of evening part of overnight trip split to 00:00
-        self.activities.loc[self.activities['isLastActivity'], 'timestampEnd'] = replace_vec(self.activities.loc[
-            self.activities['isLastActivity'], 'timestampEnd'], hour=0, minute=0)
+        self.activities.loc[
+            self.activities["isLastActivity"], "timestampEnd"
+        ] = replace_vec(
+            self.activities.loc[self.activities["isLastActivity"], "timestampEnd"],
+            hour=0,
+            minute=0,
+        )
 
     def __setONTripIDZero(self, trips):
-        trips['tripID'] = 0
-        trips['actID'] = 0
-        trips['prevActID'] = pd.NA
+        trips["tripID"] = 0
+        trips["actID"] = 0
+        trips["prevActID"] = pd.NA
 
         # Update next activity ID
-        genericID = trips['genericID']
-        actIdx = (self.activities['genericID'].isin(genericID) & self.activities['isFirstActivity'])
-        trips['nextActID'] = self.activities.loc[actIdx, 'actID']
+        uniqueID = trips["uniqueID"]
+        actIdx = (
+            self.activities["uniqueID"].isin(uniqueID)
+            & self.activities["isFirstActivity"]
+        )
+        trips["nextActID"] = self.activities.loc[actIdx, "actID"]
 
         # Update previous activity ID of previously first activity
-        self.activities.loc[actIdx, 'prevActID'] = 0
+        self.activities.loc[actIdx, "prevActID"] = 0
         return trips
 
-    def __adjustMorningTripDistance(self, overnightTrips: pd.DataFrame, morningTrips: pd.DataFrame):
+    def __adjustMorningTripDistance(
+        self, overnightTrips: pd.DataFrame, morningTrips: pd.DataFrame
+    ):
         # Splitting the total distance to morning and evening trip time-share dependent
-        morningTrips['timedelta_total'] = overnightTrips[
-            'timestampEnd'] - overnightTrips['timestampStart']
-        morningTrips['timedelta_morning'] = morningTrips[
-            'timestampEnd'] - morningTrips['timestampStart']
-        morningTrips['timeShare_morning'] = morningTrips[
-            'timedelta_morning'] / morningTrips['timedelta_total']
-        morningTrips['timeShare_evening'] = (morningTrips['timedelta_total']
-                                             - morningTrips['timedelta_morning']
-                                             ) / morningTrips['timedelta_total']
-        morningTrips['totalTripDistance'] = morningTrips['tripDistance']
-        morningTrips['tripDistance'] = morningTrips[
-            'timeShare_morning'] * morningTrips['totalTripDistance']
+        morningTrips["timedelta_total"] = (
+            overnightTrips["timestampEnd"] - overnightTrips["timestampStart"]
+        )
+        morningTrips["timedelta_morning"] = (
+            morningTrips["timestampEnd"] - morningTrips["timestampStart"]
+        )
+        morningTrips["timeShare_morning"] = (
+            morningTrips["timedelta_morning"] / morningTrips["timedelta_total"]
+        )
+        morningTrips["timeShare_evening"] = (
+            morningTrips["timedelta_total"] - morningTrips["timedelta_morning"]
+        ) / morningTrips["timedelta_total"]
+        morningTrips["totalTripDistance"] = morningTrips["tripDistance"]
+        morningTrips["tripDistance"] = (
+            morningTrips["timeShare_morning"] * morningTrips["totalTripDistance"]
+        )
         return morningTrips
 
-    def __adjustEveningTripDistance(self, morningTrips: pd.DataFrame, isONTrip: pd.Series):
-        self.activities.loc[isONTrip, 'tripDistance'] = morningTrips[
-            'timeShare_evening'] * morningTrips['totalTripDistance']
+    def __adjustEveningTripDistance(
+        self, morningTrips: pd.DataFrame, isONTrip: pd.Series
+    ):
+        self.activities.loc[isONTrip, "tripDistance"] = (
+            morningTrips["timeShare_evening"] * morningTrips["totalTripDistance"]
+        )
 
     def __setFirstLastActs(self, morningTrips: pd.DataFrame):
         # Setting first and last activities
-        morningTrips['isFirstActivity'] = True
-        morningTrips['isLastActivity'] = False
+        morningTrips["isFirstActivity"] = True
+        morningTrips["isLastActivity"] = False
 
     def __getPrevFirstAct(self, morningTrips: pd.DataFrame):
-        return (self.activities['genericID'].isin(morningTrips['genericID']) &
-                self.activities['isFirstActivity'])
+        return (
+            self.activities["uniqueID"].isin(morningTrips["uniqueID"])
+            & self.activities["isFirstActivity"]
+        )
 
-    def __neglectOverlapMorningTrips(self, morningTrips: pd.DataFrame, isPrevFirstActs: pd.DataFrame):
+    def __neglectOverlapMorningTrips(
+        self, morningTrips: pd.DataFrame, isPrevFirstActs: pd.DataFrame
+    ):
         # Option 1 of treating overlaps: After concatenation in the end
-        firstTripsEnd = self.activities.loc[isPrevFirstActs, 'timestampEnd'].copy()
+        firstTripsEnd = self.activities.loc[isPrevFirstActs, "timestampEnd"].copy()
         firstTripsEnd.index = morningTrips.index  # Adjust index for comparison
 
         # Filter out morning parts of overnight trip split for persons that already have morning trips in that period
-        neglectOvernight = firstTripsEnd < morningTrips['timestampEnd']
+        neglectOvernight = firstTripsEnd < morningTrips["timestampEnd"]
         morningTrips_noOverlap = morningTrips.loc[~neglectOvernight, :]
 
         # Filter out neglected activities from prevFirstActs accordingly
         neglectOvernightIdx = neglectOvernight
-        neglectOvernightIdx.index = isPrevFirstActs[isPrevFirstActs].index  # Align index for filtering
+        neglectOvernightIdx.index = isPrevFirstActs[
+            isPrevFirstActs
+        ].index  # Align index for filtering
         neglectOvernightIdx = neglectOvernightIdx[neglectOvernightIdx]
         isPrevFirstActs[neglectOvernightIdx.index] = False
 
         return morningTrips_noOverlap, isPrevFirstActs
 
-    def __setNextParkingTSStart(self, morningTrips: pd.DataFrame, isONTrip: pd.Series, isPrevFirstActs: pd.DataFrame):
+    def __setNextParkingTSStart(
+        self,
+        morningTrips: pd.DataFrame,
+        isONTrip: pd.Series,
+        isPrevFirstActs: pd.DataFrame,
+    ):
         # Setting start timestamp of previously first activity (parking) to end timestamp of morning split of ON trip
-        ts_new = morningTrips.loc[isONTrip, 'timestampEnd']
-        ts_new.index = self.activities.loc[isPrevFirstActs, 'timestampStart'].index
-        self.activities.loc[isPrevFirstActs, 'timestampStart'] = ts_new
-        self.activities.loc[isPrevFirstActs, 'isFirstActivity'] = False
+        ts_new = morningTrips.loc[isONTrip, "timestampEnd"]
+        ts_new.index = self.activities.loc[isPrevFirstActs, "timestampStart"].index
+        self.activities.loc[isPrevFirstActs, "timestampStart"] = ts_new
+        self.activities.loc[isPrevFirstActs, "isFirstActivity"] = False
 
         # Set nextActID column of ON trips to consecutive activity
-        return self.__updateNextActID(prevFirstActs=self.activities.loc[isPrevFirstActs, :], morningTrips=morningTrips)
+        return self.__updateNextActID(
+            prevFirstActs=self.activities.loc[isPrevFirstActs, :],
+            morningTrips=morningTrips,
+        )
 
-    def __updateNextActID(self, prevFirstActs: pd.DataFrame, morningTrips: pd.DataFrame):
-        nextActs = prevFirstActs.loc[prevFirstActs['prevActID'] == 0, 'actID']
+    def __updateNextActID(
+        self, prevFirstActs: pd.DataFrame, morningTrips: pd.DataFrame
+    ):
+        nextActs = prevFirstActs.loc[prevFirstActs["prevActID"] == 0, "actID"]
         nextActs.index = morningTrips.index
-
-        # FIXME: @Ben: Why does this throw a settingWithCopyWarning and what would be the nicest way to circumvent?
         ret = morningTrips.copy()
-        ret.loc[:, 'nextActID'] = nextActs
+        ret.loc[:, "nextActID"] = nextActs
         return ret
 
     def __addMorningTrips(self, morningTrips: pd.DataFrame):
         # Appending overnight morning trips
-        self.activities = pd.concat([self.activities, morningTrips], )
+        self.activities = pd.concat(
+            [self.activities, morningTrips],
+        )
 
     def __removeFirstParkingAct(self):
         # Removing first parking activities for persons where first activity is a trip (starting at 00:00)
-        firstParkActs = self.activities.loc[self.activities['parkID'] == 1, :]
-        firstTripActs = self.activities.loc[self.activities['tripID'] == 1, :]
+        firstParkActs = self.activities.loc[self.activities["parkID"] == 1, :]
+        firstTripActs = self.activities.loc[self.activities["tripID"] == 1, :]
         firstTripActs.index = firstParkActs.index  # Aligning trip indices
-        idxParkTS = firstParkActs['timestampStart'] == firstTripActs['timestampStart']
+        idxParkTS = firstParkActs["timestampStart"] == firstTripActs["timestampStart"]
         self.activities = self.activities.drop(idxParkTS[idxParkTS].index)
 
         # After removing first parking, set first trip to first activity
-        self.activities.loc[(self.activities['genericID'].isin(firstParkActs.loc[idxParkTS, 'genericID'])) &
-                            (self.activities['tripID'] == 1),
-                            'isFirstActivity'] = True
+        self.activities.loc[
+            (self.activities["uniqueID"].isin(firstParkActs.loc[idxParkTS, "uniqueID"]))
+            & (self.activities["tripID"] == 1),
+            "isFirstActivity",
+        ] = True
 
     def __mergeAdjacentTrips(self):
-        """ Consolidate overnight morning trips and first trips for the edge case where morning trips of next day
+        """Consolidate overnight morning trips and first trips for the edge case where morning trips of next day
         end exactly at the beginning of the first trip of the survey day. In this case, the morning split of the
         overnight trip is neglected and the beginning of the first trip is set to 00:00. In the MiD17 data set, there
         were 3 occurences of this case all with end times of the overnight trip between 00:00 and 01:00.
 
         """
-        genericID = self.__getGenericIDsToNeglect()
-        self.__neglectZeroTripIDFromActivities(id_neglect=genericID)
-        self.__updateConsolidatedAct(id_neglect=genericID)
+        uniqueID = self.__getUniqueIDsToNeglect()
+        self.__neglectZeroTripIDFromActivities(id_neglect=uniqueID)
+        self.__updateConsolidatedAct(id_neglect=uniqueID)
 
-    def __getGenericIDsToNeglect(self):
+    def __checkAndAssert(self):
+        # Calculates the neglected trip distances from overnight split trips with regular morning trips
+        distance = (
+            self.data["tripDistance"].sum()
+            - self.activities.loc[
+                ~self.activities["tripID"].isna(), "tripDistance"
+            ].sum()
+        )
+        allTripDistance = self.activities.loc[
+            ~self.activities["tripID"].isna(), "tripDistance"
+        ].sum()
+        ratio = distance / allTripDistance
+        print(
+            f"From {allTripDistance} km total mileage in the dataset after filtering, {ratio * 100}% were cropped "
+            f"because they corresponded to split-trips from overnight trips."
+        )
+        assert ratio < 0.01
+
+    def __getUniqueIDsToNeglect(self):
         """
         Identifies the household person IDs that should be neglected.
         """
-        genericIDsOvernight = self.activities.loc[self.activities['tripID'] == 0, 'genericID']
-        acts = self.activities.loc[self.activities['genericID'].isin(genericIDsOvernight), :]
-        actsOvernight = acts.loc[acts['tripID'] == 0, :]
+        uniqueIDsOvernight = self.activities.loc[
+            self.activities["tripID"] == 0, "uniqueID"
+        ]
+        acts = self.activities.loc[
+            self.activities["uniqueID"].isin(uniqueIDsOvernight), :
+        ]
+        actsOvernight = acts.loc[acts["tripID"] == 0, :]
 
         # Next trip after morning part of overnight split
-        actsNextTrip = acts.loc[acts['prevActID'] == 0, :]
-        return actsOvernight.loc[~actsOvernight['genericID'].isin(actsNextTrip['genericID']), 'genericID']
+        actsNextTrip = acts.loc[acts["prevActID"] == 0, :]
+        return actsOvernight.loc[
+            ~actsOvernight["uniqueID"].isin(actsNextTrip["uniqueID"]), "uniqueID"
+        ]
 
     def __neglectZeroTripIDFromActivities(self, id_neglect: pd.Series):
         """
         This method filters out the activities with the given hhpid and tripID 0.
         """
-        boolNeglect = (self.activities['genericID'].isin(id_neglect)) & (self.activities['tripID'] == 0)
+        boolNeglect = (self.activities["uniqueID"].isin(id_neglect)) & (
+            self.activities["tripID"] == 0
+        )
         self.activities = self.activities.loc[~boolNeglect, :]
 
     def __updateConsolidatedAct(self, id_neglect: pd.Series):
@@ -760,72 +913,93 @@ class DataParser:
         This method sets the start timestamp of the firstActivity of all hhpids given as argument to 00:00. Additionally
         the prevActID is set to pd.NA
         """
-        idxConsolidatedTrips = (self.activities['genericID'].isin(id_neglect)) & (self.activities[
-            'isFirstActivity'])
-        self.activities.loc[idxConsolidatedTrips, 'timestampStart'] = replace_vec(self.activities.loc[
-            idxConsolidatedTrips, 'timestampStart'], hour=0, minute=0)
-        self.activities.loc[idxConsolidatedTrips, 'prevActID'] = pd.NA
+        idxConsolidatedTrips = (self.activities["uniqueID"].isin(id_neglect)) & (
+            self.activities["isFirstActivity"]
+        )
+        self.activities.loc[idxConsolidatedTrips, "timestampStart"] = replace_vec(
+            self.activities.loc[idxConsolidatedTrips, "timestampStart"],
+            hour=0,
+            minute=0,
+        )
+        self.activities.loc[idxConsolidatedTrips, "prevActID"] = pd.NA
 
     def __dropONCol(self):
-        self.activities = self.activities.drop(columns=['tripEndNextDay'])
+        self.activities = self.activities.drop(columns=["tripEndNextDay"])
 
     def __sortActivities(self):
-        self.activities = self.activities.sort_values(by=['genericID', 'timestampStart'])
+        self.activities = self.activities.sort_values(by=["uniqueID", "timestampStart"])
 
     def __setONVarFalseForLastActTrip(self):
         """This function treats the edge case of trips being the last activity in the daily activity chain, i.e. trips
-        ending exactly at 00:00. They are falsely labelled as overnight trips which is corrected here. 
+        ending exactly at 00:00. They are falsely labelled as overnight trips which is corrected here.
 
         """
-        idxLastActTrips = (self.activities['isLastActivity']) & ~(self.activities['tripID'].isna())
-        idxLastTripEndMidnight = idxLastActTrips & (
-            self.activities.loc[idxLastActTrips, 'timestampEnd'].dt.hour == 0) & (
-            self.activities.loc[idxLastActTrips, 'timestampEnd'].dt.minute == 0)
-        self.tripEndNextDayRaw = self.activities['tripEndNextDay']
-        self.activities.loc[idxLastTripEndMidnight, 'tripEndNextDay'] = False
+        idxLastActTrips = (self.activities["isLastActivity"]) & ~(
+            self.activities["tripID"].isna()
+        )
+        idxLastTripEndMidnight = (
+            idxLastActTrips
+            & (self.activities.loc[idxLastActTrips, "timestampEnd"].dt.hour == 0)
+            & (self.activities.loc[idxLastActTrips, "timestampEnd"].dt.minute == 0)
+        )
+        self.tripEndNextDayRaw = self.activities["tripEndNextDay"]
+        self.activities.loc[idxLastTripEndMidnight, "tripEndNextDay"] = False
 
     def __neglectONTrips(self):
-        """ Removes all overnight trips from the activities data set based on the column 'tripEndNextDay'. Updates 
-        timestamp end (to 00:00) and isLastActivity for the new last parking activities. Overwrites self.activities. 
+        """Removes all overnight trips from the activities data set based on the column 'tripEndNextDay'. Updates
+        timestamp end (to 00:00) and isLastActivity for the new last parking activities. Overwrites self.activities.
         """
         # Column for lastActivity setting later
-        self.activities['tripEndNextDay_next'] = self.activities['tripEndNextDay'].shift(-1, fill_value=False)
+        self.activities["tripEndNextDay_next"] = self.activities[
+            "tripEndNextDay"
+        ].shift(-1, fill_value=False)
 
         # Get rid of overnight trips
-        idxNoONTrip = (~(self.activities['tripEndNextDay'].fillna(False)))
+        idxNoONTrip = ~(self.activities["tripEndNextDay"].fillna(False))
         self.activities = self.activities.loc[idxNoONTrip, :]
 
         # Update isLastActivity and timestampEnd variables and clean-up column
-        idxNewLastAct = self.activities['tripEndNextDay_next']
+        idxNewLastAct = self.activities["tripEndNextDay_next"]
         idxNewLastAct = idxNewLastAct.fillna(False).astype(bool)
-        self.activities.loc[idxNewLastAct, 'isLastActivity'] = True
-        self.activities.loc[idxNewLastAct, 'timestampEnd'] = replace_vec(
-            self.activities.loc[idxNewLastAct, 'timestampStart'], hour=0, minute=0) + pd.Timedelta(1, 'd')
-        self.activities = self.activities.drop(columns=['tripEndNextDay_next'])
+        self.activities.loc[idxNewLastAct, "isLastActivity"] = True
+        self.activities.loc[idxNewLastAct, "timestampEnd"] = replace_vec(
+            self.activities.loc[idxNewLastAct, "timestampStart"], hour=0, minute=0
+        ) + pd.Timedelta(1, "d")
+        self.activities = self.activities.drop(columns=["tripEndNextDay_next"])
 
     def __addTimeDeltaCol(self):
         # Add timedelta column
-        self.activities['timedelta'] = self.activities['timestampEnd'] - self.activities['timestampStart']
+        self.activities["timedelta"] = (
+            self.activities["timestampEnd"] - self.activities["timestampStart"]
+        )
 
     def __uniqueIndex(self):
-        self.activities.drop(columns=['level_0'], inplace=True)
-        self.activities.reset_index(inplace=True)  # Due to copying and appending rows, the index has to be reset
+        self.activities.drop(columns=["level_0"], inplace=True)
+        self.activities.reset_index(
+            inplace=True
+        )  # Due to copying and appending rows, the index has to be reset
 
     def process(self):
         """
         Wrapper function for harmonising and filtering the dataset.
         """
-        raise NotImplementedError('Implement process method for DataParser.')
+        raise NotImplementedError("Implement process method for DataParser.")
 
     def writeOutput(self):
-        root = Path(self.localPathConfig['pathAbsolute']['vencoPyRoot'])
-        folder = self.globalConfig['pathRelative']['parseOutput']
-        fileName = createFileName(globalConfig=self.globalConfig, manualLabel='', file='outputDataParser',
-                                  datasetID=self.datasetID)
-        writeOut(data = self.activities, path = root / folder / fileName)
+        root = Path(self.localPathConfig["pathAbsolute"]["vencoPyRoot"])
+        folder = self.globalConfig["pathRelative"]["parseOutput"]
+        fileName = createFileName(
+            globalConfig=self.globalConfig,
+            fileNameID="outputDataParser",
+            datasetID=self.datasetID,
+        )
+        writeOut(data=self.activities, path=root / folder / fileName)
+
 
 class IntermediateParsing(DataParser):
-    def __init__(self, configDict: dict, datasetID: str, loadEncrypted=False, debug=False):
+    def __init__(
+        self, configDict: dict, datasetID: str, loadEncrypted=False, debug=False
+    ):
         """
         Intermediate parsing class.
 
@@ -837,7 +1011,9 @@ class IntermediateParsing(DataParser):
                               file. For this, a possword has to be
                               specified in parseConfig['PW'].
         """
-        super().__init__(configDict, datasetID=datasetID, loadEncrypted=loadEncrypted, debug=debug)
+        super().__init__(
+            configDict, datasetID=datasetID, loadEncrypted=loadEncrypted, debug=debug
+        )
         self.filterDict = self.parseConfig["filterDicts"][self.datasetID]
         self.varDataTypeDict = {}
         self.columns = self.__compileVariableList()
@@ -853,9 +1029,7 @@ class IntermediateParsing(DataParser):
 
         :return: List of variables
         """
-        listIndex = self.parseConfig["dataVariables"]["datasetID"].index(
-            self.datasetID
-        )
+        listIndex = self.parseConfig["dataVariables"]["datasetID"].index(self.datasetID)
         variables = [
             val[listIndex] if val[listIndex] != "NA" else "NA"
             for key, val in self.parseConfig["dataVariables"].items()
@@ -900,10 +1074,17 @@ class IntermediateParsing(DataParser):
         """
         if self.datasetID in ["MiD17", "MiD08"]:
             dat = self.data
-            self.data = dat.loc[(dat["tripStartClock"] <= dat["tripEndClock"]) | (dat["tripEndNextDay"] == 1), :]
+            self.data = dat.loc[
+                (dat["tripStartClock"] <= dat["tripEndClock"])
+                | (dat["tripEndNextDay"] == 1),
+                :,
+            ]
             filters = (
                 (self.data.loc[:, "tripStartHour"] == self.data.loc[:, "tripEndHour"])
-                & (self.data.loc[:, "tripStartMinute"] == self.data.loc[:, "tripEndMinute"])
+                & (
+                    self.data.loc[:, "tripStartMinute"]
+                    == self.data.loc[:, "tripEndMinute"]
+                )
                 & (self.data.loc[:, "tripEndNextDay"])
             )
             self.data = self.data.loc[~filters, :]
@@ -975,16 +1156,20 @@ class IntermediateParsing(DataParser):
             endsFollowingDay, "timestampEnd"
         ] + pd.offsets.Day(1)
 
-    def _harmonizeVariablesGenericIdNames(self):
+    def _harmonizeVariablesUniqueIDNames(self):
         """
         Harmonises ID variables for all datasets.
         """
-        self.data["genericID"] = (self.data[str(self.parseConfig["IDVariablesNames"][self.datasetID])]).astype(int)
+        self.data["uniqueID"] = (
+            self.data[str(self.parseConfig["IDVariablesNames"][self.datasetID])]
+        ).astype(int)
         print("Finished harmonization of ID variables")
 
 
 class ParseMiD(IntermediateParsing):
-    def __init__(self, configDict: dict, datasetID: str, loadEncrypted=False, debug=False):
+    def __init__(
+        self, configDict: dict, datasetID: str, loadEncrypted=False, debug=False
+    ):
         """
         Class for parsing MiD data sets. The VencoPy configs globalConfig,
         parseConfig and localPathConfig have to be given on instantiation as
@@ -1001,7 +1186,12 @@ class ParseMiD(IntermediateParsing):
                               file. For this, a possword has to be
                               specified in parseConfig['PW'].
         """
-        super().__init__(configDict=configDict, datasetID=datasetID, loadEncrypted=loadEncrypted, debug=debug)
+        super().__init__(
+            configDict=configDict,
+            datasetID=datasetID,
+            loadEncrypted=loadEncrypted,
+            debug=debug,
+        )
 
     def __harmonizeVariables(self):
         """
@@ -1038,7 +1228,9 @@ class ParseMiD(IntermediateParsing):
         # Filter for dataset specific columns
         conversionDict = self.parseConfig["inputDTypes"][self.datasetID]
         keys = {iCol for iCol in conversionDict.keys() if iCol in self.data.columns}
-        self.varDataTypeDict = {key: conversionDict[key] for key in conversionDict.keys() & keys}
+        self.varDataTypeDict = {
+            key: conversionDict[key] for key in conversionDict.keys() & keys
+        }
         self.data = self.data.astype(self.varDataTypeDict)
 
     def __addStrColumns(self, weekday=True, purpose=True):
@@ -1057,16 +1249,28 @@ class ParseMiD(IntermediateParsing):
                 colName="weekdayStr", varName="tripStartWeekday"
             )
         if purpose:
-            self._addStrColumnFromVariable(
-                colName="purposeStr", varName="tripPurpose"
-            )
+            self._addStrColumnFromVariable(colName="purposeStr", varName="tripPurpose")
 
     def _dropRedundantCols(self):
         # Clean-up of temporary redundant columns
-        self.activities.drop(columns=[
-            'isMIVDriver', 'tripStartClock', 'tripEndClock', 'tripStartYear', 'tripStartMonth',
-            'tripStartWeek', 'tripStartHour', 'tripStartMinute', 'tripEndHour', 'tripEndMinute', 'genericID_prev',
-            'genericID_next', 'colFromIndex'], inplace=True)
+        self.activities.drop(
+            columns=[
+                "isMIVDriver",
+                "tripStartClock",
+                "tripEndClock",
+                "tripStartYear",
+                "tripStartMonth",
+                "tripStartWeek",
+                "tripStartHour",
+                "tripStartMinute",
+                "tripEndHour",
+                "tripEndMinute",
+                "uniqueID_prev",
+                "uniqueID_next",
+                "colFromIndex",
+            ],
+            inplace=True,
+        )
 
     def process(self, splitOvernightTrips: bool = True):
         """
@@ -1078,7 +1282,7 @@ class ParseMiD(IntermediateParsing):
 
         self._selectColumns()
         self.__harmonizeVariables()
-        self._harmonizeVariablesGenericIdNames()
+        self._harmonizeVariablesUniqueIDNames()
         self.__convertTypes()
         self.__addStrColumns()
         self._composeStartAndEndTimestamps()
@@ -1092,7 +1296,9 @@ class ParseMiD(IntermediateParsing):
 
 
 class ParseVF(IntermediateParsing):
-    def __init__(self, configDict: dict, datasetID: str, loadEncrypted=False, debug=False):
+    def __init__(
+        self, configDict: dict, datasetID: str, loadEncrypted=False, debug=False
+    ):
         """
         Class for parsing MiD data sets. The VencoPy configs globalConfig,
         parseConfig and localPathConfig have to be given on instantiation as
@@ -1109,7 +1315,9 @@ class ParseVF(IntermediateParsing):
                               file. For this, a possword has to be
                               specified in parseConfig['PW'].
         """
-        super().__init__(configDict=configDict, datasetID=datasetID, loadEncrypted=loadEncrypted)
+        super().__init__(
+            configDict=configDict, datasetID=datasetID, loadEncrypted=loadEncrypted
+        )
 
     def _loadData(self):
         """
@@ -1124,11 +1332,17 @@ class ParseVF(IntermediateParsing):
             Path(self.localPathConfig["pathAbsolute"][self.datasetID])
             / self.globalConfig["files"][self.datasetID]["vehiclesDataRaw"]
         )
-        rawDataTrips = pd.read_stata(rawDataPathTrips, convert_categoricals=False, convert_dates=False,
-                                     preserve_dtypes=False)
+        rawDataTrips = pd.read_stata(
+            rawDataPathTrips,
+            convert_categoricals=False,
+            convert_dates=False,
+            preserve_dtypes=False,
+        )
         rawDataVehicles = pd.read_csv(rawDataPathVehicles, encoding="ISO-8859-1")
-        rawDataVehicles = rawDataVehicles.drop(columns=['Unnamed: 0'])
-        rawDataVehicles = rawDataVehicles.drop_duplicates(subset=['HP_ID'], keep='first')
+        rawDataVehicles = rawDataVehicles.drop(columns=["Unnamed: 0"])
+        rawDataVehicles = rawDataVehicles.drop_duplicates(
+            subset=["HP_ID"], keep="first"
+        )
         rawDataVehicles.set_index("HP_ID", inplace=True)
         rawData = rawDataTrips.join(rawDataVehicles, on="HP_ID", rsuffix="VF")
         self.rawData = rawData
@@ -1142,11 +1356,14 @@ class ParseVF(IntermediateParsing):
 
         :return: None
         """
-        replacementDict = self._createReplacementDict(self.datasetID, self.parseConfig["dataVariables"])
+        replacementDict = self._createReplacementDict(
+            self.datasetID, self.parseConfig["dataVariables"]
+        )
         dataRenamed = self.data.rename(columns=replacementDict)
         if self.datasetID == "MiD08":
             dataRenamed["hhPersonID"] = (
-                dataRenamed["hhID"].astype("string") + dataRenamed["personID"].astype("string")
+                dataRenamed["hhID"].astype("string")
+                + dataRenamed["personID"].astype("string")
             ).astype("int")
         self.data = dataRenamed
         print("Finished harmonization of variables")
@@ -1164,7 +1381,9 @@ class ParseVF(IntermediateParsing):
         # Filter for dataset specific columns
         conversionDict = self.parseConfig["inputDTypes"][self.datasetID]
         keys = {iCol for iCol in conversionDict.keys() if iCol in self.data.columns}
-        self.varDataTypeDict = {key: conversionDict[key] for key in conversionDict.keys() & keys}
+        self.varDataTypeDict = {
+            key: conversionDict[key] for key in conversionDict.keys() & keys
+        }
         self.data = self.data.astype(self.varDataTypeDict)
 
     def __addStrColumns(self, weekday=True, purpose=True):
@@ -1183,16 +1402,28 @@ class ParseVF(IntermediateParsing):
                 colName="weekdayStr", varName="tripStartWeekday"
             )
         if purpose:
-            self._addStrColumnFromVariable(
-                colName="purposeStr", varName="tripPurpose"
-            )
+            self._addStrColumnFromVariable(colName="purposeStr", varName="tripPurpose")
 
     def _dropRedundantCols(self):
         # Clean-up of temporary redundant columns
-        self.activities.drop(columns=[
-            'isMIVDriver', 'tripStartClock', 'tripEndClock', 'tripStartYear', 'tripStartMonth',
-            'tripStartWeek', 'tripStartHour', 'tripStartMinute', 'tripEndHour', 'tripEndMinute', 'genericID_prev',
-            'genericID_next', 'colFromIndex'], inplace=True)
+        self.activities.drop(
+            columns=[
+                "isMIVDriver",
+                "tripStartClock",
+                "tripEndClock",
+                "tripStartYear",
+                "tripStartMonth",
+                "tripStartWeek",
+                "tripStartHour",
+                "tripStartMinute",
+                "tripEndHour",
+                "tripEndMinute",
+                "uniqueID_prev",
+                "uniqueID_next",
+                "colFromIndex",
+            ],
+            inplace=True,
+        )
 
     # DEPRECATED, WILL BE REMOVED IN NEXT RELEASE
     def copyOverTripNextDay(self):
@@ -1204,7 +1435,7 @@ class ParseVF(IntermediateParsing):
         """
         self._selectColumns()
         self.__harmonizeVariables()
-        self._harmonizeVariablesGenericIdNames()
+        self._harmonizeVariablesUniqueIDNames()
         self.__convertTypes()
         self.__addStrColumns()
         self._composeStartAndEndTimestamps()
@@ -1218,7 +1449,9 @@ class ParseVF(IntermediateParsing):
 
 
 class ParseKiD(IntermediateParsing):
-    def __init__(self, configDict: dict, datasetID: str, loadEncrypted=False, debug=False):
+    def __init__(
+        self, configDict: dict, datasetID: str, loadEncrypted=False, debug=False
+    ):
         """
         Inherited data class to differentiate between abstract interfaces such
         as vencopy internal variable namings and data set specific functions
@@ -1233,15 +1466,11 @@ class ParseKiD(IntermediateParsing):
     def _loadData(self):
         rawDataPathTrips = (
             Path(self.localPathConfig["pathAbsolute"][self.datasetID])
-            / self.globalConfig["files"][self.datasetID][
-                "tripsDataRaw"
-            ]
+            / self.globalConfig["files"][self.datasetID]["tripsDataRaw"]
         )
         rawDataPathVehicles = (
             Path(self.localPathConfig["pathAbsolute"][self.datasetID])
-            / self.globalConfig["files"][self.datasetID][
-                "vehiclesDataRaw"
-            ]
+            / self.globalConfig["files"][self.datasetID]["vehiclesDataRaw"]
         )
         rawDataTrips = pd.read_stata(
             rawDataPathTrips,
@@ -1258,10 +1487,7 @@ class ParseKiD(IntermediateParsing):
         rawDataVehicles.set_index("k00", inplace=True)
         rawData = rawDataTrips.join(rawDataVehicles, on="k00")
         self.rawData = rawData
-        print(
-            f"Finished loading {len(self.rawData)} "
-            f"rows of raw data of type .dta"
-        )
+        print(f"Finished loading {len(self.rawData)} " f"rows of raw data of type .dta")
 
     def __convertTypes(self):
         """
@@ -1274,13 +1500,8 @@ class ParseKiD(IntermediateParsing):
 
         :return: None
         """
-        # TODO: move convertTypes to INtermediate class and create a new
-        # class for KiD to change commas to dots
-        # Filter for dataset specific columns
         conversionDict = self.parseConfig["inputDTypes"][self.datasetID]
-        keys = {
-            iCol for iCol in conversionDict.keys() if iCol in self.data.columns
-        }
+        keys = {iCol for iCol in conversionDict.keys() if iCol in self.data.columns}
         self.varDataTypeDict = {
             key: conversionDict[key] for key in conversionDict.keys() & keys
         }
@@ -1301,41 +1522,56 @@ class ParseKiD(IntermediateParsing):
                         added in a separate column
         :return: None
         """
-        # from tripStartDate retrieve tripStartWeekday, tripStartWeek,
-        # tripStartYear, tripStartMonth, tripStartDay
-        # from tripStartClock retrieve tripStartHour, tripStartMinute
-        # from tripEndClock retrieve tripEndHour, tripEndMinute
-        self.data["tripStartDate"] = pd.to_datetime(self.data["tripStartDate"], format="%d.%m.%Y")
+        self.data["tripStartDate"] = pd.to_datetime(
+            self.data["tripStartDate"], format="%d.%m.%Y"
+        )
         self.data["tripStartYear"] = self.data["tripStartDate"].dt.year
         self.data["tripStartMonth"] = self.data["tripStartDate"].dt.month
         self.data["tripStartDay"] = self.data["tripStartDate"].dt.day
         self.data["tripStartWeekday"] = self.data["tripStartDate"].dt.weekday
-        self.data["tripStartWeek"] = (self.data["tripStartDate"].dt.isocalendar().week)
-        self.data["tripStartHour"] = pd.to_datetime(self.data["tripStartClock"], format="%H:%M").dt.hour
-        self.data["tripStartMinute"] = pd.to_datetime(self.data["tripStartClock"], format="%H:%M").dt.minute
-        self.data["tripEndHour"] = pd.to_datetime(self.data["tripEndClock"], format="%H:%M").dt.hour
-        self.data["tripEndMinute"] = pd.to_datetime(self.data["tripEndClock"], format="%H:%M").dt.minute
+        self.data["tripStartWeek"] = self.data["tripStartDate"].dt.isocalendar().week
+        self.data["tripStartHour"] = pd.to_datetime(
+            self.data["tripStartClock"], format="%H:%M"
+        ).dt.hour
+        self.data["tripStartMinute"] = pd.to_datetime(
+            self.data["tripStartClock"], format="%H:%M"
+        ).dt.minute
+        self.data["tripEndHour"] = pd.to_datetime(
+            self.data["tripEndClock"], format="%H:%M"
+        ).dt.hour
+        self.data["tripEndMinute"] = pd.to_datetime(
+            self.data["tripEndClock"], format="%H:%M"
+        ).dt.minute
         if weekday:
-            self._addStrColumnFromVariable(colName="weekdayStr", varName="tripStartWeekday")
+            self._addStrColumnFromVariable(
+                colName="weekdayStr", varName="tripStartWeekday"
+            )
         if purpose:
             self._addStrColumnFromVariable(colName="purposeStr", varName="tripPurpose")
 
     def __updateEndTimestamp(self):
-        """ Separate implementation for the KID data set than for the other two data sets. Overwrites parent method.
+        """
+        Separate implementation for the KID data set than for the other two data sets. Overwrites parent method.
 
         :return: None
         """
-        self.data["tripEndNextDay"] = np.where(self.data["timestampEnd"].dt.day > self.data["timestampStart"].dt.day,
-                                               1, 0)
+        self.data["tripEndNextDay"] = np.where(
+            self.data["timestampEnd"].dt.day > self.data["timestampStart"].dt.day, 1, 0
+        )
         endsFollowingDay = self.data["tripEndNextDay"] == 1
-        self.data.loc[endsFollowingDay, "timestampEnd"] = self.data.loc[endsFollowingDay,
-                                                                        "timestampEnd"] + pd.offsets.Day(1)
+        self.data.loc[endsFollowingDay, "timestampEnd"] = self.data.loc[
+            endsFollowingDay, "timestampEnd"
+        ] + pd.offsets.Day(1)
 
     def __excludeHours(self):
         """
         Removes trips where both start and end trip time are missing. KID-specific function.
         """
-        self.data = self.data.loc[(self.data["tripStartClock"] != "-1:-1") & (self.data["tripEndClock"] != "-1:-1"), :]
+        self.data = self.data.loc[
+            (self.data["tripStartClock"] != "-1:-1")
+            & (self.data["tripEndClock"] != "-1:-1"),
+            :,
+        ]
 
     def process(self):
         """
@@ -1343,7 +1579,7 @@ class ParseKiD(IntermediateParsing):
         """
         self._selectColumns()
         self._harmonizeVariables()
-        self._harmonizeVariablesGenericIdNames()
+        self._harmonizeVariablesUniqueIDNames()
         self.__convertTypes()
         self.__excludeHours()
         self.__addStrColumns()
@@ -1357,18 +1593,8 @@ class ParseKiD(IntermediateParsing):
         return self.activities
 
 
-if __name__ == '__main__':
-    basePath = Path(__file__).parent.parent
-    configNames = ("globalConfig", "localPathConfig", "parseConfig", "diaryConfig",
-                   "gridConfig", "flexConfig", "aggregatorConfig", "evaluatorConfig")
-    configDict = loadConfigDict(configNames, basePath)
-
-    datasetID = "KiD"  # options are MiD08, MiD17, KiD
-    if datasetID == "MiD17":
-        vpData = ParseMiD(configDict=configDict, datasetID=datasetID, debug=False)
-    elif datasetID == "KiD":
-        vpData = ParseKiD(configDict=configDict, datasetID=datasetID, debug=False)
-    elif datasetID == "VF":
-        vpData = ParseVF(configDict=configDict, datasetID=datasetID, debug=False)
-    vpData.process()
-    # vpData.writeOutput()
+def parseData(configDict: dict) -> Union[ParseMiD, ParseKiD, ParseVF]:
+    datasetID = configDict["globalConfig"]["dataset"]
+    debug = configDict["globalConfig"]["debug"]
+    delegate = {"MiD17": ParseMiD, "KiD": ParseKiD, "VF": ParseVF}
+    return delegate[datasetID](configDict=configDict, datasetID=datasetID, debug=debug)

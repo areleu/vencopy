@@ -17,19 +17,20 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 from scipy.stats.sampling import DiscreteAliasUrn
-from vencopy.utils.globalFunctions import createFileName, loadConfigDict, writeOut
-from vencopy.core.dataParsers import ParseMiD, ParseKiD, ParseVF
+from vencopy.utils.globalFunctions import createFileName, writeOut
 
 
 class GridModeler:
-    def __init__(self, configDict: dict, datasetID: str, activities, gridModel: str):
+    def __init__(self, configDict: dict, activities):
         self.globalConfig = configDict['globalConfig']
         self.gridConfig = configDict['gridConfig']
         self.flexConfig = configDict['flexConfig']
         self.localPathConfig = configDict['localPathConfig']
-        self.datasetID = datasetID
-        self.gridModel = gridModel
+        self.datasetID = configDict['globalConfig']['dataset']
+        self.gridModel = self.gridConfig['gridModel']
         self.activities = activities
+        if self.gridConfig['forceLastTripHome']:
+            self.removeActsNotEndingHome()
         self.gridAvailabilitySimple = self.gridConfig['chargingInfrastructureMappings']
         self.gridAvailabilityProb = self.gridConfig['gridAvailabilityDistribution']
         self.chargeAvailability = None
@@ -102,7 +103,8 @@ class GridModeler:
         Adjusts charging power to zero if parking duration shorter than 15 minutes.
         """
         # parkID != pd.NA and timedelta <= 15 minutes
-        self.activities.loc[((self.activities['parkID'].notna()) & ((self.activities['timedelta'] / np.timedelta64(1, 's')) <= self.gridConfig['minimumParkingTime'])), 'ratedPower'] = 0
+        self.activities.loc[((self.activities['parkID'].notna()) & (
+            (self.activities['timedelta'] / np.timedelta64(1, 's')) <= self.gridConfig['minimumParkingTime'])), 'ratedPower'] = 0
         return self.activities
 
     def assignGrid(self, losses: bool = False):
@@ -119,14 +121,15 @@ class GridModeler:
             seed = 42
             self._assignGridViaProbabilities(setSeed=seed)
         else:
-            raise(ValueError(f'Specified grid modeling option {self.gridModel} is not implemented. Please choose'
-                             f'"simple" or "probability"'))
+            raise (ValueError(f'Specified grid modeling option {self.gridModel} is not implemented. Please choose'
+                              f'"simple" or "probability"'))
 
-        self.activities = self._addGridLosses(acts=self.activities, loss=self.gridConfig['losses'], losses=losses)
+        self.activities = self._addGridLosses(acts=self.activities)
         return self.activities
 
-    def _addGridLosses(self, acts: pd.DataFrame, loss: dict, losses: bool):
-        """ Function applying a reduction of rated power capacities to the rated powers after sampling. The 
+    def _addGridLosses(self, acts: pd.DataFrame):
+        """
+        Function applying a reduction of rated power capacities to the rated powers after sampling. The
         factors for reducing the rated power are given in the gridConfig with keys being floats of rated powers
         and values being floats between 0 and 1. The factor is the LOSS FACTOR not the EFFICIENCY, thus 0.1 applied to
         a rated power of 11 kW will yield an available power of 9.9 kW.
@@ -134,9 +137,10 @@ class GridModeler:
         :param acts [bool]: Should electric losses in the charging equipment be considered?
         :param losses [bool]: Should electric losses in the charging equipment be considered?
         """
-        if losses:
-            acts['availablePower'] = acts['ratedPower'] - acts['ratedPower'] * acts['ratedPower'].apply(
-                lambda x: loss[x])
+        if self.gridConfig['losses']:
+            acts['availablePower'] = acts['ratedPower'] - (
+                acts['ratedPower'] * acts['ratedPower'].apply(
+                    lambda x: self.gridConfig['loss_factor'][f'rated_power_{str(x)}']))
         else:
             acts['availablePower'] = acts['ratedPower']
         return acts
@@ -145,28 +149,11 @@ class GridModeler:
         root = Path(self.localPathConfig['pathAbsolute']['vencoPyRoot'])
         folder = self.globalConfig['pathRelative']['gridOutput']
         fileName = createFileName(globalConfig=self.globalConfig, manualLabel='', file='outputGridModeler',
-                                    datasetID=self.datasetID)
-        writeOut(data = self.activities, path = root / folder / fileName)
+                                  datasetID=self.datasetID)
+        writeOut(data=self.activities, path=root / folder / fileName)
 
-
-
-if __name__ == "__main__":
-
-    datasetID = "MiD17"
-    basePath = Path(__file__).parent.parent
-    configNames = ("globalConfig", "localPathConfig", "parseConfig", "diaryConfig",
-                   "gridConfig", "flexConfig", "aggregatorConfig", "evaluatorConfig")
-    configDict = loadConfigDict(configNames, basePath=basePath)
-
-    if datasetID == "MiD17":
-        vpData = ParseMiD(configDict=configDict, datasetID=datasetID, debug=False)
-    elif datasetID == "KiD":
-        vpData = ParseKiD(configDict=configDict, datasetID=datasetID, debug=False)
-    elif datasetID == "VF":
-        vpData = ParseVF(configDict=configDict, datasetID=datasetID, debug=False)
-    vpData.process()
-
-    vpGrid = GridModeler(
-        configDict=configDict, datasetID=datasetID, activities=vpData.activities, gridModel='simple')
-    vpGrid.assignGrid()
-    vpGrid.writeOutput()
+    def removeActsNotEndingHome(self):
+        lastActsNotHome = self.activities.loc[(self.activities['purposeStr'] != 'HOME') & (
+            self.activities['isLastActivity']), :]
+        idToRemove = lastActsNotHome['uniqueID'].unique()
+        self.activities = self.activities.loc[~self.activities['uniqueID'].isin(idToRemove), :]

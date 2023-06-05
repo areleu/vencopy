@@ -25,19 +25,19 @@ from vencopy.utils.globalFunctions import (createFileName, createOutputFolders, 
 
 
 class ProfileAggregator():
-    def __init__(self, configDict: dict, datasetID: str,
+    def __init__(self, configDict: dict,
                  activities: pd.DataFrame, profiles: DiaryBuilder):
         self.aggregatorConfig = configDict['aggregatorConfig']
         self.globalConfig = configDict['globalConfig']
         self.localPathConfig = configDict['localPathConfig']
-        self.datasetID = datasetID
+        self.datasetID = configDict["globalConfig"]["dataset"]
         self.activities = activities
         self.deltaTime = configDict['diaryConfig']['TimeDelta']
         self.timeIndex = list(pd.timedelta_range(
             start='00:00:00', end='24:00:00', freq=f'{self.deltaTime}T'))
         self.profiles = profiles
-        self.weights = self.activities.loc[:, ['genericID', 'tripWeight']].drop_duplicates(
-            subset=['genericID']).reset_index(drop=True).set_index('genericID')
+        self.weights = self.activities.loc[:, ['uniqueID', 'tripWeight']].drop_duplicates(
+            subset=['uniqueID']).reset_index(drop=True).set_index('uniqueID')
         self.drain = profiles.drain
         self.chargingPower = profiles.chargingPower
         self.uncontrolledCharge = profiles.uncontrolledCharge
@@ -51,6 +51,7 @@ class ProfileAggregator():
     def __aggregateWeightsAndWeekdays(self, byColumn: str) -> pd.Series:
         self.weekdayProfiles = pd.DataFrame(
             columns=self.profile.columns, index=range(1, 8))
+<<<<<<< HEAD
         necessaryColumns = ['genericID', 'tripWeight'] + [byColumn]
         self.activitiesSubset = (
             self.activities[necessaryColumns].copy().drop_duplicates(subset=['genericID']).reset_index(drop=True))
@@ -60,6 +61,16 @@ class ProfileAggregator():
             self.profile, self.activitiesSubset, on='genericID', how='inner')
         # self.profile.drop('genericID', axis=1, inplace=True) # why?
         self.activitiesWeekday = self.activitiesWeekday.set_index('genericID')
+=======
+        necessaryColumns = ['uniqueID', 'tripWeight'] + [byColumn]
+        self.activitiesSubset = (
+            self.activities[necessaryColumns].copy().drop_duplicates(subset=['uniqueID']).reset_index(drop=True))
+        self.profile['uniqueID'] = self.profile.index
+        self.activitiesWeekday = pd.merge(
+            self.profile, self.activitiesSubset, on='uniqueID', how='inner')
+        self.profile.drop('uniqueID', axis=1, inplace=True)
+        self.activitiesWeekday = self.activitiesWeekday.set_index('uniqueID')
+>>>>>>> main
         # Compose weekly profile from 7 separate profiles
         if self.profileName in ('drain', 'uncontrolledCharge', 'chargingPower'):
             self.__calculateWeightedAverageFlowProfiles(byColumn=byColumn)
@@ -126,7 +137,6 @@ class ProfileAggregator():
     def __composeWeeklyProfile(self):
         # input is self.weekdayProfiles
         # check if any day of the week is not filled, copy line above in that case
-        # FIXME: very ugly function below
         if self.weekdayProfiles.isna().any(axis=1).any():
             indexEmptyRows = self.weekdayProfiles[self.weekdayProfiles.isna().any(
                 axis=1)].index - 1
@@ -146,9 +156,15 @@ class ProfileAggregator():
         startWeekday = 1  # (1: Monday, 7: Sunday)
         # shift input profiles to the right weekday and start with first bin of chosen weekday
         self.annualProfile = self.weeklyProfile.iloc[(
+<<<<<<< HEAD
             (startWeekday - 1) * ((len(list(self.timeIndex))) - 1)):]
         self.annualProfile = self.annualProfile.append(
             [self.weeklyProfile] * 52, ignore_index=True)
+=======
+            (startWeekday-1)*((len(list(self.timeIndex)))-1)):]
+        self.annualProfile = self.annualProfile.append(
+            [self.weeklyProfile]*52, ignore_index=True)
+>>>>>>> main
         self.annualProfile.drop(
             self.annualProfile.tail(
                 len(self.annualProfile) - ((len(list(self.timeIndex))) - 1) * 365).index, inplace=True)
@@ -156,9 +172,10 @@ class ProfileAggregator():
     def _writeOutput(self):
         root = Path(self.localPathConfig['pathAbsolute']['vencoPyRoot'])
         folder = self.globalConfig['pathRelative']['aggregatorOutput']
-        fileName = createFileName(globalConfig=self.globalConfig, manualLabel='', file='outputProfileAggregator',
+        fileName = createFileName(globalConfig=self.globalConfig, manualLabel=('_' + self.profileName), fileNameID='outputProfileAggregator',
                                   datasetID=self.datasetID)
         writeOut(data=self.activities, path=root / folder / fileName)
+<<<<<<< HEAD
 
     def createTimeseries(self):
         # profiles = (
@@ -168,11 +185,22 @@ class ProfileAggregator():
         profiles = (vpDiary.maxBatteryLevel, vpDiary.minBatteryLevel)
         profileNames = ('maxBatteryLevel', 'minBatteryLevel')
         for profile, profileName in itertools.product(profiles, profileNames):
+=======
+        #TODO: add test to check that where there is drain there is no charging availability at single profile level
+
+    def createTimeseries(self):
+        profiles = (self.drain, self.uncontrolledCharge,
+                    self.chargingPower, self.maxBatteryLevel, self.minBatteryLevel)
+        profileNames = ('drain', 'chargingPower', 'uncontrolledCharge',
+                        'maxBatteryLevel', 'minBatteryLevel')
+        for profile, profileName in zip(profiles, profileNames):
+>>>>>>> main
             self.profileName = profileName
             self.profile = profile
             self.__createWeeklyProfiles()
             self.__createAnnualProfiles()
         print('Run finished')
+<<<<<<< HEAD
 
 
 if __name__ == '__main__':
@@ -214,3 +242,5 @@ if __name__ == '__main__':
 
     elapsedTime = time.time() - startTime
     print('Elapsed time:', elapsedTime)
+=======
+>>>>>>> main
