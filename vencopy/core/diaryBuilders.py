@@ -32,6 +32,7 @@ class DiaryBuilder:
         self.activities = activities
         self.deltaTime = configDict["diaryConfig"]["TimeDelta"]
         self.isWeekDiary = isWeekDiary
+        self._updateActivities()
         self.distributedActivities = TimeDiscretiser(
             datasetID=self.datasetID,
             globalConfig=self.globalConfig,
@@ -50,6 +51,34 @@ class DiaryBuilder:
             isWeek=isWeekDiary,
             method="select",
         )
+
+    def _updateActivities(self):
+        self._correctTimestamp()
+        self._dropNoLengthEvents()
+
+    def _correctTimestamp(self):
+        """
+        Rounds timestamps to predifined resolution.
+        """
+        self.activities["timestampStartCorrected"] = self.activities[
+            "timestampStart"
+        ].dt.round(f"{self.dt}min")
+        self.activities["timestampEndCorrected"] = self.activities[
+            "timestampEnd"
+        ].dt.round(f"{self.dt}min")
+        self.activities["activityDuration"] = (
+            self.activities["timestampEndCorrected"] - self.activities["timestampStartCorrected"]
+        )
+        return self.activities
+
+    def _dropNoLengthEvents(self):
+        """
+        Drops line when activity duration is zero, which causes inconsistencies in diaryBuilder (e.g. division by zero in nBins calculation).
+        """
+        startLength = len(self.activities)
+        self.activities = self.activities.drop(self.activities[self.activities.activityDuration == pd.Timedelta(0)].index.to_list())
+        endLength = len(self.activities)
+        print(f"{startLength - endLength} activities dropped because activity lenght equals zero.")
 
     def createDiaries(self):
         start_time = time.time()
@@ -645,7 +674,7 @@ class TimeDiscretiser:
     def _datasetCleanup(self):
         self._removeColumns()
         self._correctValues()
-        self._correctTimestamp()
+        # self._correctTimestamp()
 
     def _removeColumns(self):
         """
@@ -687,17 +716,17 @@ class TimeDiscretiser:
             self.dataToDiscretise["residualNeed"] = self.dataToDiscretise["residualNeed"].fillna(0)
         return self.dataToDiscretise
 
-    def _correctTimestamp(self):
-        """
-        Rounds timestamps to predifined resolution.
-        """
-        self.dataToDiscretise["timestampStartCorrected"] = self.dataToDiscretise[
-            "timestampStart"
-        ].dt.round(f"{self.dt}min")
-        self.dataToDiscretise["timestampEndCorrected"] = self.dataToDiscretise[
-            "timestampEnd"
-        ].dt.round(f"{self.dt}min")
-        return self.dataToDiscretise
+    # def _correctTimestamp(self):
+    #     """
+    #     Rounds timestamps to predifined resolution.
+    #     """
+    #     self.dataToDiscretise["timestampStartCorrected"] = self.dataToDiscretise[
+    #         "timestampStart"
+    #     ].dt.round(f"{self.dt}min")
+    #     self.dataToDiscretise["timestampEndCorrected"] = self.dataToDiscretise[
+    #         "timestampEnd"
+    #     ].dt.round(f"{self.dt}min")
+    #     return self.dataToDiscretise
 
     def _createDiscretisedStructureWeek(self):
         """
