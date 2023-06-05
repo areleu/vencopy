@@ -51,17 +51,6 @@ class ProfileAggregator():
     def __aggregateWeightsAndWeekdays(self, byColumn: str) -> pd.Series:
         self.weekdayProfiles = pd.DataFrame(
             columns=self.profile.columns, index=range(1, 8))
-<<<<<<< HEAD
-        necessaryColumns = ['genericID', 'tripWeight'] + [byColumn]
-        self.activitiesSubset = (
-            self.activities[necessaryColumns].copy().drop_duplicates(subset=['genericID']).reset_index(drop=True))
-        self.profile['genericID'] = self.profile.index
-        self.profile = self.profile.reset_index(drop=True)
-        self.activitiesWeekday = pd.merge(
-            self.profile, self.activitiesSubset, on='genericID', how='inner')
-        # self.profile.drop('genericID', axis=1, inplace=True) # why?
-        self.activitiesWeekday = self.activitiesWeekday.set_index('genericID')
-=======
         necessaryColumns = ['uniqueID', 'tripWeight'] + [byColumn]
         self.activitiesSubset = (
             self.activities[necessaryColumns].copy().drop_duplicates(subset=['uniqueID']).reset_index(drop=True))
@@ -70,7 +59,6 @@ class ProfileAggregator():
             self.profile, self.activitiesSubset, on='uniqueID', how='inner')
         self.profile.drop('uniqueID', axis=1, inplace=True)
         self.activitiesWeekday = self.activitiesWeekday.set_index('uniqueID')
->>>>>>> main
         # Compose weekly profile from 7 separate profiles
         if self.profileName in ('drain', 'uncontrolledCharge', 'chargingPower'):
             self.__calculateWeightedAverageFlowProfiles(byColumn=byColumn)
@@ -156,15 +144,9 @@ class ProfileAggregator():
         startWeekday = 1  # (1: Monday, 7: Sunday)
         # shift input profiles to the right weekday and start with first bin of chosen weekday
         self.annualProfile = self.weeklyProfile.iloc[(
-<<<<<<< HEAD
-            (startWeekday - 1) * ((len(list(self.timeIndex))) - 1)):]
-        self.annualProfile = self.annualProfile.append(
-            [self.weeklyProfile] * 52, ignore_index=True)
-=======
             (startWeekday-1)*((len(list(self.timeIndex)))-1)):]
         self.annualProfile = self.annualProfile.append(
             [self.weeklyProfile]*52, ignore_index=True)
->>>>>>> main
         self.annualProfile.drop(
             self.annualProfile.tail(
                 len(self.annualProfile) - ((len(list(self.timeIndex))) - 1) * 365).index, inplace=True)
@@ -175,17 +157,6 @@ class ProfileAggregator():
         fileName = createFileName(globalConfig=self.globalConfig, manualLabel=('_' + self.profileName), fileNameID='outputProfileAggregator',
                                   datasetID=self.datasetID)
         writeOut(data=self.activities, path=root / folder / fileName)
-<<<<<<< HEAD
-
-    def createTimeseries(self):
-        # profiles = (
-        #   vpDiary.drain, vpDiary.uncontrolledCharge, vpDiary.chargingPower, vpDiary.maxBatteryLevel, vpDiary.minBatteryLevel)
-        # profileNames = ('drain', 'uncontrolledCharge', 'chargingPower', 'maxBatteryLevel', 'minBatteryLevel')
-        # TWO LINES BELOW ONLY FOR CODE WRITING PURPOSES (actuial line the two above)
-        profiles = (vpDiary.maxBatteryLevel, vpDiary.minBatteryLevel)
-        profileNames = ('maxBatteryLevel', 'minBatteryLevel')
-        for profile, profileName in itertools.product(profiles, profileNames):
-=======
         #TODO: add test to check that where there is drain there is no charging availability at single profile level
 
     def createTimeseries(self):
@@ -194,53 +165,8 @@ class ProfileAggregator():
         profileNames = ('drain', 'chargingPower', 'uncontrolledCharge',
                         'maxBatteryLevel', 'minBatteryLevel')
         for profile, profileName in zip(profiles, profileNames):
->>>>>>> main
             self.profileName = profileName
             self.profile = profile
             self.__createWeeklyProfiles()
             self.__createAnnualProfiles()
         print('Run finished')
-<<<<<<< HEAD
-
-
-if __name__ == '__main__':
-
-    startTime = time.time()
-    datasetID = "MiD17"
-    basePath = Path(__file__).parent.parent
-    configNames = ("globalConfig", "localPathConfig", "parseConfig", "diaryConfig",
-                   "gridConfig", "flexConfig", "aggregatorConfig", "evaluatorConfig")
-    configDict = loadConfigDict(configNames, basePath=basePath)
-    createOutputFolders(configDict=configDict)
-
-    if datasetID == "MiD17":
-        vpData = ParseMiD(configDict=configDict,
-                          datasetID=datasetID, debug=True)
-    elif datasetID == "KiD":
-        vpData = ParseKiD(configDict=configDict,
-                          datasetID=datasetID, debug=False)
-    elif datasetID == "VF":
-        vpData = ParseVF(configDict=configDict,
-                         datasetID=datasetID, debug=False)
-    vpData.process()
-
-    vpGrid = GridModeler(configDict=configDict, datasetID=datasetID,
-                         activities=vpData.activities, gridModel='simple')
-    vpGrid.assignGrid()
-
-    vpFlex = FlexEstimator(configDict=configDict,
-                           datasetID=datasetID, activities=vpGrid.activities)
-    vpFlex.estimateTechnicalFlexibility()
-
-    vpDiary = DiaryBuilder(configDict=configDict,
-                           datasetID=datasetID, activities=vpFlex.activities)
-    vpDiary.createDiaries()
-
-    vpProfile = ProfileAggregator(configDict=configDict, datasetID=datasetID,
-                                  activities=vpFlex.activities, profiles=vpDiary)
-    vpProfile.createTimeseries()
-
-    elapsedTime = time.time() - startTime
-    print('Elapsed time:', elapsedTime)
-=======
->>>>>>> main
