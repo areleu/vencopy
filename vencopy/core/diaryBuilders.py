@@ -53,6 +53,11 @@ class DiaryBuilder:
         )
 
     def _updateActivities(self):
+        """
+        Updates timestamps and removes activities whose length equals zero to avoid inconsistencies in profiles
+        which are separatly discretised (interdependence at single vehicle level of drain, charging power etc i.e.
+        no charging available when driving).
+        """
         self._correctTimestamp()
         self._dropNoLengthEvents()
 
@@ -62,10 +67,10 @@ class DiaryBuilder:
         """
         self.activities["timestampStartCorrected"] = self.activities[
             "timestampStart"
-        ].dt.round(f"{self.dt}min")
+        ].dt.round(f"{self.deltaTime}min")
         self.activities["timestampEndCorrected"] = self.activities[
             "timestampEnd"
-        ].dt.round(f"{self.dt}min")
+        ].dt.round(f"{self.deltaTime}min")
         self.activities["activityDuration"] = (
             self.activities["timestampEndCorrected"] - self.activities["timestampStartCorrected"]
         )

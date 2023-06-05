@@ -571,7 +571,7 @@ class DataParser:
 
         print("Completed park timestamp adjustments")
 
-    def __getParkingActsWOFirstAndLast(self) -> Union(pd.Series, pd.Series):
+    def __getParkingActsWOFirstAndLast(self) -> (pd.Series, pd.Series):
         """Return all parking activities except for the last one (return argument 1) and the first one (return argument
         2)
 
