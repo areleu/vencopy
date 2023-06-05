@@ -679,7 +679,7 @@ class TimeDiscretiser:
     def _datasetCleanup(self):
         self._removeColumns()
         self._correctValues()
-        # self._correctTimestamp()
+        self._correctTimestamp()
 
     def _removeColumns(self):
         """
@@ -721,17 +721,17 @@ class TimeDiscretiser:
             self.dataToDiscretise["residualNeed"] = self.dataToDiscretise["residualNeed"].fillna(0)
         return self.dataToDiscretise
 
-    # def _correctTimestamp(self):
-    #     """
-    #     Rounds timestamps to predifined resolution.
-    #     """
-    #     self.dataToDiscretise["timestampStartCorrected"] = self.dataToDiscretise[
-    #         "timestampStart"
-    #     ].dt.round(f"{self.dt}min")
-    #     self.dataToDiscretise["timestampEndCorrected"] = self.dataToDiscretise[
-    #         "timestampEnd"
-    #     ].dt.round(f"{self.dt}min")
-    #     return self.dataToDiscretise
+    def _correctTimestamp(self):
+        """
+        Rounds timestamps to predifined resolution.
+        """
+        self.dataToDiscretise["timestampStartCorrected"] = self.dataToDiscretise[
+            "timestampStart"
+        ].dt.round(f"{self.dt}min")
+        self.dataToDiscretise["timestampEndCorrected"] = self.dataToDiscretise[
+            "timestampEnd"
+        ].dt.round(f"{self.dt}min")
+        return self.dataToDiscretise
 
     def _createDiscretisedStructureWeek(self):
         """
@@ -979,15 +979,16 @@ class TimeDiscretiser:
             s.loc[start:end] = value
         return s
 
-    def assignBinsNp(self, vehicleTrips):
-        # FIXME: impliment edge case of firstBin=0
-        s = np.arange(self.nTimeSlots)
-        for _ , itrip in vehicleTrips.iterrows():
-            start = itrip['firstBin'] - 1 
-            end = itrip['lastBin']
-            value = itrip['valPerBin']
-            s[start: end] = value
-        return s
+    # DEPRECATED
+    # def assignBinsNp(self, vehicleTrips):
+    #     # misses edge case of firstBin=0
+    #     s = np.arange(self.nTimeSlots)
+    #     for _ , itrip in vehicleTrips.iterrows():
+    #         start = itrip['firstBin'] - 1 
+    #         end = itrip['lastBin']
+    #         value = itrip['valPerBin']
+    #         s[start: end] = value
+    #     return s
 
     def _writeOutput(self):
         root = Path(self.localPathConfig["pathAbsolute"]["vencoPyRoot"])
