@@ -10,8 +10,8 @@
 # This config holds all relative paths and filenames for VencoPy
 
 dataset: MiD17 # options are MiD08, MiD17, KiD
-debug: False
-nDebugLines: 20000
+debug: True
+nDebugLines: 5000
 
 pathRelative:
     plots: ./output/evaluator/
@@ -24,8 +24,7 @@ pathRelative:
     scripts: ./scripts/
     config: ./config/
 
-
-numberOfHours: 24  # used for discretizing tripDiaries (not tested for other values than 24)
+numberOfHours: 24 # used for discretizing tripDiaries (not tested for other values than 24)
 
 files:
     MiD17:
@@ -41,9 +40,9 @@ files:
         outputDiaryBuilder: vencopyOutputDiaryBuilder
         outputProfileAggregator: vencopyOutputProfileAggregator
         filteredDataset: filteredDataset
-        purposesProcessed: inputProfiles_Purpose  # inputProfiles_Purpose_RUNLABEL_MiD17.csv
-        inputDataDriveProfiles: inputProfiles_Drive  # inputProfiles_Drive_RUNLABEL_MiD17.csv
-        inputDataPlugProfiles: inputProfiles_Plug  # inputProfiles_Plug_RUNLABEL_MiD17.csv
+        purposesProcessed: inputProfiles_Purpose # inputProfiles_Purpose_RUNLABEL_MiD17.csv
+        inputDataDriveProfiles: inputProfiles_Drive # inputProfiles_Drive_RUNLABEL_MiD17.csv
+        inputDataPlugProfiles: inputProfiles_Plug # inputProfiles_Plug_RUNLABEL_MiD17.csv
         output: vencopy
         transactionStartHour: inputTransactionStartHour
         vencoPyOutput: vencoPyOutput
@@ -55,9 +54,9 @@ files:
         filteredDataset: outputDatasetDataParsers
         tripsProcessedOld: MiD_procCS_caseID-weekday-weight-activity.xlsx
         purposesProcessedOld: MiD_procCS_caseID-weekday-weight-activity.xlsx
-        purposesProcessed: inputProfiles_Purpose  # inputProfiles_Purpose_RUNLABEL_MiD08.csv
-        inputDataDriveProfiles: inputProfiles_Drive  # inputProfiles_Drive_RUNLABEL_MiD08.csv
-        inputDataPlugProfiles: inputProfiles_Plug  # inputProfiles_Plug_RUNLABEL_MiD08.csv
+        purposesProcessed: inputProfiles_Purpose # inputProfiles_Purpose_RUNLABEL_MiD08.csv
+        inputDataDriveProfiles: inputProfiles_Drive # inputProfiles_Drive_RUNLABEL_MiD08.csv
+        inputDataPlugProfiles: inputProfiles_Plug # inputProfiles_Plug_RUNLABEL_MiD08.csv
         output: vencopy
         flexPlotName: flexProfileComparison
     KiD:
@@ -65,9 +64,9 @@ files:
         vehiclesDataRaw: KiD2010-Fahrzeug-Datei-puf.dta
         # tripsDataRaw: KiD2010_merged.dta
         filteredDataset: outputDatasetDataParsers
-        purposesProcessed: inputProfiles_Purpose  
-        inputDataDriveProfiles: inputProfiles_Drive  
-        inputDataPlugProfiles: inputProfiles_Plug  
+        purposesProcessed: inputProfiles_Purpose
+        inputDataDriveProfiles: inputProfiles_Drive
+        inputDataPlugProfiles: inputProfiles_Plug
         output: vencopy
         flexPlotName: flexProfileComparison
         transactionStartHour: transactionStartHour
@@ -75,9 +74,9 @@ files:
         tripsDataRaw: MiD2017_Wege.dta
         vehiclesDataRaw: tripDataMergedWVehicleData.csv
         filteredDataset: outputDatasetDataParsers
-        purposesProcessed: inputProfiles_Purpose  
-        inputDataDriveProfiles: inputProfiles_Drive  
-        inputDataPlugProfiles: inputProfiles_Plug  
+        purposesProcessed: inputProfiles_Purpose
+        inputDataDriveProfiles: inputProfiles_Drive
+        inputDataPlugProfiles: inputProfiles_Plug
         output: vencopy
         flexPlotName: flexProfileComparison
         transactionStartHour: transactionStartHour
@@ -94,5 +93,4 @@ labels:
 
 validation:
     path: C:/repos/vencopy_internalRepo/test/validate/
-    tags: [postFlex]   # Options are postFlex, preFlex, postDiscrete 
-    
+    tags: [postFlex] # Options are postFlex, preFlex, postDiscrete

@@ -35,6 +35,12 @@ vpGrid.assignGrid()
 vpFlex = FlexEstimator(configDict=configDict, datasetID='MiD17', activities=vpGrid.activities)
 vpFlex.estimateTechnicalFlexibility()
 
+
+# Relevant columns
+cols = ['hhPersonID', 'tripID', 'parkID', 'tripDistance', 'timestampStart',
+        'timestampEnd', 'availablePower', 'drain', 'maxBatteryLevelStart',
+        'maxBatteryLevelEnd']
+
 # General check of variable histograms
 vpFlex['drain'].plot.hist()
 plt.show()
@@ -45,13 +51,13 @@ acts[['maxBatteryLevelStart', 'maxBatteryLevelEnd', 'minBatteryLevelStart', 'min
      'uncontrolledCharge']] = acts[['maxBatteryLevelStart', 'maxBatteryLevelEnd', 'minBatteryLevelStart',
                                    'minBatteryLevelEnd', 'uncontrolledCharge']].astype(float)
 acts['startHour'] = acts['timestampStart'].dt.hour
-acts = acts[['tripID', 'parkID', 'startHour', 'drain', 'travelTime', 'availablePower', 'maxBatteryLevelStart', 
+acts = acts[['tripID', 'parkID', 'startHour', 'drain', 'travelTime', 'availablePower', 'maxBatteryLevelStart',
              'maxBatteryLevelEnd', 'minBatteryLevelStart', 'minBatteryLevelEnd', 'uncontrolledCharge']]
 avg = acts.groupby(by='startHour').mean()
 
 # Normalization basis for the different variables
 ref = acts[['drain', 'travelTime', 'availablePower', 'maxBatteryLevelStart', 'maxBatteryLevelEnd',
-                 'minBatteryLevelStart', 'minBatteryLevelEnd', 'uncontrolledCharge']].sum()
+            'minBatteryLevelStart', 'minBatteryLevelEnd', 'uncontrolledCharge']].sum()
 
 trips = acts.loc[~acts['tripID'].isna(), :]
 parkActs = acts.loc[acts['tripID'].isna(), :]
@@ -75,10 +81,9 @@ norm['minBatteryLevelEnd'] = parkActs[['startHour', 'minBatteryLevelEnd']].group
     lambda x: x.nsmallest(n=n, columns='minBatteryLevelEnd').max())['minBatteryLevelEnd']
 
 
-
 # Checking batteryLevelMaxEnd for a variety of profiles
-df = vpFlex.activities.loc[(vpFlex.activities['genericID'].isin([10002161, 10002341, 10003121, 10003122, 10003124, 
-    10006381, 10006651, 10009841, 10010391, 10010393, 10013201, 10013661])) & (~vpFlex.activities['parkID'].isna()), 
-    ['genericID', 'parkID', 'maxBatteryLevelEnd']].set_index(['genericID', 'parkID']).unstack('genericID')
-
-df.
+df = vpFlex.activities.loc[(vpFlex.activities['genericID'].isin(
+    [10002161, 10002341, 10003121, 10003122, 10003124, 10006381, 10006651, 10009841,
+     10010391, 10010393, 10013201, 10013661])) & (~vpFlex.activities['parkID'].isna()),
+    ['genericID', 'parkID', 'maxBatteryLevelEnd']].set_index(['genericID', 'parkID']).unstack(
+    'genericID')
