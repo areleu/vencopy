@@ -32,6 +32,7 @@ class DiaryBuilder:
         self.activities = activities
         self.deltaTime = configDict["diaryConfig"]["TimeDelta"]
         self.isWeekDiary = isWeekDiary
+        self._updateActivities()
         self.distributedActivities = TimeDiscretiser(
             datasetID=self.datasetID,
             globalConfig=self.globalConfig,
@@ -50,6 +51,39 @@ class DiaryBuilder:
             isWeek=isWeekDiary,
             method="select",
         )
+
+    def _updateActivities(self):
+        """
+        Updates timestamps and removes activities whose length equals zero to avoid inconsistencies in profiles
+        which are separatly discretised (interdependence at single vehicle level of drain, charging power etc i.e.
+        no charging available when driving).
+        """
+        self._correctTimestamp()
+        self._dropNoLengthEvents()
+
+    def _correctTimestamp(self):
+        """
+        Rounds timestamps to predifined resolution.
+        """
+        self.activities["timestampStartCorrected"] = self.activities[
+            "timestampStart"
+        ].dt.round(f"{self.deltaTime}min")
+        self.activities["timestampEndCorrected"] = self.activities[
+            "timestampEnd"
+        ].dt.round(f"{self.deltaTime}min")
+        self.activities["activityDuration"] = (
+            self.activities["timestampEndCorrected"] - self.activities["timestampStartCorrected"]
+        )
+        return self.activities
+
+    def _dropNoLengthEvents(self):
+        """
+        Drops line when activity duration is zero, which causes inconsistencies in diaryBuilder (e.g. division by zero in nBins calculation).
+        """
+        startLength = len(self.activities)
+        self.activities = self.activities.drop(self.activities[self.activities.activityDuration == pd.Timedelta(0)].index.to_list())
+        endLength = len(self.activities)
+        print(f"{startLength - endLength} activities dropped because activity lenght equals zero.")
 
     def createDiaries(self):
         start_time = time.time()
@@ -945,15 +979,16 @@ class TimeDiscretiser:
             s.loc[start:end] = value
         return s
 
-    def assignBinsNp(self, vehicleTrips):
-        # FIXME: impliment edge case of firstBin=0
-        s = np.arange(self.nTimeSlots)
-        for _ , itrip in vehicleTrips.iterrows():
-            start = itrip['firstBin'] - 1 
-            end = itrip['lastBin']
-            value = itrip['valPerBin']
-            s[start: end] = value
-        return s
+    # DEPRECATED
+    # def assignBinsNp(self, vehicleTrips):
+    #     # misses edge case of firstBin=0
+    #     s = np.arange(self.nTimeSlots)
+    #     for _ , itrip in vehicleTrips.iterrows():
+    #         start = itrip['firstBin'] - 1 
+    #         end = itrip['lastBin']
+    #         value = itrip['valPerBin']
+    #         s[start: end] = value
+    #     return s
 
     def _writeOutput(self):
         root = Path(self.localPathConfig["pathAbsolute"]["vencoPyRoot"])
