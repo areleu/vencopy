@@ -66,9 +66,8 @@ class DataParser:
         self.localPathConfig = configDict["localPathConfig"]
         self.globalConfig = configDict["globalConfig"]
         self.datasetID = self.__checkDatasetID(datasetID, self.parseConfig)
-        filepath = (
-            Path(self.localPathConfig["pathAbsolute"][self.datasetID]) / self.globalConfig["files"][self.datasetID]["tripsDataRaw"]
-        )
+        filepath = (Path(self.localPathConfig["pathAbsolute"][self.datasetID]
+                         ) / self.globalConfig["files"][self.datasetID]["tripsDataRaw"])
         self.rawDataPath = filepath
         self.rawData = None
         self.data = None
@@ -227,9 +226,10 @@ class DataParser:
         Wrapper function to carry out filtering for the four filter logics of
         including, excluding, greaterThan and smallerThan.
         If a filterDict is defined with a different key, a warning is thrown.
-        The function operates on self.data class-internally.
+        Filters are defined inclusively, thus boolean vectors will select 
+        elements (TRUE) that stay in the data set. 
 
-        :return: None
+        :return: None. The function operates on self.data class-internally.
         """
         print(
             f"Starting filtering, applying {len(returnDictBottomKeys(filterDict))} filters."
@@ -272,6 +272,7 @@ class DataParser:
 
         # More sophisticated filtering functions
         sophFilter = sophFilter.join(self.__filterInconsistentSpeedTrips())
+        sophFilter = sophFilter.join(self.__filterInconsistentTravelTimes())
         sophFilter = sophFilter.join(self.__filterOverlappingTrips())
 
         # Application of sophisticated filters
@@ -362,15 +363,33 @@ class DataParser:
         responses suggest that participants were travelling for the entire time they took for the whole purpose
         (driving and parking) and not just for the real travel.
 
-        :return: None
+        :return: Boolean vector with observations marked True that should be 
+        kept in the data set
         """
         self.data["averageSpeed"] = self.data["tripDistance"] / (
             self.data["travelTime"] / 60
         )
+
         return (
-            self.data["averageSpeed"]
-            > self.parseConfig["filterDicts"]["speedThreshold"]
-        )
+            self.data["averageSpeed"] > self.parseConfig["filterDicts"][
+                "lowerSpeedThreshold"]) & (
+            self.data["averageSpeed"] <= self.parseConfig["filterDicts"][
+                "higherSpeedThreshold"])
+
+    def __filterInconsistentTravelTimes(self):
+        """ Calculates a travel time from the given timestamps and compares it
+        to the travel time given by the interviewees. Selects observations where
+        timestamps are consistent with the travel time given.
+
+        :return: Boolean vector with observations marked True that should be 
+        kept in the data set
+        """
+        self.data["travelTime_ts"] = (
+            self.data['timestampEnd'] - self.data[
+                'timestampStart']).dt.total_seconds().div(60).astype(int)
+        filt = self.data['travelTime_ts'] == self.data['travelTime']
+        filt.name = 'travelTime'  # Required for column-join in _filter()
+        return filt
 
     def __filterOverlappingTrips(self):
         """
@@ -434,7 +453,8 @@ class DataParser:
         lenData = sum(filterData.all(axis="columns"))
         boolDict = {iCol: sum(filterData[iCol]) for iCol in filterData}
         print(
-            "The following values were taken into account after simple threshold filtering:"
+            "The following number of observations were taken into account after"
+            "filtering:"
         )
         pprint.pprint(boolDict)
         # print(f'{filterData["averageSpeed"].sum()} trips have plausible average speeds')
