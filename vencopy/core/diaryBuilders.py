@@ -964,7 +964,8 @@ class TimeDiscretiser:
         are formatted in a way that uniqueID represents a unique week ID. The function then loops over the 7 weekdays
         and calls _allocate for each day a total of 7 times.
         """
-        weekSubset = self.dataToDiscretise.groupby(by=["weekdayStr", "actID"])
+        raise NotImplementedError()
+        # weekSubset = self.dataToDiscretise.groupby(by=["weekdayStr", "actID"])
 
     def _allocate(self):
         """
@@ -978,7 +979,7 @@ class TimeDiscretiser:
         trips = self.dataToDiscretise.copy()
         trips = trips[["uniqueID", "firstBin", "lastBin", "valPerBin"]]
         trips["uniqueID"] = trips["uniqueID"].astype(int)
-        self.discreteData = trips.groupby(by="uniqueID").apply(self.assignBins)
+        return trips.groupby(by="uniqueID").apply(self.assignBins)
 
     def assignBins(self, vehicleTrips):
         """
@@ -990,16 +991,6 @@ class TimeDiscretiser:
             end = itrip["lastBin"]
             value = itrip["valPerBin"]
             s.loc[start:end] = value
-        return s
-
-    def assignBinsNp(self, vehicleTrips):
-        # FIXME: impliment edge case of firstBin=0
-        s = np.arange(self.nTimeSlots)
-        for _, itrip in vehicleTrips.iterrows():
-            start = itrip['firstBin'] - 1
-            end = itrip['lastBin']
-            value = itrip['valPerBin']
-            s[start: end] = value
         return s
 
     # DEPRECATED
