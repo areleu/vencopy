@@ -81,7 +81,8 @@ class DiaryBuilder:
         Drops line when activity duration is zero, which causes inconsistencies in diaryBuilder (e.g. division by zero in nBins calculation).
         """
         startLength = len(self.activities)
-        self.activities = self.activities.drop(self.activities[self.activities.activityDuration == pd.Timedelta(0)].index.to_list())
+        self.activities = self.activities.drop(
+            self.activities[self.activities.activityDuration == pd.Timedelta(0)].index.to_list())
         endLength = len(self.activities)
         print(f"{startLength - endLength} activities dropped because activity lenght equals zero.")
 
@@ -702,7 +703,7 @@ class TimeDiscretiser:
         if self.isWeek:
             necessaryColumns = necessaryColumns + ["weekdayStr"]
         self.dataToDiscretise = self.activities[necessaryColumns].copy()
-        return self.dataToDiscretise        
+        return self.dataToDiscretise
 
     def _correctValues(self):
         """
@@ -808,7 +809,8 @@ class TimeDiscretiser:
         """
         if self.dataToDiscretise["nBins"].any() == 0:
             raise ArithmeticError(
-                "The total number of bins is zero for one activity, which caused a division by zero. This should not happen because events with length zero should have been dropped."
+                "The total number of bins is zero for one activity, which caused a division by zero."
+                "This should not happen because events with length zero should have been dropped."
             )
         self.dataToDiscretise["valPerBin"] = (
             self.dataToDiscretise[self.columnToDiscretise] / self.dataToDiscretise["nBins"]
@@ -852,7 +854,7 @@ class TimeDiscretiser:
         self.binFromMidnightSeconds = self.binFromMidnightSeconds + (self.dt * 60)
         self.dataToDiscretise["firstBin"] = (
             self.dataToDiscretise["startTimeFromMidnightSeconds"].apply(
-                lambda x: np.argmax(x < self.binFromMidnightSeconds) 
+                lambda x: np.argmax(x < self.binFromMidnightSeconds)
             )
         ).astype(int)
         if self.dataToDiscretise["firstBin"].any() > self.nTimeSlots:
@@ -910,33 +912,44 @@ class TimeDiscretiser:
         Verifies that all bins get a value assigned, otherwise raise an error.
         """
         if self.discreteData.isna().any().any():
-            raise Exception("There are NaN in the dataset.")
+            raise Exception("There are NaN in the dataset but shouldn't.")
 
+    # FIXME: Refactor variable names?
     def _dropNoLengthEvents(self):
         """
-        Implements a strategy for overlapping bins if time resolution high enough so that the event becomes negligible, i.e. drops events
-        with no lenght (timestampStartCorrected = timestampEndCorrected or activityDuration = 0), which cause division by zero in nBins calculation.
+        Implements a strategy for overlapping bins if time resolution high enough so that the event becomes negligible,
+        i.e. drops events with no length (timestampStartCorrected = timestampEndCorrected or activityDuration = 0),
+        which cause division by zero in nBins calculation.
         """
         startLength = len(self.dataToDiscretise)
-        noLengthActivitiesIDs = self.dataToDiscretise[self.dataToDiscretise.activityDuration == pd.Timedelta(0)].index.to_list()
-        self.IDsWithNoLengthActivities = self.dataToDiscretise.loc[noLengthActivitiesIDs]['uniqueID'].unique()
-        self.dataToDiscretise = self.dataToDiscretise.drop(noLengthActivitiesIDs)
+        noLengthActivitiesIDs = self.dataToDiscretise[
+            self.dataToDiscretise.activityDuration == pd.Timedelta(
+                0)].index.to_list()
+        self.IDsWithNoLengthActivities = self.dataToDiscretise.loc[
+            noLengthActivitiesIDs]['uniqueID'].unique()
+        self.dataToDiscretise = self.dataToDiscretise.drop(
+            noLengthActivitiesIDs)
         endLength = len(self.dataToDiscretise)
         droppedActivities = startLength - endLength
         print(f"{droppedActivities} zero-length activities dropped from {len(self.IDsWithNoLengthActivities)} IDs.")
         self._removeActivitiesIfColumnToDiscretiseNoValues()
 
+    # FIXME: Refactor variable names?
     def _removeActivitiesIfColumnToDiscretiseNoValues(self):
         startLength = len(self.dataToDiscretise)
-        subsetNoLengthActivitiesIDsOnly = self.dataToDiscretise.loc[self.dataToDiscretise.uniqueID.isin(self.IDsWithNoLengthActivities)]
+        subsetNoLengthActivitiesIDsOnly = self.dataToDiscretise.loc[
+            self.dataToDiscretise.uniqueID.isin(self.IDsWithNoLengthActivities)]
         subsetNoLengthActivitiesIDsOnly = subsetNoLengthActivitiesIDsOnly.set_index("uniqueID", drop=False)
         subsetNoLengthActivitiesIDsOnly.index.names = ['uniqueIDindex']
-        IDsWithSumZero = subsetNoLengthActivitiesIDsOnly.groupby(["uniqueID"])[self.columnToDiscretise].sum()
+        IDsWithSumZero = subsetNoLengthActivitiesIDsOnly.groupby(
+            ["uniqueID"])[self.columnToDiscretise].sum()
         IDsToDrop = IDsWithSumZero[IDsWithSumZero == 0].index
-        self.dataToDiscretise = self.dataToDiscretise.loc[~self.dataToDiscretise.uniqueID.isin(IDsToDrop)]
+        self.dataToDiscretise = self.dataToDiscretise.loc[
+            ~self.dataToDiscretise.uniqueID.isin(IDsToDrop)]
         endLength = len(self.dataToDiscretise)
         droppedActivities = startLength - endLength
-        print(f"Additional {droppedActivities} activities dropped as the sum of all {self.columnToDiscretise} activities for the specific ID was zero.")
+        print(f"Additional {droppedActivities} activities dropped as the sum of all {self.columnToDiscretise}"
+              "activities for the specific ID was zero.")
 
     def _overlappingActivities(self):
         """
@@ -982,20 +995,19 @@ class TimeDiscretiser:
     def assignBinsNp(self, vehicleTrips):
         # FIXME: impliment edge case of firstBin=0
         s = np.arange(self.nTimeSlots)
-        for _ , itrip in vehicleTrips.iterrows():
-            start = itrip['firstBin'] - 1 
+        for _, itrip in vehicleTrips.iterrows():
+            start = itrip['firstBin'] - 1
             end = itrip['lastBin']
             value = itrip['valPerBin']
             s[start: end] = value
         return s
-
 
     # DEPRECATED
     # def assignBinsNp(self, vehicleTrips):
     #     # misses edge case of firstBin=0
     #     s = np.arange(self.nTimeSlots)
     #     for _ , itrip in vehicleTrips.iterrows():
-    #         start = itrip['firstBin'] - 1 
+    #         start = itrip['firstBin'] - 1
     #         end = itrip['lastBin']
     #         value = itrip['valPerBin']
     #         s[start: end] = value
@@ -1018,7 +1030,7 @@ class TimeDiscretiser:
         self._datasetCleanup()
         self._identifyBinShares()
         self._allocateBinShares()
-        #self._writeOutput()
+        # self._writeOutput()
         print(f"Discretisation finished for {self.columnToDiscretise}.")
         self.columnToDiscretise = None
         return self.discreteData
