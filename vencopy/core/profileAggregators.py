@@ -181,4 +181,4 @@ class ProfileAggregator():
             self.__createWeeklyProfiles()
             self.__createAnnualProfiles()
             self._writeOutput()
-        print('Run finished')
+        print('Run finished.')

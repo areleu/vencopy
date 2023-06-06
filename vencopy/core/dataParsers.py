@@ -73,12 +73,12 @@ class DataParser:
         self.data = None
         self.activities = None
         self.filterDict = {}
-        print("Generic file parsing properties set up")
+        print("Generic file parsing properties set up.")
         if loadEncrypted:
-            print(f"Starting to retrieve encrypted data file from {self.rawDataPath}")
+            print(f"Starting to retrieve encrypted data file from {self.rawDataPath}.")
             self._loadEncryptedData(pathToZip=filepath, pathInZip=fpInZip)
         else:
-            print(f"Starting to retrieve local data file from {self.rawDataPath}")
+            print(f"Starting to retrieve local data file from {self.rawDataPath}.")
             self._loadData()
         nDebugLines = configDict["globalConfig"]["nDebugLines"]
         self.rawData = self.rawData.loc[0: nDebugLines - 1, :] if debug else self.rawData.copy()
@@ -112,7 +112,7 @@ class DataParser:
                 f"Data type {self.rawDataPath.suffix} not yet specified. Available types so far are .dta and .csv"
             )
         print(
-            f"Finished loading {len(self.rawData)} rows of raw data of type {self.rawDataPath.suffix}"
+            f"Finished loading {len(self.rawData)} rows of raw data of type {self.rawDataPath.suffix}."
         )
         return self.rawData
 
@@ -151,7 +151,7 @@ class DataParser:
                 )
 
         print(
-            f"Finished loading {len(self.rawData)} rows of raw data of type {self.rawDataPath.suffix}"
+            f"Finished loading {len(self.rawData)} rows of raw data of type {self.rawDataPath.suffix}."
         )
 
     def __checkDatasetID(self, datasetID: str, parseConfig: dict) -> str:
@@ -187,7 +187,7 @@ class DataParser:
         )
         dataRenamed = self.data.rename(columns=replacementDict)
         self.data = dataRenamed
-        print("Finished harmonization of variables")
+        print("Finished harmonization of variables.")
 
     def _createReplacementDict(self, datasetID: str, dictRaw: dict) -> dict:
         """
@@ -460,10 +460,10 @@ class DataParser:
         # print(f'{filterData["averageSpeed"].sum()} trips have plausible average speeds')
         # print(f'{(~filterData["tripDoesNotOverlap"]).sum()} trips overlap and were thus filtered out')
         print(
-            f"All filters combined yielded that a total of {lenData} trips are taken into account"
+            f"All filters combined yielded that a total of {lenData} trips are taken into account."
         )
         print(
-            f"This corresponds to {lenData / len(filterData)* 100} percent of the original data"
+            f"This corresponds to {lenData / len(filterData)* 100} percent of the original data."
         )
 
     def _addParkingRows(self, splitOvernightTrips: bool = True):
@@ -494,7 +494,7 @@ class DataParser:
 
         print(
             f'Finished activity composition with {self.activities["tripID"].fillna(0).astype(bool).sum()} trips '
-            f'and {self.activities["parkID"].fillna(0).astype(bool).sum()} parking activites'
+            f'and {self.activities["parkID"].fillna(0).astype(bool).sum()} parking activites.'
         )
 
     def __copyRows(self):
@@ -589,7 +589,7 @@ class DataParser:
         self.__updateTimestampFirstParkAct()
         self.__updateTimestampLastParkAct()
 
-        print("Completed park timestamp adjustments")
+        print("Completed park timestamp adjustments.")
 
     def __getParkingActsWOFirstAndLast(self) -> (pd.Series, pd.Series):
         """Return all parking activities except for the last one (return argument 1) and the first one (return argument
@@ -1183,7 +1183,7 @@ class IntermediateParsing(DataParser):
         self.data["uniqueID"] = (
             self.data[str(self.parseConfig["IDVariablesNames"][self.datasetID])]
         ).astype(int)
-        print("Finished harmonization of ID variables")
+        print("Finished harmonization of ID variables.")
 
 
 class ParseMiD(IntermediateParsing):
@@ -1233,7 +1233,7 @@ class ParseMiD(IntermediateParsing):
                 + dataRenamed["personID"].astype("string")
             ).astype("int")
         self.data = dataRenamed
-        print("Finished harmonization of variables")
+        print("Finished harmonization of variables.")
 
     def __convertTypes(self):
         """
@@ -1311,7 +1311,7 @@ class ParseMiD(IntermediateParsing):
         self._filter(self.filterDict)
         self._filterConsistentHours()
         self._addParkingRows(splitOvernightTrips=splitOvernightTrips)
-        print("Parsing MiD dataset completed")
+        print("Parsing MiD dataset completed.")
         return self.activities
 
 
@@ -1366,7 +1366,7 @@ class ParseVF(IntermediateParsing):
         rawDataVehicles.set_index("HP_ID", inplace=True)
         rawData = rawDataTrips.join(rawDataVehicles, on="HP_ID", rsuffix="VF")
         self.rawData = rawData
-        print(f"Finished loading {len(self.rawData)} rows of raw data of type .dta")
+        print(f"Finished loading {len(self.rawData)} rows of raw data of type .dta.")
 
     def __harmonizeVariables(self):
         """
@@ -1464,7 +1464,7 @@ class ParseVF(IntermediateParsing):
         self._filter(self.filterDict)
         self._filterConsistentHours()
         self._addParkingRows()
-        print("Parsing VF dataset completed")
+        print("Parsing VF dataset completed.")
         return self.activities
 
 
@@ -1507,7 +1507,7 @@ class ParseKiD(IntermediateParsing):
         rawDataVehicles.set_index("k00", inplace=True)
         rawData = rawDataTrips.join(rawDataVehicles, on="k00")
         self.rawData = rawData
-        print(f"Finished loading {len(self.rawData)} " f"rows of raw data of type .dta")
+        print(f"Finished loading {len(self.rawData)} " f"rows of raw data of type .dta.")
 
     def __convertTypes(self):
         """
@@ -1609,7 +1609,7 @@ class ParseKiD(IntermediateParsing):
         self._filter(self.filterDict)
         self._filterConsistentHours()
         self._addParkingRows()
-        print("Parsing KiD dataset completed")
+        print("Parsing KiD dataset completed.")
         return self.activities
 
 

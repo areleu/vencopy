@@ -61,7 +61,7 @@ class FlexEstimator:
             activity chain
         """
 
-        print('Starting maximum battery level calculation')
+        print('Starting maximum battery level calculation.')
         firstActs = self._calcMaxBatFirstAct(startLevel=startLevel)
         firstParkActs = firstActs.loc[~firstActs['parkID'].isna(), :]
 
@@ -75,7 +75,7 @@ class FlexEstimator:
         setActs = range(int(self.activities['parkID'].max()) + 1)
         tripActsRes = pd.DataFrame()  # Redundant?
         for act in setActs:  # implementable via groupby with actIDs as groups?
-            print(f'Calculate maximum battery level for act {act}')
+            print(f'Calculate maximum battery level for act {act}.')
             tripRows = (self.activities['tripID'] == act) & (
                 ~self.activities['isFirstActivity'])
             parkRows = (self.activities['parkID'] == act) & (
@@ -125,7 +125,7 @@ class FlexEstimator:
         first.
         """
 
-        print('Starting minimum battery level calculation')
+        print('Starting minimum battery level calculation.')
         isPark = ~(self.activities['parkID'].isna())
         isTrip = ~(self.activities['tripID'].isna())
         lastActs = self._calcMinBatLastAct(isPark=isPark, isTrip=isTrip)
@@ -135,7 +135,7 @@ class FlexEstimator:
         # activities, then looping to earlier acts
         setActs = range(int(self.activities['parkID'].max()) - 1, -1, -1)
         for act in setActs:
-            print(f'Calculate minimum battery level for act {act}')
+            print(f'Calculate minimum battery level for act {act}.')
             tripRows = (self.activities['tripID'] == act) & (
                 ~self.activities['isLastActivity'])
             parkRows = (self.activities['parkID'] == act) & (
@@ -426,7 +426,7 @@ class FlexEstimator:
         self._auxFuelNeed()
         if self.flexConfig['filterFuelNeed']:
             self.activities = self._filterResidualNeed(acts=self.activities, indexCols=['uniqueID'])
-        print("Technical flexibility estimation ended")
+        print("Technical flexibility estimation ended.")
         return self.activities
 
     def estimateTechnicalFlexibility_iteration(self, nIter: int = 3):
@@ -462,14 +462,13 @@ class FlexEstimator:
                     'maxBatteryLevelEnd'].values - self.activities.loc[
                         self.activities['isFirstActivity'],
                     'maxBatteryLevelStart'].values).sum()
-            print(f'Finished ITERATION {i} / {nIter-1}.'
-                  f'Delta battery level is {delta}.')
+            print(f'Finished ITERATION {i} / {nIter-1}. Delta battery level is {delta}.')
 
         self._auxFuelNeed()
         if self.flexConfig['filterFuelNeed']:
             self.activities = self._filterResidualNeed(
                 acts=self.activities, indexCols=['uniqueID'])
-        print("Technical flexibility estimation ended")
+        print("Technical flexibility estimation ended.")
         return self.activities
 
     def __getStartLevel(self, startLevel: float):
@@ -528,13 +527,13 @@ class WeekFlexEstimator(FlexEstimator):
         Args:
             startLevel (float): Battery level at beginning of first activity for each activity chain
         """
-        print('Starting maximum battery level calculation')
+        print('Starting maximum battery level calculation.')
         self.activities.loc[self.activities['isFirstActivity'], :] = self._calcMaxBatFirstAct(startLevel=startLevel)
 
         # Start and end for all trips and parkings in between
         setActs = range(int(self.activities['actID'].max()) + 1)
         for act in setActs:
-            print(f'Calculate maximum battery level for actID (park and trip) {act}')
+            print(f'Calculate maximum battery level for actID (park and trip) {act}.')
             if act != 0:
                 self.__shiftBatLevEnd()
                 self.__maxBatLevPark(parkID=act, useThreshold=self.useThreshold)
@@ -616,14 +615,14 @@ class WeekFlexEstimator(FlexEstimator):
         charged in parking activities before. Thus, activities are looped over from the last activity to first. 
         For week flexibility estimation, it can not always be assured that the last activity is a parking activity. 
         """
-        print('Starting minimum battery level calculation')
+        print('Starting minimum battery level calculation.')
         self.activities.loc[self.activities['isLastActivity'], :] = self._calcMinBatLastAct()
         self.__calcMinBatBeforeLastAct()
 
         # Start and end for all trips and parkings in between
         setActs = range(int(self.activities['actID'].max())-1, -1, -1)
         for act in setActs:
-            print(f'Calculate minimum battery level for actID (park and trip) {act}')
+            print(f'Calculate minimum battery level for actID (park and trip) {act}.')
             self.__shiftBatLevStart()
             self.__minBatLevTrips(tripID=act)
             self.__shiftBatLevStart()
@@ -725,6 +724,5 @@ class WeekFlexEstimator(FlexEstimator):
         self._batteryLevelMin()
         if filterFuelNeed:
             self.activities = self._filterResidualNeed(acts=self.activities, indexCols=['categoryID', 'weekID'])
-        print('Technical flexibility estimation for one week ended considering the plugging threshold of ')
-        print(f'{self.thresholdSOC}')
+        print(f'Technical flexibility estimation for one week ended considering the plugging threshold of {self.thresholdSOC}.')
         return self.activities

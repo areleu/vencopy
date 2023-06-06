@@ -10,17 +10,13 @@
 # This config holds all technical input assumptions and thresholds
 
 filterFuelNeed: True  # Should activity chains that require fuel for trip distance satisfaction be filtered out?
-
 Minimum_daily_mileage: 0.0 # in km, cut-off mileage to exclude profiles
 Battery_capacity: 50 # in kWh, input assumption for battery capacity
 Electric_consumption: 18.0 # in kWh/100km, input assumption for specific electric consumption
 Fuel_consumption: 1.0 # in l/100km, input assumption for specific fuel consumption for auxiliary fuel
-Electric_consumption_corr: 18.0 # in kWh/100km, assumption for potential correction after aggregation
-Fuel_consumption_corr: 1.0 # in l/100km, assumption for potential correction after aggregation
 Start_SOC: 0.5  # State-of-charge between 0 and 1 at beginning of activity chain 
 Maximum_SOC: 0.97 # in %
 Minimum_SOC: 0.03 # in %
-Is_BEV?: 1 # 1=BEV, 0=PHEV (not yet tested)
 SoC_plugging_threshold: 0.8
 
 # For plugging choice implementation

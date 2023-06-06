@@ -86,11 +86,7 @@ files:
     flexPlotName: flexProfileComparison
 
 labels:
-    runLabel: IAEE_CLUSTERS_2
-    technologyLabel: BEV
+    runLabel: 
+    technologyLabel: 
     outputFileName: vencopy
     strAdd:
-
-validation:
-    path: C:/repos/vencopy_internalRepo/test/validate/
-    tags: [postFlex] # Options are postFlex, preFlex, postDiscrete

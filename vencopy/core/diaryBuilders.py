@@ -59,7 +59,7 @@ class DiaryBuilder:
         no charging available when driving).
         """
         self._correctTimestamp()
-        self._dropNoLengthEvents()
+        self._removesZeroLengthActivities()
 
     def _correctTimestamp(self):
         """
@@ -76,7 +76,7 @@ class DiaryBuilder:
         )
         return self.activities
 
-    def _dropNoLengthEvents(self):
+    def _removesZeroLengthActivities(self):
         """
         Drops line when activity duration is zero, which causes inconsistencies in diaryBuilder (e.g. division by zero in nBins calculation).
         """
@@ -103,7 +103,7 @@ class DiaryBuilder:
         # # self.maxBatteryLevelEnd = self.selectedActivities.discretise(column="maxBatteryLevelEnd")
         # # self.minBatteryLevelEnd = self.selectedActivities.discretise(column="minBatteryLevelEnd")
         needed_time = time.time() - start_time
-        print(f"Needed time to discretise all columns: {needed_time}")
+        print(f"Needed time to discretise all columns: {needed_time}.")
 
 
 class WeekDiaryBuilder:
@@ -212,7 +212,7 @@ class WeekDiaryBuilder:
             .sum()
         )
         print(
-            f"Of those sample bases, {nSBInAct} category combinations exist in the activities data set"
+            f"Of those sample bases, {nSBInAct} category combinations exist in the activities data set."
         )
         self.__days = self.activities.groupby(by=["uniqueID"]).first()
         nSamplingBase = self.__days.groupby(by=self.samplingCols).count()
@@ -224,9 +224,7 @@ class WeekDiaryBuilder:
             sampleBaseLength == max(sampleBaseLength)
         ]
         print(
-            f"The number of samples in each sample base ranges from {smallestSampleBase}"
-        )
-        print(f"to {largestSampleBase}.")
+            f"The number of samples in each sample base ranges from {smallestSampleBase} to {largestSampleBase}.")
         print(
             f"The average sample size is approximately {sampleBaseLength.mean().round()}."
         )
@@ -378,7 +376,7 @@ class WeekDiaryBuilder:
         acts = self.__reassignTripIDs(acts=acts)
         acts = self.__reassignActIDs(acts=acts)
 
-        print("Finished weekly activity ID chaining")
+        print("Finished weekly activity ID chaining.")
         return acts
 
     def __mergeParkActs(self, acts: pd.DataFrame) -> pd.DataFrame:
@@ -407,7 +405,7 @@ class WeekDiaryBuilder:
         # OLD implementation was here acts = self.__neglectFirstParkActs(acts=acts)
         acts = self.__updateLastWeekActs(acts=acts)
         acts = self.__removeNextActVarCols(acts=acts, nextVars=nextVars)
-        print("Finished last and first daily parking to one parking activity")
+        print("Finished last and first daily parking to one parking activity.")
         return acts
 
     def __addNextActVars(
@@ -780,7 +778,7 @@ class TimeDiscretiser:
             self.dataToDiscretise["timestampEndCorrected"]
             - self.dataToDiscretise["timestampStartCorrected"]
         )
-        self._dropNoLengthEvents()
+        self._removesZeroLengthActivities()
         self.dataToDiscretise["nBins"] = self.dataToDiscretise["activityDuration"] / (
             pd.Timedelta(value=self.dt, unit="min")
         )
@@ -912,10 +910,9 @@ class TimeDiscretiser:
         Verifies that all bins get a value assigned, otherwise raise an error.
         """
         if self.discreteData.isna().any().any():
-            raise Exception("There are NaN in the dataset but shouldn't.")
+            raise Exception("There are NaN in the dataset.")
 
-    # FIXME: Refactor variable names?
-    def _dropNoLengthEvents(self):
+    def _removesZeroLengthActivities(self):
         """
         Implements a strategy for overlapping bins if time resolution high enough so that the event becomes negligible,
         i.e. drops events with no length (timestampStartCorrected = timestampEndCorrected or activityDuration = 0),
@@ -932,10 +929,9 @@ class TimeDiscretiser:
         endLength = len(self.dataToDiscretise)
         droppedActivities = startLength - endLength
         print(f"{droppedActivities} zero-length activities dropped from {len(self.IDsWithNoLengthActivities)} IDs.")
-        self._removeActivitiesIfColumnToDiscretiseNoValues()
+        self._removeActivitiesWithZeroValue()
 
-    # FIXME: Refactor variable names?
-    def _removeActivitiesIfColumnToDiscretiseNoValues(self):
+    def _removeActivitiesWithZeroValue(self):
         startLength = len(self.dataToDiscretise)
         subsetNoLengthActivitiesIDsOnly = self.dataToDiscretise.loc[
             self.dataToDiscretise.uniqueID.isin(self.IDsWithNoLengthActivities)]
