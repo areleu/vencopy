@@ -116,9 +116,10 @@ class ProfileAggregator():
 
         for idate in self.activitiesWeekday[byColumn].unique():
             levels = self.activitiesWeekday.copy()
-            levels = levels.drop(columns='tripWeight')
             weekdaySubset = levels[levels[byColumn] == idate].reset_index(
                 drop=True)
+            weekdaySubset = weekdaySubset.drop(columns=[
+                'tripStartWeekday', 'tripWeight'])
             weekdaySubset = weekdaySubset.convert_dtypes()
             if self.profileName == 'maxBatteryLevel':
                 self.weekdayProfiles.iloc[idate-1] = weekdaySubset.quantile(
