@@ -11,16 +11,11 @@ if __package__ is None or __package__ == '':
     from os import path
     sys.path.append(path.dirname(path.dirname(path.dirname(__file__))))
 
-# import time
 from pathlib import Path
-# import itertools
-
 import pandas as pd
-# from vencopy.core.dataParsers import ParseKiD, ParseMiD, ParseVF
+
 from vencopy.core.diaryBuilders import DiaryBuilder
-# from vencopy.core.flexEstimators import FlexEstimator
-# from vencopy.core.gridModelers import GridModeler
-from vencopy.utils.globalFunctions import (createFileName, writeOut)  # createOutputFolders, loadConfigDict,
+from vencopy.utils.globalFunctions import (createFileName, writeOut)
 
 
 class ProfileAggregator():
@@ -74,7 +69,6 @@ class ProfileAggregator():
             self.__calculateAggregatedStateProfiles(
                 byColumn=byColumn, alpha=self.alpha)
         self.__composeWeeklyProfile()
-        self._writeOutput()
 
     def __calculateAverageFlowProfiles(self, byColumn):
         for idate in self.activitiesWeekday[byColumn].unique():
@@ -134,13 +128,15 @@ class ProfileAggregator():
         # input is self.weekdayProfiles
         # check if any day of the week is not filled, copy line above in that case
         if self.weekdayProfiles.isna().any(axis=1).any():
-            indexEmptyRows = self.weekdayProfiles[self.weekdayProfiles.isna().any(
-                axis=1)].index - 1
+            indexEmptyRows = self.weekdayProfiles[
+                self.weekdayProfiles.isna().any(axis=1)].index - 1
             for emptyRow in indexEmptyRows:
                 if emptyRow == 6:
-                    self.weekdayProfiles.iloc[emptyRow] = self.weekdayProfiles.iloc[emptyRow - 1]
+                    self.weekdayProfiles.iloc[
+                        emptyRow] = self.weekdayProfiles.iloc[emptyRow - 1]
                 else:
-                    self.weekdayProfiles.iloc[emptyRow] = self.weekdayProfiles.iloc[emptyRow + 1]
+                    self.weekdayProfiles.iloc[
+                        emptyRow] = self.weekdayProfiles.iloc[emptyRow + 1]
         self.weekdayProfiles.index.name = 'weekday'
         self.weekdayProfiles = self.weekdayProfiles.stack().unstack(0)
         self.weeklyProfile = (
@@ -152,25 +148,31 @@ class ProfileAggregator():
         startWeekday = 1  # (1: Monday, 7: Sunday)
         # shift input profiles to the right weekday and start with first bin of chosen weekday
         self.annualProfile = self.weeklyProfile.iloc[(
-            (startWeekday-1)*((len(list(self.timeIndex)))-1)):]
+            (startWeekday - 1) * ((len(list(self.timeIndex))) - 1)):]
         self.annualProfile = self.annualProfile.append(
-            [self.weeklyProfile]*52, ignore_index=True)
+            [self.weeklyProfile] * 52, ignore_index=True)
         self.annualProfile.drop(
             self.annualProfile.tail(
-                len(self.annualProfile) - ((len(list(self.timeIndex))) - 1) * 365).index, inplace=True)
+                len(self.annualProfile) - ((len(list(
+                    self.timeIndex))) - 1) * 365).index, inplace=True)
 
-    # FIXME: Adapt to aggregator class
     def _writeOutput(self):
         root = Path(self.localPathConfig['pathAbsolute']['vencoPyRoot'])
         folder = self.globalConfig['pathRelative']['aggregatorOutput']
+
         fileName = createFileName(globalConfig=self.globalConfig, manualLabel=(
-            '_' + self.profileName), fileNameID='outputProfileAggregator',
-            datasetID=self.datasetID)
-        writeOut(data=self.activities, path=root / folder / fileName)
+            '_' + self.profileName + 'Week'),
+            fileNameID='outputProfileAggregator', datasetID=self.datasetID)
+        writeOut(data=self.weeklyProfile, path=root / folder / fileName)
+
+        fileName = createFileName(globalConfig=self.globalConfig, manualLabel=(
+            '_' + self.profileName + 'Annual'),
+            fileNameID='outputProfileAggregator', datasetID=self.datasetID)
+        writeOut(data=self.annualProfile, path=root / folder / fileName)
 
     def createTimeseries(self):
-        profiles = (self.drain, self.uncontrolledCharge,
-                    self.chargingPower, self.maxBatteryLevel, self.minBatteryLevel)
+        profiles = (self.drain, self.uncontrolledCharge, self.chargingPower,
+                    self.maxBatteryLevel, self.minBatteryLevel)
         profileNames = ('drain', 'chargingPower', 'uncontrolledCharge',
                         'maxBatteryLevel', 'minBatteryLevel')
         for profile, profileName in zip(profiles, profileNames):
@@ -178,4 +180,5 @@ class ProfileAggregator():
             self.profile = profile
             self.__createWeeklyProfiles()
             self.__createAnnualProfiles()
+            self._writeOutput()
         print('Run finished')
