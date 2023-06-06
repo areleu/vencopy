@@ -9,7 +9,5 @@
 
 # This config holds all relative paths and filenames for profileAggregator.py
 
-clustering:
-  nClusters: 20
-
-
+weightFlowProfiles: True # Currently only used for flow profile aggregation
+alpha: 10 # Only used for state profile aggregation
