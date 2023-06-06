@@ -59,7 +59,7 @@ class DiaryBuilder:
         no charging available when driving).
         """
         self._correctTimestamp()
-        self._dropNoLengthEvents()
+        self._removesZeroLengthActivities()
 
     def _correctTimestamp(self):
         """
@@ -76,7 +76,7 @@ class DiaryBuilder:
         )
         return self.activities
 
-    def _dropNoLengthEvents(self):
+    def _removesZeroLengthActivities(self):
         """
         Drops line when activity duration is zero, which causes inconsistencies in diaryBuilder (e.g. division by zero in nBins calculation).
         """
@@ -778,7 +778,7 @@ class TimeDiscretiser:
             self.dataToDiscretise["timestampEndCorrected"]
             - self.dataToDiscretise["timestampStartCorrected"]
         )
-        self._dropNoLengthEvents()
+        self._removesZeroLengthActivities()
         self.dataToDiscretise["nBins"] = self.dataToDiscretise["activityDuration"] / (
             pd.Timedelta(value=self.dt, unit="min")
         )
@@ -912,8 +912,7 @@ class TimeDiscretiser:
         if self.discreteData.isna().any().any():
             raise Exception("There are NaN in the dataset.")
 
-    # FIXME: Refactor variable names?
-    def _dropNoLengthEvents(self):
+    def _removesZeroLengthActivities(self):
         """
         Implements a strategy for overlapping bins if time resolution high enough so that the event becomes negligible,
         i.e. drops events with no length (timestampStartCorrected = timestampEndCorrected or activityDuration = 0),
@@ -930,10 +929,9 @@ class TimeDiscretiser:
         endLength = len(self.dataToDiscretise)
         droppedActivities = startLength - endLength
         print(f"{droppedActivities} zero-length activities dropped from {len(self.IDsWithNoLengthActivities)} IDs.")
-        self._removeActivitiesIfColumnToDiscretiseNoValues()
+        self._removeActivitiesWithZeroValue()
 
-    # FIXME: Refactor variable names?
-    def _removeActivitiesIfColumnToDiscretiseNoValues(self):
+    def _removeActivitiesWithZeroValue(self):
         startLength = len(self.dataToDiscretise)
         subsetNoLengthActivitiesIDsOnly = self.dataToDiscretise.loc[
             self.dataToDiscretise.uniqueID.isin(self.IDsWithNoLengthActivities)]
