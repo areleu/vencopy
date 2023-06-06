@@ -42,7 +42,7 @@ dataVariables:
     weather: ["NA", "wetter", "NA", "wetter"]
     economicStatus: ["NA", "oek_status", "NA", "oek_status"]
     hhBuilding: ["NA", "hhtyp2", "NA", "hhtyp2"] # Gebäudetyp detailliert
-    hhType: ["NA", "haustyp", "NA", "haustyp"] 
+    hhType: ["NA", "haustyp", "NA", "haustyp"]
     hpAge: ["NA", "alter_gr5", "NA", "alter_gr5"]
     hpJob: ["NA", "taet", "NA", "taet"]
     bundesland: ["NA", "BLAND", "NA", "BLAND"]
@@ -134,7 +134,8 @@ inputDTypes:
         weather: "int"
 
 filterDicts:
-    speedThreshold: 10 # Trips with an average speed below this threshold are being filtered out
+    lowerSpeedThreshold: 10 # Minimum speed required
+    higherSpeedThreshold: 200 # Maximum speed allowed
     MiD08:
         include:
             isMIVDriver: [1]
