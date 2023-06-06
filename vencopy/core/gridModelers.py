@@ -152,6 +152,6 @@ class GridModeler:
     def removeActsNotEndingHome(self):
         if self.datasetID in ["MiD17", "VF"]:
             lastActsNotHome = self.activities.loc[(self.activities['purposeStr'] != 'HOME') & (
-                self.activities['isLastActivity']), :]
+                self.activities['isLastActivity']), :].copy()
             idToRemove = lastActsNotHome['uniqueID'].unique()
-            self.activities = self.activities.loc[~self.activities['uniqueID'].isin(idToRemove), :]
+            self.activities = self.activities.loc[~self.activities['uniqueID'].isin(idToRemove), :].copy()
