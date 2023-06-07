@@ -84,7 +84,7 @@ class DiaryBuilder:
         self.activities = self.activities.drop(
             self.activities[self.activities.activityDuration == pd.Timedelta(0)].index.to_list())
         endLength = len(self.activities)
-        print(f"{startLength - endLength} activities dropped because activity lenght equals zero.")
+        print(f"{startLength - endLength} activities dropped because activity length equals zero.")
 
     def createDiaries(self):
         start_time = time.time()
@@ -821,6 +821,10 @@ class TimeDiscretiser:
         Calculate the profile value for each bin for the 'select' method.
         """
         self.dataToDiscretise["valPerBin"] = self.dataToDiscretise[self.columnToDiscretise]
+
+    # FIXME: Implement dynamic battery levels for min and max battery level
+    def _valueDynamic(self):
+        pass
 
     def _identifyBins(self):
         """
