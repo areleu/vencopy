@@ -99,9 +99,6 @@ class DiaryBuilder:
         self.minBatteryLevel = self.selectedActivities.discretise(
             column="minBatteryLevelStart"
         )
-        # # self.residualNeed = self.distributedActivities.discretise(column="residualNeed") # in elec terms kWh elec
-        # # self.maxBatteryLevelEnd = self.selectedActivities.discretise(column="maxBatteryLevelEnd")
-        # # self.minBatteryLevelEnd = self.selectedActivities.discretise(column="minBatteryLevelEnd")
         needed_time = time.time() - start_time
         print(f"Needed time to discretise all columns: {needed_time}")
 
