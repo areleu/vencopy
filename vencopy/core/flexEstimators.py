@@ -456,14 +456,12 @@ class FlexEstimator:
             self._uncontrolledCharging()
             self.__batteryLevelMin()
 
-            delta = abs(
-                self.activities.loc[
-                    self.activities['isLastActivity'],
-                    'maxBatteryLevelEnd'].values - self.activities.loc[
-                        self.activities['isFirstActivity'],
-                    'maxBatteryLevelStart'].values).sum()
-            print(f'Finished ITERATION {i} / {nIter-1}.'
-                  f'Delta battery level is {delta}.')
+            deltaMax = self.__getDelta(colStart='maxBatteryLevelStart',
+                                       colEnd='maxBatteryLevelEnd')
+            deltaMin = self.__getDelta(colStart='minBatteryLevelStart',
+                                       colEnd='minBatteryLevelEnd')
+            print(f'Finished ITERATION {i} / {nIter-1}. Delta max battery level is {deltaMax} and delta min battery is '
+                  f'{deltaMin}.')
 
         self._auxFuelNeed()
         if self.flexConfig['filterFuelNeed']:
@@ -476,6 +474,13 @@ class FlexEstimator:
         lActs = self.activities.loc[self.activities['isLastActivity'], ['hhPersonID', 'maxBatteryLevelEnd']]
         lActs['maxBatteryLevelEnd'] = startLevel
         return lActs.set_index('hhPersonID')
+
+    def __getDelta(self, colStart: str, colEnd: str) -> float:
+        return abs(self.activities.loc[self.activities[
+            'isLastActivity'],
+            colEnd].values - self.activities.loc[
+                self.activities['isFirstActivity'],
+                colStart].values).sum()
 
 
 class WeekFlexEstimator(FlexEstimator):

@@ -896,7 +896,7 @@ class TimeDiscretiser:
                 "One of first bin values is NaN."
             )
 
-    def _allocateBinShares(self):
+    def _allocateBinShares(self):  # sourcery skip: assign-if-exp
         """
         Wrapper which identifies shared bins and allocates them to a discrestised structure.
         """
@@ -949,7 +949,7 @@ class TimeDiscretiser:
         endLength = len(self.dataToDiscretise)
         droppedActivities = startLength - endLength
         print(f"Additional {droppedActivities} activities dropped as the sum of all {self.columnToDiscretise}"
-              "activities for the specific ID was zero.")
+              " activities for the specific ID was zero.")
 
     def _overlappingActivities(self):
         """
