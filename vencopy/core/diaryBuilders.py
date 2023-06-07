@@ -51,6 +51,15 @@ class DiaryBuilder:
             isWeek=isWeekDiary,
             method="select",
         )
+        self.dynamicActivities = TimeDiscretiser(
+            datasetID=self.datasetID,
+            globalConfig=self.globalConfig,
+            localPathConfig=self.localPathConfig,
+            activities=self.activities,
+            dt=self.deltaTime,
+            isWeek=isWeekDiary,
+            method="dynamic",
+        )
 
     def _updateActivities(self):
         """
@@ -93,10 +102,10 @@ class DiaryBuilder:
         self.uncontrolledCharge = self.distributedActivities.discretise(
             column="uncontrolledCharge"
         )
-        self.maxBatteryLevel = self.selectedActivities.discretise(
+        self.maxBatteryLevel = self.dynamicActivities.discretise(
             column="maxBatteryLevelStart"
         )
-        self.minBatteryLevel = self.selectedActivities.discretise(
+        self.minBatteryLevel = self.dynamicActivities.discretise(
             column="minBatteryLevelStart"
         )
         needed_time = time.time() - start_time
@@ -753,13 +762,15 @@ class TimeDiscretiser:
         Calculate value share to be assigned to bins and identifies the bins.
         Includes a wrapper for the 'distribute' und 'select' method.
         """
-        self._calculateValueBins()
+        self._calculateNBins()
         self._identifyBins()
         # wrapper for method:
         if self.method == "distribute":
             self._valueDistribute()
         elif self.method == "select":
             self._valueSelect()
+        elif self.method == "dynamic":
+            self._valueDynamic()
         else:
             raise (
                 ValueError(
@@ -767,7 +778,7 @@ class TimeDiscretiser:
                 )
             )
 
-    def _calculateValueBins(self):
+    def _calculateNBins(self):
         """
         Updates the activity duration based on the rounded timstamps.
         Calculates the multiple of dt of the activity duration and stores it to column nBins. E.g. a 2h-activity
@@ -821,7 +832,11 @@ class TimeDiscretiser:
 
     # FIXME: Implement dynamic battery levels for min and max battery level
     def _valueDynamic(self):
-        pass
+        drainPerBin = (self.activities.drain / self.dataToDiscretise.nBins).dropna()
+        if self.columnToDiscretise == "maxBatteryLevelStart":
+            self.dataToDiscretise["valPerBin"] = (self.dataToDiscretise.maxBatteryLevelStart - drainPerBin)
+        elif self.columnToDiscretise == "minBatteryLevelStart":
+            pass
 
     def _identifyBins(self):
         """
