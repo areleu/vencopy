@@ -660,11 +660,9 @@ class TimeDiscretiser:
                 start="00:00:00", end="24:00:00", freq=f"{self.dt}T"
             )
         self.timeIndex = list(self.timeDelta)
-
         if method == 'dynamic':
             self.lowerBatteryLimit = lowerBatteryLimit
             self.upperBatteryLimit = upperBatteryLimit
-
         self.discreteData = None
 
     def _nSlotsPerInterval(self, interval: pd.Timedelta):
@@ -765,12 +763,11 @@ class TimeDiscretiser:
 
     def _identifyBinShares(self):
         """
-        Calculate value share to be assigned to bins and identifies the bins.
-        Includes a wrapper for the 'distribute' und 'select' method.
+        Calculates value share to be assigned to bins and identifies the bins.
+        Includes a wrapper for the 'distribute', 'select' and 'dynamic' method.
         """
         self._calculateNBins()
         self._identifyBins()
-        # wrapper for method:
         if self.method == "distribute":
             self._valueDistribute()
         elif self.method == "select":
@@ -822,7 +819,7 @@ class TimeDiscretiser:
 
     def _valueDistribute(self):
         """
-        Calculate the profile value for each bin for the 'distribute' method.
+        Calculates the profile value for each bin for the 'distribute' method.
         """
         if self.dataToDiscretise["nBins"].any() == 0:
             raise ArithmeticError(
@@ -835,12 +832,14 @@ class TimeDiscretiser:
 
     def _valueSelect(self):
         """
-        Calculate the profile value for each bin for the 'select' method.
+        Calculates the profile value for each bin for the 'select' method.
         """
         self.dataToDiscretise["valPerBin"] = self.dataToDiscretise[self.columnToDiscretise]
 
-    # FIXME: Implement dynamic battery levels for min battery level
     def _valueDynamic(self):
+        """
+        Calculates the profile value dynamically (e.g. for the SoC).
+        """
         self.deltaBatteryLevelDriving(d=self.dataToDiscretise, valCol=self.columnToDiscretise)
         self.deltaBatteryLevelCharging(d=self.dataToDiscretise, valCol=self.columnToDiscretise)
         # self.updateValueDynamic()
@@ -935,7 +934,6 @@ class TimeDiscretiser:
         self.dataToDiscretise["startTimeFromMidnightSeconds"] = self.dataToDiscretise[
             "dailyTimeDeltaStart"
         ].apply(lambda x: x.seconds)
-        # FIXME: move it out of function globally
         bins = pd.DataFrame({"binTimestamp": self.timeDelta})
         bins.drop(
             bins.tail(1).index, inplace=True
@@ -990,11 +988,8 @@ class TimeDiscretiser:
         """
         Wrapper which identifies shared bins and allocates them to a discrestised structure.
         """
-        self._overlappingActivities()
-        if self.isWeek:
-            self.discreteData = self._allocateWeek()
-        else:
-            self.discreteData = self._allocate()
+        # self._overlappingActivities()
+        self.discreteData = self._allocateWeek() if self.isWeek else self._allocate()
         self._checkBinValues()
 
     def _checkBinValues(self):
@@ -1022,7 +1017,7 @@ class TimeDiscretiser:
         droppedActivities = startLength - endLength
         if droppedActivities != 0:
             raise ValueError(f"{droppedActivities} zero-length activities dropped from {len(self.IDsWithNoLengthActivities)} IDs.")
-        self._removeActivitiesIfColumnToDiscretiseNoValues()
+        self._removeActivitiesWithZeroValue()
 
     def _removeActivitiesWithZeroValue(self):
         startLength = len(self.dataToDiscretise)
@@ -1040,12 +1035,13 @@ class TimeDiscretiser:
         if droppedActivities != 0:
             raise ValueError(f"Additional {droppedActivities} activities dropped as the sum of all {self.columnToDiscretise} activities for the specific ID was zero.")
 
-    def _overlappingActivities(self):
-        """
-        Implements a strategy to treat overlapping bin, especially important for lower time resolution (e.g. 1h).
-        """
-        # define other strategies to treat overlapping events here
-        pass
+    # UNUSED
+    # def _overlappingActivities(self):
+    #     """
+    #     Implements a strategy to treat overlapping bin, especially important for lower time resolution (e.g. 1h).
+    #     """
+    #     # define other strategies to treat overlapping events here
+    #     pass
 
     def _allocateWeek(self):
         """
@@ -1053,8 +1049,7 @@ class TimeDiscretiser:
         are formatted in a way that uniqueID represents a unique week ID. The function then loops over the 7 weekdays
         and calls _allocate for each day a total of 7 times.
         """
-        raise NotImplementedError()
-        # weekSubset = self.dataToDiscretise.groupby(by=["weekdayStr", "actID"])
+        raise NotImplementedError('The method has not been implemneted yet.')
 
     def _allocate(self):
         """
