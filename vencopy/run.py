@@ -47,7 +47,7 @@ if __name__ == "__main__":
     vpFlex = FlexEstimator(
         configDict=configDict, activities=vpGrid.activities
     )
-    vpFlex.estimateTechnicalFlexibility_iteration(nIter=3)
+    vpFlex.estimateTechnicalFlexibility_iteration(nIter=1)
 
     vpDiary = DiaryBuilder(configDict=configDict, activities=vpFlex.activities)
     vpDiary.createDiaries()
