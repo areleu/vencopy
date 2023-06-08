@@ -97,7 +97,7 @@ class DiaryBuilder:
         self.activities = self.activities.drop(
             self.activities[self.activities.activityDuration == pd.Timedelta(0)].index.to_list())
         endLength = len(self.activities)
-        print(f"{startLength - endLength} activities dropped because activity length equals zero.")
+        print(f"{startLength - endLength} activities dropped from {startLength} total activities because activity length equals zero.")
 
     def createDiaries(self):
         start_time = time.time()
@@ -764,9 +764,6 @@ class TimeDiscretiser:
             index=self.dataToDiscretise.uniqueID.unique(),
             columns=pd.MultiIndex.from_product([self.weekdays, hours]),
         )
-        self.discreteDataFast = (
-            self.discreteData.copy()
-        )  # Only for performance analysis
 
     def _identifyBinShares(self):
         """
@@ -845,9 +842,8 @@ class TimeDiscretiser:
 
     # FIXME: Implement dynamic battery levels for min battery level
     def _valueDynamic(self):
-        col = self.columnToDiscretise
-        self.deltaBatteryLevelDriving(d=self.dataToDiscretise, valCol=col)
-        self.deltaBatteryLevelCharging(d=self.dataToDiscretise, valCol=col)
+        self.deltaBatteryLevelDriving(d=self.dataToDiscretise, valCol=self.columnToDiscretise)
+        self.deltaBatteryLevelCharging(d=self.dataToDiscretise, valCol=self.columnToDiscretise)
 
     def deltaBatteryLevelDriving(self, d: pd.DataFrame, valCol: str):
         if valCol == "maxBatteryLevelStart":
@@ -900,9 +896,9 @@ class TimeDiscretiser:
 
     def enforceBatteryLimit(self, deltaBat: list, how: str, lim: float):
         if how == 'lower':
-            return [max(l, lim) for l in deltaBat]
+            return [max(i, lim) for i in deltaBat]
         elif how == 'upper':
-            return [min(l, lim) for l in deltaBat]
+            return [min(i, lim) for i in deltaBat]
 
     def _identifyBins(self):
         """
@@ -994,7 +990,7 @@ class TimeDiscretiser:
         Verifies that all bins get a value assigned, otherwise raise an error.
         """
         if self.discreteData.isna().any().any():
-            raise Exception("There are NaN in the dataset but shouldn't.")
+            raise Exception("There are NaN in the dataset.")
 
     # FIXME: Refactor variable names?
     def _dropNoLengthEvents(self):
@@ -1059,9 +1055,14 @@ class TimeDiscretiser:
             pd.DataFrame: Discretized data set with temporal discretizations in the columns.
         """
         trips = self.dataToDiscretise.copy()
-        trips = trips[["uniqueID", "firstBin", "lastBin", "valPerBin"]]
-        trips["uniqueID"] = trips["uniqueID"].astype(int)
-        return trips.groupby(by="uniqueID").apply(self.assignBins)
+        if self.method == 'dynamic':
+            trips = trips[["uniqueID", "firstBin", "lastBin", "valPerBin", 'drainPerBin', 'chargePerBin']]
+            trips["uniqueID"] = trips["uniqueID"].astype(int)
+            return trips.groupby(by="uniqueID").apply(self.assignBins)
+        else:
+            trips = trips[["uniqueID", "firstBin", "lastBin", "valPerBin"]]
+            trips["uniqueID"] = trips["uniqueID"].astype(int)
+            return trips.groupby(by="uniqueID").apply(self.assignBins)
 
     def assignBins(self, acts: pd.DataFrame):
         """

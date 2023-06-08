@@ -113,7 +113,7 @@ class FlexEstimator:
             self.activities['isLastActivity'], [
                 'hhPersonID', 'maxBatteryLevelEnd']].set_index('hhPersonID')
 
-    @profile(immediate=True)
+    @profile(immediate=False)
     def __batteryLevelMin(self):
         """
         Calculate the minimum battery level at the beginning and end of each 
