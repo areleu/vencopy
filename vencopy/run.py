@@ -65,4 +65,4 @@ if __name__ == "__main__":
     # vpEval.plotProfiles(flexEstimator=vpFlex)
 
     elapsedTime = time.time() - startTime
-    print("Elapsed time:", elapsedTime)
+    print(f"Elapsed time: {elapsedTime}.")

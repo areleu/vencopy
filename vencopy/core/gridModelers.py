@@ -43,13 +43,13 @@ class GridModeler:
 
         :return: None
         """
-        print('Starting with charge connection replacement of location purposes')
+        print('Starting with charge connection replacement of location purposes.')
         self.chargeAvailability = self.activities.purposeStr.replace(self.gridAvailabilitySimple)
         # self.chargeAvailability = (~(self.chargeAvailability != True))  # check condition if not, needed?
         self.chargeAvailability = self.chargeAvailability * self.gridConfig['ratedPowerSimple']
         self.activities['ratedPower'] = self.chargeAvailability
         self.activities = self.adjustPowerShortParking()
-        print('Grid connection assignment complete')
+        print('Grid connection assignment complete.')
 
     def _assignGridViaProbabilities(self, setSeed: int):
         """
@@ -58,7 +58,7 @@ class GridModeler:
                  assigned with probability distribution
         """
         activitiesNoHome = []
-        print('Starting with charge connection replacement of location purposes')
+        print('Starting with charge connection replacement of location purposes.')
         for purpose in self.activities.purposeStr.unique():
             if purpose == "HOME":
                 activitiesHome = self._homeProbabilityDistribution(setSeed=42)
@@ -76,7 +76,7 @@ class GridModeler:
         dataframes = [activitiesHome, activitiesNoHome]
         self.activities = pd.concat(dataframes).reset_index(drop=True)
         self.activities = self.adjustPowerShortParking()
-        print('Grid connection assignment complete')
+        print('Grid connection assignment complete.')
 
     def _homeProbabilityDistribution(self, setSeed: int):
         # adds condition that charging at home in the morning has the same rated capacity as in the evening
@@ -107,13 +107,11 @@ class GridModeler:
             (self.activities['timedelta'] / np.timedelta64(1, 's')) <= self.gridConfig['minimumParkingTime'])), 'ratedPower'] = 0
         return self.activities
 
-    def assignGrid(self, losses: bool = False):
+    def assignGrid(self):
         """
         Wrapper function for grid assignment. The number of iterations for
         assignGridViaProbabilities() and transactionStartHour() and seed for
         reproduction of random numbers can be specified here.
-
-        :param losses [bool]: Should electric losses in the charging equipment be considered?
         """
         if self.gridModel == 'simple':
             self._assignGridViaPurposes()
@@ -123,11 +121,10 @@ class GridModeler:
         else:
             raise (ValueError(f'Specified grid modeling option {self.gridModel} is not implemented. Please choose'
                               f'"simple" or "probability"'))
-
-        self.activities = self._addGridLosses(acts=self.activities)
+        self._addGridLosses()
         return self.activities
 
-    def _addGridLosses(self, acts: pd.DataFrame):
+    def _addGridLosses(self):
         """
         Function applying a reduction of rated power capacities to the rated powers after sampling. The
         factors for reducing the rated power are given in the gridConfig with keys being floats of rated powers
@@ -138,12 +135,12 @@ class GridModeler:
         :param losses [bool]: Should electric losses in the charging equipment be considered?
         """
         if self.gridConfig['losses']:
-            acts['availablePower'] = acts['ratedPower'] - (
-                acts['ratedPower'] * acts['ratedPower'].apply(
+            self.activities['availablePower'] = self.activities['ratedPower'] - (
+                self.activities['ratedPower'] * self.activities['ratedPower'].apply(
                     lambda x: self.gridConfig['loss_factor'][f'rated_power_{str(x)}']))
         else:
-            acts['availablePower'] = acts['ratedPower']
-        return acts
+            self.activities['availablePower'] = self.activities['ratedPower']
+        return self.activities
 
     def writeOutput(self):
         root = Path(self.localPathConfig['pathAbsolute']['vencoPyRoot'])
@@ -153,7 +150,8 @@ class GridModeler:
         writeOut(data=self.activities, path=root / folder / fileName)
 
     def removeActsNotEndingHome(self):
-        lastActsNotHome = self.activities.loc[(self.activities['purposeStr'] != 'HOME') & (
-            self.activities['isLastActivity']), :]
-        idToRemove = lastActsNotHome['uniqueID'].unique()
-        self.activities = self.activities.loc[~self.activities['uniqueID'].isin(idToRemove), :]
+        if self.datasetID in ["MiD17", "VF"]:
+            lastActsNotHome = self.activities.loc[(self.activities['purposeStr'] != 'HOME') & (
+                self.activities['isLastActivity']), :].copy()
+            idToRemove = lastActsNotHome['uniqueID'].unique()
+            self.activities = self.activities.loc[~self.activities['uniqueID'].isin(idToRemove), :].copy()
