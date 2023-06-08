@@ -819,7 +819,8 @@ class TimeDiscretiser:
         )
         endLength = len(self.dataToDiscretise)
         droppedProfiles = startLength - endLength
-        print(f"{droppedProfiles} activities dropped because bin lenght equals zero.")
+        if droppedProfiles != 0:
+            raise ValueError(f"{droppedProfiles} activities dropped because bin lenght equals zero.")
 
     def _valueDistribute(self):
         """
@@ -844,6 +845,7 @@ class TimeDiscretiser:
     def _valueDynamic(self):
         self.deltaBatteryLevelDriving(d=self.dataToDiscretise, valCol=self.columnToDiscretise)
         self.deltaBatteryLevelCharging(d=self.dataToDiscretise, valCol=self.columnToDiscretise)
+        # self.updateValueDynamic()
 
     def deltaBatteryLevelDriving(self, d: pd.DataFrame, valCol: str):
         if valCol == "maxBatteryLevelStart":
@@ -899,6 +901,18 @@ class TimeDiscretiser:
             return [max(i, lim) for i in deltaBat]
         elif how == 'upper':
             return [min(i, lim) for i in deltaBat]
+
+    # def updateValueDynamic(self):
+    #     self.dataToDiscretise['originalValPerBin'] = self.dataToDiscretise['valPerBin']
+    #     self.dataToDiscretise["drainPerBin"] = self.dataToDiscretise["drainPerBin"].fillna(0)
+    #     self.dataToDiscretise['lenList'] = self.dataToDiscretise['valPerBin'].apply(lambda x: len(x))
+    #     max_len = self.dataToDiscretise['lenList'].max()
+    #     self.dataToDiscretise['listPadded'] = self.dataToDiscretise.apply(lambda x: np.pad(np.array(x.valPerBin), pad_width=(0, max_len-x.lenList)), axis=1)
+    #     arrayValPerBin = np.array(list(self.dataToDiscretise['listPadded']))
+    #     arrayDrainPerBin = np.array([self.dataToDiscretise['drainPerBin'] for _ in range(np.shape(arrayValPerBin)[1])]).transpose()
+    #     arrayChargePerBin = np.array([self.dataToDiscretise['chargePerBin'] for _ in range(np.shape(arrayValPerBin)[1])]).transpose()
+    #     self.dataToDiscretise['valPerBin'] = list(arrayValPerBin + arrayDrainPerBin + arrayChargePerBin)
+    #     self.dataToDiscretise['valPerBin'] = self.dataToDiscretise.apply(lambda x: x.valPerBin[:x.lenList], axis=1)
 
     def _identifyBins(self):
         """
@@ -990,7 +1004,7 @@ class TimeDiscretiser:
         Verifies that all bins get a value assigned, otherwise raise an error.
         """
         if self.discreteData.isna().any().any():
-            raise Exception("There are NaN in the dataset.")
+            raise ValueError("There are NaN in the dataset.")
 
     # FIXME: Refactor variable names?
     def _dropNoLengthEvents(self):
@@ -1009,7 +1023,8 @@ class TimeDiscretiser:
             noLengthActivitiesIDs)
         endLength = len(self.dataToDiscretise)
         droppedActivities = startLength - endLength
-        print(f"{droppedActivities} zero-length activities dropped from {len(self.IDsWithNoLengthActivities)} IDs.")
+        if droppedActivities != 0:
+            raise ValueError(f"{droppedActivities} zero-length activities dropped from {len(self.IDsWithNoLengthActivities)} IDs.")
         self._removeActivitiesIfColumnToDiscretiseNoValues()
 
     # FIXME: Refactor variable names?
@@ -1026,8 +1041,8 @@ class TimeDiscretiser:
             ~self.dataToDiscretise.uniqueID.isin(IDsToDrop)]
         endLength = len(self.dataToDiscretise)
         droppedActivities = startLength - endLength
-        print(f"Additional {droppedActivities} activities dropped as the sum of all {self.columnToDiscretise}"
-              " activities for the specific ID was zero.")
+        if droppedActivities != 0:
+            raise ValueError(f"Additional {droppedActivities} activities dropped as the sum of all {self.columnToDiscretise} activities for the specific ID was zero.")
 
     def _overlappingActivities(self):
         """
@@ -1055,14 +1070,9 @@ class TimeDiscretiser:
             pd.DataFrame: Discretized data set with temporal discretizations in the columns.
         """
         trips = self.dataToDiscretise.copy()
-        if self.method == 'dynamic':
-            trips = trips[["uniqueID", "firstBin", "lastBin", "valPerBin", 'drainPerBin', 'chargePerBin']]
-            trips["uniqueID"] = trips["uniqueID"].astype(int)
-            return trips.groupby(by="uniqueID").apply(self.assignBins)
-        else:
-            trips = trips[["uniqueID", "firstBin", "lastBin", "valPerBin"]]
-            trips["uniqueID"] = trips["uniqueID"].astype(int)
-            return trips.groupby(by="uniqueID").apply(self.assignBins)
+        trips = trips[["uniqueID", "firstBin", "lastBin", "valPerBin"]]
+        trips["uniqueID"] = trips["uniqueID"].astype(int)
+        return trips.groupby(by="uniqueID").apply(self.assignBins)
 
     def assignBins(self, acts: pd.DataFrame):
         """
