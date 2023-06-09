@@ -60,17 +60,14 @@ class FlexEstimator:
             startLevel (float): Battery start level for first activity of the 
             activity chain
         """
-
         print('Starting maximum battery level calculation.')
         firstActs = self._calcMaxBatFirstAct(startLevel=startLevel)
         firstParkActs = firstActs.loc[~firstActs['parkID'].isna(), :]
-
         # The second condition is needed to circumvent duplicates with tripIDs=1
         # which are initiated above
         firstTripActs = firstActs.loc[(~firstActs['tripID'].isna()) & (
             firstActs['isFirstActivity']), :]
         actTemp = pd.concat([firstParkActs, firstTripActs])
-
         # Start and end for all trips and parkings in between
         setActs = range(int(self.activities['parkID'].max()) + 1)
         tripActsRes = pd.DataFrame()  # Redundant?
@@ -82,29 +79,24 @@ class FlexEstimator:
                 ~self.activities['isFirstActivity'])
             tripActs = self.activities.loc[tripRows, :]
             parkActs = self.activities.loc[parkRows, :]
-
             # Filtering for the previous trips that have the current activity as
             # next activity
             prevTripActs = actTemp.loc[
                 (actTemp['nextActID'] == act) & (~actTemp['tripID'].isna()), :]
-
             # firstAct trips with tripID==0 (overnight morning splits) are
             # handled in _calcMaxBatFirstAct above
             if act == 1:
                 tripActsRes = self.__calcBatLevTripMax(
                     actID=act, tripActs=tripActs, prevParkActs=firstParkActs)
-
             elif act != 0:
                 # Park activities start off a new activity index e.g. parkAct 1 is always before tripAct 1
                 parkActsRes = self.__calcBatLevParkMax(
                     actID=act, parkActs=parkActs, prevTripActs=prevTripActs)
                 actTemp = pd.concat([actTemp, parkActsRes], ignore_index=True)
-
                 prevParkActs = actTemp.loc[(actTemp['nextActID'] == act) & (
                     ~actTemp['parkID'].isna()), :]
                 tripActsRes = self.__calcBatLevTripMax(
                     actID=act, tripActs=tripActs, prevParkActs=prevParkActs)
-
             actTemp = pd.concat([actTemp, tripActsRes], ignore_index=True)
             prevTripActs = tripActsRes  # Redundant?
         self.activities = actTemp.sort_values(
@@ -124,13 +116,11 @@ class FlexEstimator:
         before. Thus, activities are looped over from the last activity to 
         first.
         """
-
         print('Starting minimum battery level calculation.')
         isPark = ~(self.activities['parkID'].isna())
         isTrip = ~(self.activities['tripID'].isna())
         lastActs = self._calcMinBatLastAct(isPark=isPark, isTrip=isTrip)
         actTemp = lastActs
-
         # Start and end for all trips and parkings starting from the last
         # activities, then looping to earlier acts
         setActs = range(int(self.activities['parkID'].max()) - 1, -1, -1)
@@ -162,7 +152,8 @@ class FlexEstimator:
             by=['uniqueID', 'actID', 'parkID'], ignore_index=True)
 
     def _calcMaxBatFirstAct(self, startLevel: float) -> pd.DataFrame:
-        """Calculate maximum battery levels at beginning and end of the first activities. If overnight trips are split
+        """
+        Calculate maximum battery levels at beginning and end of the first activities. If overnight trips are split
         up, not only first activities are being treated (see details in docstring of self._getFirstActIdx())
 
         Args:
@@ -172,20 +163,16 @@ class FlexEstimator:
             pd.DataFrame: First activities with all battery level columns as anchor for the consecutive calculation 
             of maximum charge
         """
-
         # First activities - parking and trips
         idx = self.__getFirstActIdx()
         firstAct = self.activities.loc[idx, :].copy()
-
         fa = firstAct.set_index('uniqueID')
         fa['maxBatteryLevelStart'] = startLevel
         fa = fa.reset_index('uniqueID')
         fa.index = firstAct.index
         firstAct = fa
-
         isPark = ~firstAct['parkID'].isna()
         isTrip = ~firstAct['tripID'].isna()
-
         firstAct.loc[isPark, 'maxBatteryLevelEnd_unlimited'] = firstAct['maxBatteryLevelStart'] + firstAct[
             'maxChargeVolume']
         firstAct.loc[isPark, 'maxBatteryLevelEnd'] = firstAct.loc[isPark, 'maxBatteryLevelEnd_unlimited'].where(
@@ -218,7 +205,6 @@ class FlexEstimator:
             pd.DataFrame: Activity data set with the battery variables set for all last activities of the activity 
             chains
         """
-
         # Last activities - parking and trips
         lastAct = self.activities.loc[self.activities['isLastActivity'], :].copy()
         lastAct.loc[isPark, 'minBatteryLevelEnd'] = self.lowerBatLev
@@ -234,17 +220,14 @@ class FlexEstimator:
 
     def __calcBatLevTripMax(self, actID: int, tripActs: pd.DataFrame, prevParkActs: pd.DataFrame = None):
         # Setting trip activity battery start level to battery end level of previous parking
-
         # Index setting of trip activities to be updated
         activeHHPersonIDs = tripActs.loc[:, 'uniqueID']
         multiIdxTrip = [(id, actID, None) for id in activeHHPersonIDs]
         tripActsIdx = tripActs.set_index(['uniqueID', 'tripID', 'parkID'])
-
         # Index setting of previous park activities as basis for the update
         prevParkIDs = tripActs.loc[:, 'prevActID']
         multiIdxPark = [(id, None, act) for id, act in zip(activeHHPersonIDs, prevParkIDs)]
         prevParkActsIdx = prevParkActs.set_index(['uniqueID', 'tripID', 'parkID'])
-
         # Calculation of battery level at start and end of trip
         tripActsIdx.loc[multiIdxTrip, 'maxBatteryLevelStart'] = prevParkActsIdx.loc[
             multiIdxPark, 'maxBatteryLevelEnd'].values
@@ -299,12 +282,10 @@ class FlexEstimator:
         activeHHPersonIDs = parkActs.loc[:, 'uniqueID']
         multiIdxPark = [(id, None, actID) for id in activeHHPersonIDs]
         parkActsIdx = parkActs.set_index(['uniqueID', 'tripID', 'parkID'])
-
         # Index setting of previous trip activities used to update
         prevTripIDs = parkActs.loc[:, 'prevActID']
         multiIdxTrip = [(id, act, None) for id, act in zip(activeHHPersonIDs, prevTripIDs)]
         prevTripActsIdx = prevTripActs.set_index(['uniqueID', 'tripID', 'parkID'])
-
         # Calculation of battery level at start and end of park activity
         parkActsIdx.loc[multiIdxPark, 'maxBatteryLevelStart'] = prevTripActsIdx.loc[
             multiIdxTrip, 'maxBatteryLevelEnd'].values
@@ -314,7 +295,6 @@ class FlexEstimator:
             parkActsIdx['maxBatteryLevelEnd_unlimited'] <= self.upperBatLev, other=self.upperBatLev)
         tmpOvershoot = parkActsIdx['maxBatteryLevelEnd_unlimited'] - self.upperBatLev
         parkActsIdx['maxOvershoot'] = tmpOvershoot.where(tmpOvershoot >= 0, other=0)
-
         return parkActsIdx.reset_index()
 
     def __calcBatLevParkMin(self, actID: int, parkActs: pd.DataFrame, nextTripActs: pd.DataFrame = None):
@@ -336,12 +316,10 @@ class FlexEstimator:
         activeHHPersonIDs = parkActs.loc[:, 'uniqueID']
         multiIdxPark = [(id, None, actID) for id in activeHHPersonIDs]
         parkActsIdx = parkActs.set_index(['uniqueID', 'tripID', 'parkID'])
-
         # Composing trip activity index to get battery level from
         nextTripIDs = parkActs.loc[:, 'nextActID']
         multiIdxTrip = [(id, act, None) for id, act in zip(activeHHPersonIDs, nextTripIDs)]
         nextTripActsIdx = nextTripActs.set_index(['uniqueID', 'tripID', 'parkID'])
-
         # Setting next park activity battery start level to battery end level of current trip
         parkActsIdx.loc[multiIdxPark, 'minBatteryLevelEnd'] = nextTripActsIdx.loc[
             multiIdxTrip, 'minBatteryLevelStart'].values
@@ -356,7 +334,6 @@ class FlexEstimator:
     def _uncontrolledCharging(self):
         self.activities.loc[~self.activities['parkID'].isna(), 'uncontrolledCharge'] = self.activities[
             'maxBatteryLevelEnd'] - self.activities['maxBatteryLevelStart']
-
         # FIXME: Steps for implementing additional timestamp column for maximum power uncontrolled charging
         # 1  Calculate self.upperBatLev - maxBatteryLevelStart
         # 2  If this is smaller than available charged energy (if full power charging would end earlier than
@@ -382,7 +359,6 @@ class FlexEstimator:
             indexCols (list): Columns that define a "day", i.e. all unique combinations where at least one activity
                 requires residual fuel are disregarded.
         """
-
         actsIdx = acts.set_index(indexCols)
         idxOut = (~actsIdx['maxResidualNeed'].isin([None, 0])) | (~actsIdx['minResidualNeed'].isin([None, 0]))
 
@@ -447,7 +423,6 @@ class FlexEstimator:
         """
         self._drain()
         self._maxChargeVolumePerParkingAct()
-
         # Initial battery level for first iteration loop per hhPersonID in index
         batteryLevelEnd = self.__getStartLevel(
             startLevel=self.upperBatLev * self.flexConfig['Start_SOC'])
@@ -461,7 +436,6 @@ class FlexEstimator:
                                        colEnd='minBatteryLevelEnd')
             print(f'Finished ITERATION {i} / {nIter-1}. Delta max battery level is {deltaMax} and delta min battery is '
                   f'{deltaMin}.')
-
         self._auxFuelNeed()
         if self.flexConfig['filterFuelNeed']:
             self.activities = self._filterResidualNeed(
@@ -706,7 +680,7 @@ class WeekFlexEstimator(FlexEstimator):
         tmpUndershoot = self.activities.loc[idx, 'minBatteryLevelStart_unlimited'] - self.lowerBatLev
         self.activities.loc[idx, 'minUndershoot'] = tmpUndershoot.where(tmpUndershoot >= 0, other=0)
 
-    def estimateTechnicalFlexibility(self, filterFuelNeed: bool = True):
+    def estimateWeekTechnicalFlexibility(self, filterFuelNeed: bool = True):
         """
         Main run function for the class WeekFlexEstimator. Calculates uncontrolled charging as well as technical
         boundary constraints for controlled charging and feeding electricity back into the grid on an indvidiual vehicle

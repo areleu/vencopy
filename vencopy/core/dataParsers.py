@@ -1129,7 +1129,7 @@ class IntermediateParsing(DataParser):
             key: conversionDict[key] for key in conversionDict.keys() & keys
         }
         self.data = self.data.astype(self.varDataTypeDict)
-    
+
     def _filterConsistentHours(self):
         """
         Filtering out records where starting hour is after end hour but trip
