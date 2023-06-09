@@ -474,7 +474,8 @@ class DataParser:
         )
 
     def _addParkingRows(self, splitOvernightTrips: bool = True):
-        """Wrapper function generating park activity rows between the trip data from the original MID dataset. Some
+        """
+        Wrapper function generating park activity rows between the trip data from the original MID dataset. Some
         utility attributes are being added such as isFirstActivity, isLastActivity or the hhPersonID of the next and
         previous activity. Redundant time observations are dropped after timestamp creation for start and end time of
         each activity. Overnight trips (e.g. extending from 23:00 at survey day to 1:30 on the consecutive day) are
@@ -1323,14 +1324,13 @@ class ParseMiD(IntermediateParsing):
             inplace=True,
         )
 
-    def process(self, splitOvernightTrips: bool = True):
+    def process(self):
         """
         Wrapper function for harmonising and filtering the activities dataset as well as adding parking rows.
 
         :param splitOvernightTrips: Should trips that end on the consecutive day (not the survey day) be split in such
         a way that the estimated trip distance the next day is appended in the morning hours of the survey day?
         """
-
         self._selectColumns()
         self.__harmonizeVariables()
         self._harmonizeVariablesUniqueIDNames()
@@ -1341,7 +1341,7 @@ class ParseMiD(IntermediateParsing):
         self._checkFilterDict(self.filterDict)
         self._filter(self.filterDict)
         self._filterConsistentHours()
-        self._addParkingRows(splitOvernightTrips=splitOvernightTrips)
+        self._addParkingRows(splitOvernightTrips=self.parseConfig['splitOvernightTrips'])
         print("Parsing MiD dataset completed.")
         return self.activities
 
@@ -1475,11 +1475,11 @@ class ParseVF(IntermediateParsing):
         self._checkFilterDict(self.filterDict)
         self._filter(self.filterDict)
         self._filterConsistentHours()
-        self._addParkingRows()
+        self._addParkingRows(splitOvernightTrips=self.parseConfig['splitOvernightTrips'])
         print("Parsing VF dataset completed.")
         return self.activities
 
-
+  
 class ParseKiD(IntermediateParsing):
     def __init__(
         self, configDict: dict, datasetID: str, loadEncrypted=False, debug=False

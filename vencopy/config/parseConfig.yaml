@@ -10,6 +10,7 @@
 # This config holds all relative paths and filenames for dataParsers.py
 
 encryptionPW: "PW"
+splitOvernightTrips: True
 
 dataVariables:
     datasetID: ["MiD08", "MiD17", "KiD", "VF"]
