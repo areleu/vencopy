@@ -1111,6 +1111,25 @@ class IntermediateParsing(DataParser):
         """
         self.data = self.rawData.loc[:, self.columns]
 
+    def _convertTypes(self):
+        """
+        Convert raw column types to predefined python types as specified in
+        parseConfig['inputDTypes'][datasetID]. This is mainly done for
+        performance reasons. But also in order to avoid index values that are
+        of type int to be cast to float. The function operates only on
+        self.data and writes back changes to self.data
+
+        :return: None
+        """
+        # Filter for dataset specific columns
+        conversionDict = self.parseConfig["inputDTypes"][self.datasetID]
+        keys = {iCol for iCol in conversionDict.keys()
+                if iCol in self.data.columns}
+        self.varDataTypeDict = {
+            key: conversionDict[key] for key in conversionDict.keys() & keys
+        }
+        self.data = self.data.astype(self.varDataTypeDict)
+    
     def _filterConsistentHours(self):
         """
         Filtering out records where starting hour is after end hour but trip
@@ -1264,25 +1283,6 @@ class ParseMiD(IntermediateParsing):
         self.data = dataRenamed
         print("Finished harmonization of variables.")
 
-    def __convertTypes(self):
-        """
-        Convert raw column types to predefined python types as specified in
-        parseConfig['inputDTypes'][datasetID]. This is mainly done for
-        performance reasons. But also in order to avoid index values that are
-        of type int to be cast to float. The function operates only on
-        self.data and writes back changes to self.data
-
-        :return: None
-        """
-        # Filter for dataset specific columns
-        conversionDict = self.parseConfig["inputDTypes"][self.datasetID]
-        keys = {iCol for iCol in conversionDict.keys()
-                if iCol in self.data.columns}
-        self.varDataTypeDict = {
-            key: conversionDict[key] for key in conversionDict.keys() & keys
-        }
-        self.data = self.data.astype(self.varDataTypeDict)
-
     def __addStrColumns(self, weekday=True, purpose=True):
         """
         Adds string columns for either weekday or purpose.
@@ -1334,7 +1334,6 @@ class ParseMiD(IntermediateParsing):
         self._selectColumns()
         self.__harmonizeVariables()
         self._harmonizeVariablesUniqueIDNames()
-        self.__convertTypes()
         self.__addStrColumns()
         self._composeStartAndEndTimestamps()
         self._updateEndTimestamp()
@@ -1421,25 +1420,6 @@ class ParseVF(IntermediateParsing):
         self.data = dataRenamed
         print("Finished harmonization of variables")
 
-    def __convertTypes(self):
-        """
-        Convert raw column types to predefined python types as specified in
-        parseConfig['inputDTypes'][datasetID]. This is mainly done for
-        performance reasons. But also in order to avoid index values that are
-        of type int to be cast to float. The function operates only on
-        self.data and writes back changes to self.data
-
-        :return: None
-        """
-        # Filter for dataset specific columns
-        conversionDict = self.parseConfig["inputDTypes"][self.datasetID]
-        keys = {iCol for iCol in conversionDict.keys()
-                if iCol in self.data.columns}
-        self.varDataTypeDict = {
-            key: conversionDict[key] for key in conversionDict.keys() & keys
-        }
-        self.data = self.data.astype(self.varDataTypeDict)
-
     def __addStrColumns(self, weekday=True, purpose=True):
         """
         Adds string columns for either weekday or purpose.
@@ -1480,10 +1460,6 @@ class ParseVF(IntermediateParsing):
             inplace=True,
         )
 
-    # DEPRECATED, WILL BE REMOVED IN NEXT RELEASE
-    def copyOverTripNextDay(self):
-        pass
-
     def process(self):
         """
         Wrapper function for harmonising and filtering the dataset.
@@ -1491,7 +1467,6 @@ class ParseVF(IntermediateParsing):
         self._selectColumns()
         self.__harmonizeVariables()
         self._harmonizeVariablesUniqueIDNames()
-        self.__convertTypes()
         self.__addStrColumns()
         self._composeStartAndEndTimestamps()
         self._updateEndTimestamp()
@@ -1545,29 +1520,16 @@ class ParseKiD(IntermediateParsing):
         print(
             f"Finished loading {len(self.rawData)} " f"rows of raw data of type .dta.")
 
-    def __convertTypes(self):
+    def __changeSeparator(self):
         """
-        Convert raw column types to predefined python types as specified
-        in parseConfig['inputDTypes'][datasetID].
-        This is mainly done for performance reasons. But also in order
-        to avoid index values that are of type int
-        to be cast to float. The function operates only on self.data
-        and writes back changes to self.data
+        Replaces commas with dots in the dataset (German datasets).
 
         :return: None
         """
-        conversionDict = self.parseConfig["inputDTypes"][self.datasetID]
-        keys = {iCol for iCol in conversionDict.keys()
-                if iCol in self.data.columns}
-        self.varDataTypeDict = {
-            key: conversionDict[key] for key in conversionDict.keys() & keys
-        }
-        # German df has commas instead of dots in floats
         for i, x in enumerate(list(self.data.tripDistance)):
             self.data.at[i, "tripDistance"] = x.replace(",", ".")
         for i, x in enumerate(list(self.data.tripWeight)):
             self.data.at[i, "tripWeight"] = x.replace(",", ".")
-        self.data = self.data.astype(self.varDataTypeDict)
 
     def __addStrColumns(self, weekday=True, purpose=True):
         """
@@ -1638,7 +1600,7 @@ class ParseKiD(IntermediateParsing):
         self._selectColumns()
         self._harmonizeVariables()
         self._harmonizeVariablesUniqueIDNames()
-        self.__convertTypes()
+        self.__changeSeparator()
         self.__excludeHours()
         self.__addStrColumns()
         self._composeStartAndEndTimestamps()
