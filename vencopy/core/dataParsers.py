@@ -1139,7 +1139,7 @@ class IntermediateParsing(DataParser):
 
         :return: No returns, operates only on the class instance
         """
-        if self.datasetID in ["MiD17", "MiD08"]:
+        if self.datasetID in ["MiD17", "MiD08", "VF", "KiD"]:
             dat = self.data
             self.data = dat.loc[
                 (dat["tripStartClock"] <= dat["tripEndClock"])
@@ -1421,6 +1421,20 @@ class ParseVF(IntermediateParsing):
         self.data = dataRenamed
         print("Finished harmonization of variables")
 
+    def __padMissingCarSegments(self):
+        # pad missing car segments
+        self.data.carSegment = self.data.groupby('hhID').carSegment.transform('first')
+        self.data.drivetrain = self.data.groupby('hhID').drivetrain.transform('first')
+        self.data.vehicleID = self.data.groupby('hhID').vehicleID.transform('first')
+        # remove remaining NaN
+        self.data = self.data.dropna(subset=['carSegment','drivetrain', 'vehicleID'])
+
+    def __excludeHours(self):
+        """
+        Removes trips where both start and end trip time are missing. KID-specific function.
+        """
+        self.data = self.data.dropna(subset=['tripStartClock', 'tripEndClock'])
+
     def __addStrColumns(self, weekday=True, purpose=True):
         """
         Adds string columns for either weekday or purpose.
@@ -1431,7 +1445,6 @@ class ParseVF(IntermediateParsing):
                         added in a separate column
         :return: None
         """
-
         if weekday:
             self._addStrColumnFromVariable(
                 colName="weekdayStr", varName="tripStartWeekday"
@@ -1444,7 +1457,6 @@ class ParseVF(IntermediateParsing):
         # Clean-up of temporary redundant columns
         self.activities.drop(
             columns=[
-                "isMIVDriver",
                 "tripStartClock",
                 "tripEndClock",
                 "tripStartYear",
@@ -1468,6 +1480,8 @@ class ParseVF(IntermediateParsing):
         self._selectColumns()
         self.__harmonizeVariables()
         self._harmonizeVariablesUniqueIDNames()
+        self.__padMissingCarSegments()
+        self.__excludeHours()
         self._convertTypes()
         self.__addStrColumns()
         self._composeStartAndEndTimestamps()

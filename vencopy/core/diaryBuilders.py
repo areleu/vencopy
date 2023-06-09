@@ -59,10 +59,6 @@ class DiaryBuilder:
             dt=self.deltaTime,
             isWeek=isWeekDiary,
             method="dynamic",
-            upperBatteryLimit=configDict["flexConfig"][
-                'Battery_capacity'] * configDict["flexConfig"]['Maximum_SOC'],
-            lowerBatteryLimit=configDict["flexConfig"][
-                'Battery_capacity'] * configDict["flexConfig"]['Minimum_SOC']
         )
 
     def _updateActivities(self):
@@ -608,10 +604,7 @@ class TimeDiscretiser:
         method: str,
         globalConfig: dict,
         localPathConfig: dict,
-        isWeek: bool = False,
-        lowerBatteryLimit: float = 0,
-        upperBatteryLimit: float = 100
-    ):
+        isWeek: bool = False):
         """
         Class for discretisation of activities to fixed temporal resolution
 
@@ -660,9 +653,6 @@ class TimeDiscretiser:
                 start="00:00:00", end="24:00:00", freq=f"{self.dt}T"
             )
         self.timeIndex = list(self.timeDelta)
-        if method == 'dynamic':
-            self.lowerBatteryLimit = lowerBatteryLimit
-            self.upperBatteryLimit = upperBatteryLimit
         self.discreteData = None
 
     def _nSlotsPerInterval(self, interval: pd.Timedelta):
@@ -871,7 +861,7 @@ class TimeDiscretiser:
             d.loc[d['tripID'].isna(), 'valPerBin'] = d.loc[
                 d['tripID'].isna(), 'valPerBin'].apply(
                 self.enforceBatteryLimit, how='upper',
-                lim=self.upperBatteryLimit)
+                lim=self.flexConfig['Battery_capacity'] * self.flexConfig['Maximum_SOC'])
         elif valCol == "minBatteryLevelEnd":
             d['chargePerBin'
               ] = self.activities.availablePower * self.dt / 60 * -1
@@ -883,7 +873,7 @@ class TimeDiscretiser:
             d.loc[d['tripID'].isna(), 'valPerBin'] = d.loc[
                 d['tripID'].isna(), 'valPerBin'].apply(
                     self.enforceBatteryLimit, how='lower',
-                    lim=self.lowerBatteryLimit)
+                    lim=self.flexConfig['Battery_capacity'] * self.flexConfig['Minimum_SOC'])
 
     def listComp(self, socStart, socAddPerBin, nBins):
         lst = []

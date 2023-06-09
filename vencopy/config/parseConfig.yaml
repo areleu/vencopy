@@ -45,7 +45,7 @@ dataVariables:
     hhBuilding: ["NA", "hhtyp2", "NA", "hhtyp2"] # Gebäudetyp detailliert
     hhType: ["NA", "haustyp", "NA", "haustyp"]
     hpAge: ["NA", "alter_gr5", "NA", "alter_gr5"]
-    hpJob: ["NA", "taet", "NA", "taet"]
+    hpJob: ["NA", "taet", "NA", "NA"]
     bundesland: ["NA", "BLAND", "NA", "BLAND"]
     areaType: ["NA", "SKTYP", "k50", "SKTYP"]
     garage: ["NA", "garage", "NA", "garage"]
@@ -173,14 +173,12 @@ filterDicts:
             tripDistance: [3000]
     VF:
         include:
-            isMIVDriver: [1]
         exclude:
             tripStartHour: [99, 701]
             tripEndHour: [99, 701]
             tripStartClock: [" "]
             tripEndClock: [" "]
             tripPurpose: [99]
-            tripIsIntermodal: [1, 703, 708]
         greaterThan:
         smallerThan:
             tripDistance: [1000]
