@@ -9,7 +9,7 @@
 
 # This config holds all relative paths and filenames for VencoPy
 
-dataset: KiD # options are MiD08, MiD17, VF, KiD
+dataset: VF # options are MiD08, MiD17, VF, KiD
 debug: False
 nDebugLines: 10000
 

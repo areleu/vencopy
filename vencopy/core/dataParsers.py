@@ -989,7 +989,8 @@ class DataParser:
         self.activities.loc[idxLastTripEndMidnight, "tripEndNextDay"] = False
 
     def __neglectONTrips(self):
-        """Removes all overnight trips from the activities data set based on the column 'tripEndNextDay'. Updates
+        """
+        Removes all overnight trips from the activities data set based on the column 'tripEndNextDay'. Updates
         timestamp end (to 00:00) and isLastActivity for the new last parking activities. Overwrites self.activities.
         """
         # Column for lastActivity setting later

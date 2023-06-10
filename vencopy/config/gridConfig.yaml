@@ -12,8 +12,9 @@
 
 minimumParkingTime: 900 # charging power is set to zero if parking time lower than <minimumParkingTime> in seconds
 gridModel: "simple"  # Options are "simple" and "probability"
-losses: True  # Take into account charging station losses 
+losses: True  # Take into account charging station losses
 forceLastTripHome: True  # Require that all last trips end home
+ratedPowerSimple: 11
 
 chargingInfrastructureMappings:  # Simple grid model: Explicit mapping given for each location aka parking purpose
     'DRIVING': False
@@ -28,8 +29,6 @@ chargingInfrastructureMappings:  # Simple grid model: Explicit mapping given for
     'PEOPLE_MOBILITY': False
     'TRANSPORT': False
     'SERVICES': False
-
-ratedPowerSimple: 11
 
 gridAvailabilityDistribution:  # Grid model 3: Probabilities given for each location aka trip purpose and capacity
     'DRIVING':
@@ -72,7 +71,7 @@ gridAvailabilityDistribution:  # Grid model 3: Probabilities given for each loca
         11: 0.2
         22: 0.2
         0 : 0.6
-    'SERVICES': 
+    'SERVICES':
         11: 0.2
         22: 0.2
         0 : 0.6
@@ -80,6 +79,6 @@ gridAvailabilityDistribution:  # Grid model 3: Probabilities given for each loca
 loss_factor:  # Gives the power that is being lost per rated capacity. See gridModeler for detailed usage.
     rated_power_0: 0
     rated_power_3.6: 0.1
-    rated_power_11: 0.1      
+    rated_power_11: 0.1
     rated_power_22: 0.1
     rated_power_50: 0.2
