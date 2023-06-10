@@ -256,7 +256,17 @@ Replacements:
             10: "PEOPLE_MOBILITY" # Holen, Bringen, Befördern von Personen (privat)
             11: "OTHER" # sonstige private Erledigung
             12: "HOME" # Fahrt nach Hause
-        carSegment:
+        vehicleSegment:
+            1: "Light motorised vehicles"
+            2: "Car"
+            3: "Transporter"
+            4: "Truck"
+            5: "Tractor unit"
+            6: "Coach"
+            7: "City bus" # not in KiD201
+            8: "Other tractor units"
+            9: "Agriculture and forestry tractor units"
+            11: "Others"
     VF:
         tripStartWeekday:
             1: "MON"
@@ -281,7 +291,7 @@ Replacements:
             31: "SCHOOL" # Zur Schule oder Vorschule (MiD08)
             32: "SCHOOL" # Kindertagesstaette oder Kindergarten (MiD08)
             99: "NA" # keine Angabe
-        carSegment:
+        vehicleSegment:
             'klein': "S"
             'kompakt': "S"
             'mittel': "M"

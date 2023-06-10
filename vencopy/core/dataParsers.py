@@ -1424,13 +1424,13 @@ class ParseVF(IntermediateParsing):
 
     def __padMissingCarSegments(self):
         # pad missing car segments
-        self.data.carSegment = self.data.groupby('hhID').carSegment.transform('first')
+        self.data.vehicleSegment = self.data.groupby('hhID').vehicleSegment.transform('first')
         self.data.drivetrain = self.data.groupby('hhID').drivetrain.transform('first')
         self.data.vehicleID = self.data.groupby('hhID').vehicleID.transform('first')
         # remove remaining NaN
-        self.data = self.data.dropna(subset=['carSegment','drivetrain', 'vehicleID'])
-        # remove carSegment nicht zuzuordnen
-        self.data = self.data[self.data.carSegment != 'nicht zuzuordnen']
+        self.data = self.data.dropna(subset=['vehicleSegment','drivetrain', 'vehicleID'])
+        # remove vehicleSegment nicht zuzuordnen
+        self.data = self.data[self.data.vehicleSegment != 'nicht zuzuordnen']
 
     def __excludeHours(self):
         """
@@ -1438,7 +1438,7 @@ class ParseVF(IntermediateParsing):
         """
         self.data = self.data.dropna(subset=['tripStartClock', 'tripEndClock'])
 
-    def __addStrColumns(self, weekday=True, purpose=True, carSegment=True):
+    def __addStrColumns(self, weekday=True, purpose=True, vehicleSegment=True):
         """
         Adds string columns for either weekday or purpose.
 
@@ -1455,10 +1455,10 @@ class ParseVF(IntermediateParsing):
         if purpose:
             self._addStrColumnFromVariable(
                 colName="purposeStr", varName="tripPurpose")
-        if carSegment:
+        if vehicleSegment:
             self.data = self.data.replace('groß', 'gross')
             self._addStrColumnFromVariable(
-                colName="carSegmentStr", varName="carSegment")
+                colName="vehicleSegmentStr", varName="vehicleSegment")
 
     def _dropRedundantCols(self):
         # Clean-up of temporary redundant columns
@@ -1554,7 +1554,7 @@ class ParseKiD(IntermediateParsing):
         for i, x in enumerate(list(self.data.tripWeight)):
             self.data.at[i, "tripWeight"] = x.replace(",", ".")
 
-    def __addStrColumns(self, weekday=True, purpose=True, carSegment=True):
+    def __addStrColumns(self, weekday=True, purpose=True, vehicleSegment=True):
         """
         Adds string columns for either weekday or purpose.
 
@@ -1591,9 +1591,9 @@ class ParseKiD(IntermediateParsing):
         if purpose:
             self._addStrColumnFromVariable(
                 colName="purposeStr", varName="tripPurpose")
-        if carSegment:
+        if vehicleSegment:
             self._addStrColumnFromVariable(
-                colName="carSegmentStr", varName="carSegment")
+                colName="vehicleSegmentStr", varName="vehicleSegment")
 
     def __updateEndTimestamp(self):
         """
@@ -1626,8 +1626,8 @@ class ParseKiD(IntermediateParsing):
         self._selectColumns()
         self._harmonizeVariables()
         self._harmonizeVariablesUniqueIDNames()
-        self._convertTypes()
         self.__changeSeparator()
+        self._convertTypes()
         self.__excludeHours()
         self.__addStrColumns()
         self._composeStartAndEndTimestamps()
