@@ -15,7 +15,7 @@ import os
 def loadConfigDict(basePath):
     # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
     """
-    Generic function to load and open yaml config files
+    Generic function to load and open yaml config files.
 
     :param configNames: Tuple containing names of config files to be loaded
     :return: Dictionary with opened yaml config files
@@ -100,14 +100,15 @@ def createOutputFolders(configDict: dict):
     mainDir = 'output'
     if not os.path.exists(Path(root / mainDir)):
         os.mkdir(Path(root / mainDir))
-    subDirs = ('dataParser', 'diaryBuilder', 'gridModeler', 'flexEstimator', 'profileAggregator', 'evaluator')
+    subDirs = ('dataParser', 'diaryBuilder', 'gridModeler',
+               'flexEstimator', 'profileAggregator', 'evaluator')
     for subDir in subDirs:
         if not os.path.exists(Path(root / mainDir / subDir)):
             os.mkdir(Path(root / mainDir / subDir))
 
 
 def createFileName(globalConfig: dict, fileNameID: str, datasetID: str, manualLabel: str = '',
-                     suffix: str = 'csv'):
+                   suffix: str = 'csv'):
     """
     Generic method used for fileString compilation throughout the VencoPy framework. This method does not write any
     files but just creates the file name including the filetype suffix.
@@ -135,9 +136,11 @@ def mergeVariables(data, variableData, variables):
     :return: The merged data
     """
 
-    variableDataUnique = variableData.loc[~variableData['genericID'].duplicated(), :]
+    variableDataUnique = variableData.loc[~variableData['genericID'].duplicated(
+    ), :]
     variables.append('genericID')
-    variableDataMerge = variableDataUnique.loc[:, variables].set_index('genericID')
+    variableDataMerge = variableDataUnique.loc[:, variables].set_index(
+        'genericID')
     if 'genericID' not in data.index.names:
         data.set_index('genericID', inplace=True, drop=True)
     mergedData = pd.concat([variableDataMerge, data], axis=1, join='inner')
@@ -171,9 +174,9 @@ def writeProfilesToCSV(profileDictOut, globalConfig: dict, localPathConfig: dict
         dataOut.to_csv(Path(
             localPathConfig['pathAbsolute']['vencoPyRoot']) / globalConfig['pathRelative']['flexOutput'] /
             createFileName(globalConfig=globalConfig,
-                             fileKey='output',
-                             manualLabel=globalConfig['labels']['technologyLabel'],
-                             datasetID=datasetID),
+                           fileKey='output',
+                           manualLabel=globalConfig['labels']['technologyLabel'],
+                           datasetID=datasetID),
             header=True)
     else:
         for iName, iProf in profileDictOut.items():
