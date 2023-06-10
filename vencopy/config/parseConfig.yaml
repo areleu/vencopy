@@ -17,7 +17,7 @@ dataVariables:
     isMIVDriver: ["pkw_f", "W_VM_G", "NA", "NA"]
     hhID: ["hhid", "H_ID_Reg", "NA", "H_ID"]
     vehicleID: ["NA", "NA", "k00", "A_ID"] # Fahrzeug ID
-    carSegment: ["NA", "NA", "k01", "seg_kba_gr"] # Fahrzeugart
+    vehicleSegment: ["NA", "NA", "k01", "seg_kba_gr"] # Fahrzeugart
     drivetrain: ["NA", "NA", "NA", "A_ANTRIEB"]
     personID: ["pid", "P_ID", "NA", "P_ID"]
     hhPersonID: ["NA", "HP_ID_Reg", "NA", "HP_ID"]
@@ -257,16 +257,16 @@ Replacements:
             11: "OTHER" # sonstige private Erledigung
             12: "HOME" # Fahrt nach Hause
         vehicleSegment:
-            1: "Light motorised vehicles"
+            1: "Light motorised vehicle"
             2: "Car"
-            3: "Transporter"
+            3: "Van"
             4: "Truck"
             5: "Tractor unit"
             6: "Coach"
             7: "City bus" # not in KiD201
-            8: "Other tractor units"
-            9: "Agriculture and forestry tractor units"
-            11: "Others"
+            8: "Other tractor unit"
+            9: "Agriculture and forestry tractor unit"
+            11: "Other"
     VF:
         tripStartWeekday:
             1: "MON"

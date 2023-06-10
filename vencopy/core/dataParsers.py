@@ -1597,7 +1597,7 @@ class ParseKiD(IntermediateParsing):
 
     def __updateEndTimestamp(self):
         """
-        Separate implementation for the KID data set than for the other two data sets. Overwrites parent method.
+        Separate implementation for the KID dataset. Overwrites parent method.
 
         :return: None
         """
