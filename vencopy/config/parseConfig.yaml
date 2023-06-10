@@ -17,7 +17,7 @@ dataVariables:
     isMIVDriver: ["pkw_f", "W_VM_G", "NA", "NA"]
     hhID: ["hhid", "H_ID_Reg", "NA", "H_ID"]
     vehicleID: ["NA", "NA", "k00", "A_ID"] # Fahrzeug ID
-    carSegment: ["NA", "NA", "k01", "seg_kba"] # Fahrzeugart
+    carSegment: ["NA", "NA", "k01", "seg_kba_gr"] # Fahrzeugart
     drivetrain: ["NA", "NA", "NA", "A_ANTRIEB"]
     personID: ["pid", "P_ID", "NA", "P_ID"]
     hhPersonID: ["NA", "HP_ID_Reg", "NA", "HP_ID"]
@@ -256,6 +256,7 @@ Replacements:
             10: "PEOPLE_MOBILITY" # Holen, Bringen, Befördern von Personen (privat)
             11: "OTHER" # sonstige private Erledigung
             12: "HOME" # Fahrt nach Hause
+        carSegment:
     VF:
         tripStartWeekday:
             1: "MON"
@@ -280,3 +281,8 @@ Replacements:
             31: "SCHOOL" # Zur Schule oder Vorschule (MiD08)
             32: "SCHOOL" # Kindertagesstaette oder Kindergarten (MiD08)
             99: "NA" # keine Angabe
+        carSegment:
+            'klein': "S"
+            'kompakt': "S"
+            'mittel': "M"
+            'gross': "L"

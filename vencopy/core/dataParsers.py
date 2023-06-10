@@ -14,8 +14,9 @@ if __package__ is None or __package__ == "":
     sys.path.append(path.dirname(path.dirname(path.dirname(__file__))))
 
 import pprint
-from typing import Union
 import warnings
+import codecs
+from typing import Union
 from pathlib import Path
 from zipfile import ZipFile
 
@@ -1294,7 +1295,6 @@ class ParseMiD(IntermediateParsing):
                         added in a separate column
         :return: None
         """
-
         if weekday:
             self._addStrColumnFromVariable(
                 colName="weekdayStr", varName="tripStartWeekday"
@@ -1302,6 +1302,7 @@ class ParseMiD(IntermediateParsing):
         if purpose:
             self._addStrColumnFromVariable(
                 colName="purposeStr", varName="tripPurpose")
+
 
     def _dropRedundantCols(self):
         # Clean-up of temporary redundant columns
@@ -1428,6 +1429,8 @@ class ParseVF(IntermediateParsing):
         self.data.vehicleID = self.data.groupby('hhID').vehicleID.transform('first')
         # remove remaining NaN
         self.data = self.data.dropna(subset=['carSegment','drivetrain', 'vehicleID'])
+        # remove carSegment nicht zuzuordnen
+        self.data = self.data[self.data.carSegment != 'nicht zuzuordnen']
 
     def __excludeHours(self):
         """
@@ -1435,7 +1438,7 @@ class ParseVF(IntermediateParsing):
         """
         self.data = self.data.dropna(subset=['tripStartClock', 'tripEndClock'])
 
-    def __addStrColumns(self, weekday=True, purpose=True):
+    def __addStrColumns(self, weekday=True, purpose=True, carSegment=True):
         """
         Adds string columns for either weekday or purpose.
 
@@ -1452,6 +1455,10 @@ class ParseVF(IntermediateParsing):
         if purpose:
             self._addStrColumnFromVariable(
                 colName="purposeStr", varName="tripPurpose")
+        if carSegment:
+            self.data = self.data.replace('groß', 'gross')
+            self._addStrColumnFromVariable(
+                colName="carSegmentStr", varName="carSegment")
 
     def _dropRedundantCols(self):
         # Clean-up of temporary redundant columns
@@ -1547,7 +1554,7 @@ class ParseKiD(IntermediateParsing):
         for i, x in enumerate(list(self.data.tripWeight)):
             self.data.at[i, "tripWeight"] = x.replace(",", ".")
 
-    def __addStrColumns(self, weekday=True, purpose=True):
+    def __addStrColumns(self, weekday=True, purpose=True, carSegment=True):
         """
         Adds string columns for either weekday or purpose.
 
@@ -1584,6 +1591,9 @@ class ParseKiD(IntermediateParsing):
         if purpose:
             self._addStrColumnFromVariable(
                 colName="purposeStr", varName="tripPurpose")
+        if carSegment:
+            self._addStrColumnFromVariable(
+                colName="carSegmentStr", varName="carSegment")
 
     def __updateEndTimestamp(self):
         """
