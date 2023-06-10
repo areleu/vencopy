@@ -263,7 +263,7 @@ Replacements:
             4: "Truck"
             5: "Tractor unit"
             6: "Coach"
-            7: "City bus" # not in KiD201
+            7: "City bus" # not in KiD2010
             8: "Other tractor unit"
             9: "Agriculture and forestry tractor unit"
             11: "Other"
@@ -296,3 +296,9 @@ Replacements:
             'kompakt': "S"
             'mittel': "M"
             'gross': "L"
+
+subsetVehicleSegment: True
+vehicleSegment:
+    VF: "S"
+    KiD: "Car"
+

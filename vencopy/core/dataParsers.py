@@ -6,7 +6,6 @@ __birthdate__ = "21.04.2022"
 __status__ = "dev"  # options are: dev, test, prod
 
 
-# ----- imports & packages ------
 if __package__ is None or __package__ == "":
     import sys
     from os import path
@@ -84,8 +83,7 @@ class DataParser:
                 f"Starting to retrieve local data file from {self.rawDataPath}.")
             self._loadData()
         nDebugLines = configDict["globalConfig"]["nDebugLines"]
-        self.rawData = self.rawData.loc[0: nDebugLines -
-                                        1, :] if debug else self.rawData.copy()
+        self.rawData = self.rawData.loc[0: nDebugLines - 1, :] if debug else self.rawData.copy()
         # Storage for original data variable that is being overwritten throughout adding of park rows
         self.tripEndNextDayRaw = None
 
@@ -182,9 +180,8 @@ class DataParser:
         """
         Harmonizes the input data variables to match internal VencoPy names
         given as specified in the mapping in parseConfig['dataVariables'].
-        So far mappings for MiD08 and MiD17 are given. Since the MiD08 does
-        not provide a combined household and person unique identifier, it is
-        synthesized of the both IDs.
+        Since the MiD08 does not provide a combined household and person
+        unique identifier, it is synthesized of the both IDs.
 
         :return: None
         """
@@ -232,8 +229,8 @@ class DataParser:
         Wrapper function to carry out filtering for the four filter logics of
         including, excluding, greaterThan and smallerThan.
         If a filterDict is defined with a different key, a warning is thrown.
-        Filters are defined inclusively, thus boolean vectors will select 
-        elements (TRUE) that stay in the data set. 
+        Filters are defined inclusively, thus boolean vectors will select
+        elements (TRUE) that stay in the data set.
 
         :return: None. The function operates on self.data class-internally.
         """
@@ -371,7 +368,7 @@ class DataParser:
         responses suggest that participants were travelling for the entire time they took for the whole purpose
         (driving and parking) and not just for the real travel.
 
-        :return: Boolean vector with observations marked True that should be 
+        :return: Boolean vector with observations marked True that should be
         kept in the data set
         """
         self.data["averageSpeed"] = self.data["tripDistance"] / (
@@ -389,7 +386,7 @@ class DataParser:
         to the travel time given by the interviewees. Selects observations where
         timestamps are consistent with the travel time given.
 
-        :return: Boolean vector with observations marked True that should be 
+        :return: Boolean vector with observations marked True that should be
         kept in the data set
         """
         self.data["travelTime_ts"] = (
@@ -416,7 +413,8 @@ class DataParser:
         return ret
 
     def __overlapPeriods(self, data, period):
-        """New implementation of identifying trips that overlap with previous trips.
+        """
+        New implementation of identifying trips that overlap with previous trips.
 
         Args:
             data (pd.DataFrame): Trip data set including the two variables timestampStart and timestampEnd
@@ -429,26 +427,21 @@ class DataParser:
         """
         dat = data.copy()
         if self.datasetID == "KiD":
-            dat["isSameVehicleAsPrevTrip"] = dat["vehicleID"] == dat["vehicleID"].shift(
-                period
-            )
-            dat["tripStartsAfterPrevTrip"] = dat["timestampStart"] > dat[
-                "timestampEnd"
-            ].shift(period)
-            dat["tripDoesNotOverlap"] = ~(
-                dat["isSameVehicleAsPrevTrip"] & ~dat["tripStartsAfterPrevTrip"]
+            self.__identifyOverlappingTrips(
+                dat, "vehicleID", period, "isSameVehicleAsPrevTrip"
             )
         else:
-            dat["isSameHHAsPrevTrip"] = dat["hhPersonID"] == dat["hhPersonID"].shift(
-                period
-            )
-            dat["tripStartsAfterPrevTrip"] = dat["timestampStart"] > dat[
-                "timestampEnd"
-            ].shift(period)
-            dat["tripDoesNotOverlap"] = ~(
-                dat["isSameHHAsPrevTrip"] & ~dat["tripStartsAfterPrevTrip"]
+            self.__identifyOverlappingTrips(
+                dat, "hhPersonID", period, "isSameHHAsPrevTrip"
             )
         return dat["tripDoesNotOverlap"]
+
+    def __identifyOverlappingTrips(self, dat, arg1, period, arg3):
+        dat[arg3] = dat[arg1] == dat[arg1].shift(period)
+        dat["tripStartsAfterPrevTrip"] = dat["timestampStart"] > dat[
+            "timestampEnd"
+        ].shift(period)
+        dat["tripDoesNotOverlap"] = ~(dat[arg3] & ~dat["tripStartsAfterPrevTrip"])
 
     def __filterAnalysis(self, filterData: pd.DataFrame):
         """
@@ -604,11 +597,12 @@ class DataParser:
 
         print("Completed park timestamp adjustments.")
 
-    def __getParkingActsWOFirstAndLast(self) -> (pd.Series, pd.Series):
-        """Return all parking activities except for the last one (return argument 1) and the first one (return argument
+    def __getParkingActsWOFirstAndLast(self):
+        """
+        Returns all parking activities except for the last one (return argument 1) and the first one (return argument
         2)
 
-        Returns:
+        Return:
             pd.Series: Parking activity indices without the last one
             pd.Series: Parking activity indices without the first one
         """
@@ -1235,6 +1229,11 @@ class IntermediateParsing(DataParser):
         ).astype(int)
         print("Finished harmonization of ID variables.")
 
+    def _subsetVehicleSegment(self):
+        if self.parseConfig['subsetVehicleSegment']:
+            self.data = self.data[(
+                self.data['vehicleSegmentStr'] == self.parseConfig['vehicleSegment'][self.datasetID])]
+
 
 class ParseMiD(IntermediateParsing):
     def __init__(
@@ -1302,7 +1301,6 @@ class ParseMiD(IntermediateParsing):
         if purpose:
             self._addStrColumnFromVariable(
                 colName="purposeStr", varName="tripPurpose")
-
 
     def _dropRedundantCols(self):
         # Clean-up of temporary redundant columns
@@ -1428,7 +1426,7 @@ class ParseVF(IntermediateParsing):
         self.data.drivetrain = self.data.groupby('hhID').drivetrain.transform('first')
         self.data.vehicleID = self.data.groupby('hhID').vehicleID.transform('first')
         # remove remaining NaN
-        self.data = self.data.dropna(subset=['vehicleSegment','drivetrain', 'vehicleID'])
+        self.data = self.data.dropna(subset=['vehicleSegment', 'drivetrain', 'vehicleID'])
         # remove vehicleSegment nicht zuzuordnen
         self.data = self.data[self.data.vehicleSegment != 'nicht zuzuordnen']
 
@@ -1497,10 +1495,11 @@ class ParseVF(IntermediateParsing):
         self._filter(self.filterDict)
         self._filterConsistentHours()
         self._addParkingRows(splitOvernightTrips=self.parseConfig['splitOvernightTrips'])
+        self._subsetVehicleSegment()
         print("Parsing VF dataset completed.")
         return self.activities
 
-  
+
 class ParseKiD(IntermediateParsing):
     def __init__(
         self, configDict: dict, datasetID: str, loadEncrypted=False, debug=False
@@ -1614,8 +1613,7 @@ class ParseKiD(IntermediateParsing):
         Removes trips where both start and end trip time are missing. KID-specific function.
         """
         self.data = self.data.loc[
-            (self.data["tripStartClock"] != "-1:-1")
-            & (self.data["tripEndClock"] != "-1:-1"),
+            (self.data["tripStartClock"] != "-1:-1") & (self.data["tripEndClock"] != "-1:-1"),
             :,
         ]
 
@@ -1636,6 +1634,7 @@ class ParseKiD(IntermediateParsing):
         self._filter(self.filterDict)
         self._filterConsistentHours()
         self._addParkingRows()
+        self._subsetVehicleSegment()
         print("Parsing KiD dataset completed.")
         return self.activities
 
