@@ -86,7 +86,7 @@ files:
     flexPlotName: flexProfileComparison
 
 labels:
-    runLabel: 
-    technologyLabel: 
+    runLabel:
+    technologyLabel:
     outputFileName: vencopy
     strAdd:

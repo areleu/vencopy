@@ -11,6 +11,10 @@
 
 encryptionPW: "PW"
 splitOvernightTrips: True
+subsetVehicleSegment: True
+vehicleSegment:
+    VF: "S"
+    KiD: "Car"
 
 dataVariables:
     datasetID: ["MiD08", "MiD17", "KiD", "VF"]
@@ -297,8 +301,5 @@ Replacements:
             'mittel': "M"
             'gross': "L"
 
-subsetVehicleSegment: True
-vehicleSegment:
-    VF: "S"
-    KiD: "Car"
+
 

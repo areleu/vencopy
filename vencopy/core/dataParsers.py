@@ -467,7 +467,7 @@ class DataParser:
             f"This corresponds to {lenData / len(filterData)* 100} percent of the original data."
         )
 
-    def _addParkingRows(self, splitOvernightTrips: bool = True):
+    def _addParkingRows(self):
         """
         Wrapper function generating park activity rows between the trip data from the original MID dataset. Some
         utility attributes are being added such as isFirstActivity, isLastActivity or the hhPersonID of the next and
@@ -481,6 +481,7 @@ class DataParser:
         trips in such a way that the estimated trip distance the next day is appended in the morning hours of the survey
         day?
         """
+        splitOvernightTrips = self.parseConfig['splitOvernightTrips']
         self.__copyRows()
         self.__addUtilAttributes()
         self.__addParkActAfterLastTrip()
@@ -1233,6 +1234,7 @@ class IntermediateParsing(DataParser):
         if self.parseConfig['subsetVehicleSegment']:
             self.data = self.data[(
                 self.data['vehicleSegmentStr'] == self.parseConfig['vehicleSegment'][self.datasetID])]
+            print(f"The subset contains only vehicles of the class {self.parseConfig['vehicleSegment'][self.datasetID]} for a total of {len(self.data.uniqueID.unique())} individual vehicles.")
 
 
 class ParseMiD(IntermediateParsing):
@@ -1340,7 +1342,7 @@ class ParseMiD(IntermediateParsing):
         self._checkFilterDict(self.filterDict)
         self._filter(self.filterDict)
         self._filterConsistentHours()
-        self._addParkingRows(splitOvernightTrips=self.parseConfig['splitOvernightTrips'])
+        self._addParkingRows()
         print("Parsing MiD dataset completed.")
         return self.activities
 
@@ -1494,7 +1496,7 @@ class ParseVF(IntermediateParsing):
         self._checkFilterDict(self.filterDict)
         self._filter(self.filterDict)
         self._filterConsistentHours()
-        self._addParkingRows(splitOvernightTrips=self.parseConfig['splitOvernightTrips'])
+        self._addParkingRows()
         self._subsetVehicleSegment()
         print("Parsing VF dataset completed.")
         return self.activities
