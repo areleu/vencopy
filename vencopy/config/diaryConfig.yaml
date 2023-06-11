@@ -12,5 +12,5 @@
 TimeDelta: 15
 
 # Determine if the activity data set comprises weekly activity chains (synthesized by WeekDiaryBuilder)
-isWeekDiary: False  
+isWeekDiary: False
 

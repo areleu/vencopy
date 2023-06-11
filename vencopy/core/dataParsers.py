@@ -35,9 +35,9 @@ class DataParser:
         self,
         configDict: dict,
         datasetID: str,
+        debug,
         fpInZip=None,
-        loadEncrypted=False,
-        debug=False,
+        loadEncrypted=False
     ):
         """
         Basic class for parsing a mobility survey trip data set. Currently both
@@ -84,6 +84,8 @@ class DataParser:
             self._loadData()
         nDebugLines = configDict["globalConfig"]["nDebugLines"]
         self.rawData = self.rawData.loc[0: nDebugLines - 1, :] if debug else self.rawData.copy()
+        if debug:
+            print("Running in debug mode.")
         # Storage for original data variable that is being overwritten throughout adding of park rows
         self.tripEndNextDayRaw = None
 
@@ -92,7 +94,6 @@ class DataParser:
         Loads data specified in self.rawDataPath and stores it in self.rawData.
         Raises an exception if a invalid suffix is specified in
         self.rawDataPath.
-        READ IN OF CSV HAS NOT BEEN EXTENSIVELY TESTED BEFORE BETA RELEASE.
 
         :return: None
         """
@@ -1042,7 +1043,7 @@ class DataParser:
 
 class IntermediateParsing(DataParser):
     def __init__(
-        self, configDict: dict, datasetID: str, loadEncrypted=False, debug=False
+        self, configDict: dict, datasetID: str, debug, loadEncrypted=False
     ):
         """
         Intermediate parsing class.
@@ -1350,7 +1351,7 @@ class ParseMiD(IntermediateParsing):
 
 class ParseVF(IntermediateParsing):
     def __init__(
-        self, configDict: dict, datasetID: str, loadEncrypted=False, debug=False
+        self, configDict: dict, datasetID: str, debug, loadEncrypted=False
     ):
         """
         Class for parsing MiD data sets. The VencoPy configs globalConfig,
@@ -1369,7 +1370,7 @@ class ParseVF(IntermediateParsing):
                               specified in parseConfig['PW'].
         """
         super().__init__(
-            configDict=configDict, datasetID=datasetID, loadEncrypted=loadEncrypted
+            configDict=configDict, datasetID=datasetID, debug=debug, loadEncrypted=loadEncrypted
         )
 
     def _loadData(self):

@@ -28,6 +28,7 @@ class DiaryBuilder:
         self.diaryConfig = configDict["diaryConfig"]
         self.globalConfig = configDict["globalConfig"]
         self.localPathConfig = configDict["localPathConfig"]
+        self.flexConfig = configDict["flexConfig"]
         self.datasetID = configDict["globalConfig"]["dataset"]
         self.activities = activities
         self.deltaTime = configDict["diaryConfig"]["TimeDelta"]
@@ -37,6 +38,7 @@ class DiaryBuilder:
             datasetID=self.datasetID,
             globalConfig=self.globalConfig,
             localPathConfig=self.localPathConfig,
+            flexConfig=self.flexConfig,
             activities=self.activities,
             dt=self.deltaTime,
             isWeek=isWeekDiary,
@@ -46,6 +48,7 @@ class DiaryBuilder:
             datasetID=self.datasetID,
             globalConfig=self.globalConfig,
             localPathConfig=self.localPathConfig,
+            flexConfig=self.flexConfig,
             activities=self.activities,
             dt=self.deltaTime,
             isWeek=isWeekDiary,
@@ -55,6 +58,7 @@ class DiaryBuilder:
             datasetID=self.datasetID,
             globalConfig=self.globalConfig,
             localPathConfig=self.localPathConfig,
+            flexConfig=self.flexConfig,
             activities=self.activities,
             dt=self.deltaTime,
             isWeek=isWeekDiary,
@@ -604,6 +608,7 @@ class TimeDiscretiser:
         method: str,
         globalConfig: dict,
         localPathConfig: dict,
+        flexConfig: dict,
         isWeek: bool = False):
         """
         Class for discretisation of activities to fixed temporal resolution
@@ -637,6 +642,7 @@ class TimeDiscretiser:
         self.dataToDiscretise = None
         self.localPathConfig = localPathConfig
         self.globalConfig = globalConfig
+        self.flexConfig = flexConfig
         self.quantum = pd.Timedelta(value=1, unit="min")
         self.dt = dt  # e.g. 15 min
         self.isWeek = isWeek

@@ -10,8 +10,8 @@
 # This config holds all relative paths and filenames for VencoPy
 
 dataset: VF # options are MiD08, MiD17, VF, KiD
-debug: False
-nDebugLines: 10000
+debug: True
+nDebugLines: 5000
 
 pathRelative:
     plots: ./output/evaluator/
@@ -70,16 +70,20 @@ files:
         output: vencopy
         flexPlotName: flexProfileComparison
         transactionStartHour: transactionStartHour
+        outputDataParser: vencopyOutputDataParser
+        outputGridModeler: vencopyOutputGridModeler
+        outputFlexEstimator: vencopyOutputFlexEstimator
+        outputDiaryBuilder: vencopyOutputDiaryBuilder
+        outputProfileAggregator: vencopyOutputProfileAggregator
     VF:
         tripsDataRaw: MiD2017_Wege.dta
         vehiclesDataRaw: tripDataMergedWVehicleData.csv
-        filteredDataset: outputDatasetDataParsers
-        purposesProcessed: inputProfiles_Purpose
-        inputDataDriveProfiles: inputProfiles_Drive
-        inputDataPlugProfiles: inputProfiles_Plug
         output: vencopy
-        flexPlotName: flexProfileComparison
-        transactionStartHour: transactionStartHour
+        outputDataParser: vencopyOutputDataParser
+        outputGridModeler: vencopyOutputGridModeler
+        outputFlexEstimator: vencopyOutputFlexEstimator
+        outputDiaryBuilder: vencopyOutputDiaryBuilder
+        outputProfileAggregator: vencopyOutputProfileAggregator
     output: output
     vencoPyOutput: vencoPyOutput
     aggPlotName: mobilityComparison
