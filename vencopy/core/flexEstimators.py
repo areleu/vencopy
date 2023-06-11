@@ -103,7 +103,7 @@ class FlexEstimator:
             by=['uniqueID', 'actID', 'parkID'])
         return self.activities.loc[
             self.activities['isLastActivity'], [
-                'hhPersonID', 'maxBatteryLevelEnd']].set_index('hhPersonID')
+                'uniqueID', 'maxBatteryLevelEnd']].set_index('uniqueID')
 
     @profile(immediate=False)
     def __batteryLevelMin(self):
@@ -423,7 +423,7 @@ class FlexEstimator:
         """
         self._drain()
         self._maxChargeVolumePerParkingAct()
-        # Initial battery level for first iteration loop per hhPersonID in index
+        # Initial battery level for first iteration loop per uniqueID in index
         batteryLevelEnd = self.__getStartLevel(
             startLevel=self.upperBatLev * self.flexConfig['Start_SOC'])
         for i in range(nIter):
@@ -444,9 +444,9 @@ class FlexEstimator:
         return self.activities
 
     def __getStartLevel(self, startLevel: float):
-        lActs = self.activities.loc[self.activities['isLastActivity'], ['hhPersonID', 'maxBatteryLevelEnd']]
+        lActs = self.activities.loc[self.activities['isLastActivity'], ['uniqueID', 'maxBatteryLevelEnd']]
         lActs['maxBatteryLevelEnd'] = startLevel
-        return lActs.set_index('hhPersonID')
+        return lActs.set_index('uniqueID')
 
     def __getDelta(self, colStart: str, colEnd: str) -> float:
         return abs(self.activities.loc[self.activities[

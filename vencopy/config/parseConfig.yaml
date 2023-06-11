@@ -172,6 +172,7 @@ filterDicts:
         include:
         exclude:
             tripStartDate: ["-1"]
+            tripPurpose: [-1]
         greaterThan:
         smallerThan:
             tripDistance: [3000]

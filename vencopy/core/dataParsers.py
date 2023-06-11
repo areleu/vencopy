@@ -1506,7 +1506,7 @@ class ParseVF(IntermediateParsing):
 
 class ParseKiD(IntermediateParsing):
     def __init__(
-        self, configDict: dict, datasetID: str, loadEncrypted=False, debug=False
+        self, configDict: dict, datasetID: str, debug, loadEncrypted=False
     ):
         """
         Inherited data class to differentiate between abstract interfaces such
@@ -1517,6 +1517,7 @@ class ParseKiD(IntermediateParsing):
             configDict=configDict,
             datasetID=datasetID,
             loadEncrypted=loadEncrypted,
+            debug=debug
         )
 
     def _loadData(self):
