@@ -10,8 +10,14 @@
 # This config holds all relative paths and filenames for VencoPy
 
 dataset: KiD # options are MiD08, MiD17, VF, KiD
-debug: True
+debug: False
 nDebugLines: 5000
+
+labels:
+    runLabel: KiD_car
+    technologyLabel:
+    outputFileName: vencopy
+    strAdd:
 
 pathRelative:
     plots: ./output/evaluator/
@@ -89,8 +95,4 @@ files:
     aggPlotName: mobilityComparison
     flexPlotName: flexProfileComparison
 
-labels:
-    runLabel:
-    technologyLabel:
-    outputFileName: vencopy
-    strAdd:
+

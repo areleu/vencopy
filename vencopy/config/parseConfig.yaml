@@ -13,8 +13,8 @@ encryptionPW: "PW"
 splitOvernightTrips: True
 subsetVehicleSegment: True
 vehicleSegment:
-    VF: "S"
-    KiD: "Car"
+    VF: "L" # options: "S", "M", "L"
+    KiD: "Car" # options: "Light motorised vehicle", "Car", "Van", "Truck", "Tractor unit", "Coach", "Other tractor unit", "Agriculture and forestry tractor unit", "Other"
 
 dataVariables:
     datasetID: ["MiD08", "MiD17", "KiD", "VF"]

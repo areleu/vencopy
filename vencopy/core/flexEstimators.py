@@ -46,7 +46,7 @@ class FlexEstimator:
         self.activities.loc[self.isPark, 'maxChargeVolume'] = self.activities.loc[self.isPark, 'availablePower'] * \
             self.activities.loc[self.isPark, 'timedelta'] / pd.Timedelta('1 hour')
 
-    @profile(immediate=False)
+    # @profile(immediate=False)
     def __batteryLevelMax(self, startLevel: float):
         """
         Calculate the maximum battery level at the beginning and end of each
@@ -105,7 +105,7 @@ class FlexEstimator:
             self.activities['isLastActivity'], [
                 'uniqueID', 'maxBatteryLevelEnd']].set_index('uniqueID')
 
-    @profile(immediate=False)
+    # @profile(immediate=False)
     def __batteryLevelMin(self):
         """
         Calculate the minimum battery level at the beginning and end of each
