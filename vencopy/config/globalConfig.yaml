@@ -9,8 +9,8 @@
 
 # This config holds all relative paths and filenames for VencoPy
 
-dataset: KiD # options are MiD08, MiD17, VF, KiD
-debug: False
+dataset: MiD17 # options are MiD08, MiD17, VF, KiD
+debug: True
 nDebugLines: 5000
 
 labels:
@@ -94,5 +94,3 @@ files:
     vencoPyOutput: vencoPyOutput
     aggPlotName: mobilityComparison
     flexPlotName: flexProfileComparison
-
-

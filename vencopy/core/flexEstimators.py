@@ -434,7 +434,7 @@ class FlexEstimator:
                                        colEnd='maxBatteryLevelEnd')
             deltaMin = self.__getDelta(colStart='minBatteryLevelStart',
                                        colEnd='minBatteryLevelEnd')
-            print(f'Finished ITERATION {i} / {nIter-1}. Delta max battery level is {deltaMax} and delta min battery is '
+            print(f'Finished ITERATION {i+1} / {nIter}. Delta max battery level is {deltaMax} and delta min battery is '
                   f'{deltaMin}.')
         self._auxFuelNeed()
         if self.flexConfig['filterFuelNeed']:
@@ -703,5 +703,6 @@ class WeekFlexEstimator(FlexEstimator):
         self._batteryLevelMin()
         if filterFuelNeed:
             self.activities = self._filterResidualNeed(acts=self.activities, indexCols=['categoryID', 'weekID'])
-        print(f'Technical flexibility estimation for one week ended considering the plugging threshold of {self.thresholdSOC}.')
+        print(
+            f'Technical flexibility estimation for one week ended considering the plugging threshold of {self.thresholdSOC}.')
         return self.activities
