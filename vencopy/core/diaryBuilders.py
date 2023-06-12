@@ -601,15 +601,15 @@ class WeekDiaryBuilder:
 
 class TimeDiscretiser:
     def __init__(
-        self,
-        activities: pd.DataFrame,
-        dt: int,
-        datasetID: str,
-        method: str,
-        globalConfig: dict,
-        localPathConfig: dict,
-        flexConfig: dict,
-        isWeek: bool = False):
+            self,
+            activities: pd.DataFrame,
+            dt: int,
+            datasetID: str,
+            method: str,
+            globalConfig: dict,
+            localPathConfig: dict,
+            flexConfig: dict,
+            isWeek: bool = False):
         """
         Class for discretisation of activities to fixed temporal resolution
 
@@ -834,54 +834,119 @@ class TimeDiscretiser:
 
     def _valueDynamic(self):
         """
-        Calculates the profile value dynamically (e.g. for the SoC).
+        Calculates the bin values dynamically (e.g. for the SoC). It returns a 
+        non-linearly increasing list of values capped to upper and lower battery
+        capacity limitations. The list of values is alloacted to bins in the 
+        function _allocate() in the same way as for value-per-bins. Operates 
+        directly on class attributes thus neither input nor return attributes.
         """
-        self.deltaBatteryLevelDriving(d=self.dataToDiscretise, valCol=self.columnToDiscretise)
-        self.deltaBatteryLevelCharging(d=self.dataToDiscretise, valCol=self.columnToDiscretise)
-        # self.updateValueDynamic()
+        self.deltaBatteryLevelDriving(d=self.dataToDiscretise,
+                                      valCol=self.columnToDiscretise)
+        self.deltaBatteryLevelCharging(d=self.dataToDiscretise,
+                                       valCol=self.columnToDiscretise)
 
     def deltaBatteryLevelDriving(self, d: pd.DataFrame, valCol: str):
+        """Calculates decreasing battery level values for driving activities for
+        both cases, minimum and maximum battery level. The cases have to be 
+        differentiated because the max case runs chronologically from morning to
+        evening while the min case runs anti-chronologically from end-of-day to
+        beginning. Thus, in the latter case, drain has to be added to the 
+        battery level. 
+        The function increaseLevelPerBin() is applied to the whole data set with
+        the respective start battery levels (socStart), battery level increases 
+        (socAddPerBin) and nBins for each activity respectively in a vectorized
+        manner. 
+        The function adds a column 'valPerBin' to d directly, thus it doesn't 
+        return anything.
+
+        Args:
+            d (pd.DataFrame): Activity data with activities in rows and at least
+            the columns valCol, 'drainPerBin', 'valPerBin', 'parkID' and 
+            'nBins'.
+            valCol (str): The column to descritize. Currently only 
+            maxBatteryLevelStart and minBatteryLevelStart are implemented.
+        """
         if valCol == "maxBatteryLevelStart":
             d['drainPerBin'] = (self.activities.drain / d.nBins) * -1
             d["valPerBin"] = d.loc[
                 d['parkID'].isna(), :].apply(
-                    lambda x: self.listComp(socStart=x[valCol],
-                                            socAddPerBin=x['drainPerBin'],
-                                            nBins=x['nBins']), axis=1)
+                    lambda x: self.increaseLevelPerBin(socStart=x[valCol],
+                                                       socAddPerBin=x['drainPerBin'],
+                                                       nBins=x['nBins']), axis=1)
         elif valCol == "minBatteryLevelEnd":
             d['drainPerBin'] = (self.activities.drain / d.nBins)
             d["valPerBin"] = d.loc[
                 d['parkID'].isna(), :].apply(
-                    lambda x: self.listComp(socStart=x[valCol],
-                                            socAddPerBin=x['drainPerBin'],
-                                            nBins=x['nBins'],), axis=1)
+                    lambda x: self.increaseLevelPerBin(socStart=x[valCol],
+                                                       socAddPerBin=x['drainPerBin'],
+                                                       nBins=x['nBins'],), axis=1)
 
     def deltaBatteryLevelCharging(self, d: pd.DataFrame, valCol: str):
+        """Calculates increasing battery level values for park / charging 
+        activities for both cases, minimum and maximum battery level. The cases
+        have to be differentiated because the max case runs chronologically from
+        morning to evening while the min case runs anti-chronologically from 
+        evening to morning. Thus, in the latter case, charge has to be 
+        subtracted from the battery level. Charging volumes per bin are 
+        calculated from the 'availablePower' column in d.
+        The function increaseLevelPerBin() is applied to the whole data set with
+        the respective start battery levels (socStart), battery level increases 
+        (socAddPerBin) and nBins for each activity respectively in a vectorized
+        manner. Then, battery capacity limitations are enforced applying the 
+        function enforceBatteryLimit().
+        The function adds a column 'valPerBin' to d directly, thus it doesn't 
+        return anything.
+
+        Args:
+            d (pd.DataFrame): DataFrame with activities in rows and at least
+            the columns valCol, 'availablePower', 'tripID' and 
+            'nBins'.
+            valCol (str): The column to descritize. Currently only 
+            maxBatteryLevelStart and minBatteryLevelStart are implemented.
+        """
         if valCol == "maxBatteryLevelStart":
             d['chargePerBin'] = self.activities.availablePower * self.dt / 60
             d.loc[d['tripID'].isna(), 'valPerBin'] = d.loc[
                 d['tripID'].isna(), :].apply(
-                    lambda x: self.listComp(socStart=x[valCol],
-                                            socAddPerBin=x['chargePerBin'],
-                                            nBins=x['nBins']), axis=1)
+                    lambda x: self.increaseLevelPerBin(socStart=x[valCol],
+                                                       socAddPerBin=x['chargePerBin'],
+                                                       nBins=x['nBins']), axis=1)
             d.loc[d['tripID'].isna(), 'valPerBin'] = d.loc[
                 d['tripID'].isna(), 'valPerBin'].apply(
                 self.enforceBatteryLimit, how='upper',
-                lim=self.flexConfig['Battery_capacity'] * self.flexConfig['Maximum_SOC'])
+                lim=self.flexConfig[
+                    'Battery_capacity'] * self.flexConfig['Maximum_SOC'])
         elif valCol == "minBatteryLevelEnd":
             d['chargePerBin'
               ] = self.activities.availablePower * self.dt / 60 * -1
             d.loc[d['tripID'].isna(), 'valPerBin'] = d.loc[
                 d['tripID'].isna(), :].apply(
-                    lambda x: self.listComp(socStart=x[valCol],
-                                            socAddPerBin=x['chargePerBin'],
-                                            nBins=x['nBins']), axis=1)
+                    lambda x: self.increaseLevelPerBin(socStart=x[valCol],
+                                                       socAddPerBin=x['chargePerBin'],
+                                                       nBins=x['nBins']), axis=1)
             d.loc[d['tripID'].isna(), 'valPerBin'] = d.loc[
                 d['tripID'].isna(), 'valPerBin'].apply(
                     self.enforceBatteryLimit, how='lower',
-                    lim=self.flexConfig['Battery_capacity'] * self.flexConfig['Minimum_SOC'])
+                    lim=self.flexConfig[
+                        'Battery_capacity'] * self.flexConfig['Minimum_SOC'])
 
-    def listComp(self, socStart, socAddPerBin, nBins):
+    def increaseLevelPerBin(self,
+                            socStart: float,
+                            socAddPerBin: float,
+                            nBins: int
+                            ) -> list:
+        """ Returns a list of battery level values wiht length nBins starting 
+        with socStart with added value of socAddPerBin. 
+
+        Args:
+            socStart (float): Starting SOC
+            socAddPerBin (float): Consecutive (constant) additions to the start 
+            SOC
+            nBins (int): Number of discretized bins (one per timeslot)
+
+        Returns:
+            list: List of nBins increasing battery level values 
+        """
         lst = []
         tmp = socStart
         for _ in range(nBins):
@@ -889,12 +954,26 @@ class TimeDiscretiser:
             lst.append(tmp)
         return lst
 
-    def enforceBatteryLimit(self, deltaBat: list, how: str, lim: float):
+    def enforceBatteryLimit(self, deltaBat: list, how: str, lim: float) -> list:
+        """ Lower-level function that caps a list of values at lower or upper 
+        (determined by how) limits given by limit. Thus [0, 40, 60] with 
+        how=upper and lim=50 would return [0, 40, 50]. 
+
+        Args:
+            deltaBat (list): List of float values of arbitrary length. 
+            how (str): Must be either 'upper' or 'lower'.
+            lim (float): Number of threshold to which to limit the values in the
+            list.
+
+        Returns:
+            list: Returns a list of same length with values limited to lim.
+        """
         if how == 'lower':
             return [max(i, lim) for i in deltaBat]
         elif how == 'upper':
             return [min(i, lim) for i in deltaBat]
 
+    # DEPRECATED WILL BE DELETED SOON
     # def updateValueDynamic(self):
     #     self.dataToDiscretise['originalValPerBin'] = self.dataToDiscretise['valPerBin']
     #     self.dataToDiscretise["drainPerBin"] = self.dataToDiscretise["drainPerBin"].fillna(0)
@@ -1012,7 +1091,8 @@ class TimeDiscretiser:
         endLength = len(self.dataToDiscretise)
         droppedActivities = startLength - endLength
         if droppedActivities != 0:
-            raise ValueError(f"{droppedActivities} zero-length activities dropped from {len(self.IDsWithNoLengthActivities)} IDs.")
+            raise ValueError(
+                f"{droppedActivities} zero-length activities dropped from {len(self.IDsWithNoLengthActivities)} IDs.")
         self._removeActivitiesWithZeroValue()
 
     def _removeActivitiesWithZeroValue(self):
@@ -1029,7 +1109,8 @@ class TimeDiscretiser:
         endLength = len(self.dataToDiscretise)
         droppedActivities = startLength - endLength
         if droppedActivities != 0:
-            raise ValueError(f"Additional {droppedActivities} activities dropped as the sum of all {self.columnToDiscretise} activities for the specific ID was zero.")
+            raise ValueError(
+                f"Additional {droppedActivities} activities dropped as the sum of all {self.columnToDiscretise} activities for the specific ID was zero.")
 
     # UNUSED
     # def _overlappingActivities(self):
