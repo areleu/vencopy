@@ -1238,6 +1238,17 @@ class IntermediateParsing(DataParser):
                 self.data['vehicleSegmentStr'] == self.parseConfig['vehicleSegment'][self.datasetID])]
             print(f"The subset contains only vehicles of the class {self.parseConfig['vehicleSegment'][self.datasetID]} for a total of {len(self.data.uniqueID.unique())} individual vehicles.")
 
+    def _cleanupDataset(self):
+        self.activities.drop(
+            columns=['level_0',
+                     'tripIsIntermodal',
+                     'timedelta_total',
+                     'timedelta_morning',
+                     'timeShare_morning',
+                     'timeShare_evening',
+                     'totalTripDistance',
+                     'timedelta'], inplace=True)
+
 
 class ParseMiD(IntermediateParsing):
     def __init__(
@@ -1345,6 +1356,7 @@ class ParseMiD(IntermediateParsing):
         self._filter(self.filterDict)
         self._filterConsistentHours()
         self._addParkingRows()
+        self._cleanupDataset()
         print("Parsing MiD dataset completed.")
         return self.activities
 
@@ -1500,6 +1512,7 @@ class ParseVF(IntermediateParsing):
         self._filterConsistentHours()
         self._addParkingRows()
         self._subsetVehicleSegment()
+        self._cleanupDataset()
         print("Parsing VF dataset completed.")
         return self.activities
 
@@ -1640,6 +1653,7 @@ class ParseKiD(IntermediateParsing):
         self._filterConsistentHours()
         self._addParkingRows()
         self._subsetVehicleSegment()
+        self._cleanupDataset()
         print("Parsing KiD dataset completed.")
         return self.activities
 

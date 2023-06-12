@@ -43,7 +43,7 @@ dataVariables:
     tripEndHour: ["en_std", "W_AZS", "NA", "W_AZS"]
     tripEndMinute: ["en_min", "W_AZM", "NA", "W_AZM"]
     tripEndNextDay: ["en_dat", "W_FOLGETAG", "NA", "W_FOLGETAG"]
-    tripIsIntermodal: ["NA", "weg_intermod", "NA", "NA"]
+    tripIsIntermodal: ["NA", "weg_intermod", "NA", "weg_intermod"]
     # weather: ["NA", "wetter", "NA", "wetter"]
     # economicStatus: ["NA", "oek_status", "NA", "oek_status"]
     # hhBuilding: ["NA", "hhtyp2", "NA", "hhtyp2"] # Gebäudetyp detailliert
