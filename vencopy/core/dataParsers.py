@@ -70,7 +70,6 @@ class DataParser:
                          ) / self.globalConfig["files"][self.datasetID]["tripsDataRaw"])
         self.rawDataPath = filepath
         self.rawData = None
-        self.data = None
         self.activities = None
         self.filterDict = {}
         print("Generic file parsing properties set up.")
@@ -189,8 +188,8 @@ class DataParser:
         replacementDict = self._createReplacementDict(
             self.datasetID, self.parseConfig["dataVariables"]
         )
-        dataRenamed = self.data.rename(columns=replacementDict)
-        self.data = dataRenamed
+        dataRenamed = self.activities.rename(columns=replacementDict)
+        self.activities = dataRenamed
         print("Finished harmonization of variables.")
 
     def _createReplacementDict(self, datasetID: str, dictRaw: dict) -> dict:
@@ -212,7 +211,7 @@ class DataParser:
         listIndex = dictRaw["datasetID"].index(datasetID)
         return {val[listIndex]: key for (key, val) in dictRaw.items()}
 
-    def _checkFilterDict(self, filterDict):
+    def _checkFilterDict(self):
         """
         Checking if all values of filter dictionaries are of type list.
         Currently only checking if list of list str not typechecked
@@ -233,13 +232,13 @@ class DataParser:
         Filters are defined inclusively, thus boolean vectors will select
         elements (TRUE) that stay in the data set.
 
-        :return: None. The function operates on self.data class-internally.
+        :return: None. The function operates on self.activities class-internally.
         """
         print(
             f"Starting filtering, applying {len(returnDictBottomKeys(filterDict))} filters."
         )
-        simpleFilter = pd.DataFrame(index=self.data.index)
-        sophFilter = pd.DataFrame(index=self.data.index)
+        simpleFilter = pd.DataFrame(index=self.activities.index)
+        sophFilter = pd.DataFrame(index=self.activities.index)
         # Future releases: as discussed before we could indeed work here with a plug and pray approach.
         #  we would need to introduce a filter manager and a folder structure where to look for filters.
         #  this is very similar code than the one from ioproc. If we want to go down this route we should
@@ -250,19 +249,19 @@ class DataParser:
         for iKey, iVal in filterDict.items():
             if iKey == "include" and iVal:
                 simpleFilter = simpleFilter.join(
-                    self.__setIncludeFilter(iVal, self.data.index)
+                    self.__setIncludeFilter(iVal, self.activities.index)
                 )
             elif iKey == "exclude" and iVal:
                 simpleFilter = simpleFilter.join(
-                    self.__setExcludeFilter(iVal, self.data.index)
+                    self.__setExcludeFilter(iVal, self.activities.index)
                 )
             elif iKey == "greaterThan" and iVal:
                 simpleFilter = simpleFilter.join(
-                    self.__setGreaterThanFilter(iVal, self.data.index)
+                    self.__setGreaterThanFilter(iVal, self.activities.index)
                 )
             elif iKey == "smallerThan" and iVal:
                 simpleFilter = simpleFilter.join(
-                    self.__setSmallerThanFilter(iVal, self.data.index)
+                    self.__setSmallerThanFilter(iVal, self.activities.index)
                 )
             elif iKey not in ["include", "exclude", "greaterThan", "smallerThan"]:
                 warnings.warn(
@@ -272,7 +271,7 @@ class DataParser:
                 )
 
         # Application of simple value-based filters
-        self.dataSimple = self.data[simpleFilter.all(axis="columns")]
+        self.dataSimple = self.activities[simpleFilter.all(axis="columns")]
 
         # More sophisticated filtering functions
         sophFilter = sophFilter.join(self.__filterInconsistentSpeedTrips())
@@ -280,7 +279,7 @@ class DataParser:
         sophFilter = sophFilter.join(self.__filterOverlappingTrips())
 
         # Application of sophisticated filters
-        self.data = self.dataSimple.loc[sophFilter.all(axis="columns"), :]
+        self.activities = self.dataSimple.loc[sophFilter.all(axis="columns"), :]
         self.__filterAnalysis(simpleFilter.join(sophFilter))
 
     def __setIncludeFilter(self, includeFilterDict: dict, dataIndex) -> pd.DataFrame:
@@ -296,7 +295,7 @@ class DataParser:
         incFilterCols = pd.DataFrame(
             index=dataIndex, columns=includeFilterDict.keys())
         for incCol, incElements in includeFilterDict.items():
-            incFilterCols[incCol] = self.data[incCol].isin(incElements)
+            incFilterCols[incCol] = self.activities[incCol].isin(incElements)
         return incFilterCols
 
     def __setExcludeFilter(self, excludeFilterDict: dict, dataIndex) -> pd.DataFrame:
@@ -311,7 +310,7 @@ class DataParser:
         exclFilterCols = pd.DataFrame(
             index=dataIndex, columns=excludeFilterDict.keys())
         for excCol, excElements in excludeFilterDict.items():
-            exclFilterCols[excCol] = ~self.data[excCol].isin(excElements)
+            exclFilterCols[excCol] = ~self.activities[excCol].isin(excElements)
         return exclFilterCols
 
     def __setGreaterThanFilter(self, greaterThanFilterDict: dict, dataIndex):
@@ -328,7 +327,7 @@ class DataParser:
         )
         for greaterCol, greaterElements in greaterThanFilterDict.items():
             greaterThanFilterCols[greaterCol] = (
-                self.data[greaterCol] >= greaterElements.pop()
+                self.activities[greaterCol] >= greaterElements.pop()
             )
             if len(greaterElements) > 0:
                 warnings.warn(
@@ -354,7 +353,7 @@ class DataParser:
         )
         for smallerCol, smallerElements in smallerThanFilterDict.items():
             smallerThanFilterCols[smallerCol] = (
-                self.data[smallerCol] <= smallerElements.pop()
+                self.activities[smallerCol] <= smallerElements.pop()
             )
             if len(smallerElements) > 0:
                 warnings.warn(
@@ -372,14 +371,14 @@ class DataParser:
         :return: Boolean vector with observations marked True that should be
         kept in the data set
         """
-        self.data["averageSpeed"] = self.data["tripDistance"] / (
-            self.data["travelTime"] / 60
+        self.activities["averageSpeed"] = self.activities["tripDistance"] / (
+            self.activities["travelTime"] / 60
         )
 
         return (
-            self.data["averageSpeed"] > self.parseConfig["filterDicts"][
+            self.activities["averageSpeed"] > self.parseConfig["filterDicts"][
                 "lowerSpeedThreshold"]) & (
-            self.data["averageSpeed"] <= self.parseConfig["filterDicts"][
+            self.activities["averageSpeed"] <= self.parseConfig["filterDicts"][
                 "higherSpeedThreshold"])
 
     def __filterInconsistentTravelTimes(self):
@@ -390,10 +389,10 @@ class DataParser:
         :return: Boolean vector with observations marked True that should be
         kept in the data set
         """
-        self.data["travelTime_ts"] = (
-            self.data['timestampEnd'] - self.data[
+        self.activities["travelTime_ts"] = (
+            self.activities['timestampEnd'] - self.activities[
                 'timestampStart']).dt.total_seconds().div(60).astype(int)
-        filt = self.data['travelTime_ts'] == self.data['travelTime']
+        filt = self.activities['travelTime_ts'] == self.activities['travelTime']
         filt.name = 'travelTime'  # Required for column-join in _filter()
         return filt
 
@@ -406,7 +405,7 @@ class DataParser:
         periods = 7
         lst = []
         for p in range(1, periods + 1):
-            ser = self.__overlapPeriods(self.data, period=p)
+            ser = self.__overlapPeriods(self.activities, period=p)
             ser.name = ser.name + f" p={p}"
             lst.append(ser)
         ret = pd.concat(lst, axis=1).all(axis=1)
@@ -504,7 +503,7 @@ class DataParser:
     def __copyRows(self):
         # Adding skeleton duplicate rows for parking activities
         self.activities = pd.concat(
-            [self.data] * 2).sort_index(ignore_index=True)
+            [self.activities] * 2).sort_index(ignore_index=True)
         self.activities["parkID"] = self.activities["tripID"]
         self.activities.loc[range(
             0, len(self.activities), 2), "tripID"] = pd.NA
@@ -908,7 +907,7 @@ class DataParser:
     def __checkAndAssert(self):
         # Calculates the neglected trip distances from overnight split trips with regular morning trips
         distance = (
-            self.data["tripDistance"].sum()
+            self.activities["tripDistance"].sum()
             - self.activities.loc[
                 ~self.activities["tripID"].isna(), "tripDistance"
             ].sum()
@@ -1104,11 +1103,11 @@ class IntermediateParsing(DataParser):
         """
         Function to filter the rawData for only relevant columns as specified
         by parseConfig and cleaned in self.compileVariablesList().
-        Stores the subset of data in self.data
+        Stores the subset of data in self.activities
 
         :return: None
         """
-        self.data = self.rawData.loc[:, self.columns]
+        self.activities = self.rawData.loc[:, self.columns]
 
     def _convertTypes(self):
         """
@@ -1116,18 +1115,18 @@ class IntermediateParsing(DataParser):
         parseConfig['inputDTypes'][datasetID]. This is mainly done for
         performance reasons. But also in order to avoid index values that are
         of type int to be cast to float. The function operates only on
-        self.data and writes back changes to self.data
+        self.activities and writes back changes to self.activities
 
         :return: None
         """
         # Filter for dataset specific columns
         conversionDict = self.parseConfig["inputDTypes"][self.datasetID]
         keys = {iCol for iCol in conversionDict.keys()
-                if iCol in self.data.columns}
+                if iCol in self.activities.columns}
         self.varDataTypeDict = {
             key: conversionDict[key] for key in conversionDict.keys() & keys
         }
-        self.data = self.data.astype(self.varDataTypeDict)
+        self.activities = self.activities.astype(self.varDataTypeDict)
 
     def _filterConsistentHours(self):
         """
@@ -1138,35 +1137,34 @@ class IntermediateParsing(DataParser):
         :return: No returns, operates only on the class instance
         """
         if self.datasetID in ["MiD17", "MiD08", "VF", "KiD"]:
-            dat = self.data
-            self.data = dat.loc[
-                (dat["tripStartClock"] <= dat["tripEndClock"])
-                | (dat["tripEndNextDay"] == 1),
+            self.activities = self.activities.loc[
+                (self.activities["tripStartClock"] <= self.activities["tripEndClock"])
+                | (self.activities["tripEndNextDay"] == 1),
                 :,
             ]
             filters = (
-                (self.data.loc[:, "tripStartHour"]
-                 == self.data.loc[:, "tripEndHour"])
+                (self.activities.loc[:, "tripStartHour"]
+                 == self.activities.loc[:, "tripEndHour"])
                 & (
-                    self.data.loc[:, "tripStartMinute"]
-                    == self.data.loc[:, "tripEndMinute"]
+                    self.activities.loc[:, "tripStartMinute"]
+                    == self.activities.loc[:, "tripEndMinute"]
                 )
-                & (self.data.loc[:, "tripEndNextDay"])
+                & (self.activities.loc[:, "tripEndNextDay"])
             )
-            self.data = self.data.loc[~filters, :]
+            self.activities = self.activities.loc[~filters, :]
 
     def _addStrColumnFromVariable(self, colName: str, varName: str):
         """
         Replaces each occurence of a MiD/KiD variable e.g. 1,2,...,7 for
         weekdays with an explicitly mapped string e.g. 'MON', 'TUE',...,'SUN'.
 
-        :param colName: Name of the column in self.data where the explicit
+        :param colName: Name of the column in self.activities where the explicit
                         string info is stored
         :param varName: Name of the VencoPy internal variable given in
                         config/parseConfig['dataVariables']
         :return: None
         """
-        self.data.loc[:, colName] = self.data.loc[:, varName].replace(
+        self.activities.loc[:, colName] = self.activities.loc[:, varName].replace(
             self.parseConfig["Replacements"][self.datasetID][varName]
         )
 
@@ -1203,9 +1201,9 @@ class IntermediateParsing(DataParser):
         """
         :return: Returns start and end time of a trip
         """
-        self.__composeTimestamp(data=self.data)  # Starting timestamp
+        self.__composeTimestamp(data=self.activities)  # Starting timestamp
         self.__composeTimestamp(
-            data=self.data,  # Ending timestamps
+            data=self.activities,  # Ending timestamps
             colHour="tripEndHour",
             colMin="tripEndMinute",
             colName="timestampEnd",
@@ -1217,8 +1215,8 @@ class IntermediateParsing(DataParser):
 
         :return: None, only acts on the class variable
         """
-        endsFollowingDay = self.data["tripEndNextDay"] == 1
-        self.data.loc[endsFollowingDay, "timestampEnd"] = self.data.loc[
+        endsFollowingDay = self.activities["tripEndNextDay"] == 1
+        self.activities.loc[endsFollowingDay, "timestampEnd"] = self.activities.loc[
             endsFollowingDay, "timestampEnd"
         ] + pd.offsets.Day(1)
 
@@ -1226,17 +1224,17 @@ class IntermediateParsing(DataParser):
         """
         Harmonises ID variables for all datasets.
         """
-        self.data["uniqueID"] = (
-            self.data[str(self.parseConfig["IDVariablesNames"]
+        self.activities["uniqueID"] = (
+            self.activities[str(self.parseConfig["IDVariablesNames"]
                           [self.datasetID])]
         ).astype(int)
         print("Finished harmonization of ID variables.")
 
     def _subsetVehicleSegment(self):
         if self.parseConfig['subsetVehicleSegment']:
-            self.data = self.data[(
-                self.data['vehicleSegmentStr'] == self.parseConfig['vehicleSegment'][self.datasetID])]
-            print(f"The subset contains only vehicles of the class {self.parseConfig['vehicleSegment'][self.datasetID]} for a total of {len(self.data.uniqueID.unique())} individual vehicles.")
+            self.activities = self.activities[(
+                self.activities['vehicleSegmentStr'] == self.parseConfig['vehicleSegment'][self.datasetID])]
+            print(f"The subset contains only vehicles of the class {self.parseConfig['vehicleSegment'][self.datasetID]} for a total of {len(self.activities.uniqueID.unique())} individual vehicles.")
 
     def _cleanupDataset(self):
         self.activities.drop(
@@ -1289,13 +1287,13 @@ class ParseMiD(IntermediateParsing):
         replacementDict = self._createReplacementDict(
             self.datasetID, self.parseConfig["dataVariables"]
         )
-        dataRenamed = self.data.rename(columns=replacementDict)
+        activitiesRenamed = self.activities.rename(columns=replacementDict)
         if self.datasetID == "MiD08":
-            dataRenamed["hhPersonID"] = (
-                dataRenamed["hhID"].astype("string")
-                + dataRenamed["personID"].astype("string")
+            activitiesRenamed["hhPersonID"] = (
+                activitiesRenamed["hhID"].astype("string")
+                + activitiesRenamed["personID"].astype("string")
             ).astype("int")
-        self.data = dataRenamed
+        self.activities = activitiesRenamed
         print("Finished harmonization of variables.")
 
     def __addStrColumns(self, weekday=True, purpose=True):
@@ -1351,7 +1349,7 @@ class ParseMiD(IntermediateParsing):
         self.__addStrColumns()
         self._composeStartAndEndTimestamps()
         self._updateEndTimestamp()
-        self._checkFilterDict(self.filterDict)
+        self._checkFilterDict()
         self._filter(self.filterDict)
         self._filterConsistentHours()
         self._addParkingRows()
@@ -1426,30 +1424,32 @@ class ParseVF(IntermediateParsing):
         replacementDict = self._createReplacementDict(
             self.datasetID, self.parseConfig["dataVariables"]
         )
-        dataRenamed = self.data.rename(columns=replacementDict)
+        dataRenamed = self.activities.rename(columns=replacementDict)
         if self.datasetID == "MiD08":
             dataRenamed["hhPersonID"] = (
                 dataRenamed["hhID"].astype("string")
                 + dataRenamed["personID"].astype("string")
             ).astype("int")
-        self.data = dataRenamed
+        self.activities = dataRenamed
         print("Finished harmonization of variables")
 
     def __padMissingCarSegments(self):
-        # pad missing car segments
-        self.data.vehicleSegment = self.data.groupby('hhID').vehicleSegment.transform('first')
-        self.data.drivetrain = self.data.groupby('hhID').drivetrain.transform('first')
-        self.data.vehicleID = self.data.groupby('hhID').vehicleID.transform('first')
-        # remove remaining NaN
-        self.data = self.data.dropna(subset=['vehicleSegment', 'drivetrain', 'vehicleID'])
         # remove vehicleSegment nicht zuzuordnen
-        self.data = self.data[self.data.vehicleSegment != 'nicht zuzuordnen']
+        self.activities = self.activities[self.activities.vehicleSegment != 'nicht zuzuordnen']
+        # pad missing car segments
+        # self.activities.vehicleSegment = self.activities.groupby('hhID').vehicleSegment.transform('first')
+        # self.activities.drivetrain = self.activities.groupby('hhID').drivetrain.transform('first')
+        # self.activities.vehicleID = self.activities.groupby('hhID').vehicleID.transform('first')
+        # remove remaining NaN
+        self.activities = self.activities.dropna(subset=['vehicleSegment'])
+        # self.activities = self.activities.dropna(subset=['vehicleSegment', 'drivetrain', 'vehicleID'])
+
 
     def __excludeHours(self):
         """
         Removes trips where both start and end trip time are missing. KID-specific function.
         """
-        self.data = self.data.dropna(subset=['tripStartClock', 'tripEndClock'])
+        self.activities = self.activities.dropna(subset=['tripStartClock', 'tripEndClock'])
 
     def __addStrColumns(self, weekday=True, purpose=True, vehicleSegment=True):
         """
@@ -1469,7 +1469,7 @@ class ParseVF(IntermediateParsing):
             self._addStrColumnFromVariable(
                 colName="purposeStr", varName="tripPurpose")
         if vehicleSegment:
-            self.data = self.data.replace('groß', 'gross')
+            self.activities = self.activities.replace('groß', 'gross')
             self._addStrColumnFromVariable(
                 colName="vehicleSegmentStr", varName="vehicleSegment")
 
@@ -1506,7 +1506,7 @@ class ParseVF(IntermediateParsing):
         self.__addStrColumns()
         self._composeStartAndEndTimestamps()
         self._updateEndTimestamp()
-        self._checkFilterDict(self.filterDict)
+        self._checkFilterDict()
         self._filter(self.filterDict)
         self._filterConsistentHours()
         self._addParkingRows()
@@ -1565,10 +1565,10 @@ class ParseKiD(IntermediateParsing):
 
         :return: None
         """
-        for i, x in enumerate(list(self.data.tripDistance)):
-            self.data.at[i, "tripDistance"] = x.replace(",", ".")
-        for i, x in enumerate(list(self.data.tripWeight)):
-            self.data.at[i, "tripWeight"] = x.replace(",", ".")
+        for i, x in enumerate(list(self.activities.tripDistance)):
+            self.activities.at[i, "tripDistance"] = x.replace(",", ".")
+        for i, x in enumerate(list(self.activities.tripWeight)):
+            self.activities.at[i, "tripWeight"] = x.replace(",", ".")
 
     def __addStrColumns(self, weekday=True, purpose=True, vehicleSegment=True):
         """
@@ -1580,25 +1580,23 @@ class ParseKiD(IntermediateParsing):
                         added in a separate column
         :return: None
         """
-        self.data["tripStartDate"] = pd.to_datetime(
-            self.data["tripStartDate"], format="%d.%m.%Y"
-        )
-        self.data["tripStartYear"] = self.data["tripStartDate"].dt.year
-        self.data["tripStartMonth"] = self.data["tripStartDate"].dt.month
-        self.data["tripStartDay"] = self.data["tripStartDate"].dt.day
-        self.data["tripStartWeekday"] = self.data["tripStartDate"].dt.weekday
-        self.data["tripStartWeek"] = self.data["tripStartDate"].dt.isocalendar().week
-        self.data["tripStartHour"] = pd.to_datetime(
-            self.data["tripStartClock"], format="%H:%M"
+        self.activities["tripStartDate"] = pd.to_datetime(self.activities["tripStartDate"], format="%d.%m.%Y")
+        self.activities["tripStartYear"] = self.activities["tripStartDate"].dt.year
+        self.activities["tripStartMonth"] = self.activities["tripStartDate"].dt.month
+        self.activities["tripStartDay"] = self.activities["tripStartDate"].dt.day
+        self.activities["tripStartWeekday"] = self.activities["tripStartDate"].dt.weekday
+        self.activities["tripStartWeek"] = self.activities["tripStartDate"].dt.isocalendar().week
+        self.activities["tripStartHour"] = pd.to_datetime(
+            self.activities["tripStartClock"], format="%H:%M"
         ).dt.hour
-        self.data["tripStartMinute"] = pd.to_datetime(
-            self.data["tripStartClock"], format="%H:%M"
+        self.activities["tripStartMinute"] = pd.to_datetime(
+            self.activities["tripStartClock"], format="%H:%M"
         ).dt.minute
-        self.data["tripEndHour"] = pd.to_datetime(
-            self.data["tripEndClock"], format="%H:%M"
+        self.activities["tripEndHour"] = pd.to_datetime(
+            self.activities["tripEndClock"], format="%H:%M"
         ).dt.hour
-        self.data["tripEndMinute"] = pd.to_datetime(
-            self.data["tripEndClock"], format="%H:%M"
+        self.activities["tripEndMinute"] = pd.to_datetime(
+            self.activities["tripEndClock"], format="%H:%M"
         ).dt.minute
         if weekday:
             self._addStrColumnFromVariable(
@@ -1617,11 +1615,11 @@ class ParseKiD(IntermediateParsing):
 
         :return: None
         """
-        self.data["tripEndNextDay"] = np.where(
-            self.data["timestampEnd"].dt.day > self.data["timestampStart"].dt.day, 1, 0
+        self.activities["tripEndNextDay"] = np.where(
+            self.activities["timestampEnd"].dt.day > self.activities["timestampStart"].dt.day, 1, 0
         )
-        endsFollowingDay = self.data["tripEndNextDay"] == 1
-        self.data.loc[endsFollowingDay, "timestampEnd"] = self.data.loc[
+        endsFollowingDay = self.activities["tripEndNextDay"] == 1
+        self.activities.loc[endsFollowingDay, "timestampEnd"] = self.activities.loc[
             endsFollowingDay, "timestampEnd"
         ] + pd.offsets.Day(1)
 
@@ -1629,8 +1627,8 @@ class ParseKiD(IntermediateParsing):
         """
         Removes trips where both start and end trip time are missing. KID-specific function.
         """
-        self.data = self.data.loc[
-            (self.data["tripStartClock"] != "-1:-1") & (self.data["tripEndClock"] != "-1:-1"),
+        self.activities = self.activities.loc[
+            (self.activities["tripStartClock"] != "-1:-1") & (self.activities["tripEndClock"] != "-1:-1"),
             :,
         ]
 

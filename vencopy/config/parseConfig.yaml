@@ -13,7 +13,7 @@ encryptionPW: "PW"
 splitOvernightTrips: True
 subsetVehicleSegment: True
 vehicleSegment:
-    VF: "L" # options: "S", "M", "L"
+    VF: "L" # options: "S" (65743), "M" (37999), "L" (13359)
     KiD: "Car" # options: "Light motorised vehicle", "Car", "Van", "Truck", "Tractor unit", "Coach", "Other tractor unit", "Agriculture and forestry tractor unit", "Other"
 
 dataVariables:
