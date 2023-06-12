@@ -117,6 +117,7 @@ class FlexEstimator:
         first.
         """
         print('Starting minimum battery level calculation.')
+        print(f'Calculate minimum battery level for act {int(self.activities.actID.max())}.')
         lastActs = self._calcMinBatLastAct(endLevel=endLevel)
         actTemp = lastActs
         # Start and end for all trips and parkings starting from the last
@@ -131,14 +132,7 @@ class FlexEstimator:
             tripActs = self.activities.loc[tripRows, :]
             parkActs = self.activities.loc[parkRows, :]
             nextParkActs = actTemp.loc[~actTemp['parkID'].isna(), :]
-            # if act == self.activities['parkID'].max() - 1:
-            #    tripActsRes = self.calcBatLevTripMin(
-            #       actID=act, tripActs=tripActs, nextParkActs=lastActs)
-            #    actTemp = pd.concat([actTemp, tripActsRes], ignore_index=True)
-            #    nextTripActs = actTemp.loc[~actTemp['tripID'].isna(), :]
-            #    parkActsRes = self.calcBatLevParkMin(
-            #       actID=act, parkActs=parkActs, nextTripActs=nextTripActs)
-            # else:
+
             tripActsRes = self.__calcBatLevTripMin(
                 actID=act, tripActs=tripActs, nextParkActs=nextParkActs)
             actTemp = pd.concat([actTemp, tripActsRes], ignore_index=True)
@@ -212,12 +206,8 @@ class FlexEstimator:
         """
         # Last activities - parking and trips
         lastActIn = self.activities.loc[self.activities['isLastActivity'], :].copy()
-
-        isPark = ~lastActIn['parkID'].isna()
         isTrip = ~lastActIn['tripID'].isna()
 
-        # if type(endLevel) == pd.Series:
-        #     endLevel.columns = ['minBatteryLevelEnd']
         lastActIdx = lastActIn.set_index('uniqueID')
         lastActIdx['minBatteryLevelEnd'] = endLevel
         lastActIdx.loc[lastActIdx['tripID'].isna(),
