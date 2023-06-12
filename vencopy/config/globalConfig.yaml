@@ -10,11 +10,11 @@
 # This config holds all relative paths and filenames for VencoPy
 
 dataset: MiD17 # options are MiD08, MiD17, VF, KiD
-debug: True
-nDebugLines: 5000
+debug: False
+nDebugLines: 20000
 
 labels:
-    runLabel: KiD_car
+    runLabel:
     technologyLabel:
     outputFileName: vencopy
     strAdd:

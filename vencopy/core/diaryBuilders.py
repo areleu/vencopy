@@ -103,17 +103,32 @@ class DiaryBuilder:
         start_time = time.time()
         self.drain = self.distributedActivities.discretise(column="drain")
         self.chargingPower = self.selectedActivities.discretise(column="availablePower")
-        self.uncontrolledCharge = self.distributedActivities.discretise(
-            column="uncontrolledCharge"
-        )
         self.maxBatteryLevel = self.dynamicActivities.discretise(
             column="maxBatteryLevelStart"
         )
         self.minBatteryLevel = self.dynamicActivities.discretise(
             column="minBatteryLevelEnd"
         )
+        # self.uncontrolledCharge = self.distributedActivities.discretise(
+        #     column="uncontrolledCharge"
+        # )
+        self.uncontrolledCharge = self.uncontrolledCharging(
+            maxBatLev=self.maxBatteryLevel)
         needed_time = time.time() - start_time
         print(f"Needed time to discretise all columns: {needed_time}.")
+
+    def uncontrolledCharging(self, maxBatLev: pd.DataFrame) -> pd.DataFrame:
+        uncCharge = maxBatLev.copy()
+        for cName, c in uncCharge.items():
+            if cName > 0:
+                # print(cName)
+                # print(c)
+                tempCol = maxBatLev[cName] - maxBatLev[cName - 1]
+                uncCharge[cName] = tempCol.where(tempCol >= 0, other=0)
+            else:
+                uncCharge[cName] = 0
+
+        return uncCharge
 
 
 class WeekDiaryBuilder:
