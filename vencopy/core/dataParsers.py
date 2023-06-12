@@ -1645,7 +1645,7 @@ class ParseKiD(IntermediateParsing):
         self.__addStrColumns()
         self._composeStartAndEndTimestamps()
         self.__updateEndTimestamp()
-        self._checkFilterDict(self.filterDict)
+        self._checkFilterDict()
         self._filter(self.filterDict)
         self._filterConsistentHours()
         self._addParkingRows()
