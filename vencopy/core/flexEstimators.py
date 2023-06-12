@@ -150,6 +150,9 @@ class FlexEstimator:
             actTemp = pd.concat([actTemp, parkActsRes], ignore_index=True)
         self.activities = actTemp.sort_values(
             by=['uniqueID', 'actID', 'parkID'], ignore_index=True)
+        return self.activities.loc[
+            self.activities['isLastActivity'], [
+                'uniqueID', 'minBatteryLevelEnd']].set_index('uniqueID')
 
     def _calcMaxBatFirstAct(self, startLevel: float) -> pd.DataFrame:
         """
@@ -423,23 +426,31 @@ class FlexEstimator:
         """
         self._drain()
         self._maxChargeVolumePerParkingAct()
+
         # Initial battery level for first iteration loop per uniqueID in index
-        batteryLevelEnd = self.__getStartLevel(
+        # Start battery level will be set to end battery level consecutively.
+        batteryLevelMaxEnd = self.__getStartLevel(
             startLevel=self.upperBatLev * self.flexConfig['Start_SOC'])
+        batteryLevelMinEnd = 0
+
         for i in range(nIter):
-            batteryLevelEnd = self.__batteryLevelMax(startLevel=batteryLevelEnd)
+            batteryLevelMaxEnd = self.__batteryLevelMax(
+                startLevel=batteryLevelMaxEnd)
             self._uncontrolledCharging()
-            self.__batteryLevelMin()
+            batteryLevelMinEnd = self.__batteryLevelMin(
+                startLevel=batteryLevelMinEnd)
             deltaMax = self.__getDelta(colStart='maxBatteryLevelStart',
                                        colEnd='maxBatteryLevelEnd')
             deltaMin = self.__getDelta(colStart='minBatteryLevelStart',
                                        colEnd='minBatteryLevelEnd')
             print(f'Finished ITERATION {i+1} / {nIter}. Delta max battery level is {deltaMax} and delta min battery is '
                   f'{deltaMin}.')
+
         self._auxFuelNeed()
         if self.flexConfig['filterFuelNeed']:
             self.activities = self._filterResidualNeed(
                 acts=self.activities, indexCols=['uniqueID'])
+
         print("Technical flexibility estimation ended.")
         return self.activities
 
