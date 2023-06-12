@@ -106,7 +106,7 @@ class FlexEstimator:
                 'uniqueID', 'maxBatteryLevelEnd']].set_index('uniqueID')
 
     # @profile(immediate=False)
-    def __batteryLevelMin(self):
+    def __batteryLevelMin(self, endLevel: pd.Series):
         """
         Calculate the minimum battery level at the beginning and end of each
         activity. This represents the case of vehicles just being charged for
@@ -117,9 +117,7 @@ class FlexEstimator:
         first.
         """
         print('Starting minimum battery level calculation.')
-        isPark = ~(self.activities['parkID'].isna())
-        isTrip = ~(self.activities['tripID'].isna())
-        lastActs = self._calcMinBatLastAct(isPark=isPark, isTrip=isTrip)
+        lastActs = self._calcMinBatLastAct(endLevel=endLevel)
         actTemp = lastActs
         # Start and end for all trips and parkings starting from the last
         # activities, then looping to earlier acts
@@ -150,6 +148,9 @@ class FlexEstimator:
             actTemp = pd.concat([actTemp, parkActsRes], ignore_index=True)
         self.activities = actTemp.sort_values(
             by=['uniqueID', 'actID', 'parkID'], ignore_index=True)
+        return self.activities.loc[
+            self.activities['isFirstActivity'], [
+                'uniqueID', 'minBatteryLevelStart']].set_index('uniqueID')
 
     def _calcMaxBatFirstAct(self, startLevel: float) -> pd.DataFrame:
         """
@@ -197,20 +198,36 @@ class FlexEstimator:
         """
         return (self.activities['isFirstActivity']) | (self.activities['parkID'] == 1)
 
-    def _calcMinBatLastAct(self, isPark: pd.Series, isTrip: pd.Series) -> pd.DataFrame:
+    def _calcMinBatLastAct(self, endLevel) -> pd.DataFrame:
         """Calculate the minimum battery levels for the last activity in the data set determined by the maximum activity
         ID.
 
+        Args:
+            endLevel (float or pd.Series): End battery level at end of simulation time (lastBin). Defaults to
+            self.lowerBatLev, the minimum battery level. Can be either of type float (in first iteration) or pd.Series
+            with respective uniqueID in the index.
         Returns:
             pd.DataFrame: Activity data set with the battery variables set for all last activities of the activity
             chains
         """
         # Last activities - parking and trips
-        lastAct = self.activities.loc[self.activities['isLastActivity'], :].copy()
-        lastAct.loc[isPark, 'minBatteryLevelEnd'] = self.lowerBatLev
-        lastAct.loc[isPark, 'minBatteryLevelStart'] = self.lowerBatLev
-        lastAct.loc[isTrip, 'minBatteryLevelEnd'] = self.lowerBatLev
-        lastAct.loc[isTrip, 'minBatteryLevelStart_unlimited'] = self.lowerBatLev + lastAct.loc[isTrip, 'drain']
+        lastActIn = self.activities.loc[self.activities['isLastActivity'], :].copy()
+
+        isPark = ~lastActIn['parkID'].isna()
+        isTrip = ~lastActIn['tripID'].isna()
+
+        # if type(endLevel) == pd.Series:
+        #     endLevel.columns = ['minBatteryLevelEnd']
+        lastActIdx = lastActIn.set_index('uniqueID')
+        lastActIdx['minBatteryLevelEnd'] = endLevel
+        lastActIdx.loc[lastActIdx['tripID'].isna(),
+                       'minBatteryLevelStart'] = endLevel  # For park acts
+
+        lastAct = lastActIdx.reset_index('uniqueID')
+        lastAct.index = lastActIn.index
+
+        lastAct.loc[isTrip, 'minBatteryLevelStart_unlimited'] = lastAct.loc[
+            isTrip, 'minBatteryLevelEnd'] + lastAct.loc[isTrip, 'drain']
         lastAct.loc[isTrip, 'minBatteryLevelStart'] = lastAct.loc[
             isTrip, 'minBatteryLevelStart_unlimited'].where(lastAct.loc[
                 isTrip, 'minBatteryLevelStart_unlimited'] <= self.upperBatLev, other=self.upperBatLev)
@@ -423,30 +440,49 @@ class FlexEstimator:
         """
         self._drain()
         self._maxChargeVolumePerParkingAct()
+
         # Initial battery level for first iteration loop per uniqueID in index
-        batteryLevelEnd = self.__getStartLevel(
-            startLevel=self.upperBatLev * self.flexConfig['Start_SOC'])
+        # Start battery level will be set to end battery level consecutively.
+        # batteryLevelMaxEnd = self.__getStartLevel(
+        #    startLevel=self.upperBatLev * self.flexConfig['Start_SOC'])
+
+        batteryLevelMaxEnd = self.upperBatLev * self.flexConfig['Start_SOC']
+        batteryLevelMinStart = self.lowerBatLev
+
         for i in range(nIter):
-            batteryLevelEnd = self.__batteryLevelMax(startLevel=batteryLevelEnd)
+            batteryLevelMaxEnd = self.__batteryLevelMax(
+                startLevel=batteryLevelMaxEnd)
             self._uncontrolledCharging()
-            self.__batteryLevelMin()
+            batteryLevelMinStart = self.__batteryLevelMin(
+                endLevel=batteryLevelMinStart)
+
+            # Calculate deviation between start and end battery level
             deltaMax = self.__getDelta(colStart='maxBatteryLevelStart',
                                        colEnd='maxBatteryLevelEnd')
             deltaMin = self.__getDelta(colStart='minBatteryLevelStart',
                                        colEnd='minBatteryLevelEnd')
             print(f'Finished ITERATION {i+1} / {nIter}. Delta max battery level is {deltaMax} and delta min battery is '
                   f'{deltaMin}.')
+
         self._auxFuelNeed()
         if self.flexConfig['filterFuelNeed']:
             self.activities = self._filterResidualNeed(
                 acts=self.activities, indexCols=['uniqueID'])
+
         print("Technical flexibility estimation ended.")
         return self.activities
 
     def __getStartLevel(self, startLevel: float):
-        lActs = self.activities.loc[self.activities['isLastActivity'], ['uniqueID', 'maxBatteryLevelEnd']]
-        lActs['maxBatteryLevelEnd'] = startLevel
-        return lActs.set_index('uniqueID')
+        lastActs = self.activities.loc[self.activities['isLastActivity'],
+                                       ['uniqueID', 'maxBatteryLevelEnd']]
+        lastActs['maxBatteryLevelEnd'] = startLevel
+        return lastActs.set_index('uniqueID')
+
+    def __getEndLevel(self, endLevel: float):
+        firstActs = self.activities.loc[self.activities['isFirstActivity'],
+                                        ['uniqueID', 'minBatteryLevelStart']]
+        firstActs['minBatteryLevelStart'] = endLevel
+        return firstActs.set_index('uniqueID')
 
     def __getDelta(self, colStart: str, colEnd: str) -> float:
         return abs(self.activities.loc[self.activities[
