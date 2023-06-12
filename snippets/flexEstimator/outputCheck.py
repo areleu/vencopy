@@ -39,7 +39,7 @@ vpFlex.estimateTechnicalFlexibility()
 # Relevant columns
 cols = ['hhPersonID', 'tripID', 'parkID', 'tripDistance', 'timestampStart',
         'timestampEnd', 'availablePower', 'drain', 'maxBatteryLevelStart',
-        'maxBatteryLevelEnd']
+        'maxBatteryLevelEnd', 'minBatteryLevelStart', 'minBatteryLevelEnd']
 
 # General check of variable histograms
 vpFlex['drain'].plot.hist()
