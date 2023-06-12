@@ -1246,8 +1246,7 @@ class IntermediateParsing(DataParser):
                      'timedelta_morning',
                      'timeShare_morning',
                      'timeShare_evening',
-                     'totalTripDistance',
-                     'timedelta'], inplace=True)
+                     'totalTripDistance'], inplace=True)
 
 
 class ParseMiD(IntermediateParsing):
