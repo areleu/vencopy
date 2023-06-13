@@ -121,13 +121,10 @@ class DiaryBuilder:
         uncCharge = maxBatLev.copy()
         for cName, c in uncCharge.items():
             if cName > 0:
-                # print(cName)
-                # print(c)
                 tempCol = maxBatLev[cName] - maxBatLev[cName - 1]
                 uncCharge[cName] = tempCol.where(tempCol >= 0, other=0)
             else:
                 uncCharge[cName] = 0
-
         return uncCharge
 
 
