@@ -339,14 +339,30 @@ class FlexEstimator:
         return parkActsIdx.reset_index()
 
     def _uncontrolledCharging(self):
-        self.activities.loc[~self.activities['parkID'].isna(), 'uncontrolledCharge'] = self.activities[
-            'maxBatteryLevelEnd'] - self.activities['maxBatteryLevelStart']
-        # FIXME: Steps for implementing additional timestamp column for maximum power uncontrolled charging
-        # 1  Calculate self.upperBatLev - maxBatteryLevelStart
-        # 2  If this is smaller than available charged energy (if full power charging would end earlier than
-        #    timestampEnd), calculate the timestamp at which full power charging reaches self.upperBatLev
-        # 3  Divide difference from 1 by max available power to get time for full power charging
-        # 4  Add time from 3 to timestampStart
+        parkActs = self.activities.loc[self.activities['tripID'].isna(), :]
+        parkActs['uncontrolledCharge'] = parkActs[
+            'maxBatteryLevelEnd'] - parkActs['maxBatteryLevelStart']
+
+        # Calculate timestamp at which charging ends disregarding parking end
+        parkActs['timestampEndUC_unltd'] = parkActs.apply(
+            lambda x: self._calcChargeEndTS(
+                startTS=x['timestampStart'], startBatLev=x['maxBatteryLevelStart'],
+                power=x['availablePower']), axis=1)
+
+        # Take into account possible earlier disconnection due to end of parking
+        parkActs['timestampEndUC'] = parkActs[
+            ['timestampEndUC_unltd', 'timestampEnd']].min(axis=1)
+
+    def _calcChargeEndTS(self,
+                         startTS: pd.Timestamp,
+                         startBatLev: float,
+                         power: float
+                         ):
+        if power == 0:
+            return pd.NA
+        deltaBatLev = self.upperBatLev - startBatLev
+        timeForCharge = deltaBatLev / power  # in hours
+        return startTS + pd.Timedelta(value=timeForCharge, unit='h').round(freq='s')
 
     def _auxFuelNeed(self):
         self.activities['auxiliaryFuelNeed'] = self.activities['residualNeed'] * self.flexConfig[

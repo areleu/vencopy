@@ -947,7 +947,7 @@ class TimeDiscretiser:
                             socAddPerBin: float,
                             nBins: int
                             ) -> list:
-        """ Returns a list of battery level values wiht length nBins starting 
+        """ Returns a list of battery level values with length nBins starting 
         with socStart with added value of socAddPerBin. 
 
         Args:
@@ -959,9 +959,9 @@ class TimeDiscretiser:
         Returns:
             list: List of nBins increasing battery level values 
         """
-        lst = []
         tmp = socStart
-        for _ in range(nBins):
+        lst = [tmp]
+        for _ in range(nBins - 1):
             tmp += socAddPerBin
             lst.append(tmp)
         return lst
