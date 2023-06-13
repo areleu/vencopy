@@ -17,6 +17,7 @@ from pathlib import Path
 import time
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 from typing import Optional
 from vencopy.utils.globalFunctions import createFileName, writeOut
 
@@ -1002,7 +1003,7 @@ class TimeDiscretiser:
         d['timedeltaUC'] = d['timestampEndUC'] - d['timestampStart']
         d['nFullBinsUC'] = (d.loc[self.dataToDiscretise[
             'tripID'].isna(), 'timedeltaUC'].dt.total_seconds() / 60 / self.dt).astype(int)
-        d['valuePerBin'] = d.loc[self.dataToDiscretise[
+        d['valPerBin'] = d.loc[self.dataToDiscretise[
             'tripID'].isna(), :].apply(
             lambda x: self._chargeRatePerBin(chargeRate=x['availablePower'],
                                              chargeVol=x['uncontrolledCharge'], nBins=x['nBins'],
@@ -1025,10 +1026,15 @@ class TimeDiscretiser:
         # Incomplete bin treatment
         if idxsOvershoot:
             binOvershoot = idxsOvershoot.pop(0)
-        else:
-            return [chargeVol]
+        # overshoot beyond activity end, this occurs when discretized activity is shorter than original due to discr.
+        # e.g. uniqueID == 10040082, parkID==5 starts at 16:10 and ends at 17:00, with dt=15 min it has 3 bins reducing
+    # the discretized duration to 45 minutes instead of 50 minutes.
+        elif cEnergy[0] < chargeVol:
+            return chargeRatesPerBin
+        else:  # overshoot in first bin
+            return [round(chargeVol, 3)]
 
-        valLastCBin = chargeVol
+        valLastCBin = round(chargeVol, 3)
 
         # if chargeVol > min(volumesPerBin):
         #    valLastCBin = chargeVol - cEnergy[binOvershoot]  # maybe - 1
