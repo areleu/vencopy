@@ -1,0 +1,32 @@
+#-*- coding:utf-8 -*-
+
+# __version__ = '0.1.X'
+# __maintainer__ = 'Niklas Wulff'
+# __contributors__ = 'Fabia Miorelli, Parth Butte'
+# __email__ = 'Niklas.Wulff@dlr.de'
+# __birthdate__ = '2019-02-12'
+# __status__ = 'prod'  # options are: dev, test, prod
+
+# This config holds all plotting properties for evaluators.py
+
+# Currently not used, implemented for cloning daily profiles to full year for application in ESMs
+postprocessing:
+    hoursClone: 8760
+
+plotConfig:
+    show: True
+    save: True
+    xAxis:
+        xTickSteps: 12
+        weekdays: ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN']
+        hours: [0, 12]
+#        hours: [0]
+        ticklabelsize: 10
+    yAxis:
+        ticklabelsize: 10
+    plotRCParameters:
+        font.family: sans-serif
+        font.weight: normal
+        font.size: 10
+        axes.labelsize: 10
+#        axes.labelpad: 8.0

@@ -1,0 +1,13 @@
+#-*- coding:utf-8 -*-
+
+# __version__ = '0.1.X'
+# __maintainer__ = 'Niklas Wulff'
+# __contributors__ = 'Fabia Miorelli'
+# __email__ = 'Niklas.Wulff@dlr.de'
+# __birthdate__ = '29.07.2022'
+# __status__ = 'dev'  # options are: dev, test, prod
+
+# This config holds all relative paths and filenames for profileAggregator.py
+
+weightFlowProfiles: False # Currently only used for flow profile aggregation
+alpha: 10 # Only used for state profile aggregation

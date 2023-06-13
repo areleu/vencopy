@@ -14,7 +14,7 @@ if __package__ is None or __package__ == "":
 
 from pathlib import Path
 import matplotlib.pyplot as plt
-from vencopy.core.dataParsers import ParseMiD
+from vencopy.core.dataParsers import parseData
 from vencopy.core.gridModelers import GridModeler
 from vencopy.core.flexEstimators import FlexEstimator
 
@@ -22,18 +22,17 @@ from vencopy.utils.globalFunctions import loadConfigDict
 
 
 basePath = Path(__file__).parent.parent
-configNames = ("globalConfig", "localPathConfig", "parseConfig", "diaryConfig",
-               "gridConfig", "flexConfig", "aggregatorConfig", "evaluatorConfig")
-configDict = loadConfigDict(configNames, basePath)
-vpData = ParseMiD(configDict=configDict, datasetID='MiD17', debug=False)
+
+configDict = loadConfigDict(basePath=basePath)
+
+vpData = parseData(configDict=configDict)
 vpData.process()
 
-vpGrid = GridModeler(configDict=configDict, datasetID='MiD17', activities=vpData.activities,
-                     gridModel='simple')
+vpGrid = GridModeler(configDict=configDict, activities=vpData.activities)
 vpGrid.assignGrid()
 
-vpFlex = FlexEstimator(configDict=configDict, datasetID='MiD17', activities=vpGrid.activities)
-vpFlex.estimateTechnicalFlexibility()
+vpFlex = FlexEstimator(configDict=configDict, activities=vpGrid.activities)
+vpFlex.estimateTechnicalFlexibility_iteration(nIter=3)
 
 
 # Relevant columns

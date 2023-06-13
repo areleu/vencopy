@@ -1,0 +1,16 @@
+#-*- coding:utf-8 -*-
+
+# __version__ = '0.1.X'
+# __maintainer__ = 'Niklas Wulff'
+# __contributors__ = 'Fabia Miorelli, Parth Butte'
+# __email__ = 'Niklas.Wulff@dlr.de'
+# __birthdate__ = '2019-02-12'
+# __status__ = 'prod'  # options are: dev, test, prod
+
+# This config holds all relative paths and filenames for diaryBuilders.py
+
+TimeDelta: 15
+
+# Determine if the activity data set comprises weekly activity chains (synthesized by WeekDiaryBuilder)
+isWeekDiary: False
+
