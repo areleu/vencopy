@@ -109,10 +109,10 @@ class DiaryBuilder:
         self.minBatteryLevel = self.dynamicActivities.discretise(
             column="minBatteryLevelEnd"
         )
-        # self.uncontrolledCharge = self.distributedActivities.discretise(
-        #     column="uncontrolledCharge"
-        # )
-        self.uncontrolledCharge = self.uncontrolledCharging(
+        self.uncontrolledCharge_Flex = self.dynamicActivities.discretise(
+            column="uncontrolledCharge"
+        )
+        self.uncontrolledCharge_DiscrSOC = self.uncontrolledCharging(
             maxBatLev=self.maxBatteryLevel)
         needed_time = time.time() - start_time
         print(f"Needed time to discretise all columns: {needed_time}.")
@@ -703,6 +703,7 @@ class TimeDiscretiser:
         self._correctValues()
         self._correctTimestamp()
 
+    # FIXME: Rename to selectColumns?
     def _removeColumns(self):
         """
         Removes additional columns not used in the TimeDiscretiser class.
@@ -723,6 +724,9 @@ class TimeDiscretiser:
         ] + [self.columnToDiscretise]
         if self.isWeek:
             necessaryColumns = necessaryColumns + ["weekdayStr"]
+        if self.columnToDiscretise == 'uncontrolledCharge':
+            necessaryColumns = necessaryColumns + ['availablePower',
+                                                   'timestampEndUC']
         self.dataToDiscretise = self.activities[necessaryColumns].copy()
         return self.dataToDiscretise
 
@@ -781,7 +785,11 @@ class TimeDiscretiser:
         elif self.method == "select":
             self._valueSelect()
         elif self.method == "dynamic":
-            self._valueDynamic()
+            if self.columnToDiscretise in ('maxBatteryLevelStart',
+                                           'minBatteryLevelEnd'):
+                self._valueNonlinearLevel()
+            elif self.columnToDiscretise == 'uncontrolledCharge':
+                self._valueNonlinearCharge()
         else:
             raise (
                 ValueError(
@@ -844,7 +852,7 @@ class TimeDiscretiser:
         """
         self.dataToDiscretise["valPerBin"] = self.dataToDiscretise[self.columnToDiscretise]
 
-    def _valueDynamic(self):
+    def _valueNonlinearLevel(self):
         """
         Calculates the bin values dynamically (e.g. for the SoC). It returns a 
         non-linearly increasing list of values capped to upper and lower battery
@@ -984,6 +992,60 @@ class TimeDiscretiser:
             return [max(i, lim) for i in deltaBat]
         elif how == 'upper':
             return [min(i, lim) for i in deltaBat]
+
+    def _valueNonlinearCharge(self):
+        self._ucParking(d=self.dataToDiscretise)
+        self._ucDriving(d=self.dataToDiscretise)
+
+    def _ucParking(self, d: pd.DataFrame):
+        d['timestampEndUC'] = pd.to_datetime(d['timestampEndUC'])
+        d['timedeltaUC'] = d['timestampEndUC'] - d['timestampStart']
+        d['nFullBinsUC'] = (d.loc[self.dataToDiscretise[
+            'tripID'].isna(), 'timedeltaUC'].dt.total_seconds() / 60 / self.dt).astype(int)
+        d['valuePerBin'] = d.loc[self.dataToDiscretise[
+            'tripID'].isna(), :].apply(
+            lambda x: self._chargeRatePerBin(chargeRate=x['availablePower'],
+                                             chargeVol=x['uncontrolledCharge'], nBins=x['nBins'],
+                                             nBinsUC=x['nFullBinsUC']), axis=1)
+
+    def _ucDriving(self, d: pd.DataFrame):
+        d.loc[d['parkID'].isna(), 'valPerBin'] = 0
+
+    def _chargeRatePerBin(self, chargeRate: float, chargeVol: float,
+                          nBins: int, nBinsUC: int) -> list:
+        # FIXME: The typecast in _ucParking does not reliably provide integers, get rid of this eventually
+        nBinsUC = int(nBinsUC)
+        if chargeRate == 0:
+            return [0] * nBins
+        chargeRatesPerBin = [chargeRate] * nBins
+        volumesPerBin = [r * self.dt / 60 for r in chargeRatesPerBin]
+        cEnergy = np.cumsum(volumesPerBin)
+        idxsOvershoot = [idx for idx, en in enumerate(cEnergy) if en > chargeVol]
+
+        # Incomplete bin treatment
+        if idxsOvershoot:
+            binOvershoot = idxsOvershoot.pop(0)
+        else:
+            return [chargeVol]
+
+        valLastCBin = chargeVol
+
+        # if chargeVol > min(volumesPerBin):
+        #    valLastCBin = chargeVol - cEnergy[binOvershoot]  # maybe - 1
+
+        # chargeRatesPerBin[idxsOvershoot] = [0] * (nBins - nBinsUC)
+        # Option 1 / too long
+        # chargeRatesPerBin[min(idxsOvershoot): max(idxsOvershoot)] = [0] * (nBins - nBinsUC)
+        # Option 2 / erroneous
+        # crpb_o2 = np.array(chargeRatesPerBin)
+        # crpb_o2[idxsOvershoot] = [0] * (nBins - nBinsUC - 1)  # First / incomplete bin
+        # Option 3 / too long
+        # crpb_o3 = [0 if i in idxsOvershoot else chargeRatesPerBin[i] for i in range(len(chargeRatesPerBin))]
+        # chargeRatesPerBin[binOvershoot] = valLastCBin  # Only for Options 1-3
+
+        # Option 4
+        return chargeRatesPerBin[:binOvershoot] + [valLastCBin] + [0] * (
+            nBins - nBinsUC - 1)
 
     # DEPRECATED WILL BE DELETED SOON
     # def updateValueDynamic(self):
