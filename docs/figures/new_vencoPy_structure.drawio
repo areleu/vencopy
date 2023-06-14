@@ -1,6 +1,6 @@
-<mxfile host="app.diagrams.net" modified="2023-06-14T13:07:07.086Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36 Edg/113.0.1774.35" etag="YtUnKJuRY1bBnpOT8RP9" version="21.3.8" type="device">
+<mxfile host="app.diagrams.net" modified="2023-06-14T13:10:42.575Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36 Edg/113.0.1774.35" etag="XNCzYsg39hx1lvbu16Yd" version="21.3.8" type="device">
   <diagram id="YimaGMnV5s-QCDrL5l2j" name="Page-1">
-    <mxGraphModel dx="1322" dy="642" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="1928" dy="937" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -105,7 +105,7 @@
           <mxGeometry x="450" y="489.37" width="370" height="280.63" as="geometry" />
         </mxCell>
         <mxCell id="yWLFi-7v6lwdjs25CXLh-2" value="ProfileAggregator" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=20;rotation=270;" vertex="1" parent="1">
-          <mxGeometry x="710" y="580.63" width="174.75" height="20" as="geometry" />
+          <mxGeometry x="714.63" y="619.68" width="174.75" height="20" as="geometry" />
         </mxCell>
         <mxCell id="yWLFi-7v6lwdjs25CXLh-13" value="aggregation" style="whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
           <mxGeometry x="470" y="510.63" width="70" height="70" as="geometry" />
@@ -116,7 +116,7 @@
         <mxCell id="yWLFi-7v6lwdjs25CXLh-16" value="&lt;ul&gt;&lt;li&gt;aggregation of flow profiles by averaging&lt;/li&gt;&lt;li&gt;aggregation of state profiles by nth-value selection&lt;br&gt;&lt;/li&gt;&lt;/ul&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=-20;" vertex="1" parent="1">
           <mxGeometry x="570" y="510.63" width="210" height="70" as="geometry" />
         </mxCell>
-        <mxCell id="yWLFi-7v6lwdjs25CXLh-18" value="&lt;ul&gt;&lt;li&gt;compositino of weekly and annual&amp;nbsp; timeseries for all profiles&lt;/li&gt;&lt;/ul&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=-20;" vertex="1" parent="1">
+        <mxCell id="yWLFi-7v6lwdjs25CXLh-18" value="&lt;ul&gt;&lt;li&gt;composition of weekly and annual&amp;nbsp; timeseries for all profiles&lt;/li&gt;&lt;/ul&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=-20;" vertex="1" parent="1">
           <mxGeometry x="570" y="602.37" width="210" height="60" as="geometry" />
         </mxCell>
         <mxCell id="yWLFi-7v6lwdjs25CXLh-20" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=20;entryX=0.472;entryY=-0.002;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="1" source="HGCUKCm3Jx_b27lc3u62-22" target="HGCUKCm3Jx_b27lc3u62-32">
