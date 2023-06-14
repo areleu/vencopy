@@ -96,9 +96,9 @@ class ProfileAggregator():
 
     def __calculateAggregatedStateProfiles(self, byColumn: str, alpha: int = 10):
         """
-        Selects the alpha (100 - alpha) percentile from maximum battery level 
-        (minimum batttery level) profile for each hour. If alpha = 10, the 
-        10%-biggest (10%-smallest) value is selected, all values beyond are 
+        Selects the alpha (100 - alpha) percentile from maximum battery level
+        (minimum batttery level) profile for each hour. If alpha = 10, the
+        10%-biggest (10%-smallest) value is selected, all values beyond are
         disregarded as outliers.
 
         :param byColumn: Currently tripWeekday
@@ -107,7 +107,6 @@ class ProfileAggregator():
         :return: No return. Result is written to self.weekdayProfiles with bins
             in the columns and weekday identifiers in the rows.
         """
-
         for idate in self.activitiesWeekday[byColumn].unique():
             levels = self.activitiesWeekday.copy()
             weekdaySubset = levels[levels[byColumn] == idate].reset_index(
@@ -116,11 +115,11 @@ class ProfileAggregator():
                 'tripStartWeekday', 'tripWeight'])
             weekdaySubset = weekdaySubset.convert_dtypes()
             if self.profileName == 'maxBatteryLevel':
-                self.weekdayProfiles.iloc[idate-1] = weekdaySubset.quantile(
-                    alpha / 100)
-            elif self.profileName == 'minBatteryLevel':
-                self.weekdayProfiles.iloc[idate-1] = weekdaySubset.quantile(
+                self.weekdayProfiles.iloc[idate - 1] = weekdaySubset.quantile(
                     1 - (alpha / 100))
+            elif self.profileName == 'minBatteryLevel':
+                self.weekdayProfiles.iloc[idate - 1] = weekdaySubset.quantile(
+                    alpha / 100)
             else:
                 raise NotImplementedError(f'An unknown profile {self.profileName} was selected.')
 
