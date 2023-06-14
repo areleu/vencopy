@@ -17,6 +17,7 @@ from pathlib import Path
 import time
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 from typing import Optional
 from vencopy.utils.globalFunctions import createFileName, writeOut
 
@@ -102,18 +103,22 @@ class DiaryBuilder:
     def createDiaries(self):
         start_time = time.time()
         self.drain = self.distributedActivities.discretise(column="drain")
-        self.chargingPower = self.selectedActivities.discretise(column="availablePower")
+        self.chargingPower = self.selectedActivities.discretise(
+            column="availablePower")
         self.maxBatteryLevel = self.dynamicActivities.discretise(
             column="maxBatteryLevelStart"
         )
         self.minBatteryLevel = self.dynamicActivities.discretise(
             column="minBatteryLevelEnd"
         )
-        # self.uncontrolledCharge = self.distributedActivities.discretise(
-        #     column="uncontrolledCharge"
-        # )
-        self.uncontrolledCharge = self.uncontrolledCharging(
+        self.uncontrolledCharge = self.dynamicActivities.discretise(
+            column="uncontrolledCharge"
+        )
+
+        # Redundant, was only used for debugging
+        self.uncontrolledCharge_DiscrSOC = self.uncontrolledCharging(
             maxBatLev=self.maxBatteryLevel)
+
         needed_time = time.time() - start_time
         print(f"Needed time to discretise all columns: {needed_time}.")
 
@@ -121,13 +126,10 @@ class DiaryBuilder:
         uncCharge = maxBatLev.copy()
         for cName, c in uncCharge.items():
             if cName > 0:
-                # print(cName)
-                # print(c)
                 tempCol = maxBatLev[cName] - maxBatLev[cName - 1]
                 uncCharge[cName] = tempCol.where(tempCol >= 0, other=0)
             else:
                 uncCharge[cName] = 0
-
         return uncCharge
 
 
@@ -503,9 +505,7 @@ class WeekDiaryBuilder:
         week, i.e. Mondays.
         """
         return (
-            (~acts["parkID"].isna())
-            & (acts["isFirstActivity"])
-            & ~(acts["tripStartWeekday"] == 1)
+            (~acts["parkID"].isna()) & (acts["isFirstActivity"]) & ~(acts["tripStartWeekday"] == 1)
         )
 
     def __getLastParkActsWOSun(self, acts) -> pd.Series:
@@ -522,9 +522,7 @@ class WeekDiaryBuilder:
             the week, i.e. Sundays.
         """
         return (
-            (~acts["parkID"].isna())
-            & (acts["isLastActivity"])
-            & ~(acts["tripStartWeekday"] == 7)
+            (~acts["parkID"].isna()) & (acts["isLastActivity"]) & ~(acts["tripStartWeekday"] == 7)
         )
 
     def __updateLastWeekActs(self, acts: pd.DataFrame) -> pd.DataFrame:
@@ -706,6 +704,7 @@ class TimeDiscretiser:
         self._correctValues()
         self._correctTimestamp()
 
+    # FIXME: Rename to selectColumns?
     def _removeColumns(self):
         """
         Removes additional columns not used in the TimeDiscretiser class.
@@ -726,6 +725,9 @@ class TimeDiscretiser:
         ] + [self.columnToDiscretise]
         if self.isWeek:
             necessaryColumns = necessaryColumns + ["weekdayStr"]
+        if self.columnToDiscretise == 'uncontrolledCharge':
+            necessaryColumns = necessaryColumns + ['availablePower',
+                                                   'timestampEndUC']
         self.dataToDiscretise = self.activities[necessaryColumns].copy()
         return self.dataToDiscretise
 
@@ -784,7 +786,11 @@ class TimeDiscretiser:
         elif self.method == "select":
             self._valueSelect()
         elif self.method == "dynamic":
-            self._valueDynamic()
+            if self.columnToDiscretise in ('maxBatteryLevelStart',
+                                           'minBatteryLevelEnd'):
+                self._valueNonlinearLevel()
+            elif self.columnToDiscretise == 'uncontrolledCharge':
+                self._valueNonlinearCharge()
         else:
             raise (
                 ValueError(
@@ -799,8 +805,7 @@ class TimeDiscretiser:
         with a dt of 15 mins would have a 8 in the column.
         """
         self.dataToDiscretise["activityDuration"] = (
-            self.dataToDiscretise["timestampEndCorrected"]
-            - self.dataToDiscretise["timestampStartCorrected"]
+            self.dataToDiscretise["timestampEndCorrected"] - self.dataToDiscretise["timestampStartCorrected"]
         )
         self._removesZeroLengthActivities()
         self.dataToDiscretise["nBins"] = self.dataToDiscretise["activityDuration"] / (
@@ -819,8 +824,7 @@ class TimeDiscretiser:
         startLength = len(self.dataToDiscretise)
         self.dataToDiscretise.drop(
             self.dataToDiscretise[
-                self.dataToDiscretise.nBins
-                == 0
+                self.dataToDiscretise.nBins == 0
             ].index
         )
         endLength = len(self.dataToDiscretise)
@@ -847,12 +851,12 @@ class TimeDiscretiser:
         """
         self.dataToDiscretise["valPerBin"] = self.dataToDiscretise[self.columnToDiscretise]
 
-    def _valueDynamic(self):
+    def _valueNonlinearLevel(self):
         """
-        Calculates the bin values dynamically (e.g. for the SoC). It returns a 
+        Calculates the bin values dynamically (e.g. for the SoC). It returns a
         non-linearly increasing list of values capped to upper and lower battery
-        capacity limitations. The list of values is alloacted to bins in the 
-        function _allocate() in the same way as for value-per-bins. Operates 
+        capacity limitations. The list of values is alloacted to bins in the
+        function _allocate() in the same way as for value-per-bins. Operates
         directly on class attributes thus neither input nor return attributes.
         """
         self.deltaBatteryLevelDriving(d=self.dataToDiscretise,
@@ -862,23 +866,23 @@ class TimeDiscretiser:
 
     def deltaBatteryLevelDriving(self, d: pd.DataFrame, valCol: str):
         """Calculates decreasing battery level values for driving activities for
-        both cases, minimum and maximum battery level. The cases have to be 
+        both cases, minimum and maximum battery level. The cases have to be
         differentiated because the max case runs chronologically from morning to
         evening while the min case runs anti-chronologically from end-of-day to
-        beginning. Thus, in the latter case, drain has to be added to the 
-        battery level. 
+        beginning. Thus, in the latter case, drain has to be added to the
+        battery level.
         The function increaseLevelPerBin() is applied to the whole data set with
-        the respective start battery levels (socStart), battery level increases 
+        the respective start battery levels (socStart), battery level increases
         (socAddPerBin) and nBins for each activity respectively in a vectorized
-        manner. 
-        The function adds a column 'valPerBin' to d directly, thus it doesn't 
+        manner.
+        The function adds a column 'valPerBin' to d directly, thus it doesn't
         return anything.
 
         Args:
             d (pd.DataFrame): Activity data with activities in rows and at least
-            the columns valCol, 'drainPerBin', 'valPerBin', 'parkID' and 
+            the columns valCol, 'drainPerBin', 'valPerBin', 'parkID' and
             'nBins'.
-            valCol (str): The column to descritize. Currently only 
+            valCol (str): The column to descritize. Currently only
             maxBatteryLevelStart and minBatteryLevelStart are implemented.
         """
         if valCol == "maxBatteryLevelStart":
@@ -897,26 +901,26 @@ class TimeDiscretiser:
                                                        nBins=x['nBins'],), axis=1)
 
     def deltaBatteryLevelCharging(self, d: pd.DataFrame, valCol: str):
-        """Calculates increasing battery level values for park / charging 
+        """Calculates increasing battery level values for park / charging
         activities for both cases, minimum and maximum battery level. The cases
         have to be differentiated because the max case runs chronologically from
-        morning to evening while the min case runs anti-chronologically from 
-        evening to morning. Thus, in the latter case, charge has to be 
-        subtracted from the battery level. Charging volumes per bin are 
+        morning to evening while the min case runs anti-chronologically from
+        evening to morning. Thus, in the latter case, charge has to be
+        subtracted from the battery level. Charging volumes per bin are
         calculated from the 'availablePower' column in d.
         The function increaseLevelPerBin() is applied to the whole data set with
-        the respective start battery levels (socStart), battery level increases 
+        the respective start battery levels (socStart), battery level increases
         (socAddPerBin) and nBins for each activity respectively in a vectorized
-        manner. Then, battery capacity limitations are enforced applying the 
+        manner. Then, battery capacity limitations are enforced applying the
         function enforceBatteryLimit().
-        The function adds a column 'valPerBin' to d directly, thus it doesn't 
+        The function adds a column 'valPerBin' to d directly, thus it doesn't
         return anything.
 
         Args:
             d (pd.DataFrame): DataFrame with activities in rows and at least
-            the columns valCol, 'availablePower', 'tripID' and 
+            the columns valCol, 'availablePower', 'tripID' and
             'nBins'.
-            valCol (str): The column to descritize. Currently only 
+            valCol (str): The column to descritize. Currently only
             maxBatteryLevelStart and minBatteryLevelStart are implemented.
         """
         if valCol == "maxBatteryLevelStart":
@@ -950,32 +954,32 @@ class TimeDiscretiser:
                             socAddPerBin: float,
                             nBins: int
                             ) -> list:
-        """ Returns a list of battery level values wiht length nBins starting 
-        with socStart with added value of socAddPerBin. 
+        """ Returns a list of battery level values with length nBins starting
+        with socStart with added value of socAddPerBin.
 
         Args:
             socStart (float): Starting SOC
-            socAddPerBin (float): Consecutive (constant) additions to the start 
+            socAddPerBin (float): Consecutive (constant) additions to the start
             SOC
             nBins (int): Number of discretized bins (one per timeslot)
 
         Returns:
-            list: List of nBins increasing battery level values 
+            list: List of nBins increasing battery level values
         """
-        lst = []
         tmp = socStart
-        for _ in range(nBins):
+        lst = [tmp]
+        for _ in range(nBins - 1):
             tmp += socAddPerBin
             lst.append(tmp)
         return lst
 
     def enforceBatteryLimit(self, deltaBat: list, how: str, lim: float) -> list:
-        """ Lower-level function that caps a list of values at lower or upper 
-        (determined by how) limits given by limit. Thus [0, 40, 60] with 
-        how=upper and lim=50 would return [0, 40, 50]. 
+        """ Lower-level function that caps a list of values at lower or upper
+        (determined by how) limits given by limit. Thus [0, 40, 60] with
+        how=upper and lim=50 would return [0, 40, 50].
 
         Args:
-            deltaBat (list): List of float values of arbitrary length. 
+            deltaBat (list): List of float values of arbitrary length.
             how (str): Must be either 'upper' or 'lower'.
             lim (float): Number of threshold to which to limit the values in the
             list.
@@ -988,18 +992,54 @@ class TimeDiscretiser:
         elif how == 'upper':
             return [min(i, lim) for i in deltaBat]
 
-    # DEPRECATED WILL BE DELETED SOON
-    # def updateValueDynamic(self):
-    #     self.dataToDiscretise['originalValPerBin'] = self.dataToDiscretise['valPerBin']
-    #     self.dataToDiscretise["drainPerBin"] = self.dataToDiscretise["drainPerBin"].fillna(0)
-    #     self.dataToDiscretise['lenList'] = self.dataToDiscretise['valPerBin'].apply(lambda x: len(x))
-    #     max_len = self.dataToDiscretise['lenList'].max()
-    #     self.dataToDiscretise['listPadded'] = self.dataToDiscretise.apply(lambda x: np.pad(np.array(x.valPerBin), pad_width=(0, max_len-x.lenList)), axis=1)
-    #     arrayValPerBin = np.array(list(self.dataToDiscretise['listPadded']))
-    #     arrayDrainPerBin = np.array([self.dataToDiscretise['drainPerBin'] for _ in range(np.shape(arrayValPerBin)[1])]).transpose()
-    #     arrayChargePerBin = np.array([self.dataToDiscretise['chargePerBin'] for _ in range(np.shape(arrayValPerBin)[1])]).transpose()
-    #     self.dataToDiscretise['valPerBin'] = list(arrayValPerBin + arrayDrainPerBin + arrayChargePerBin)
-    #     self.dataToDiscretise['valPerBin'] = self.dataToDiscretise.apply(lambda x: x.valPerBin[:x.lenList], axis=1)
+    def _valueNonlinearCharge(self):
+        self._ucParking(d=self.dataToDiscretise)
+        self._ucDriving(d=self.dataToDiscretise)
+
+    def _ucParking(self, d: pd.DataFrame):
+        d['timestampEndUC'] = pd.to_datetime(d['timestampEndUC'])
+        d['timedeltaUC'] = d['timestampEndUC'] - d['timestampStart']
+        d['nFullBinsUC'] = (d.loc[self.dataToDiscretise[
+            'tripID'].isna(), 'timedeltaUC'].dt.total_seconds() / 60 / self.dt).astype(int)
+        d['valPerBin'] = d.loc[self.dataToDiscretise[
+            'tripID'].isna(), :].apply(
+            lambda x: self._chargeRatePerBin(chargeRate=x['availablePower'],
+                                             chargeVol=x['uncontrolledCharge'], nBins=x['nBins'],
+                                             nBinsUC=x['nFullBinsUC']), axis=1)
+
+    def _ucDriving(self, d: pd.DataFrame):
+        d.loc[d['parkID'].isna(), 'valPerBin'] = 0
+
+    def _chargeRatePerBin(self, chargeRate: float, chargeVol: float,
+                          nBins: int, nBinsUC: int) -> list:
+        # FIXME: The typecast in _ucParking does not reliably provide integers, get rid of this eventually
+        nBinsUC = int(nBinsUC)
+        if chargeRate == 0:
+            return [0] * nBins
+        chargeRatesPerBin = [chargeRate] * nBins
+        volumesPerBin = [r * self.dt / 60 for r in chargeRatesPerBin]
+        cEnergy = np.cumsum(volumesPerBin)
+        idxsOvershoot = [
+            idx for idx, en in enumerate(cEnergy) if en > chargeVol]
+
+        # Incomplete bin treatment
+        if idxsOvershoot:
+            binOvershoot = idxsOvershoot.pop(0)
+        # uncontrolled charging never completed during activity. This occurs when discretized activity is shorter than
+        # original due to discr. e.g. uniqueID == 10040082, parkID==5 starts at 16:10 and ends at 17:00, with dt=15 min
+        # it has 3 bins reducing the discretized duration to 45 minutes instead of 50 minutes.
+        elif cEnergy[0] < chargeVol:
+            return volumesPerBin
+        else:  # uncontrolled charging completed in first bin
+            return [round(chargeVol, 3)]
+
+        if binOvershoot == 0:
+            valLastCBin = round(chargeVol, 3)
+        else:
+            valLastCBin = round((chargeVol - cEnergy[binOvershoot - 1]), 3)
+
+        return volumesPerBin[:binOvershoot] + [valLastCBin] + [0] * (
+            nBins - nBinsUC - 1)
 
     def _identifyBins(self):
         """

@@ -26,16 +26,25 @@ class FlexEstimator:
         self.flexConfig = configDict['flexConfig']
         self.globalConfig = configDict['globalConfig']
         self.localPathConfig = configDict['localPathConfig']
-        self.upperBatLev = self.flexConfig['Battery_capacity'] * self.flexConfig['Maximum_SOC']
-        self.lowerBatLev = self.flexConfig['Battery_capacity'] * self.flexConfig['Minimum_SOC']
+        self.upperBatLev = self.flexConfig[
+            'Battery_capacity'] * self.flexConfig['Maximum_SOC']
+        self.lowerBatLev = self.flexConfig[
+            'Battery_capacity'] * self.flexConfig['Minimum_SOC']
         self.activities = activities.copy()
         self.isTrip = ~self.activities['tripID'].isna()
         self.isPark = ~self.activities['parkID'].isna()
-        self.isFirstAct = self.activities['isFirstActivity'].fillna(0).astype(bool)
-        self.isLastAct = self.activities['isLastActivity'].fillna(0).astype(bool)
-        self.activities[['maxBatteryLevelStart', 'maxBatteryLevelEnd', 'minBatteryLevelStart',
-                         'minBatteryLevelEnd', 'maxBatteryLevelEnd_unlimited', 'minBatteryLevelEnd_unlimited',
-                         'maxResidualNeed', 'minResidualNeed', 'maxOvershoot', 'minUndershoot',
+        self.isFirstAct = self.activities['isFirstActivity'].fillna(
+            0).astype(bool)
+        self.isLastAct = self.activities['isLastActivity'].fillna(
+            0).astype(bool)
+
+        # UC = uncontrolled charging
+        self.activities[['maxBatteryLevelStart', 'maxBatteryLevelEnd',
+                         'minBatteryLevelStart', 'minBatteryLevelEnd',
+                         'maxBatteryLevelEnd_unlimited', 'uncontrolledCharge',
+                         'timestampEndUC_unltd', 'timestampEndUC',
+                         'minBatteryLevelEnd_unlimited', 'maxResidualNeed',
+                         'minResidualNeed', 'maxOvershoot', 'minUndershoot',
                          'auxiliaryFuelNeed']] = None
         self.activitiesWOResidual = None
 
@@ -43,8 +52,10 @@ class FlexEstimator:
         self.activities['drain'] = self.activities['tripDistance'] * self.flexConfig['Electric_consumption'] / 100
 
     def _maxChargeVolumePerParkingAct(self):
-        self.activities.loc[self.isPark, 'maxChargeVolume'] = self.activities.loc[self.isPark, 'availablePower'] * \
-            self.activities.loc[self.isPark, 'timedelta'] / pd.Timedelta('1 hour')
+        self.activities.loc[self.isPark,
+                            'maxChargeVolume'] = self.activities.loc[
+            self.isPark, 'availablePower'] * self.activities.loc[
+                self.isPark, 'timedelta'] / pd.Timedelta('1 hour')
 
     # @profile(immediate=False)
     def __batteryLevelMax(self, startLevel: float):
@@ -339,14 +350,41 @@ class FlexEstimator:
         return parkActsIdx.reset_index()
 
     def _uncontrolledCharging(self):
-        self.activities.loc[~self.activities['parkID'].isna(), 'uncontrolledCharge'] = self.activities[
-            'maxBatteryLevelEnd'] - self.activities['maxBatteryLevelStart']
-        # FIXME: Steps for implementing additional timestamp column for maximum power uncontrolled charging
-        # 1  Calculate self.upperBatLev - maxBatteryLevelStart
-        # 2  If this is smaller than available charged energy (if full power charging would end earlier than
-        #    timestampEnd), calculate the timestamp at which full power charging reaches self.upperBatLev
-        # 3  Divide difference from 1 by max available power to get time for full power charging
-        # 4  Add time from 3 to timestampStart
+        parkActs = self.activities.loc[self.activities['tripID'].isna(),
+                                       :].copy()
+        parkActs['uncontrolledCharge'] = parkActs[
+            'maxBatteryLevelEnd'] - parkActs['maxBatteryLevelStart']
+
+        # Calculate timestamp at which charging ends disregarding parking end
+        parkActs['timestampEndUC_unltd'] = parkActs.apply(
+            lambda x: self._calcChargeEndTS(
+                startTS=x['timestampStart'], startBatLev=x['maxBatteryLevelStart'],
+                power=x['availablePower']), axis=1)
+
+        # Take into account possible earlier disconnection due to end of parking
+        parkActs['timestampEndUC'] = parkActs['timestampEndUC_unltd'].where(
+            parkActs['timestampEndUC_unltd'] <= parkActs['timestampEnd'],
+            other=parkActs['timestampEnd'])
+
+        # This would be a neater implementation of the above, but
+        # timestampEndUC_unltd contains NA making it impossible to convert to
+        # datetime with .dt which is a prerequisite to applying
+        # pandas.DataFrame.min()
+        # parkActs['timestampEndUC'] = parkActs[
+        #     ['timestampEndUC_unltd', 'timestampEnd']].min(axis=1)
+
+        self.activities.loc[self.activities['tripID'].isna(), :] = parkActs
+
+    def _calcChargeEndTS(self,
+                         startTS: pd.Timestamp,
+                         startBatLev: float,
+                         power: float
+                         ):
+        if power == 0:
+            return pd.NA
+        deltaBatLev = self.upperBatLev - startBatLev
+        timeForCharge = deltaBatLev / power  # in hours
+        return startTS + pd.Timedelta(value=timeForCharge, unit='h').round(freq='s')
 
     def _auxFuelNeed(self):
         self.activities['auxiliaryFuelNeed'] = self.activities['residualNeed'] * self.flexConfig[
