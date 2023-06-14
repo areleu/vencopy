@@ -1021,20 +1021,24 @@ class TimeDiscretiser:
         chargeRatesPerBin = [chargeRate] * nBins
         volumesPerBin = [r * self.dt / 60 for r in chargeRatesPerBin]
         cEnergy = np.cumsum(volumesPerBin)
-        idxsOvershoot = [idx for idx, en in enumerate(cEnergy) if en > chargeVol]
+        idxsOvershoot = [
+            idx for idx, en in enumerate(cEnergy) if en > chargeVol]
 
         # Incomplete bin treatment
         if idxsOvershoot:
             binOvershoot = idxsOvershoot.pop(0)
-        # overshoot beyond activity end, this occurs when discretized activity is shorter than original due to discr.
-        # e.g. uniqueID == 10040082, parkID==5 starts at 16:10 and ends at 17:00, with dt=15 min it has 3 bins reducing
-    # the discretized duration to 45 minutes instead of 50 minutes.
+        # uncontrolled charging never completed during activity. This occurs when discretized activity is shorter than
+        # original due to discr. e.g. uniqueID == 10040082, parkID==5 starts at 16:10 and ends at 17:00, with dt=15 min
+        # it has 3 bins reducing the discretized duration to 45 minutes instead of 50 minutes.
         elif cEnergy[0] < chargeVol:
-            return chargeRatesPerBin
-        else:  # overshoot in first bin
+            return volumesPerBin
+        else:  # uncontrolled charging completed in first bin
             return [round(chargeVol, 3)]
 
-        valLastCBin = round(chargeVol, 3)
+        if binOvershoot == 0:
+            valLastCBin = round(chargeVol, 3)
+        else:
+            valLastCBin = round((chargeVol - cEnergy[binOvershoot - 1]), 3)
 
         # if chargeVol > min(volumesPerBin):
         #    valLastCBin = chargeVol - cEnergy[binOvershoot]  # maybe - 1
@@ -1050,7 +1054,7 @@ class TimeDiscretiser:
         # chargeRatesPerBin[binOvershoot] = valLastCBin  # Only for Options 1-3
 
         # Option 4
-        return chargeRatesPerBin[:binOvershoot] + [valLastCBin] + [0] * (
+        return volumesPerBin[:binOvershoot] + [valLastCBin] + [0] * (
             nBins - nBinsUC - 1)
 
     # DEPRECATED WILL BE DELETED SOON
