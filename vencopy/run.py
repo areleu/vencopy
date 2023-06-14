@@ -56,6 +56,7 @@ if __name__ == "__main__":
         configDict=configDict, activities=vpDiary.activities, profiles=vpDiary
     )
     vpProfile.createTimeseries()
+    # vpProfile.createTimeseries(pNames=('maxBatteryLevel'), profiles=(vpDiary.maxBatteryLevel))
 
     # Evaluate drive and trip purpose profile
     # vpEval = Evaluator(configDict=configDict, parseData=pd.Series(data=vpData, index=[datasetID]))

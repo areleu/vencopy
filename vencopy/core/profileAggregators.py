@@ -19,8 +19,8 @@ from vencopy.utils.globalFunctions import (createFileName, writeOut)
 
 
 class ProfileAggregator():
-    def __init__(self, configDict: dict,
-                 activities: pd.DataFrame, profiles: DiaryBuilder):
+    def __init__(self, configDict: dict, activities: pd.DataFrame,
+                 profiles: DiaryBuilder):
         self.aggregatorConfig = configDict['aggregatorConfig']
         self.globalConfig = configDict['globalConfig']
         self.localPathConfig = configDict['localPathConfig']
@@ -96,9 +96,9 @@ class ProfileAggregator():
 
     def __calculateAggregatedStateProfiles(self, byColumn: str, alpha: int = 10):
         """
-        Selects the alpha (100 - alpha) percentile from maximum battery level 
-        (minimum batttery level) profile for each hour. If alpha = 10, the 
-        10%-biggest (10%-smallest) value is selected, all values beyond are 
+        Selects the alpha (100 - alpha) percentile from maximum battery level
+        (minimum batttery level) profile for each hour. If alpha = 10, the
+        10%-biggest (10%-smallest) value is selected, all values beyond are
         disregarded as outliers.
 
         :param byColumn: Currently tripWeekday
@@ -107,7 +107,6 @@ class ProfileAggregator():
         :return: No return. Result is written to self.weekdayProfiles with bins
             in the columns and weekday identifiers in the rows.
         """
-
         for idate in self.activitiesWeekday[byColumn].unique():
             levels = self.activitiesWeekday.copy()
             weekdaySubset = levels[levels[byColumn] == idate].reset_index(
@@ -116,10 +115,10 @@ class ProfileAggregator():
                 'tripStartWeekday', 'tripWeight'])
             weekdaySubset = weekdaySubset.convert_dtypes()
             if self.profileName == 'maxBatteryLevel':
-                self.weekdayProfiles.iloc[idate-1] = weekdaySubset.quantile(
-                    1-(alpha / 100))
+                self.weekdayProfiles.iloc[idate - 1] = weekdaySubset.quantile(
+                    1 - (alpha / 100))
             elif self.profileName == 'minBatteryLevel':
-                self.weekdayProfiles.iloc[idate-1] = weekdaySubset.quantile(
+                self.weekdayProfiles.iloc[idate - 1] = weekdaySubset.quantile(
                     alpha / 100)
             else:
                 raise NotImplementedError(f'An unknown profile {self.profileName} was selected.')
@@ -170,12 +169,14 @@ class ProfileAggregator():
             fileNameID='outputProfileAggregator', datasetID=self.datasetID)
         writeOut(data=self.annualProfile, path=root / folder / fileName)
 
-    def createTimeseries(self):
-        profiles = (self.drain, self.uncontrolledCharge, self.chargingPower,
-                    self.maxBatteryLevel, self.minBatteryLevel)
-        profileNames = ('drain', 'chargingPower', 'uncontrolledCharge',
-                        'maxBatteryLevel', 'minBatteryLevel')
-        for profile, profileName in zip(profiles, profileNames):
+    def createTimeseries(self, pNames: (str) = None,
+                         profiles: (pd.DataFrame) = None):
+        if not pNames and not profiles:
+            profiles = (self.drain, self.uncontrolledCharge, self.chargingPower,
+                        self.maxBatteryLevel, self.minBatteryLevel)
+            pNames = ('drain', 'uncontrolledCharge', 'chargingPower',
+                      'maxBatteryLevel', 'minBatteryLevel')
+        for profile, profileName in zip(profiles, pNames):
             self.profileName = profileName
             self.profile = profile
             self.__createWeeklyProfiles()
