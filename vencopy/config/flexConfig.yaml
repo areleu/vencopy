@@ -11,7 +11,7 @@
 
 filterFuelNeed: True # Should activity chains that require fuel for trip distance satisfaction be filtered out?
 Minimum_daily_mileage: 0.0 # in km, cut-off mileage to exclude profiles
-Battery_capacity: 20 # in kWh, input assumption for battery capacity
+Battery_capacity: 50 # in kWh, input assumption for battery capacity
 Electric_consumption: 18.0 # in kWh/100km, input assumption for specific electric consumption
 Fuel_consumption: 1.0 # in l/100km, input assumption for specific fuel consumption for auxiliary fuel
 Start_SOC: 0.5 # State-of-charge between 0 and 1 at beginning of activity chain

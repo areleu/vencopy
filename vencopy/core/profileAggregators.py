@@ -117,10 +117,10 @@ class ProfileAggregator():
             weekdaySubset = weekdaySubset.convert_dtypes()
             if self.profileName == 'maxBatteryLevel':
                 self.weekdayProfiles.iloc[idate-1] = weekdaySubset.quantile(
-                    1-(alpha / 100))
+                    alpha / 100)
             elif self.profileName == 'minBatteryLevel':
                 self.weekdayProfiles.iloc[idate-1] = weekdaySubset.quantile(
-                    alpha / 100)
+                    1 - (alpha / 100))
             else:
                 raise NotImplementedError(f'An unknown profile {self.profileName} was selected.')
 
@@ -175,7 +175,7 @@ class ProfileAggregator():
         if not pNames and not profiles:
             profiles = (self.drain, self.uncontrolledCharge, self.chargingPower,
                         self.maxBatteryLevel, self.minBatteryLevel)
-            pNames = ('drain', 'chargingPower', 'uncontrolledCharge',
+            pNames = ('drain', 'uncontrolledCharge', 'chargingPower',
                       'maxBatteryLevel', 'minBatteryLevel')
         for profile, profileName in zip(profiles, pNames):
             self.profileName = profileName
