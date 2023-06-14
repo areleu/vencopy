@@ -44,6 +44,11 @@ class ProfileAggregator():
         self.uncontrolledCharge = profiles.uncontrolledCharge
         self.maxBatteryLevel = profiles.maxBatteryLevel
         self.minBatteryLevel = profiles.minBatteryLevel
+        self.drainWeekly = None
+        self.chargingPowerWeekly = None
+        self.uncontrolledChargeWeekly = None
+        self.maxBatteryLevelWeekly = None
+        self.minBatteryLevelWeekly = None
 
     def __createWeeklyProfiles(self):
         print('Aggregating all profiles to fleet level based on day of the week.')
@@ -142,6 +147,19 @@ class ProfileAggregator():
             pd.concat([self.weekdayProfiles[1], self.weekdayProfiles[2], self.weekdayProfiles[3],
                        self.weekdayProfiles[4], self.weekdayProfiles[5], self.weekdayProfiles[6],
                        self.weekdayProfiles[7]], ignore_index=True))
+        self.__makeWeeklyProfileClassAttribute()
+
+    def __makeWeeklyProfileClassAttribute(self):
+        if self.profileName == 'drain':
+            self.drainWeekly = self.weeklyProfile
+        elif self.profileName == 'uncontrolledCharge':
+            self.uncontrolledChargeWeekly = self.weeklyProfile
+        elif self.profileName == 'chargingPower':
+            self.chargingPowerWeekly = self.weeklyProfile
+        elif self.profileName == 'maxBatteryLevel':
+            self.maxBatteryLevelWeekly = self.weeklyProfile
+        elif self.profileName == 'minBatteryLevel':
+            self.minBatteryLevelWeekly = self.weeklyProfile
 
     def __createAnnualProfiles(self):
         startWeekday = 1  # (1: Monday, 7: Sunday)
