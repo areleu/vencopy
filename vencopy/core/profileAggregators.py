@@ -19,8 +19,8 @@ from vencopy.utils.globalFunctions import (createFileName, writeOut)
 
 
 class ProfileAggregator():
-    def __init__(self, configDict: dict,
-                 activities: pd.DataFrame, profiles: DiaryBuilder):
+    def __init__(self, configDict: dict, activities: pd.DataFrame,
+                 profiles: DiaryBuilder):
         self.aggregatorConfig = configDict['aggregatorConfig']
         self.globalConfig = configDict['globalConfig']
         self.localPathConfig = configDict['localPathConfig']
@@ -170,12 +170,14 @@ class ProfileAggregator():
             fileNameID='outputProfileAggregator', datasetID=self.datasetID)
         writeOut(data=self.annualProfile, path=root / folder / fileName)
 
-    def createTimeseries(self):
-        profiles = (self.drain, self.uncontrolledCharge, self.chargingPower,
-                    self.maxBatteryLevel, self.minBatteryLevel)
-        profileNames = ('drain', 'chargingPower', 'uncontrolledCharge',
-                        'maxBatteryLevel', 'minBatteryLevel')
-        for profile, profileName in zip(profiles, profileNames):
+    def createTimeseries(self, pNames: (str) = None,
+                         profiles: (pd.DataFrame) = None):
+        if not pNames and not profiles:
+            profiles = (self.drain, self.uncontrolledCharge, self.chargingPower,
+                        self.maxBatteryLevel, self.minBatteryLevel)
+            pNames = ('drain', 'chargingPower', 'uncontrolledCharge',
+                      'maxBatteryLevel', 'minBatteryLevel')
+        for profile, profileName in zip(profiles, pNames):
             self.profileName = profileName
             self.profile = profile
             self.__createWeeklyProfiles()

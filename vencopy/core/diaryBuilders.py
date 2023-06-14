@@ -103,18 +103,22 @@ class DiaryBuilder:
     def createDiaries(self):
         start_time = time.time()
         self.drain = self.distributedActivities.discretise(column="drain")
-        self.chargingPower = self.selectedActivities.discretise(column="availablePower")
+        self.chargingPower = self.selectedActivities.discretise(
+            column="availablePower")
         self.maxBatteryLevel = self.dynamicActivities.discretise(
             column="maxBatteryLevelStart"
         )
         self.minBatteryLevel = self.dynamicActivities.discretise(
             column="minBatteryLevelEnd"
         )
-        self.uncontrolledCharge_Flex = self.dynamicActivities.discretise(
+        self.uncontrolledCharge = self.dynamicActivities.discretise(
             column="uncontrolledCharge"
         )
+
+        # Redundant, was only used for debugging
         self.uncontrolledCharge_DiscrSOC = self.uncontrolledCharging(
             maxBatLev=self.maxBatteryLevel)
+
         needed_time = time.time() - start_time
         print(f"Needed time to discretise all columns: {needed_time}.")
 
@@ -1040,20 +1044,6 @@ class TimeDiscretiser:
         else:
             valLastCBin = round((chargeVol - cEnergy[binOvershoot - 1]), 3)
 
-        # if chargeVol > min(volumesPerBin):
-        #    valLastCBin = chargeVol - cEnergy[binOvershoot]  # maybe - 1
-
-        # chargeRatesPerBin[idxsOvershoot] = [0] * (nBins - nBinsUC)
-        # Option 1 / too long
-        # chargeRatesPerBin[min(idxsOvershoot): max(idxsOvershoot)] = [0] * (nBins - nBinsUC)
-        # Option 2 / erroneous
-        # crpb_o2 = np.array(chargeRatesPerBin)
-        # crpb_o2[idxsOvershoot] = [0] * (nBins - nBinsUC - 1)  # First / incomplete bin
-        # Option 3 / too long
-        # crpb_o3 = [0 if i in idxsOvershoot else chargeRatesPerBin[i] for i in range(len(chargeRatesPerBin))]
-        # chargeRatesPerBin[binOvershoot] = valLastCBin  # Only for Options 1-3
-
-        # Option 4
         return volumesPerBin[:binOvershoot] + [valLastCBin] + [0] * (
             nBins - nBinsUC - 1)
 
