@@ -58,7 +58,6 @@ if __name__ == "__main__":
     vpProfile.createTimeseries()
     # vpProfile.createTimeseries(pNames=('maxBatteryLevel'), profiles=(vpDiary.maxBatteryLevel))
 
-    # Evaluate drive and trip purpose profile
     # vpEval = Evaluator(configDict=configDict, parseData=pd.Series(data=vpData, index=[datasetID]))
     # vpEval.plotParkingAndPowers(vpGrid=vpGrid)
     # vpEval.hourlyAggregates = vpEval.calcVariableSpecAggregates(by=["tripStartWeekday"])

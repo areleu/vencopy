@@ -388,7 +388,7 @@ class WeekDiaryBuilder:
         return acts
 
     def __orderViaWeekday(self, acts) -> pd.DataFrame:
-        return acts.sort_values(by=["uniqueID", "tripStartWeekday", "timestampStart"])
+        return acts.sort_values(by=["uniqueID", "tripStartWeekday", "timestampStartCorrected"])
 
     def __adjustActID(self, acts: pd.DataFrame) -> pd.DataFrame:
         """
@@ -993,27 +993,25 @@ class TimeDiscretiser:
             return [min(i, lim) for i in deltaBat]
 
     def _valueNonlinearCharge(self):
-        self._ucParking(d=self.dataToDiscretise)
-        self._ucDriving(d=self.dataToDiscretise)
+        self._ucParking()
+        self._ucDriving()
 
-    def _ucParking(self, d: pd.DataFrame):
-        d['timestampEndUC'] = pd.to_datetime(d['timestampEndUC'])
-        d['timedeltaUC'] = d['timestampEndUC'] - d['timestampStart']
-        d['nFullBinsUC'] = (d.loc[self.dataToDiscretise[
+    def _ucParking(self):
+        self.dataToDiscretise['timestampEndUC'] = pd.to_datetime(self.dataToDiscretise['timestampEndUC'])
+        self.dataToDiscretise['timedeltaUC'] = self.dataToDiscretise['timestampEndUC'] - self.dataToDiscretise['timestampStart']
+        self.dataToDiscretise['nFullBinsUC'] = (self.dataToDiscretise.loc[self.dataToDiscretise[
             'tripID'].isna(), 'timedeltaUC'].dt.total_seconds() / 60 / self.dt).astype(int)
-        d['valPerBin'] = d.loc[self.dataToDiscretise[
+        self.dataToDiscretise['valPerBin'] = self.dataToDiscretise.loc[self.dataToDiscretise[
             'tripID'].isna(), :].apply(
             lambda x: self._chargeRatePerBin(chargeRate=x['availablePower'],
-                                             chargeVol=x['uncontrolledCharge'], nBins=x['nBins'],
-                                             nBinsUC=x['nFullBinsUC']), axis=1)
+                                             chargeVol=x['uncontrolledCharge'],
+                                             nBins=x['nBins']), axis=1)
 
-    def _ucDriving(self, d: pd.DataFrame):
-        d.loc[d['parkID'].isna(), 'valPerBin'] = 0
+    def _ucDriving(self):
+        self.dataToDiscretise.loc[self.dataToDiscretise['parkID'].isna(), 'valPerBin'] = 0
 
     def _chargeRatePerBin(self, chargeRate: float, chargeVol: float,
-                          nBins: int, nBinsUC: int) -> list:
-        # FIXME: The typecast in _ucParking does not reliably provide integers, get rid of this eventually
-        nBinsUC = int(nBinsUC)
+                          nBins: int) -> list:
         if chargeRate == 0:
             return [0] * nBins
         chargeRatesPerBin = [chargeRate] * nBins
@@ -1038,8 +1036,7 @@ class TimeDiscretiser:
         else:
             valLastCBin = round((chargeVol - cEnergy[binOvershoot - 1]), 3)
 
-        return volumesPerBin[:binOvershoot] + [valLastCBin] + [0] * (
-            nBins - nBinsUC - 1)
+        return volumesPerBin[:binOvershoot] + [valLastCBin] + [0] * (len(idxsOvershoot))
 
     def _identifyBins(self):
         """
@@ -1230,7 +1227,7 @@ class TimeDiscretiser:
         self._datasetCleanup()
         self._identifyBinShares()
         self._allocateBinShares()
-        self._writeOutput()
+        #self._writeOutput()
         print(f"Discretisation finished for {self.columnToDiscretise}.")
         elapsedTimeDiaryBuilder = time.time() - startTimeDiaryBuilder
         print(f"Needed time to discretise {self.columnToDiscretise}: {elapsedTimeDiaryBuilder}.")

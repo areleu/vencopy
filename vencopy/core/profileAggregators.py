@@ -182,10 +182,10 @@ class ProfileAggregator():
             fileNameID='outputProfileAggregator', datasetID=self.datasetID)
         writeOut(data=self.weeklyProfile, path=root / folder / fileName)
 
-        fileName = createFileName(globalConfig=self.globalConfig, manualLabel=(
-            '_' + self.profileName + 'Annual'),
-            fileNameID='outputProfileAggregator', datasetID=self.datasetID)
-        writeOut(data=self.annualProfile, path=root / folder / fileName)
+        # fileName = createFileName(globalConfig=self.globalConfig, manualLabel=(
+        #     '_' + self.profileName + 'Annual'),
+        #     fileNameID='outputProfileAggregator', datasetID=self.datasetID)
+        # writeOut(data=self.annualProfile, path=root / folder / fileName)
 
     def createTimeseries(self, pNames: (str) = None,
                          profiles: (pd.DataFrame) = None):
