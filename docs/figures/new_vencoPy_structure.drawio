@@ -1,6 +1,6 @@
-<mxfile host="app.diagrams.net" modified="2023-06-14T13:10:42.575Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36 Edg/113.0.1774.35" etag="XNCzYsg39hx1lvbu16Yd" version="21.3.8" type="device">
+<mxfile host="app.diagrams.net" modified="2023-06-16T08:33:16.604Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36 Edg/113.0.1774.35" etag="OjeVbk3TIj-zv5qbOand" version="21.4.0" type="device">
   <diagram id="YimaGMnV5s-QCDrL5l2j" name="Page-1">
-    <mxGraphModel dx="1928" dy="937" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="2314" dy="1124" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -86,7 +86,7 @@
         <mxCell id="HGCUKCm3Jx_b27lc3u62-38" value="&lt;ul&gt;&lt;li&gt;uncontrolled charging profile calculation&lt;/li&gt;&lt;li&gt;fuel consumption calculation for PHEVs / FCEVs&lt;br&gt;&lt;/li&gt;&lt;/ul&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=-20;" parent="1" vertex="1">
           <mxGeometry x="172.5" y="640" width="210" height="75" as="geometry" />
         </mxCell>
-        <mxCell id="HGCUKCm3Jx_b27lc3u62-39" value="State profile calculation (SoC min)" style="whiteSpace=wrap;html=1;aspect=fixed;" parent="1" vertex="1">
+        <mxCell id="HGCUKCm3Jx_b27lc3u62-39" value="state profile calculation (SoC min)" style="whiteSpace=wrap;html=1;aspect=fixed;" parent="1" vertex="1">
           <mxGeometry x="72.5" y="735" width="70" height="70" as="geometry" />
         </mxCell>
         <mxCell id="HGCUKCm3Jx_b27lc3u62-40" value="&lt;ul&gt;&lt;li&gt;minimum SoCcalculation&lt;br&gt;&lt;/li&gt;&lt;li&gt;iteration to ensure SoC(t=start) = SoC(t=end)&lt;br&gt;&lt;/li&gt;&lt;/ul&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=-20;" parent="1" vertex="1">
@@ -101,41 +101,41 @@
         <mxCell id="HGCUKCm3Jx_b27lc3u62-50" value="GridModeler" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=20;rotation=270;" parent="1" vertex="1">
           <mxGeometry x="1.8800000000000008" y="381.26" width="96.25" height="20" as="geometry" />
         </mxCell>
-        <mxCell id="yWLFi-7v6lwdjs25CXLh-1" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;arcSize=7;" vertex="1" parent="1">
+        <mxCell id="yWLFi-7v6lwdjs25CXLh-1" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;arcSize=7;" parent="1" vertex="1">
           <mxGeometry x="450" y="489.37" width="370" height="280.63" as="geometry" />
         </mxCell>
-        <mxCell id="yWLFi-7v6lwdjs25CXLh-2" value="ProfileAggregator" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=20;rotation=270;" vertex="1" parent="1">
+        <mxCell id="yWLFi-7v6lwdjs25CXLh-2" value="ProfileAggregator" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=20;rotation=270;" parent="1" vertex="1">
           <mxGeometry x="714.63" y="619.68" width="174.75" height="20" as="geometry" />
         </mxCell>
-        <mxCell id="yWLFi-7v6lwdjs25CXLh-13" value="aggregation" style="whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+        <mxCell id="yWLFi-7v6lwdjs25CXLh-13" value="aggregation" style="whiteSpace=wrap;html=1;aspect=fixed;" parent="1" vertex="1">
           <mxGeometry x="470" y="510.63" width="70" height="70" as="geometry" />
         </mxCell>
-        <mxCell id="yWLFi-7v6lwdjs25CXLh-15" value="weekly and annual timeseries" style="whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+        <mxCell id="yWLFi-7v6lwdjs25CXLh-15" value="weekly and annual timeseries" style="whiteSpace=wrap;html=1;aspect=fixed;" parent="1" vertex="1">
           <mxGeometry x="470" y="597.37" width="70" height="70" as="geometry" />
         </mxCell>
-        <mxCell id="yWLFi-7v6lwdjs25CXLh-16" value="&lt;ul&gt;&lt;li&gt;aggregation of flow profiles by averaging&lt;/li&gt;&lt;li&gt;aggregation of state profiles by nth-value selection&lt;br&gt;&lt;/li&gt;&lt;/ul&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=-20;" vertex="1" parent="1">
+        <mxCell id="yWLFi-7v6lwdjs25CXLh-16" value="&lt;ul&gt;&lt;li&gt;aggregation of flow profiles by averaging&lt;/li&gt;&lt;li&gt;aggregation of state profiles by nth-value selection&lt;br&gt;&lt;/li&gt;&lt;/ul&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=-20;" parent="1" vertex="1">
           <mxGeometry x="570" y="510.63" width="210" height="70" as="geometry" />
         </mxCell>
-        <mxCell id="yWLFi-7v6lwdjs25CXLh-18" value="&lt;ul&gt;&lt;li&gt;composition of weekly and annual&amp;nbsp; timeseries for all profiles&lt;/li&gt;&lt;/ul&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=-20;" vertex="1" parent="1">
+        <mxCell id="yWLFi-7v6lwdjs25CXLh-18" value="&lt;ul&gt;&lt;li&gt;composition of weekly and annual&amp;nbsp; timeseries for all profiles&lt;/li&gt;&lt;/ul&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=-20;" parent="1" vertex="1">
           <mxGeometry x="570" y="602.37" width="210" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="yWLFi-7v6lwdjs25CXLh-20" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=20;entryX=0.472;entryY=-0.002;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="1" source="HGCUKCm3Jx_b27lc3u62-22" target="HGCUKCm3Jx_b27lc3u62-32">
+        <mxCell id="yWLFi-7v6lwdjs25CXLh-20" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=20;entryX=0.472;entryY=-0.002;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" parent="1" source="HGCUKCm3Jx_b27lc3u62-22" target="HGCUKCm3Jx_b27lc3u62-32" edge="1">
           <mxGeometry relative="1" as="geometry">
             <mxPoint x="215" y="460" as="sourcePoint" />
             <mxPoint x="225" y="341" as="targetPoint" />
             <Array as="points" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="yWLFi-7v6lwdjs25CXLh-21" value="&lt;ul&gt;&lt;li&gt;calculation shares of electricity demand for driving, charging power, uncontrolled charging load, maximum and minimum SoC&lt;br&gt;&lt;/li&gt;&lt;li&gt;allocation of values to the specified time resolution&amp;nbsp;&lt;/li&gt;&lt;/ul&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacing=2;spacingLeft=-20;" vertex="1" parent="1">
+        <mxCell id="yWLFi-7v6lwdjs25CXLh-21" value="&lt;ul&gt;&lt;li&gt;calculation shares of electricity demand for driving, charging power, uncontrolled charging load, maximum and minimum SoC&lt;br&gt;&lt;/li&gt;&lt;li&gt;allocation of values to the specified time resolution&amp;nbsp;&lt;/li&gt;&lt;/ul&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacing=2;spacingLeft=-20;" parent="1" vertex="1">
           <mxGeometry x="570" y="325" width="210" height="100" as="geometry" />
         </mxCell>
-        <mxCell id="yWLFi-7v6lwdjs25CXLh-23" value="normali-sation" style="whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+        <mxCell id="yWLFi-7v6lwdjs25CXLh-23" value="normali-sation" style="whiteSpace=wrap;html=1;aspect=fixed;" parent="1" vertex="1">
           <mxGeometry x="470" y="685" width="70" height="70" as="geometry" />
         </mxCell>
-        <mxCell id="yWLFi-7v6lwdjs25CXLh-24" value="&lt;ul&gt;&lt;li&gt;SoC profiles normalized to battery capacity&lt;/li&gt;&lt;/ul&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=-20;" vertex="1" parent="1">
+        <mxCell id="yWLFi-7v6lwdjs25CXLh-24" value="&lt;ul&gt;&lt;li&gt;SoC profiles normalized to battery capacity&lt;/li&gt;&lt;/ul&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=-20;" parent="1" vertex="1">
           <mxGeometry x="570" y="685" width="210" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="yWLFi-7v6lwdjs25CXLh-27" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=20;entryX=0.517;entryY=0.005;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.482;exitY=0.999;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="1" source="HGCUKCm3Jx_b27lc3u62-32" target="HGCUKCm3Jx_b27lc3u62-21">
+        <mxCell id="yWLFi-7v6lwdjs25CXLh-27" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=20;entryX=0.517;entryY=0.005;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.482;exitY=0.999;exitDx=0;exitDy=0;exitPerimeter=0;" parent="1" source="HGCUKCm3Jx_b27lc3u62-32" target="HGCUKCm3Jx_b27lc3u62-21" edge="1">
           <mxGeometry relative="1" as="geometry">
             <mxPoint x="225" y="466" as="sourcePoint" />
             <mxPoint x="225" y="489" as="targetPoint" />
