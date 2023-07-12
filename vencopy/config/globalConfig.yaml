@@ -46,6 +46,7 @@ files:
         outputFlexEstimator: vencopyOutputFlexEstimator
         outputDiaryBuilder: vencopyOutputDiaryBuilder
         outputProfileAggregator: vencopyOutputProfileAggregator
+        outputOutputFormatter: vencopyOutputOutputFormatter
         filteredDataset: filteredDataset
         purposesProcessed: inputProfiles_Purpose # inputProfiles_Purpose_RUNLABEL_MiD17.csv
         inputDataDriveProfiles: inputProfiles_Drive # inputProfiles_Drive_RUNLABEL_MiD17.csv
@@ -82,6 +83,7 @@ files:
         outputFlexEstimator: vencopyOutputFlexEstimator
         outputDiaryBuilder: vencopyOutputDiaryBuilder
         outputProfileAggregator: vencopyOutputProfileAggregator
+        outputOutputFormatter: vencopyOutputOutputFormatter
     VF:
         tripsDataRaw: MiD2017_Wege.dta
         vehiclesDataRaw: tripDataMergedWVehicleData.csv
@@ -91,6 +93,7 @@ files:
         outputFlexEstimator: vencopyOutputFlexEstimator
         outputDiaryBuilder: vencopyOutputDiaryBuilder
         outputProfileAggregator: vencopyOutputProfileAggregator
+        outputOutputFormatter: vencopyOutputOutputFormatter
     output: output
     vencoPyOutput: vencoPyOutput
     aggPlotName: mobilityComparison

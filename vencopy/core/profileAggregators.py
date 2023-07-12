@@ -182,4 +182,5 @@ class ProfileAggregator():
             self.profile = profile
             self.__createWeeklyProfiles()
             self._writeOutput()
-        print('Run finished.')
+            print(f'Discretisation finished for {self.profileName}.')
+        print('Discretisation finished for all profiles.')

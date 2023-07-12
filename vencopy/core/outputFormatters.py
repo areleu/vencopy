@@ -22,6 +22,9 @@ class OutputFormatter():
         self.globalConfig = configDict['globalConfig']
         self.localPathConfig = configDict['localPathConfig']
         self.datasetID = configDict["globalConfig"]["dataset"]
+        self.deltaTime = configDict['diaryConfig']['TimeDelta']
+        self.timeIndex = list(pd.timedelta_range(
+            start='00:00:00', end='24:00:00', freq=f'{self.deltaTime}T'))
         self.drain = profiles.drainWeekly
         self.chargingPower = profiles.chargingPowerWeekly
         self.uncontrolledCharge = profiles.uncontrolledChargeWeekly
@@ -46,7 +49,7 @@ class OutputFormatter():
 
         fileName = createFileName(globalConfig=self.globalConfig, manualLabel=(
             '_' + self.profileName + ''),
-            fileNameID='outputFormatter', datasetID=self.datasetID)
+            fileNameID='outputOutputFormatter', datasetID=self.datasetID)
         writeOut(data=self.profile, path=root / folder / fileName)
 
     def createTimeseries(self):
