@@ -21,6 +21,7 @@ from vencopy.core.diaryBuilders import DiaryBuilder
 from vencopy.core.gridModelers import GridModeler
 from vencopy.core.flexEstimators import FlexEstimator
 from vencopy.core.profileAggregators import ProfileAggregator
+from vencopy.core.outputFormatters import OutputFormatter
 
 # from vencopy.core.evaluators import Evaluator
 from vencopy.utils.globalFunctions import (
@@ -55,8 +56,10 @@ if __name__ == "__main__":
     vpProfile = ProfileAggregator(
         configDict=configDict, activities=vpDiary.activities, profiles=vpDiary
     )
-    vpProfile.createTimeseries()
-    # vpProfile.createTimeseries(pNames=('maxBatteryLevel'), profiles=(vpDiary.maxBatteryLevel))
+    vpProfile.aggregateProfile()
+
+    vpOutput = OutputFormatter(configDict=configDict, profiles=vpProfile)
+    vpOutput.createTimeseries()
 
     # vpEval = Evaluator(configDict=configDict, parseData=pd.Series(data=vpData, index=[datasetID]))
     # vpEval.plotParkingAndPowers(vpGrid=vpGrid)

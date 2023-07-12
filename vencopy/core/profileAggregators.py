@@ -161,18 +161,6 @@ class ProfileAggregator():
         elif self.profileName == 'minBatteryLevel':
             self.minBatteryLevelWeekly = self.weeklyProfile
 
-    def __createAnnualProfiles(self):
-        startWeekday = 1  # (1: Monday, 7: Sunday)
-        # shift input profiles to the right weekday and start with first bin of chosen weekday
-        self.annualProfile = self.weeklyProfile.iloc[(
-            (startWeekday - 1) * ((len(list(self.timeIndex))) - 1)):]
-        self.annualProfile = self.annualProfile.append(
-            [self.weeklyProfile] * 52, ignore_index=True)
-        self.annualProfile.drop(
-            self.annualProfile.tail(
-                len(self.annualProfile) - ((len(list(
-                    self.timeIndex))) - 1) * 365).index, inplace=True)
-
     def _writeOutput(self):
         root = Path(self.localPathConfig['pathAbsolute']['vencoPyRoot'])
         folder = self.globalConfig['pathRelative']['aggregatorOutput']
@@ -182,12 +170,7 @@ class ProfileAggregator():
             fileNameID='outputProfileAggregator', datasetID=self.datasetID)
         writeOut(data=self.weeklyProfile, path=root / folder / fileName)
 
-        # fileName = createFileName(globalConfig=self.globalConfig, manualLabel=(
-        #     '_' + self.profileName + 'Annual'),
-        #     fileNameID='outputProfileAggregator', datasetID=self.datasetID)
-        # writeOut(data=self.annualProfile, path=root / folder / fileName)
-
-    def createTimeseries(self, pNames: (str) = None,
+    def aggregateProfile(self, pNames: (str) = None,
                          profiles: (pd.DataFrame) = None):
         if not pNames and not profiles:
             profiles = (self.drain, self.uncontrolledCharge, self.chargingPower,
@@ -198,6 +181,5 @@ class ProfileAggregator():
             self.profileName = profileName
             self.profile = profile
             self.__createWeeklyProfiles()
-            self.__createAnnualProfiles()
             self._writeOutput()
         print('Run finished.')

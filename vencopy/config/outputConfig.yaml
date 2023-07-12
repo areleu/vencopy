@@ -1,0 +1,11 @@
+#-*- coding:utf-8 -*-
+
+# __version__ = '0.1.X'
+# __maintainer__ = 'Niklas Wulff, Fabia Miorelli'
+# __email__ = 'Niklas.Wulff@dlr.de'
+# __birthdate__ = '12.07.2023'
+# __status__ = 'dev'  # options are: dev, test, prod
+
+# This config holds all relative paths and filenames for profileAggregator.py
+
+startWeekday: 1 # 1=Monday
