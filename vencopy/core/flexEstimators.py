@@ -450,7 +450,7 @@ class FlexEstimator:
         print("Technical flexibility estimation ended.")
         return self.activities
 
-    def estimateTechnicalFlexibility_iteration(self, nIter: int = 3):
+    def estimateTechnicalFlexibilityIterating(self):
         """
         Main run function for the class WeekFlexEstimator. Calculates uncontrolled charging as well as technical
         boundary constraints for controlled charging and feeding electricity back into the grid on an indvidiual vehicle
@@ -466,6 +466,7 @@ class FlexEstimator:
             pd.DataFrame: Activities data set comprising uncontrolled charging and flexible charging constraints for
             each car.
         """
+        nIter = self.flexConfig['iterations']
         self._drain()
         self._maxChargeVolumePerParkingAct()
 
