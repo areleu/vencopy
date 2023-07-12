@@ -27,6 +27,7 @@ def loadConfigDict(basePath):
         "diaryConfig",
         "gridConfig",
         "flexConfig",
+        "outputConfig",
         "aggregatorConfig",
         "evaluatorConfig",
     )
@@ -101,7 +102,7 @@ def createOutputFolders(configDict: dict):
     if not os.path.exists(Path(root / mainDir)):
         os.mkdir(Path(root / mainDir))
     subDirs = ('dataParser', 'diaryBuilder', 'gridModeler',
-               'flexEstimator', 'profileAggregator', 'evaluator')
+               'flexEstimator', 'profileAggregator', 'outputFormatter', 'evaluator')
     for subDir in subDirs:
         if not os.path.exists(Path(root / mainDir / subDir)):
             os.mkdir(Path(root / mainDir / subDir))
