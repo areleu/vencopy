@@ -122,6 +122,7 @@ class GridModeler:
             raise (ValueError(f'Specified grid modeling option {self.gridModel} is not implemented. Please choose'
                               f'"simple" or "probability"'))
         self._addGridLosses()
+        self.writeOutput()
         return self.activities
 
     def _addGridLosses(self):
@@ -145,7 +146,7 @@ class GridModeler:
     def writeOutput(self):
         root = Path(self.localPathConfig['pathAbsolute']['vencoPyRoot'])
         folder = self.globalConfig['pathRelative']['gridOutput']
-        fileName = createFileName(globalConfig=self.globalConfig, manualLabel='', file='outputGridModeler',
+        fileName = createFileName(globalConfig=self.globalConfig, manualLabel='', fileNameID='outputGridModeler',
                                   datasetID=self.datasetID)
         writeOut(data=self.activities, path=root / folder / fileName)
 
