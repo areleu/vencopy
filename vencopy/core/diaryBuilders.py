@@ -1219,7 +1219,7 @@ class TimeDiscretiser:
         self._datasetCleanup()
         self._identifyBinShares()
         self._allocateBinShares()
-        #self._writeOutput()
+        # self._writeOutput()
         print(f"Discretisation finished for {self.columnToDiscretise}.")
         elapsedTimeDiaryBuilder = time.time() - startTimeDiaryBuilder
         print(f"Needed time to discretise {self.columnToDiscretise}: {elapsedTimeDiaryBuilder}.")

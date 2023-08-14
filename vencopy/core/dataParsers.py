@@ -235,7 +235,8 @@ class DataParser:
         :return: None. The function operates on self.activities class-internally.
         """
         print(
-            f"Starting filtering, applying {len(returnDictBottomKeys(filterDict))} filters."
+            f"Starting filtering of data set of length {len(self.activities)}, "
+            f"applying {len(returnDictBottomKeys(filterDict))} filters."
         )
         simpleFilter = pd.DataFrame(index=self.activities.index)
         sophFilter = pd.DataFrame(index=self.activities.index)
@@ -276,7 +277,7 @@ class DataParser:
         # More sophisticated filtering functions
         sophFilter = sophFilter.join(self.__filterInconsistentSpeedTrips())
         sophFilter = sophFilter.join(self.__filterInconsistentTravelTimes())
-        sophFilter = sophFilter.join(self.__filterOverlappingTrips())
+        sophFilter = sophFilter.join(self.__filterOverlappingTrips(lookahead_periods=7))
 
         # Application of sophisticated filters
         self.activities = self.dataSimple.loc[sophFilter.all(axis="columns"), :]
@@ -396,52 +397,75 @@ class DataParser:
         filt.name = 'travelTime'  # Required for column-join in _filter()
         return filt
 
-    def __filterOverlappingTrips(self):
+    def __filterOverlappingTrips(self, lookahead_periods: int = 1) -> pd.DataFrame:
         """
-        Filter out trips that have same hhPersonID as previous trip but overlap with previous trip.
-
-        :return:
-        """
-        periods = 7
-        lst = []
-        for p in range(1, periods + 1):
-            ser = self.__overlapPeriods(self.activities, period=p)
-            ser.name = ser.name + f" p={p}"
-            lst.append(ser)
-        ret = pd.concat(lst, axis=1).all(axis=1)
-        ret.name = "noOverlapPrevTrips"
-        return ret
-
-    def __overlapPeriods(self, data, period):
-        """
-        New implementation of identifying trips that overlap with previous trips.
+        Filter out trips carried out by the same car as next (second next, third next up to period next etc) trip but 
+        overlap with at least one of the period next trips.
 
         Args:
             data (pd.DataFrame): Trip data set including the two variables timestampStart and timestampEnd
             characterizing a trip
-            period (int): Trip identifier within trip diary in survey day to compare every trip to
+
+        Returns: 
+            Pandas DataFrame containing periods columns comparing each trip to their following trips. If True, the
+            trip does not overlap with the trip following after period trips (e.g. period==1 signifies no overlap with 
+            next trip, period==2 no overlap with second next trip etc.).
+        """
+        lst = []
+        for p in range(1, lookahead_periods + 1):
+            ser = self.__identifyOverlappingTrips(dat=self.activities, period=p)
+            ser.name = f"p={p}"
+            lst.append(ser)
+        ret = pd.concat(lst, axis=1).all(axis=1)
+        ret.name = "noOverlapNextTrips"
+        return ret
+
+    # METHOD MOST LIKELY DEPRECATED
+    # def __overlapPeriods(self, data, period) -> pd.Series:
+    #     """
+    #     New implementation of identifying trips that overlap with previous trips.
+
+    #     Args:
+    #         data (pd.DataFrame): Trip data set including the two variables timestampStart and timestampEnd
+    #         characterizing a trip
+    #         period (int): Trip identifier within trip diary in survey day to compare every trip to
+
+    #     Returns:
+    #         pd.Series: A boolean Series being True for non-overlapping trips and False for overlapping trips. Has the
+    #         same index as the MID data.
+    #     """
+    #     dat = data.copy()
+
+    #     if self.datasetID == "KiD":
+    #         tripDoesNotOverlap = self.__identifyOverlappingTrips(dat, "vehicleID", period)
+    #     else:
+    #         tripDoesNotOverlap = self.__identifyOverlappingTrips(
+    #         dat, "hhPersonID", period
+    #     )
+    #     return tripDoesNotOverlap
+
+    def __identifyOverlappingTrips(
+            self, dat: pd.DataFrame, period: int) -> pd.Series:
+        """ Calculates a boolean vector of same length as dat that is True if the current trip does not overlap with 
+        the next trip. "Next" can relate to the consecutive trip (if period==1) or to a later trip defined by the 
+        period (e.g. for period==2 the trip after next). For determining if a overlap occurs the end timestamp of the 
+        current trip is compared to the start timestamp of the "next" trip. 
+
+        Args:
+            dat (pd.DataFrame): A trip data set containing consecutive trips containing at least the columns id_col, 
+                timestampStart, timestampEnd. 
+            id_col (str): Column that differentiates units of trips e.g. daily trips carried out by the same vehicle. 
+            period (int): Forward looking period to compare trip overlap. Should be the maximum number of trip that one
+                vehicle carries out in a time interval (e.g. day) in the data set.
 
         Returns:
-            pd.Series: A boolean Series being True for non-overlapping trips and False for overlapping trips. Has the
-            same index as the MID data.
+            pd.Series: A boolean vector that is True if the trip does not overlap with the period-next trip but belongs
+                to the same vehicle.
         """
-        dat = data.copy()
-        if self.datasetID == "KiD":
-            self.__identifyOverlappingTrips(
-                dat, "vehicleID", period, "isSameVehicleAsPrevTrip"
-            )
-        else:
-            self.__identifyOverlappingTrips(
-                dat, "hhPersonID", period, "isSameHHAsPrevTrip"
-            )
-        return dat["tripDoesNotOverlap"]
-
-    def __identifyOverlappingTrips(self, dat, arg1, period, arg3):
-        dat[arg3] = dat[arg1] == dat[arg1].shift(period)
+        dat['isSameIDAsPrev'] = dat['uniqueID'] == dat['uniqueID'].shift(period)
         dat["tripStartsAfterPrevTrip"] = dat["timestampStart"] > dat[
-            "timestampEnd"
-        ].shift(period)
-        dat["tripDoesNotOverlap"] = ~(dat[arg3] & ~dat["tripStartsAfterPrevTrip"])
+            "timestampEnd"].shift(period)
+        return ~(dat['isSameIDAsPrev'] & ~dat["tripStartsAfterPrevTrip"])
 
     def __filterAnalysis(self, filterData: pd.DataFrame):
         """
@@ -453,10 +477,7 @@ class DataParser:
         """
         lenData = sum(filterData.all(axis="columns"))
         boolDict = {iCol: sum(filterData[iCol]) for iCol in filterData}
-        print(
-            "The following number of observations were taken into account after"
-            "filtering:"
-        )
+        print("The following number of observations were taken into account after filtering:")
         pprint.pprint(boolDict)
         # print(f'{filterData["averageSpeed"].sum()} trips have plausible average speeds')
         # print(f'{(~filterData["tripDoesNotOverlap"]).sum()} trips overlap and were thus filtered out')
@@ -1226,7 +1247,7 @@ class IntermediateParsing(DataParser):
         """
         self.activities["uniqueID"] = (
             self.activities[str(self.parseConfig["IDVariablesNames"]
-                          [self.datasetID])]
+                                [self.datasetID])]
         ).astype(int)
         print("Finished harmonization of ID variables.")
 
@@ -1234,7 +1255,8 @@ class IntermediateParsing(DataParser):
         if self.parseConfig['subsetVehicleSegment']:
             self.activities = self.activities[(
                 self.activities['vehicleSegmentStr'] == self.parseConfig['vehicleSegment'][self.datasetID])]
-            print(f"The subset contains only vehicles of the class {self.parseConfig['vehicleSegment'][self.datasetID]} for a total of {len(self.activities.uniqueID.unique())} individual vehicles.")
+            print(
+                f"The subset contains only vehicles of the class {self.parseConfig['vehicleSegment'][self.datasetID]} for a total of {len(self.activities.uniqueID.unique())} individual vehicles.")
 
     def _cleanupDataset(self):
         self.activities.drop(
@@ -1314,7 +1336,7 @@ class ParseMiD(IntermediateParsing):
             self._addStrColumnFromVariable(
                 colName="purposeStr", varName="tripPurpose")
 
-    def _dropRedundantCols(self):
+    def _dropRedundantCols(self) -> pd.DataFrame:
         # Clean-up of temporary redundant columns
         self.activities.drop(
             columns=[
@@ -1443,7 +1465,6 @@ class ParseVF(IntermediateParsing):
         # remove remaining NaN
         self.activities = self.activities.dropna(subset=['vehicleSegment'])
         # self.activities = self.activities.dropna(subset=['vehicleSegment', 'drivetrain', 'vehicleID'])
-
 
     def __excludeHours(self):
         """
@@ -1659,4 +1680,6 @@ def parseData(configDict: dict) -> Union[ParseMiD, ParseKiD, ParseVF]:
     datasetID = configDict["globalConfig"]["dataset"]
     debug = configDict["globalConfig"]["debug"]
     delegate = {"MiD17": ParseMiD, "KiD": ParseKiD, "VF": ParseVF}
-    return delegate[datasetID](configDict=configDict, datasetID=datasetID, debug=debug)
+    return delegate[datasetID](
+        configDict=configDict, datasetID=datasetID, debug=debug
+    )

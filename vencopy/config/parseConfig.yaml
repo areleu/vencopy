@@ -297,10 +297,7 @@ Replacements:
             32: "SCHOOL" # Kindertagesstaette oder Kindergarten (MiD08)
             99: "NA" # keine Angabe
         vehicleSegment:
-            'klein': "S"
-            'kompakt': "S"
-            'mittel': "M"
-            'gross': "L"
-
-
-
+            "klein": "S"
+            "kompakt": "S"
+            "mittel": "M"
+            "gross": "L"
