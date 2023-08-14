@@ -417,7 +417,7 @@ class DataParser:
         filt.name = 'travelTime'  # Required for column-join in _filter()
         return filt
 
-    def __filterOverlappingTrips(self, lookahead_periods: int = 1) -> pd.DataFrame:
+    def _filterOverlappingTrips(self, lookahead_periods: int = 1) -> pd.DataFrame:
         """
         Filter out trips carried out by the same car as next (second next, third next up to period next etc) trip but 
         overlap with at least one of the period next trips.
