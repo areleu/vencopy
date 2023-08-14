@@ -1336,7 +1336,7 @@ class ParseMiD(IntermediateParsing):
             self._addStrColumnFromVariable(
                 colName="purposeStr", varName="tripPurpose")
 
-    def _dropRedundantCols(self):
+    def _dropRedundantCols(self) -> pd.DataFrame:
         # Clean-up of temporary redundant columns
         self.activities.drop(
             columns=[
