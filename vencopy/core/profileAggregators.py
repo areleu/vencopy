@@ -38,104 +38,46 @@ class ProfileAggregator():
         self.uncontrolledCharge = profiles.uncontrolledCharge
         self.maxBatteryLevel = profiles.maxBatteryLevel
         self.minBatteryLevel = profiles.minBatteryLevel
-        self.drainWeekly = Aggregator(
-            profile=self.drain,
-            datasetID=self.datasetID,
-            globalConfig=self.globalConfig,
-            localPathConfig=self.localPathConfig,
-            activities=self.activities,
-            method="flow",
-            weighted=self.weighted
-        )
-        self.chargingPowerWeekly = Aggregator(
-            profile=self.chargingPower,
-            datasetID=self.datasetID,
-            globalConfig=self.globalConfig,
-            localPathConfig=self.localPathConfig,
-            activities=self.activities,
-            method="state",
-            weighted=self.weighted
-        )
-        self.uncontrolledChargeWeekly = Aggregator(
-            profile=self.uncontrolledCharge,
-            datasetID=self.datasetID,
-            globalConfig=self.globalConfig,
-            localPathConfig=self.localPathConfig,
-            activities=self.activities,
-            method="flow",
-            weighted=self.weighted
-        )
-        self.maxBatteryLevelWeekly = Aggregator(
-            profile=self.maxBatteryLevel,
-            datasetID=self.datasetID,
-            globalConfig=self.globalConfig,
-            localPathConfig=self.localPathConfig,
-            activities=self.activities,
-            method="state",
-            weighted=self.weighted
-        )
-        self.minBatteryLevelWeekly = Aggregator(
-            profile=self.minBatteryLevel,
-            datasetID=self.datasetID,
-            globalConfig=self.globalConfig,
-            localPathConfig=self.localPathConfig,
-            activities=self.activities,
-            method="state",
-            weighted=self.weighted
-        )
-
-
-#     def aggregateProfiles(self):
-#         profiles = (self.drain, self.uncontrolledCharge, self.chargingPower,
-#                         self.maxBatteryLevel, self.minBatteryLevel)
-#         profileNames = ('drain', 'uncontrolledCharge', 'chargingPower',
-#                       'maxBatteryLevel', 'minBatteryLevel')
-#         for profile, profileName in zip(profiles, profileNames):
-#             self.profileName = profileName
-#             self.profile = profile
-#             print(f'Discretisation finished for {self.profileName}.')
-
+        self.aggregator = Aggregator(activities=self.activities,
+                                     datasetID=self.datasetID,
+                                     globalConfig=self.globalConfig,
+                                     localPathConfig=self.localPathConfig,
+                                     weighted=self.weighted,
+                                     alpha=self.alpha)
 
     def aggregateProfiles(self):
-        self.drainWeekly = self.drain.performAggregation(column="drain")
-        self.chargingPowerWeekly = self.chargingPower.performAggregation(
-            column="availablePower")
-        self.maxBatteryLevelWeekly = self.maxBatteryLevel.performAggregation(
-            column="maxBatteryLevel")
-        self.minBatteryLevelWeekly = self.minBatteryLevel.performAggregation(
-            column="minBatteryLevel")
-        self.uncontrolledChargeWeekly = self.uncontrolledCharge.performAggregation(
-            column="uncontrolledCharge")
-        self._writeOutput()
+        self.drainWeekly = self.aggregator.performAggregation(profile=self.drain, profileName="drain", method="flow")
+        self.chargingPowerWeekly = self.aggregator.performAggregation(profile=self.chargingPower, profileName="chargingPower", method="flow")
+        self.uncontrolledChargeWeekly = self.aggregator.performAggregation(profile=self.uncontrolledCharge, profileName="uncontrolledCharge", method="flow")
+        self.maxBatteryLevelWeekly = self.aggregator.performAggregation(profile=self.maxBatteryLevel, profileName="maxBatteryLevel", method="state")
+        self.minBatteryLevelWeekly = self.aggregator.performAggregation(profile=self.minBatteryLevel, profileName="minBatteryLevel", method="state")
         print('Aggregation finished for all profiles.')
 
 
-class Aggregator:
+class Aggregator():
     def __init__(
             self,
-            profile: pd.DataFrame,
             activities: pd.DataFrame,
             datasetID: str,
-            method: str,
+            alpha: int,
             globalConfig: dict,
             localPathConfig: dict,
             weighted: bool):
         self.datasetID = datasetID
-        self.method = method
+        self.alpha = alpha
         self.activities = activities
         self.weighted = weighted
-        self.profileToAggregate = profile
         self.localPathConfig = localPathConfig
         self.globalConfig = globalConfig
 
     def __basicAggregation(self, byColumn="tripStartWeekday") -> pd.Series:
         self.weekdayProfiles = pd.DataFrame(
-            columns=self.profileToAggregate.columns, index=range(1, 8))
+            columns=self.profile.columns, index=range(1, 8))
         necessaryColumns = ['uniqueID', 'tripWeight'] + [byColumn]
         self.activitiesSubset = (
             self.activities[necessaryColumns].copy().drop_duplicates(subset=['uniqueID']).reset_index(drop=True))
         self.activitiesWeekday = pd.merge(
-            self.profileToAggregate, self.activitiesSubset, on='uniqueID', how='inner')
+            self.profile, self.activitiesSubset, on='uniqueID', how='inner')
         # self.profile.drop('uniqueID', axis=1, inplace=True)
         self.activitiesWeekday = self.activitiesWeekday.set_index('uniqueID')
         # Compose weekly profile from 7 separate profiles
@@ -147,7 +89,6 @@ class Aggregator:
         elif self.method == 'state':
             self.__calculateAggregatedStateProfiles(
                 byColumn="tripStartWeekday", alpha=self.alpha)
-
 
     def __calculateAverageFlowProfiles(self, byColumn):
         for idate in self.activitiesWeekday[byColumn].unique():
@@ -225,22 +166,24 @@ class Aggregator:
     def _writeOutput(self):
         root = Path(self.localPathConfig['pathAbsolute']['vencoPyRoot'])
         folder = self.globalConfig['pathRelative']['aggregatorOutput']
-
         fileName = createFileName(globalConfig=self.globalConfig, manualLabel=(
             '_' + self.profileName + 'Week'),
             fileNameID='outputProfileAggregator', datasetID=self.datasetID)
         writeOut(data=self.weeklyProfile, path=root / folder / fileName)
 
-
-    def performAggregation(self, column: str):
-        self.columnToAggregate: Optional[str] = column
-        print(f"Starting to aggregate {self.columnToAggregate} to fleet level based on day of the week.")
+    def performAggregation(self, profile: pd.DataFrame, profileName: str, method: str):
+        self.profile = profile
+        self.profileName = profileName
+        self.method = method
+        print(f"Starting to aggregate {self.profileName} to fleet level based on day of the week.")
         startTimeAggregator = time.time()
         self.__basicAggregation()
         self.__composeWeeklyProfile()
         self._writeOutput()
-        print(f"Aggregation finished for {self.columnToAggregate}.")
+        print(f"Aggregation finished for {self.profileName}.")
         elapsedTimeAggregator = time.time() - startTimeAggregator
-        print(f"Needed time to aggregate {self.columnToAggregate}: {elapsedTimeAggregator}.")
-        self.columnToAggregate = None
+        print(f"Needed time to aggregate {self.profileName}: {elapsedTimeAggregator}.")
+        self.profile = None
+        self.profileName = None
+        self.method = None
         return self.weeklyProfile
