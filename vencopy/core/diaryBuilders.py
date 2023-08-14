@@ -1164,14 +1164,6 @@ class TimeDiscretiser:
             raise ValueError(
                 f"Additional {droppedActivities} activities dropped as the sum of all {self.columnToDiscretise} activities for the specific ID was zero.")
 
-    # UNUSED
-    # def _overlappingActivities(self):
-    #     """
-    #     Implements a strategy to treat overlapping bin, especially important for lower time resolution (e.g. 1h).
-    #     """
-    #     # define other strategies to treat overlapping events here
-    #     pass
-
     def _allocateWeek(self):
         """
         Wrapper method for allocating respective values per bin to days within a week. Expects that the activities
