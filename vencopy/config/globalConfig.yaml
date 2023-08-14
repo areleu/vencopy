@@ -27,7 +27,7 @@ pathRelative:
     flexOutput: ./output/flexEstimator/
     aggregatorOutput: ./output/profileAggregator/
     formatterOutput: ./output/outputFormatter/
-    evalOutput: ./output/evaluator/
+    normaliserOutput: ./output/normaliser/
     scripts: ./scripts/
     config: ./config/
 

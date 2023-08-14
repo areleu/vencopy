@@ -36,6 +36,14 @@ class Normalizer():
         self.soc_max = None
         self.soc_min = None
 
+    def _writeOutput(self):
+        root = Path(self.localPathConfig['pathAbsolute']['vencoPyRoot'])
+        folder = self.globalConfig['pathRelative']['normaliserOutput']
+        fileName = createFileName(globalConfig=self.globalConfig, manualLabel=(
+            '_' + ''),
+            fileNameID='outputNormaliser', datasetID=self.datasetID)
+        writeOut(data=self.profile, path=root / folder / fileName)
+
     def normalize(self):
         # Normalization basis: Total annual energy
         self.drain_norm = self.drain / self.drain.sum()
