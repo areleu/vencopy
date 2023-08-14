@@ -14,7 +14,6 @@ if __package__ is None or __package__ == "":
 
 import pprint
 import warnings
-import codecs
 from typing import Union
 from pathlib import Path
 from zipfile import ZipFile
@@ -235,19 +234,36 @@ class DataParser:
         :return: None. The function operates on self.activities class-internally.
         """
         print(
-            f"Starting filtering of data set of length {len(self.activities)}, "
-            f"applying {len(returnDictBottomKeys(filterDict))} filters."
+            f"Starting filtering, applying {len(returnDictBottomKeys(filterDict))} filters."
         )
-        simpleFilter = pd.DataFrame(index=self.activities.index)
-        sophFilter = pd.DataFrame(index=self.activities.index)
         # Future releases: as discussed before we could indeed work here with a plug and pray approach.
         #  we would need to introduce a filter manager and a folder structure where to look for filters.
         #  this is very similar code than the one from ioproc. If we want to go down this route we should
         #  take inspiration from the code there. It was not easy to get it right in the first place. This
-        #  might be easy to code but hard to implement correctly.
+        #  might be easy to code but hard to implement correctly. See issue #445
 
+        # Application of simple value-based filters
+        simpleFilters = self.__simpleFilters()
+        self.dataSimple = self.activities[simpleFilters.all(axis="columns")]
+
+        # Application of sophisticated filters
+        complexFilters = self._complexFilters()
+        self.activities = self.dataSimple.loc[complexFilters.all(axis="columns"), :]
+
+        # Print user feedback on filtering
+        self._filterAnalysis(simpleFilters.join(complexFilters))
+
+    def __simpleFilters(self) -> pd.DataFrame:
+        """Apply single-column scalar value filtering as defined in the config. 
+
+        Returns:
+            pd.DataFrame: DataFrame with boolean columns for include, exclude, greaterThan and smallerThan filters. True
+            means keep the row.
+        """
+        simpleFilter = pd.DataFrame(index=self.activities.index)
+        
         # Simple filters checking single columns for specified values
-        for iKey, iVal in filterDict.items():
+        for iKey, iVal in self.filterDict.items():
             if iKey == "include" and iVal:
                 simpleFilter = simpleFilter.join(
                     self.__setIncludeFilter(iVal, self.activities.index)
@@ -270,19 +286,8 @@ class DataParser:
                     f"Current filtering keys comprise include, exclude, smallerThan and greaterThan."
                     f"Continuing with ignoring the dictionary {iKey}"
                 )
-
-        # Application of simple value-based filters
-        self.dataSimple = self.activities[simpleFilter.all(axis="columns")]
-
-        # More sophisticated filtering functions
-        sophFilter = sophFilter.join(self.__filterInconsistentSpeedTrips())
-        sophFilter = sophFilter.join(self.__filterInconsistentTravelTimes())
-        sophFilter = sophFilter.join(self.__filterOverlappingTrips(lookahead_periods=7))
-
-        # Application of sophisticated filters
-        self.activities = self.dataSimple.loc[sophFilter.all(axis="columns"), :]
-        self.__filterAnalysis(simpleFilter.join(sophFilter))
-
+        return simpleFilter
+    
     def __setIncludeFilter(self, includeFilterDict: dict, dataIndex) -> pd.DataFrame:
         """
         Read-in function for include filter dict from parseConfig.yaml
@@ -363,7 +368,22 @@ class DataParser:
                 )
         return smallerThanFilterCols
 
-    def __filterInconsistentSpeedTrips(self):
+    def _complexFilters(self) -> pd.DataFrame:
+        """Collects filters that compare multiple columns or derived variables or calculation results thereof. True
+        in this filter means "keep row". The function needs self.activities to determine the length and the index of the
+        return argument.
+
+        Returns:
+            pd.DataFrame: DataFrame with a boolean column per complex filter. True means keep the row in the activities
+            data set. 
+        """
+        complexFilters = pd.DataFrame(index=self.activities.index)
+        complexFilters = complexFilters.join(self.__filterInconsistentSpeedTrips())
+        complexFilters = complexFilters.join(self.__filterInconsistentTravelTimes())
+        complexFilters = complexFilters.join(self.__filterOverlappingTrips())
+        return complexFilters
+
+    def _filterInconsistentSpeedTrips(self):
         """
         Filter out trips with inconsistent average speed. These trips are mainly trips where survey participant
         responses suggest that participants were travelling for the entire time they took for the whole purpose
@@ -382,7 +402,7 @@ class DataParser:
             self.activities["averageSpeed"] <= self.parseConfig["filterDicts"][
                 "higherSpeedThreshold"])
 
-    def __filterInconsistentTravelTimes(self):
+    def _filterInconsistentTravelTimes(self):
         """ Calculates a travel time from the given timestamps and compares it
         to the travel time given by the interviewees. Selects observations where
         timestamps are consistent with the travel time given.
@@ -467,7 +487,7 @@ class DataParser:
             "timestampEnd"].shift(period)
         return ~(dat['isSameIDAsPrev'] & ~dat["tripStartsAfterPrevTrip"])
 
-    def __filterAnalysis(self, filterData: pd.DataFrame):
+    def _filterAnalysis(self, filterData: pd.DataFrame):
         """
         Function supplies some aggregate info of the data after filtering to the user Function does not change any
         class attributes
@@ -1149,30 +1169,52 @@ class IntermediateParsing(DataParser):
         }
         self.activities = self.activities.astype(self.varDataTypeDict)
 
-    def _filterConsistentHours(self):
-        """
-        Filtering out records where starting hour is after end hour but trip
-        takes place on the same day.
-        These observations are data errors.
+    def _complexFilters(self) -> pd.DataFrame:
+        """Collects filters that compare multiple columns or derived variables or calculation results thereof. True
+        in this filter means "keep row". The function needs self.activities to determine the length and the index of the
+        return argument.
 
-        :return: No returns, operates only on the class instance
+        Returns:
+            pd.DataFrame: DataFrame with a boolean column per complex filter. True means keep the row in the activities
+            data set. 
         """
-        if self.datasetID in ["MiD17", "MiD08", "VF", "KiD"]:
-            self.activities = self.activities.loc[
-                (self.activities["tripStartClock"] <= self.activities["tripEndClock"])
-                | (self.activities["tripEndNextDay"] == 1),
-                :,
-            ]
-            filters = (
-                (self.activities.loc[:, "tripStartHour"]
-                 == self.activities.loc[:, "tripEndHour"])
-                & (
-                    self.activities.loc[:, "tripStartMinute"]
-                    == self.activities.loc[:, "tripEndMinute"]
-                )
-                & (self.activities.loc[:, "tripEndNextDay"])
+        complexFilters = pd.DataFrame(index=self.activities.index)
+        complexFilters = complexFilters.join(self._filterInconsistentSpeedTrips())
+        complexFilters = complexFilters.join(self._filterInconsistentTravelTimes())
+        complexFilters = complexFilters.join(self._filterOverlappingTrips())
+        complexFilters = complexFilters.join(self._filterConsistentHours())
+        complexFilters = complexFilters.join(self._filterNoZeroLengthTrips())
+        return complexFilters
+
+    def _filterConsistentHours(self) -> pd.Series:
+        """
+        Filtering out records where starting timestamp is before end timestamp. These observations are data errors.
+
+        :return: Returns a boolean Series indicating erroneous rows (trips) with False.
+        """
+        ser = (self.activities["timestampStart"] <= self.activities["timestampEnd"])
+        ser.name = 'tripStartAfterEnd'
+        return ser
+
+    def _filterNoZeroLengthTrips(self) -> pd.Series:
+        """Filter out trips that start and end at same hour and minute but are not ending on next day (no 24-hour 
+        trips).
+
+        Returns:
+            _type_: _description_
+        """
+
+        ser = ~(
+            (self.activities.loc[:, "tripStartHour"]
+                == self.activities.loc[:, "tripEndHour"])
+            & (
+                self.activities.loc[:, "tripStartMinute"]
+                == self.activities.loc[:, "tripEndMinute"]
             )
-            self.activities = self.activities.loc[~filters, :]
+            & (~self.activities.loc[:, "tripEndNextDay"])
+            )
+        ser.name = 'isNoZeroLengthTrip'
+        return ser
 
     def _addStrColumnFromVariable(self, colName: str, varName: str):
         """
@@ -1255,8 +1297,7 @@ class IntermediateParsing(DataParser):
         if self.parseConfig['subsetVehicleSegment']:
             self.activities = self.activities[(
                 self.activities['vehicleSegmentStr'] == self.parseConfig['vehicleSegment'][self.datasetID])]
-            print(
-                f"The subset contains only vehicles of the class {self.parseConfig['vehicleSegment'][self.datasetID]} for a total of {len(self.activities.uniqueID.unique())} individual vehicles.")
+            print(f"The subset contains only vehicles of the class {self.parseConfig['vehicleSegment'][self.datasetID]} for a total of {len(self.activities.uniqueID.unique())} individual vehicles.")
 
     def _cleanupDataset(self):
         self.activities.drop(
@@ -1336,7 +1377,7 @@ class ParseMiD(IntermediateParsing):
             self._addStrColumnFromVariable(
                 colName="purposeStr", varName="tripPurpose")
 
-    def _dropRedundantCols(self) -> pd.DataFrame:
+    def _dropRedundantCols(self):
         # Clean-up of temporary redundant columns
         self.activities.drop(
             columns=[
