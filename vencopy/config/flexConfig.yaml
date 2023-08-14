@@ -18,7 +18,10 @@ Start_SOC: 0.5 # State-of-charge between 0 and 1 at beginning of activity chain
 Maximum_SOC: 0.97 # in %
 Minimum_SOC: 0.03 # in %
 SoC_plugging_threshold: 0.8
-iterations: 3
+
+maxIterations: 10  # Technical parameter --> not to user config
+epsilon_battery_level: 0.0001  # Iterations stop once the difference between start and end battery level have decreased to this share of fleet battery level 
+
 
 # For plugging choice implementation
 # f(x) = 1 - 1 / (1 + exp(-k * (x - SOC))) with k being the slope at 50% probability and SOC being SOC at 50% probability

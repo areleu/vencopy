@@ -254,14 +254,14 @@ class DataParser:
         self._filterAnalysis(simpleFilters.join(complexFilters))
 
     def __simpleFilters(self) -> pd.DataFrame:
-        """Apply single-column scalar value filtering as defined in the config. 
+        """Apply single-column scalar value filtering as defined in the config.
 
         Returns:
             pd.DataFrame: DataFrame with boolean columns for include, exclude, greaterThan and smallerThan filters. True
             means keep the row.
         """
         simpleFilter = pd.DataFrame(index=self.activities.index)
-        
+
         # Simple filters checking single columns for specified values
         for iKey, iVal in self.filterDict.items():
             if iKey == "include" and iVal:
@@ -287,7 +287,7 @@ class DataParser:
                     f"Continuing with ignoring the dictionary {iKey}"
                 )
         return simpleFilter
-    
+
     def __setIncludeFilter(self, includeFilterDict: dict, dataIndex) -> pd.DataFrame:
         """
         Read-in function for include filter dict from parseConfig.yaml
@@ -375,7 +375,7 @@ class DataParser:
 
         Returns:
             pd.DataFrame: DataFrame with a boolean column per complex filter. True means keep the row in the activities
-            data set. 
+            data set.
         """
         complexFilters = pd.DataFrame(index=self.activities.index)
         complexFilters = complexFilters.join(self.__filterInconsistentSpeedTrips())
@@ -419,16 +419,16 @@ class DataParser:
 
     def _filterOverlappingTrips(self, lookahead_periods: int = 1) -> pd.DataFrame:
         """
-        Filter out trips carried out by the same car as next (second next, third next up to period next etc) trip but 
+        Filter out trips carried out by the same car as next (second next, third next up to period next etc) trip but
         overlap with at least one of the period next trips.
 
         Args:
             data (pd.DataFrame): Trip data set including the two variables timestampStart and timestampEnd
             characterizing a trip
 
-        Returns: 
+        Returns:
             Pandas DataFrame containing periods columns comparing each trip to their following trips. If True, the
-            trip does not overlap with the trip following after period trips (e.g. period==1 signifies no overlap with 
+            trip does not overlap with the trip following after period trips (e.g. period==1 signifies no overlap with
             next trip, period==2 no overlap with second next trip etc.).
         """
         lst = []
@@ -466,15 +466,15 @@ class DataParser:
 
     def __identifyOverlappingTrips(
             self, dat: pd.DataFrame, period: int) -> pd.Series:
-        """ Calculates a boolean vector of same length as dat that is True if the current trip does not overlap with 
-        the next trip. "Next" can relate to the consecutive trip (if period==1) or to a later trip defined by the 
-        period (e.g. for period==2 the trip after next). For determining if a overlap occurs the end timestamp of the 
-        current trip is compared to the start timestamp of the "next" trip. 
+        """ Calculates a boolean vector of same length as dat that is True if the current trip does not overlap with
+        the next trip. "Next" can relate to the consecutive trip (if period==1) or to a later trip defined by the
+        period (e.g. for period==2 the trip after next). For determining if a overlap occurs the end timestamp of the
+        current trip is compared to the start timestamp of the "next" trip.
 
         Args:
-            dat (pd.DataFrame): A trip data set containing consecutive trips containing at least the columns id_col, 
+            dat (pd.DataFrame): A trip data set containing consecutive trips containing at least the columns id_col,
                 timestampStart, timestampEnd. 
-            id_col (str): Column that differentiates units of trips e.g. daily trips carried out by the same vehicle. 
+            id_col (str): Column that differentiates units of trips e.g. daily trips carried out by the same vehicle.
             period (int): Forward looking period to compare trip overlap. Should be the maximum number of trip that one
                 vehicle carries out in a time interval (e.g. day) in the data set.
 
@@ -1176,7 +1176,7 @@ class IntermediateParsing(DataParser):
 
         Returns:
             pd.DataFrame: DataFrame with a boolean column per complex filter. True means keep the row in the activities
-            data set. 
+            data set.
         """
         complexFilters = pd.DataFrame(index=self.activities.index)
         complexFilters = complexFilters.join(self._filterInconsistentSpeedTrips())
@@ -1197,7 +1197,7 @@ class IntermediateParsing(DataParser):
         return ser
 
     def _filterNoZeroLengthTrips(self) -> pd.Series:
-        """Filter out trips that start and end at same hour and minute but are not ending on next day (no 24-hour 
+        """Filter out trips that start and end at same hour and minute but are not ending on next day (no 24-hour
         trips).
 
         Returns:

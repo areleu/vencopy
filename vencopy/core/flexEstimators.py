@@ -450,7 +450,7 @@ class FlexEstimator:
         print("Technical flexibility estimation ended.")
         return self.activities
 
-    def estimateTechnicalFlexibilityIterating(self):
+    def estimateTechnicalFlexibilityIterating(self) -> pd.DataFrame:
         """
         Main run function for the class WeekFlexEstimator. Calculates uncontrolled charging as well as technical
         boundary constraints for controlled charging and feeding electricity back into the grid on an indvidiual vehicle
@@ -466,47 +466,79 @@ class FlexEstimator:
             pd.DataFrame: Activities data set comprising uncontrolled charging and flexible charging constraints for
             each car.
         """
-        nIter = self.flexConfig['iterations']
         self._drain()
         self._maxChargeVolumePerParkingAct()
-
-        # Initial battery level for first iteration loop per uniqueID in index
-        # Start battery level will be set to end battery level consecutively.
-        # batteryLevelMaxEnd = self.__getStartLevel(
-        #    startLevel=self.upperBatLev * self.flexConfig['Start_SOC'])
-
-        batteryLevelMaxEnd = self.upperBatLev * self.flexConfig['Start_SOC']
-        batteryLevelMinStart = self.lowerBatLev
-
-        for i in range(nIter):
-            batteryLevelMaxEnd = self.__batteryLevelMax(
-                startLevel=batteryLevelMaxEnd)
-            self._uncontrolledCharging()
-            batteryLevelMinStart = self.__batteryLevelMin(
-                endLevel=batteryLevelMinStart)
-
-            # Calculate deviation between start and end battery level
-            deltaMax = self.__getDelta(colStart='maxBatteryLevelStart',
-                                       colEnd='maxBatteryLevelEnd')
-            deltaMin = self.__getDelta(colStart='minBatteryLevelStart',
-                                       colEnd='minBatteryLevelEnd')
-            print(f'Finished ITERATION {i+1} / {nIter}. Delta max battery level is {deltaMax} and delta min battery is '
-                  f'{deltaMin}.')
-
+        self.__iterativeBatteryLevelCalculations(
+            maxIter=self.flexConfig['maxIterations'], eps=self.flexConfig['epsilon_battery_level'],
+            batCap=self.flexConfig['Battery_capacity'], nVehicles=len(self.activities['uniqueID'].unique())
+        )
         self._auxFuelNeed()
         if self.flexConfig['filterFuelNeed']:
-            self.activities = self._filterResidualNeed(
-                acts=self.activities, indexCols=['uniqueID'])
+            self.activities = self._filterResidualNeed(acts=self.activities, indexCols=['uniqueID'])
 
         print("Technical flexibility estimation ended.")
         return self.activities
 
+    def __iterativeBatteryLevelCalculations(self, maxIter: int, eps: float, batCap: float, nVehicles: int):
+        """ A single iteration of calculation maximum battery levels, uncontrolled charging and minimum battery levels
+        for each trip. Initial battery level for first iteration loop per uniqueID in index. Start battery level will be
+        set to end battery level consecutively. Function operates on class attribute self.activities.
+        
+        Args:
+            maxIter (int): Maximum iteration limit if epsilon threshold is never reached.
+            eps (float): Share of total aggregated battery fleet capacity (e.g. 0.01 for 1% would relate to a threshold of 100 Wh per car for a 10 kWh battery capacity.)
+            batCap (float): Average nominal battery capacity per vehicle in kWh. 
+            nVehicles (int): Number of vehicles in the empiric mobility pattern data set.
+        """
+        batteryLevelMaxEnd = self.upperBatLev * self.flexConfig['Start_SOC']
+        batteryLevelMinStart = self.lowerBatLev
+        absoluteEps = int(self.__absoluteEps(eps=eps, batCap=batCap, nVehicles=nVehicles))
+
+        batteryLevelMaxEnd = self.__batteryLevelMax(startLevel=batteryLevelMaxEnd)
+        self._uncontrolledCharging()
+        batteryLevelMinStart = self.__batteryLevelMin(endLevel=batteryLevelMinStart)
+
+        deltaMax = self.__getDelta(colStart='maxBatteryLevelStart', colEnd='maxBatteryLevelEnd')
+        deltaMin = self.__getDelta(colStart='minBatteryLevelStart', colEnd='minBatteryLevelEnd')
+
+        for i in range(1, maxIter+1):
+            if deltaMax < absoluteEps and deltaMin < absoluteEps:
+                break
+
+            elif deltaMax >= absoluteEps:
+                batteryLevelMaxEnd = self.__batteryLevelMax(startLevel=batteryLevelMaxEnd)
+                self._uncontrolledCharging()
+                deltaMax = self.__getDelta(colStart='maxBatteryLevelStart', colEnd='maxBatteryLevelEnd')
+
+            else:
+                batteryLevelMinStart = self.__batteryLevelMin(endLevel=batteryLevelMinStart)
+                deltaMin = self.__getDelta(colStart='minBatteryLevelStart', colEnd='minBatteryLevelEnd')
+
+            print(f'Finished ITERATION {i+1} / {maxIter}. Delta max battery level is {int(deltaMax)} / {absoluteEps} '
+                  f'and delta min battery is {int(deltaMin)} / {absoluteEps}.')
+
+    def __absoluteEps(self, eps: float, batCap: float, nVehicles: int) -> float:
+        """Calculates the absolute threshold of battery level deviatiation used for interrupting the battery level
+        calculation iterations.
+
+        Args:
+            eps (float): Share of total aggregated battery fleet capacity (e.g. 0.01 for 1% would relate to a threshold of 100 Wh per car for a 10 kWh battery capacity.)
+            batteryCapacity (float): Average battery capacity per car
+            nVehicles (int): Number of vehicles
+
+        Returns:
+            float: Absolute iteration threshold in kWh of fleet battery
+        """
+        return eps * batCap * nVehicles
+
+    # DEPRECATED?
     def __getStartLevel(self, startLevel: float):
         lastActs = self.activities.loc[self.activities['isLastActivity'],
                                        ['uniqueID', 'maxBatteryLevelEnd']]
         lastActs['maxBatteryLevelEnd'] = startLevel
         return lastActs.set_index('uniqueID')
 
+    # DEPRECATED?
     def __getEndLevel(self, endLevel: float):
         firstActs = self.activities.loc[self.activities['isFirstActivity'],
                                         ['uniqueID', 'minBatteryLevelStart']]
