@@ -56,16 +56,10 @@ if __name__ == "__main__":
     vpProfile = ProfileAggregator(
         configDict=configDict, activities=vpDiary.activities, profiles=vpDiary
     )
-    vpProfile.aggregateProfile()
+    vpProfile.aggregateProfiles()
 
     vpOutput = OutputFormatter(configDict=configDict, profiles=vpProfile)
     vpOutput.createTimeseries()
-
-    # vpEval = Evaluator(configDict=configDict, parseData=pd.Series(data=vpData, index=[datasetID]))
-    # vpEval.plotParkingAndPowers(vpGrid=vpGrid)
-    # vpEval.hourlyAggregates = vpEval.calcVariableSpecAggregates(by=["tripStartWeekday"])
-    # vpEval.plotAggregates()
-    # vpEval.plotProfiles(flexEstimator=vpFlex)
 
     elapsedTime = time.time() - startTime
     print(f"Elapsed time: {elapsedTime}.")
