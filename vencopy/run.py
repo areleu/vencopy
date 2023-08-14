@@ -22,6 +22,7 @@ from vencopy.core.gridModelers import GridModeler
 from vencopy.core.flexEstimators import FlexEstimator
 from vencopy.core.profileAggregators import ProfileAggregator
 from vencopy.core.outputFormatters import OutputFormatter
+from vencopy.core.normalizers import Normalizer
 
 # from vencopy.core.evaluators import Evaluator
 from vencopy.utils.globalFunctions import (
@@ -60,6 +61,11 @@ if __name__ == "__main__":
 
     vpOutput = OutputFormatter(configDict=configDict, profiles=vpProfile)
     vpOutput.createTimeseries()
+
+    vpNormProf = Normalizer(
+        configDict=configDict, profiles=vpOutput
+    )
+    vpNormProf.normalize()
 
     # vpEval = Evaluator(configDict=configDict, parseData=pd.Series(data=vpData, index=[datasetID]))
     # vpEval.plotParkingAndPowers(vpGrid=vpGrid)

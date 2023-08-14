@@ -19,7 +19,7 @@ Maximum_SOC: 0.97 # in %
 Minimum_SOC: 0.03 # in %
 SoC_plugging_threshold: 0.8
 
-maxIterations: 10  # Technical parameter --> not to user config
+maxIterations: 3  # Technical parameter --> not to user config
 epsilon_battery_level: 0.0001  # Iterations stop once the difference between start and end battery level have decreased to this share of fleet battery level 
 
 
