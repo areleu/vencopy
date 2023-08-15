@@ -16,15 +16,15 @@ from vencopy.utils.globalFunctions import createFileName, writeOut
 
 class GridModeler:
     def __init__(self, configDict: dict, activities):
-        self.appConfig = configDict['appConfig']
-        self.devConfig = configDict['devConfig']
-        self.datasetID = configDict['appConfig']['global']['dataset']
-        self.gridModel = self.appConfig["gridModelers"]['gridModel']
+        self.user_config = configDict['user_config']
+        self.dev_config = configDict['dev_config']
+        self.datasetID = configDict['user_config']['global']['dataset']
+        self.gridModel = self.user_config["gridModelers"]['gridModel']
         self.activities = activities
-        if self.appConfig["gridModelers"]['forceLastTripHome']:
+        if self.user_config["gridModelers"]['forceLastTripHome']:
             self.removeActsNotEndingHome()
-        self.gridAvailabilitySimple = self.appConfig["gridModelers"]['chargingInfrastructureMappings']
-        self.gridAvailabilityProb = self.appConfig["gridModelers"]['gridAvailabilityDistribution']
+        self.gridAvailabilitySimple = self.user_config["gridModelers"]['chargingInfrastructureMappings']
+        self.gridAvailabilityProb = self.user_config["gridModelers"]['gridAvailabilityDistribution']
         self.chargeAvailability = None
 
     def _assignGridViaPurposes(self):
@@ -38,7 +38,7 @@ class GridModeler:
         print('Starting with charge connection replacement of location purposes.')
         self.chargeAvailability = self.activities.purposeStr.replace(self.gridAvailabilitySimple)
         # self.chargeAvailability = (~(self.chargeAvailability != True))  # check condition if not, needed?
-        self.chargeAvailability = self.chargeAvailability * self.appConfig["gridModelers"]['ratedPowerSimple']
+        self.chargeAvailability = self.chargeAvailability * self.user_config["gridModelers"]['ratedPowerSimple']
         self.activities['ratedPower'] = self.chargeAvailability
         self.activities = self.adjustPowerShortParking()
         print('Grid connection assignment complete.')
@@ -56,8 +56,8 @@ class GridModeler:
                 activitiesHome = self._homeProbabilityDistribution(setSeed=42)
             else:
                 subset = self.activities.loc[self.activities.purposeStr == purpose].copy()
-                power = list((self.appConfig["gridModelers"]["gridAvailabilityDistribution"][purpose]).keys())
-                probability = list(self.appConfig["gridModelers"]["gridAvailabilityDistribution"][purpose].values())
+                power = list((self.user_config["gridModelers"]["gridAvailabilityDistribution"][purpose]).keys())
+                probability = list(self.user_config["gridModelers"]["gridAvailabilityDistribution"][purpose].values())
                 urng = np.random.default_rng(setSeed)  # universal non-uniform random number
                 rng = DiscreteAliasUrn(probability, random_state=urng)
                 self.chargeAvailability = rng.rvs(len(subset))
@@ -79,8 +79,8 @@ class GridModeler:
         homeActivities = self.activities.loc[self.activities.purposeStr == purpose].copy()
         households = homeActivities[['hhID']].reset_index(drop=True)
         households = households.drop_duplicates(subset="hhID").copy()  # 73850 unique HH
-        power = list((self.appConfig["gridModelers"]["gridAvailabilityDistribution"][purpose]).keys())
-        probability = list(self.appConfig["gridModelers"]["gridAvailabilityDistribution"][purpose].values())
+        power = list((self.user_config["gridModelers"]["gridAvailabilityDistribution"][purpose]).keys())
+        probability = list(self.user_config["gridModelers"]["gridAvailabilityDistribution"][purpose].values())
         urng = np.random.default_rng(setSeed)  # universal non-uniform random number
         rng = DiscreteAliasUrn(probability, random_state=urng)
         self.chargeAvailability = rng.rvs(len(households))
@@ -96,7 +96,7 @@ class GridModeler:
         """
         # parkID != pd.NA and timedelta <= 15 minutes
         self.activities.loc[((self.activities['parkID'].notna()) & (
-            (self.activities['timedelta'] / np.timedelta64(1, 's')) <= self.appConfig["gridModelers"]['minimumParkingTime'])), 'ratedPower'] = 0
+            (self.activities['timedelta'] / np.timedelta64(1, 's')) <= self.user_config["gridModelers"]['minimumParkingTime'])), 'ratedPower'] = 0
         return self.activities
 
     def assignGrid(self):
@@ -127,19 +127,19 @@ class GridModeler:
         :param acts [bool]: Should electric losses in the charging equipment be considered?
         :param losses [bool]: Should electric losses in the charging equipment be considered?
         """
-        if self.appConfig["gridModelers"]['losses']:
+        if self.user_config["gridModelers"]['losses']:
             self.activities['availablePower'] = self.activities['ratedPower'] - (
                 self.activities['ratedPower'] * self.activities['ratedPower'].apply(
-                    lambda x: self.appConfig["gridModelers"]['loss_factor'][f'rated_power_{str(x)}']))
+                    lambda x: self.user_config["gridModelers"]['loss_factor'][f'rated_power_{str(x)}']))
         else:
             self.activities['availablePower'] = self.activities['ratedPower']
         return self.activities
 
     def _writeOutput(self):
-        if self.appConfig["global"]["writeOutputToDisk"]["gridOutput"]:
-            root = Path(self.appConfig["global"]['pathAbsolute']['vencopyRoot'])
-            folder = self.devConfig["global"]['pathRelative']['gridOutput']
-            fileName = createFileName(devConfig=self.devConfig, appConfig=self.appConfig, manualLabel='', fileNameID='outputGridModeler',
+        if self.user_config["global"]["writeOutputToDisk"]["gridOutput"]:
+            root = Path(self.user_config["global"]['pathAbsolute']['vencopyRoot'])
+            folder = self.dev_config["global"]['pathRelative']['gridOutput']
+            fileName = createFileName(dev_config=self.dev_config, user_config=self.user_config, manualLabel='', fileNameID='outputGridModeler',
                                       datasetID=self.datasetID)
             writeOut(data=self.activities, path=root / folder / fileName)
 

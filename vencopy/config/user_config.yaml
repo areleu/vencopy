@@ -112,14 +112,12 @@ gridModelers:
 
 flexEstimators:
   filterFuelNeed: True # Should activity chains that require fuel for trip distance satisfaction be filtered out?
-  Minimum_daily_mileage: 0.0 # in km, cut-off mileage to exclude profiles
   Battery_capacity: 50 # in kWh, input assumption for battery capacity
   Electric_consumption: 18.0 # in kWh/100km, input assumption for specific electric consumption
   Fuel_consumption: 1.0 # in l/100km, input assumption for specific fuel consumption for auxiliary fuel
   Start_SOC: 0.5 # State-of-charge between 0 and 1 at beginning of activity chain
   Maximum_SOC: 0.97 # in %
   Minimum_SOC: 0.03 # in %
-  SoC_plugging_threshold: 0.8
   maxIterations: 10  # Technical parameter --> not to user config
   epsilon_battery_level: 0.0001  # Iterations stop once the difference between start and end battery level have decreased to this share of fleet battery level
 

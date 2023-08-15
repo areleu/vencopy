@@ -20,7 +20,7 @@ def loadConfigDict(basePath):
     :param configNames: Tuple containing names of config files to be loaded
     :return: Dictionary with opened yaml config files
     """
-    configNames = ("appConfig", "devConfig")
+    configNames = ("user_config", "dev_config")
     configPath = basePath / 'config'
     configDict = {}
     for configName in configNames:
@@ -87,7 +87,7 @@ def createOutputFolders(configDict: dict):
     :param: config dictionary
     :return: None
     """
-    root = Path(configDict['appConfig']['global']['pathAbsolute']['vencopyRoot'])
+    root = Path(configDict['user_config']['global']['pathAbsolute']['vencopyRoot'])
     mainDir = 'output'
     if not os.path.exists(Path(root / mainDir)):
         os.mkdir(Path(root / mainDir))
@@ -98,13 +98,13 @@ def createOutputFolders(configDict: dict):
             os.mkdir(Path(root / mainDir / subDir))
 
 
-def createFileName(devConfig: dict, appConfig: dict, manualLabel: str, fileNameID: str, datasetID: str,
+def createFileName(dev_config: dict, user_config: dict, manualLabel: str, fileNameID: str, datasetID: str,
                    suffix: str = 'csv'):
     """
     Generic method used for fileString compilation throughout the VencoPy framework. This method does not write any
     files but just creates the file name including the filetype suffix.
 
-    :param appConfig: user config file for paths
+    :param user_config: user config file for paths
     :param fileNameID: ID of respective data file as specified in global config
     :param datasetID: Manual specification of data set ID e.g. 'MiD17'
     :param manualLabel: Optional manual label to add to filename
@@ -112,8 +112,8 @@ def createFileName(devConfig: dict, appConfig: dict, manualLabel: str, fileNameI
     :return: Full name of file to be written.
     """
     if datasetID is None:
-        return f"{devConfig['global']['diskFileNames'][fileNameID]}_{appConfig['global']['runLabel']}_{manualLabel}.{suffix}"
-    return f"{devConfig['global']['diskFileNames'][fileNameID]}_{appConfig['global']['runLabel']}_{manualLabel}" \
+        return f"{dev_config['global']['diskFileNames'][fileNameID]}_{user_config['global']['runLabel']}_{manualLabel}.{suffix}"
+    return f"{dev_config['global']['diskFileNames'][fileNameID]}_{user_config['global']['runLabel']}_{manualLabel}" \
            f"{datasetID}.{suffix}"
 
 

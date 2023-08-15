@@ -14,10 +14,10 @@ from vencopy.utils.globalFunctions import createFileName, writeOut
 
 class OutputFormatter():
     def __init__(self, configDict: dict, profiles: ProfileAggregator):
-        self.appConfig = configDict['appConfig']
-        self.devConfig = configDict['devConfig']
-        self.datasetID = self.appConfig["global"]["dataset"]
-        self.deltaTime = self.appConfig['diaryBuilders']['TimeDelta']
+        self.user_config = configDict['user_config']
+        self.dev_config = configDict['dev_config']
+        self.datasetID = self.user_config["global"]["dataset"]
+        self.deltaTime = self.user_config['diaryBuilders']['TimeDelta']
         self.timeIndex = list(pd.timedelta_range(
             start='00:00:00', end='24:00:00', freq=f'{self.deltaTime}T'))
         self.drain = profiles.drainWeekly
@@ -27,7 +27,7 @@ class OutputFormatter():
         self.minBatteryLevel = profiles.minBatteryLevelWeekly
 
     def __createAnnualProfiles(self):
-        startWeekday = self.appConfig["outputFormatters"]['startWeekday']  # (1: Monday, 7: Sunday)
+        startWeekday = self.user_config["outputFormatters"]['startWeekday']  # (1: Monday, 7: Sunday)
         # shift input profiles to the right weekday and start with first bin of chosen weekday
         self.annualProfile = self.profile.iloc[(
             (startWeekday - 1) * ((len(list(self.timeIndex))) - 1)):]
@@ -39,10 +39,10 @@ class OutputFormatter():
                     self.timeIndex))) - 1) * 365).index, inplace=True)
 
     def _writeOutput(self):
-        if self.appConfig["global"]["writeOutputToDisk"]["formatterOutput"]:
-            root = Path(self.appConfig["global"]['pathAbsolute']['vencopyRoot'])
-            folder = self.devConfig["global"]['pathRelative']['formatterOutput']
-            fileName = createFileName(devConfig=self.devConfig, appConfig=self.appConfig, manualLabel='', fileNameID='outputOutputFormatter',
+        if self.user_config["global"]["writeOutputToDisk"]["formatterOutput"]:
+            root = Path(self.user_config["global"]['pathAbsolute']['vencopyRoot'])
+            folder = self.dev_config["global"]['pathRelative']['formatterOutput']
+            fileName = createFileName(dev_config=self.dev_config, user_config=self.user_config, manualLabel='', fileNameID='outputOutputFormatter',
                                       datasetID=self.datasetID)
             writeOut(data=self.annualProfile, path=root / folder / fileName)
 
