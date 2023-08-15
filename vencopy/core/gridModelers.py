@@ -122,7 +122,7 @@ class GridModeler:
             raise (ValueError(f'Specified grid modeling option {self.gridModel} is not implemented. Please choose'
                               f'"simple" or "probability"'))
         self._addGridLosses()
-        self.writeOutput()
+        self._writeOutput()
         return self.activities
 
     def _addGridLosses(self):
@@ -143,7 +143,7 @@ class GridModeler:
             self.activities['availablePower'] = self.activities['ratedPower']
         return self.activities
 
-    def writeOutput(self):
+    def _writeOutput(self):
         if self.globalConfig["writeOutputToDisk"]["gridOutput"]:
             root = Path(self.localPathConfig['pathAbsolute']['vencoPyRoot'])
             folder = self.globalConfig['pathRelative']['gridOutput']

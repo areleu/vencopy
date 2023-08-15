@@ -440,30 +440,6 @@ class DataParser:
         ret.name = "noOverlapNextTrips"
         return ret
 
-    # METHOD MOST LIKELY DEPRECATED
-    # def __overlapPeriods(self, data, period) -> pd.Series:
-    #     """
-    #     New implementation of identifying trips that overlap with previous trips.
-
-    #     Args:
-    #         data (pd.DataFrame): Trip data set including the two variables timestampStart and timestampEnd
-    #         characterizing a trip
-    #         period (int): Trip identifier within trip diary in survey day to compare every trip to
-
-    #     Returns:
-    #         pd.Series: A boolean Series being True for non-overlapping trips and False for overlapping trips. Has the
-    #         same index as the MID data.
-    #     """
-    #     dat = data.copy()
-
-    #     if self.datasetID == "KiD":
-    #         tripDoesNotOverlap = self.__identifyOverlappingTrips(dat, "vehicleID", period)
-    #     else:
-    #         tripDoesNotOverlap = self.__identifyOverlappingTrips(
-    #         dat, "hhPersonID", period
-    #     )
-    #     return tripDoesNotOverlap
-
     def __identifyOverlappingTrips(
             self, dat: pd.DataFrame, period: int) -> pd.Series:
         """ Calculates a boolean vector of same length as dat that is True if the current trip does not overlap with

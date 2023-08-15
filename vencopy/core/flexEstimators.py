@@ -416,7 +416,7 @@ class FlexEstimator:
             actsFilt = actsIdx.loc[~actsIdx.index.isin(tplFilt), :]
         return actsFilt.reset_index()
 
-    def writeOutput(self):
+    def _writeOutput(self):
         if self.globalConfig["writeOutputToDisk"]["flexOutput"]:
             root = Path(self.localPathConfig['pathAbsolute']['vencoPyRoot'])
             folder = self.globalConfig['pathRelative']['flexOutput']
@@ -448,6 +448,7 @@ class FlexEstimator:
         self._auxFuelNeed()
         if self.flexConfig['filterFuelNeed']:
             self.activities = self._filterResidualNeed(acts=self.activities, indexCols=['uniqueID'])
+        self._writeOutput()
         print("Technical flexibility estimation ended.")
         return self.activities
 
@@ -476,7 +477,7 @@ class FlexEstimator:
         self._auxFuelNeed()
         if self.flexConfig['filterFuelNeed']:
             self.activities = self._filterResidualNeed(acts=self.activities, indexCols=['uniqueID'])
-
+        self._writeOutput()
         print("Technical flexibility estimation ended.")
         return self.activities
 
