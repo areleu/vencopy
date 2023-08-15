@@ -21,13 +21,11 @@ class DiaryBuilder:
     def __init__(
         self, configDict: dict, activities: pd.DataFrame, isWeekDiary: bool = False
     ):
-        self.diaryConfig = configDict["diaryConfig"]
-        self.globalConfig = configDict["globalConfig"]
-        self.localPathConfig = configDict["localPathConfig"]
-        self.flexConfig = configDict["flexConfig"]
-        self.datasetID = configDict["globalConfig"]["dataset"]
+        self.dev_config = configDict["dev_config"]
+        self.user_config = configDict["user_config"]
+        self.datasetID = configDict["user_config"]["global"]["dataset"]
         self.activities = activities
-        self.deltaTime = configDict["diaryConfig"]["TimeDelta"]
+        self.deltaTime = configDict["user_config"]["diaryBuilders"]["TimeDelta"]
         self.isWeekDiary = isWeekDiary
         self._updateActivities()
         self.drain = None
@@ -36,9 +34,8 @@ class DiaryBuilder:
         self.maxBatteryLevel = None
         self.minBatteryLevel = None
         self.distributor = TimeDiscretiser(datasetID=self.datasetID,
-                                           globalConfig=self.globalConfig,
-                                           localPathConfig=self.localPathConfig,
-                                           flexConfig=self.flexConfig,
+                                           dev_config=self.dev_config,
+                                           user_config=self.user_config,
                                            activities=self.activities,
                                            dt=self.deltaTime,
                                            isWeek=isWeekDiary)
@@ -583,9 +580,8 @@ class TimeDiscretiser:
             activities: pd.DataFrame,
             dt: int,
             datasetID: str,
-            globalConfig: dict,
-            localPathConfig: dict,
-            flexConfig: dict,
+            user_config: dict,
+            dev_config: dict,
             isWeek: bool = False):
         """
         Class for discretisation of activities to fixed temporal resolution
@@ -615,9 +611,8 @@ class TimeDiscretiser:
         self.activities = activities
         self.datasetID = datasetID
         self.dataToDiscretise = None
-        self.localPathConfig = localPathConfig
-        self.globalConfig = globalConfig
-        self.flexConfig = flexConfig
+        self.user_config = user_config
+        self.dev_config = dev_config
         self.quantum = pd.Timedelta(value=1, unit="min")
         self.dt = dt  # e.g. 15 min
         self.isWeek = isWeek
@@ -894,8 +889,8 @@ class TimeDiscretiser:
             d.loc[d['tripID'].isna(), 'valPerBin'] = d.loc[
                 d['tripID'].isna(), 'valPerBin'].apply(
                 self.enforceBatteryLimit, how='upper',
-                lim=self.flexConfig[
-                    'Battery_capacity'] * self.flexConfig['Maximum_SOC'])
+                lim=self.user_config["flexEstimators"][
+                    'Battery_capacity'] * self.user_config["flexEstimators"]['Maximum_SOC'])
         elif valCol == "minBatteryLevelEnd":
             d['chargePerBin'
               ] = self.activities.availablePower * self.dt / 60 * -1
@@ -907,8 +902,8 @@ class TimeDiscretiser:
             d.loc[d['tripID'].isna(), 'valPerBin'] = d.loc[
                 d['tripID'].isna(), 'valPerBin'].apply(
                     self.enforceBatteryLimit, how='lower',
-                    lim=self.flexConfig[
-                        'Battery_capacity'] * self.flexConfig['Minimum_SOC'])
+                    lim=self.user_config["flexEstimators"][
+                        'Battery_capacity'] * self.user_config["flexEstimators"]['Minimum_SOC'])
 
     def increaseLevelPerBin(self,
                             socStart: float,
@@ -1163,14 +1158,15 @@ class TimeDiscretiser:
         return s
 
     def _writeOutput(self):
-        if self.globalConfig["writeOutputToDisk"]["diaryOutput"]:
-            root = Path(self.localPathConfig["pathAbsolute"]["vencoPyRoot"])
-            folder = self.globalConfig["pathRelative"]["diaryOutput"]
+        if self.user_config["global"]["writeOutputToDisk"]["diaryOutput"]:
+            root = Path(self.user_config["global"]["pathAbsolute"]["vencopyRoot"])
+            folder = self.dev_config["global"]["pathRelative"]["diaryOutput"]
             fileName = createFileName(
-                globalConfig=self.globalConfig,
+                dev_config=self.dev_config,
+                user_config=self.user_config,
                 manualLabel=self.columnToDiscretise,
                 fileNameID="outputDiaryBuilder",
-                datasetID=self.datasetID,
+                datasetID=self.datasetID
             )
             writeOut(data=self.activities, path=root / folder / fileName)
 

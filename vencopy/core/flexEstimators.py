@@ -16,14 +16,13 @@ from vencopy.utils.globalFunctions import createFileName, writeOut
 
 class FlexEstimator:
     def __init__(self, configDict: dict, activities: pd.DataFrame):
-        self.datasetID = configDict["globalConfig"]["dataset"]
-        self.flexConfig = configDict['flexConfig']
-        self.globalConfig = configDict['globalConfig']
-        self.localPathConfig = configDict['localPathConfig']
-        self.upperBatLev = self.flexConfig[
-            'Battery_capacity'] * self.flexConfig['Maximum_SOC']
-        self.lowerBatLev = self.flexConfig[
-            'Battery_capacity'] * self.flexConfig['Minimum_SOC']
+        self.datasetID = configDict["user_config"]["global"]["dataset"]
+        self.user_config = configDict['user_config']
+        self.dev_config = configDict['dev_config']
+        self.upperBatLev = self.user_config["flexEstimators"][
+            'Battery_capacity'] * self.user_config["flexEstimators"]['Maximum_SOC']
+        self.lowerBatLev = self.user_config["flexEstimators"][
+            'Battery_capacity'] * self.user_config["flexEstimators"]['Minimum_SOC']
         self.activities = activities.copy()
         self.isTrip = ~self.activities['tripID'].isna()
         self.isPark = ~self.activities['parkID'].isna()
@@ -43,7 +42,7 @@ class FlexEstimator:
         self.activitiesWOResidual = None
 
     def _drain(self):
-        self.activities['drain'] = self.activities['tripDistance'] * self.flexConfig['Electric_consumption'] / 100
+        self.activities['drain'] = self.activities['tripDistance'] * self.user_config["flexEstimators"]['Electric_consumption'] / 100
 
     def _maxChargeVolumePerParkingAct(self):
         self.activities.loc[self.isPark,
@@ -381,8 +380,8 @@ class FlexEstimator:
         return startTS + pd.Timedelta(value=timeForCharge, unit='h').round(freq='s')
 
     def _auxFuelNeed(self):
-        self.activities['auxiliaryFuelNeed'] = self.activities['residualNeed'] * self.flexConfig[
-            'Fuel_consumption'] / self.flexConfig['Electric_consumption']
+        self.activities['auxiliaryFuelNeed'] = self.activities['residualNeed'] * self.user_config["flexEstimators"][
+            'Fuel_consumption'] / self.user_config["flexEstimators"]['Electric_consumption']
 
     def _filterResidualNeed(self, acts: pd.DataFrame, indexCols: list):
         """
@@ -411,11 +410,11 @@ class FlexEstimator:
         return actsFilt.reset_index()
 
     def _writeOutput(self):
-        if self.globalConfig["writeOutputToDisk"]["flexOutput"]:
-            root = Path(self.localPathConfig['pathAbsolute']['vencoPyRoot'])
-            folder = self.globalConfig['pathRelative']['flexOutput']
-            fileName = createFileName(globalConfig=self.globalConfig, manualLabel='', file='outputFlexEstimator',
-                                    datasetID=self.datasetID)
+        if self.user_config["global"]["writeOutputToDisk"]["flexOutput"]:
+            root = Path(self.user_config["global"]['pathAbsolute']['vencopyRoot'])
+            folder = self.dev_config["global"]['pathRelative']['flexOutput']
+            fileName = createFileName(user_config=self.user_config, dev_config=self.dev_config, manualLabel='', fileNameID='outputFlexEstimator',
+                                      datasetID=self.datasetID)
             writeOut(data=self.activities, path=root / folder / fileName)
 
     def estimateTechnicalFlexibility_noBoundaryConstraints(self):
@@ -436,11 +435,11 @@ class FlexEstimator:
         """
         self._drain()
         self._maxChargeVolumePerParkingAct()
-        self.__batteryLevelMax(startLevel=self.upperBatLev * self.flexConfig['Start_SOC'])
+        self.__batteryLevelMax(startLevel=self.upperBatLev * self.user_config["flexEstimators"]['Start_SOC'])
         self._uncontrolledCharging()
         self.__batteryLevelMin()
         self._auxFuelNeed()
-        if self.flexConfig['filterFuelNeed']:
+        if self.user_config["flexEstimators"]['filterFuelNeed']:
             self.activities = self._filterResidualNeed(acts=self.activities, indexCols=['uniqueID'])
         self._writeOutput()
         print("Technical flexibility estimation ended.")
@@ -465,11 +464,11 @@ class FlexEstimator:
         self._drain()
         self._maxChargeVolumePerParkingAct()
         self.__iterativeBatteryLevelCalculations(
-            maxIter=self.flexConfig['maxIterations'], eps=self.flexConfig['epsilon_battery_level'],
-            batCap=self.flexConfig['Battery_capacity'], nVehicles=len(self.activities['uniqueID'].unique())
+            maxIter=self.user_config["flexEstimators"]['maxIterations'], eps=self.user_config["flexEstimators"]['epsilon_battery_level'],
+            batCap=self.user_config["flexEstimators"]['Battery_capacity'], nVehicles=len(self.activities['uniqueID'].unique())
         )
         self._auxFuelNeed()
-        if self.flexConfig['filterFuelNeed']:
+        if self.user_config["flexEstimators"]['filterFuelNeed']:
             self.activities = self._filterResidualNeed(acts=self.activities, indexCols=['uniqueID'])
         self._writeOutput()
         print("Technical flexibility estimation ended.")
@@ -486,7 +485,7 @@ class FlexEstimator:
             batCap (float): Average nominal battery capacity per vehicle in kWh.
             nVehicles (int): Number of vehicles in the empiric mobility pattern data set.
         """
-        batteryLevelMaxEnd = self.upperBatLev * self.flexConfig['Start_SOC']
+        batteryLevelMaxEnd = self.upperBatLev * self.user_config["flexEstimators"]['Start_SOC']
         batteryLevelMinStart = self.lowerBatLev
         absoluteEps = int(self.__absoluteEps(eps=eps, batCap=batCap, nVehicles=nVehicles))
 
@@ -561,7 +560,7 @@ class WeekFlexEstimator(FlexEstimator):
         if threshold:
             self.useThreshold = True
             self.thresholdSOC = threshold
-            self.thresholdAbsolute = threshold * self.flexConfig['Battery_capacity']
+            self.thresholdAbsolute = threshold * self.user_config["flexEstimators"]['Battery_capacity']
             if self.thresholdAbsolute <= self.upperBatLev:
                 self.thresholdAbsolute = self.thresholdAbsolute
             else:

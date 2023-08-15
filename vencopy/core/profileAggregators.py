@@ -18,12 +18,11 @@ from vencopy.utils.globalFunctions import createFileName, writeOut
 class ProfileAggregator():
     def __init__(self, configDict: dict, activities: pd.DataFrame,
                  profiles: DiaryBuilder):
-        self.aggregatorConfig = configDict['aggregatorConfig']
-        self.globalConfig = configDict['globalConfig']
-        self.localPathConfig = configDict['localPathConfig']
-        self.datasetID = self.globalConfig["dataset"]
-        self.weighted = self.aggregatorConfig['weightFlowProfiles']
-        self.alpha = self.aggregatorConfig['alpha']
+        self.user_config = configDict['user_config']
+        self.dev_config = configDict['dev_config']
+        self.datasetID = self.user_config["global"]["dataset"]
+        self.weighted = self.user_config["profileAggregators"]['weightFlowProfiles']
+        self.alpha = self.user_config["profileAggregators"]['alpha']
         self.activities = activities
         self.profiles = profiles
         self.weights = self.activities.loc[
@@ -36,8 +35,8 @@ class ProfileAggregator():
         self.minBatteryLevel = profiles.minBatteryLevel
         self.aggregator = Aggregator(activities=self.activities,
                                      datasetID=self.datasetID,
-                                     globalConfig=self.globalConfig,
-                                     localPathConfig=self.localPathConfig,
+                                     user_config=self.user_config,
+                                     dev_config=self.dev_config,
                                      weighted=self.weighted,
                                      alpha=self.alpha)
 
@@ -56,15 +55,15 @@ class Aggregator():
             activities: pd.DataFrame,
             datasetID: str,
             alpha: int,
-            globalConfig: dict,
-            localPathConfig: dict,
+            user_config: dict,
+            dev_config: dict,
             weighted: bool):
         self.datasetID = datasetID
         self.alpha = alpha
         self.activities = activities
         self.weighted = weighted
-        self.localPathConfig = localPathConfig
-        self.globalConfig = globalConfig
+        self.user_config = user_config
+        self.dev_config = dev_config
 
     def __basicAggregation(self, byColumn="tripStartWeekday") -> pd.Series:
         self.weekdayProfiles = pd.DataFrame(
@@ -160,13 +159,12 @@ class Aggregator():
                        self.weekdayProfiles[7]], ignore_index=True))
 
     def _writeOutput(self):
-        if self.globalConfig["writeOutputToDisk"]["aggregatorOutput"]:
-            root = Path(self.localPathConfig['pathAbsolute']['vencoPyRoot'])
-            folder = self.globalConfig['pathRelative']['aggregatorOutput']
-            fileName = createFileName(globalConfig=self.globalConfig, manualLabel=(
-                '_' + self.profileName + 'Week'),
-                fileNameID='outputProfileAggregator', datasetID=self.datasetID)
-            writeOut(data=self.weeklyProfile, path=root / folder / fileName)
+        if self.user_config["global"]["writeOutputToDisk"]["aggregatorOutput"]:
+            root = Path(self.user_config["global"]['pathAbsolute']['vencopyRoot'])
+            folder = self.dev_config["global"]['pathRelative']['aggregatorOutput']
+            fileName = createFileName(dev_config=self.dev_config, user_config=self.user_config, manualLabel='', fileNameID='outputProfileAggregator',
+                                      datasetID=self.datasetID)
+            writeOut(data=self.activities, path=root / folder / fileName)
 
     def performAggregation(self, profile: pd.DataFrame, profileName: str, method: str):
         self.profile = profile
