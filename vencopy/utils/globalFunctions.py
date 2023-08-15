@@ -20,7 +20,7 @@ def loadConfigDict(basePath):
     :param configNames: Tuple containing names of config files to be loaded
     :return: Dictionary with opened yaml config files
     """
-    configNames = ("appConfig", "devConfig", "localPathConfig")
+    configNames = ("appConfig", "devConfig")
     configPath = basePath / 'config'
     configDict = {}
     for configName in configNames:
@@ -87,7 +87,7 @@ def createOutputFolders(configDict: dict):
     :param: config dictionary
     :return: None
     """
-    root = Path(configDict['localPathConfig']['pathAbsolute']['vencopyRoot'])
+    root = Path(configDict['appConfig']['global']['pathAbsolute']['vencopyRoot'])
     mainDir = 'output'
     if not os.path.exists(Path(root / mainDir)):
         os.mkdir(Path(root / mainDir))
@@ -98,7 +98,7 @@ def createOutputFolders(configDict: dict):
             os.mkdir(Path(root / mainDir / subDir))
 
 
-def createFileName(appConfig: dict, fileNameID: str, datasetID: str, manualLabel: str = '',
+def createFileName(devConfig: dict, appConfig: dict, manualLabel: str, fileNameID: str, datasetID: str,
                    suffix: str = 'csv'):
     """
     Generic method used for fileString compilation throughout the VencoPy framework. This method does not write any
@@ -112,8 +112,8 @@ def createFileName(appConfig: dict, fileNameID: str, datasetID: str, manualLabel
     :return: Full name of file to be written.
     """
     if datasetID is None:
-        return f"{appConfig['files'][fileNameID]}_{appConfig['global']['runLabel']}_{manualLabel}.{suffix}"
-    return f"{appConfig['files'][datasetID][fileNameID]}_{appConfig['global']['runLabel']}_{manualLabel}" \
+        return f"{devConfig['global']['diskFileNames'][fileNameID]}_{appConfig['global']['runLabel']}_{manualLabel}.{suffix}"
+    return f"{devConfig['global']['diskFileNames'][fileNameID]}_{appConfig['global']['runLabel']}_{manualLabel}" \
            f"{datasetID}.{suffix}"
 
 

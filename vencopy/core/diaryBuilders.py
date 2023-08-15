@@ -1158,14 +1158,15 @@ class TimeDiscretiser:
         return s
 
     def _writeOutput(self):
-        if self.devConfig["global"]["writeOutputToDisk"]["diaryOutput"]:
+        if self.appConfig["global"]["writeOutputToDisk"]["diaryOutput"]:
             root = Path(self.appConfig["global"]["pathAbsolute"]["vencopyRoot"])
             folder = self.devConfig["global"]["pathRelative"]["diaryOutput"]
             fileName = createFileName(
+                devConfig=self.devConfig,
                 appConfig=self.appConfig,
                 manualLabel=self.columnToDiscretise,
                 fileNameID="outputDiaryBuilder",
-                datasetID=self.datasetID,
+                datasetID=self.datasetID
             )
             writeOut(data=self.activities, path=root / folder / fileName)
 

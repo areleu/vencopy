@@ -83,13 +83,11 @@ dataParsers:
       # garage: ["NA", "garage", "NA", "garage"]
       #    tripStartLocation: [ 'NA', 'KKZ_SO' ]
       #    tripEndLocation: [ 'NA', 'KKZ_ZO' ]
-
   IDVariablesNames:
       MiD08: "hhPersonID"
       MiD17: "hhPersonID"
       KiD: "vehicleID"
       VF: "hhPersonID"
-
   inputDTypes:
       MiD17:
           isMIVDriver: "bool"
@@ -165,7 +163,6 @@ dataParsers:
           tripEndNextDay: "bool"
           tripIsIntermodal: "int"
           weather: "int"
-
   filterDicts:
       lowerSpeedThreshold: 10 # Minimum speed required
       higherSpeedThreshold: 200 # Maximum speed allowed
@@ -215,7 +212,6 @@ dataParsers:
           greaterThan:
           smallerThan:
               tripDistance: [1000]
-
   Replacements:
       MiD08:
           tripStartWeekday:
@@ -329,22 +325,3 @@ dataParsers:
               "kompakt": "S"
               "mittel": "M"
               "gross": "L"
-
-
-
-gridModelers:
-
-
-flexEstimators:
-
-
-diaryBuilders:
-
-
-profileAggregators:
-
-
-outputFormatters:
-
-
-normalisers:

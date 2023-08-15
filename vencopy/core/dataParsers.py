@@ -53,9 +53,8 @@ class DataParser:
         """
         self.appConfig = configDict["appConfig"]
         self.devConfig = configDict["devConfig"]
-        self.localPathConfig = configDict["localPathConfig"]
         self.datasetID = self.__checkDatasetID(datasetID)
-        filepath = (Path(self.localPathConfig["pathAbsolute"][self.datasetID]
+        filepath = (Path(self.appConfig["global"]["pathAbsolute"][self.datasetID]
                          ) / self.devConfig["global"]["files"][self.datasetID]["tripsDataRaw"])
         self.rawDataPath = filepath
         self.rawData = None
@@ -485,9 +484,11 @@ class DataParser:
             root = Path(self.appConfig["global"]["pathAbsolute"]["vencopyRoot"])
             folder = self.devConfig["global"]["pathRelative"]["parseOutput"]
             fileName = createFileName(
-                globalConfig=self.appConfig["global"],
+                devConfig=self.devConfig,
+                appConfig=self.appConfig,
                 fileNameID="outputDataParser",
                 datasetID=self.datasetID,
+                manualLabel=''
             )
             writeOut(data=self.activities, path=root / folder / fileName)
 
@@ -1250,9 +1251,9 @@ class IntermediateParsing(DataParser):
 
     def _subsetVehicleSegment(self):
         if self.appConfig["dataParsers"]['subsetVehicleSegment']:
-            self.activities = self.activities[(
-                self.activities['vehicleSegmentStr'] == self.appConfig["dataParsers"]['vehicleSegment'][self.datasetID])]
-            print(f"The subset contains only vehicles of the class {(self.appConfig["dataParsers"]["vehicleSegment"][self.datasetID])} for a total of {len(self.activities.uniqueID.unique())} individual vehicles.")
+            self.activities = self.activities[
+                self.activities['vehicleSegmentStr'] == self.appConfig["dataParsers"]['vehicleSegment'][self.datasetID]]
+            print(f'The subset contains only vehicles of the class {(self.appConfig["dataParsers"]["vehicleSegment"][self.datasetID])} for a total of {len(self.activities.uniqueID.unique())} individual vehicles.')
 
     def _cleanupDataset(self):
         self.activities.drop(
@@ -1408,11 +1409,11 @@ class ParseVF(IntermediateParsing):
         rawDataPathVehicles is an internal dataset from VF
         """
         rawDataPathTrips = (
-            Path(self.localPathConfig["pathAbsolute"][self.datasetID])
+            Path(self.appConfig["global"]["pathAbsolute"][self.datasetID])
             / self.devConfig["global"]["files"][self.datasetID]["tripsDataRaw"]
         )
         rawDataPathVehicles = (
-            Path(self.localPathConfig["pathAbsolute"][self.datasetID])
+            Path(self.appConfig["global"]["pathAbsolute"][self.datasetID])
             / self.devConfig["global"]["files"][self.datasetID]["vehiclesDataRaw"]
         )
         rawDataTrips = pd.read_stata(

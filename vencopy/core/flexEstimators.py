@@ -16,7 +16,7 @@ from vencopy.utils.globalFunctions import createFileName, writeOut
 
 class FlexEstimator:
     def __init__(self, configDict: dict, activities: pd.DataFrame):
-        self.datasetID = configDict["globalConfig"]["dataset"]
+        self.datasetID = configDict["appConfig"]["global"]["dataset"]
         self.appConfig = configDict['appConfig']
         self.devConfig = configDict['devConfig']
         self.upperBatLev = self.appConfig["flexEstimators"][
@@ -410,10 +410,10 @@ class FlexEstimator:
         return actsFilt.reset_index()
 
     def _writeOutput(self):
-        if self.devConfig["global"]["writeOutputToDisk"]["flexOutput"]:
+        if self.appConfig["global"]["writeOutputToDisk"]["flexOutput"]:
             root = Path(self.appConfig["global"]['pathAbsolute']['vencopyRoot'])
             folder = self.devConfig["global"]['pathRelative']['flexOutput']
-            fileName = createFileName(appConfig=self.appConfig, manualLabel='', fileNameID='outputFlexEstimator',
+            fileName = createFileName(appConfig=self.appConfig, devConfig=self.devConfig, manualLabel='', fileNameID='outputFlexEstimator',
                                       datasetID=self.datasetID)
             writeOut(data=self.activities, path=root / folder / fileName)
 

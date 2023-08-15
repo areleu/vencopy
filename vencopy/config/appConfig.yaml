@@ -12,10 +12,10 @@ global:
   nDebugLines: 5000
   runLabel:
   writeOutputToDisk:
-      parseOutput: False
-      gridOutput: False
-      flexOutput: False
-      diaryOutput: False
+      parseOutput: True
+      gridOutput: True
+      flexOutput: True
+      diaryOutput: True
       aggregatorOutput: True
       formatterOutput: True
       normaliserOutput: True
