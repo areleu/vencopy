@@ -28,7 +28,7 @@ make.bat
 *.h5f
 
 # files with user-specific local paths
-vencopy/config/user_config.yaml
+vencopy/config/config.yaml
 
 # VS-Code
 .vscode
