@@ -16,17 +16,15 @@ from vencopy.utils.globalFunctions import createFileName, writeOut
 
 class GridModeler:
     def __init__(self, configDict: dict, activities):
-        self.globalConfig = configDict['globalConfig']
-        self.gridConfig = configDict['gridConfig']
-        self.flexConfig = configDict['flexConfig']
-        self.localPathConfig = configDict['localPathConfig']
-        self.datasetID = configDict['globalConfig']['dataset']
-        self.gridModel = self.gridConfig['gridModel']
+        self.appConfig = configDict['appConfig']
+        self.devConfig = configDict['devConfig']
+        self.datasetID = configDict['appConfig']['global']['dataset']
+        self.gridModel = self.appConfig["gridModelers"]['gridModel']
         self.activities = activities
-        if self.gridConfig['forceLastTripHome']:
+        if self.appConfig["gridModelers"]['forceLastTripHome']:
             self.removeActsNotEndingHome()
-        self.gridAvailabilitySimple = self.gridConfig['chargingInfrastructureMappings']
-        self.gridAvailabilityProb = self.gridConfig['gridAvailabilityDistribution']
+        self.gridAvailabilitySimple = self.appConfig["gridModelers"]['chargingInfrastructureMappings']
+        self.gridAvailabilityProb = self.appConfig["gridModelers"]['gridAvailabilityDistribution']
         self.chargeAvailability = None
 
     def _assignGridViaPurposes(self):
@@ -40,7 +38,7 @@ class GridModeler:
         print('Starting with charge connection replacement of location purposes.')
         self.chargeAvailability = self.activities.purposeStr.replace(self.gridAvailabilitySimple)
         # self.chargeAvailability = (~(self.chargeAvailability != True))  # check condition if not, needed?
-        self.chargeAvailability = self.chargeAvailability * self.gridConfig['ratedPowerSimple']
+        self.chargeAvailability = self.chargeAvailability * self.appConfig["gridModelers"]['ratedPowerSimple']
         self.activities['ratedPower'] = self.chargeAvailability
         self.activities = self.adjustPowerShortParking()
         print('Grid connection assignment complete.')
@@ -58,8 +56,8 @@ class GridModeler:
                 activitiesHome = self._homeProbabilityDistribution(setSeed=42)
             else:
                 subset = self.activities.loc[self.activities.purposeStr == purpose].copy()
-                power = list((self.gridConfig["gridAvailabilityDistribution"][purpose]).keys())
-                probability = list(self.gridConfig["gridAvailabilityDistribution"][purpose].values())
+                power = list((self.appConfig["gridModelers"]["gridAvailabilityDistribution"][purpose]).keys())
+                probability = list(self.appConfig["gridModelers"]["gridAvailabilityDistribution"][purpose].values())
                 urng = np.random.default_rng(setSeed)  # universal non-uniform random number
                 rng = DiscreteAliasUrn(probability, random_state=urng)
                 self.chargeAvailability = rng.rvs(len(subset))
@@ -81,8 +79,8 @@ class GridModeler:
         homeActivities = self.activities.loc[self.activities.purposeStr == purpose].copy()
         households = homeActivities[['hhID']].reset_index(drop=True)
         households = households.drop_duplicates(subset="hhID").copy()  # 73850 unique HH
-        power = list((self.gridConfig["gridAvailabilityDistribution"][purpose]).keys())
-        probability = list(self.gridConfig["gridAvailabilityDistribution"][purpose].values())
+        power = list((self.appConfig["gridModelers"]["gridAvailabilityDistribution"][purpose]).keys())
+        probability = list(self.appConfig["gridModelers"]["gridAvailabilityDistribution"][purpose].values())
         urng = np.random.default_rng(setSeed)  # universal non-uniform random number
         rng = DiscreteAliasUrn(probability, random_state=urng)
         self.chargeAvailability = rng.rvs(len(households))
@@ -98,7 +96,7 @@ class GridModeler:
         """
         # parkID != pd.NA and timedelta <= 15 minutes
         self.activities.loc[((self.activities['parkID'].notna()) & (
-            (self.activities['timedelta'] / np.timedelta64(1, 's')) <= self.gridConfig['minimumParkingTime'])), 'ratedPower'] = 0
+            (self.activities['timedelta'] / np.timedelta64(1, 's')) <= self.appConfig["gridModelers"]['minimumParkingTime'])), 'ratedPower'] = 0
         return self.activities
 
     def assignGrid(self):
@@ -129,10 +127,10 @@ class GridModeler:
         :param acts [bool]: Should electric losses in the charging equipment be considered?
         :param losses [bool]: Should electric losses in the charging equipment be considered?
         """
-        if self.gridConfig['losses']:
+        if self.appConfig["gridModelers"]['losses']:
             self.activities['availablePower'] = self.activities['ratedPower'] - (
                 self.activities['ratedPower'] * self.activities['ratedPower'].apply(
-                    lambda x: self.gridConfig['loss_factor'][f'rated_power_{str(x)}']))
+                    lambda x: self.appConfig["gridModelers"]['loss_factor'][f'rated_power_{str(x)}']))
         else:
             self.activities['availablePower'] = self.activities['ratedPower']
         return self.activities
