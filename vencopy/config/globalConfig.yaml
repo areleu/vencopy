@@ -19,6 +19,15 @@ labels:
     outputFileName: vencopy
     strAdd:
 
+writeOutputToDisk:
+    parseOutput: False
+    gridOutput: False
+    flexOutput: False
+    diaryOutput: False
+    aggregatorOutput: True
+    formatterOutput: True
+    normaliserOutput: True
+
 pathRelative:
     plots: ./output/evaluator/
     parseOutput: ./output/dataParser/

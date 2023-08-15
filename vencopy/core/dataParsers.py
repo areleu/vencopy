@@ -473,7 +473,7 @@ class DataParser:
 
         Args:
             dat (pd.DataFrame): A trip data set containing consecutive trips containing at least the columns id_col,
-                timestampStart, timestampEnd. 
+                timestampStart, timestampEnd.
             id_col (str): Column that differentiates units of trips e.g. daily trips carried out by the same vehicle.
             period (int): Forward looking period to compare trip overlap. Should be the maximum number of trip that one
                 vehicle carries out in a time interval (e.g. day) in the data set.
@@ -515,14 +515,15 @@ class DataParser:
         raise NotImplementedError("Implement process method for DataParser.")
 
     def writeOutput(self):
-        root = Path(self.localPathConfig["pathAbsolute"]["vencoPyRoot"])
-        folder = self.globalConfig["pathRelative"]["parseOutput"]
-        fileName = createFileName(
-            globalConfig=self.globalConfig,
-            fileNameID="outputDataParser",
-            datasetID=self.datasetID,
-        )
-        writeOut(data=self.activities, path=root / folder / fileName)
+        if self.globalConfig["writeOutputToDisk"]["parseOutput"]:
+            root = Path(self.localPathConfig["pathAbsolute"]["vencoPyRoot"])
+            folder = self.globalConfig["pathRelative"]["parseOutput"]
+            fileName = createFileName(
+                globalConfig=self.globalConfig,
+                fileNameID="outputDataParser",
+                datasetID=self.datasetID,
+            )
+            writeOut(data=self.activities, path=root / folder / fileName)
 
 
 class ParkInference:
@@ -546,7 +547,7 @@ class ParkInference:
         day?
         """
         self.activities = activities
-        
+
         splitOvernightTrips = self.parse_config['splitOvernightTrips']
         self.__copyRows()
         self.__addUtilAttributes()
@@ -807,7 +808,7 @@ class OvernightSplitter:
         sum of all distances after filtering'.
         """
         self.activities = activities
-        
+
         # Split overnight trips and add next day distance in the morning (tripID=0)
         isONTrip, overnightTripsAdd = self.__getOvernightActs()
         overnightTripsAddTS = self.__adjustONTimestamps(trips=overnightTripsAdd)
@@ -1408,6 +1409,7 @@ class ParseMiD(IntermediateParsing):
         self._filterConsistentHours()
         self.activities = self.parkInference.addParkingRows(activities=self.activities)
         self._cleanupDataset()
+        self.writeOutput()
         print("Parsing MiD dataset completed.")
         return self.activities
 
@@ -1565,6 +1567,7 @@ class ParseVF(IntermediateParsing):
         self._addParkingRows()
         self._subsetVehicleSegment()
         self._cleanupDataset()
+        self.writeOutput()
         print("Parsing VF dataset completed.")
         return self.activities
 
@@ -1704,6 +1707,7 @@ class ParseKiD(IntermediateParsing):
         self._addParkingRows()
         self._subsetVehicleSegment()
         self._cleanupDataset()
+        self.writeOutput()
         print("Parsing KiD dataset completed.")
         return self.activities
 

@@ -1168,15 +1168,16 @@ class TimeDiscretiser:
         return s
 
     def _writeOutput(self):
-        root = Path(self.localPathConfig["pathAbsolute"]["vencoPyRoot"])
-        folder = self.globalConfig["pathRelative"]["diaryOutput"]
-        fileName = createFileName(
-            globalConfig=self.globalConfig,
-            manualLabel=self.columnToDiscretise,
-            fileNameID="outputDiaryBuilder",
-            datasetID=self.datasetID,
-        )
-        writeOut(data=self.activities, path=root / folder / fileName)
+        if self.globalConfig["writeOutputToDisk"]["diaryOutput"]:
+            root = Path(self.localPathConfig["pathAbsolute"]["vencoPyRoot"])
+            folder = self.globalConfig["pathRelative"]["diaryOutput"]
+            fileName = createFileName(
+                globalConfig=self.globalConfig,
+                manualLabel=self.columnToDiscretise,
+                fileNameID="outputDiaryBuilder",
+                datasetID=self.datasetID,
+            )
+            writeOut(data=self.activities, path=root / folder / fileName)
 
     def discretise(self, profile, profileName: str, method: str):
         self.columnToDiscretise: Optional[str] = profileName

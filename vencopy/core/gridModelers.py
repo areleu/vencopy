@@ -144,11 +144,12 @@ class GridModeler:
         return self.activities
 
     def writeOutput(self):
-        root = Path(self.localPathConfig['pathAbsolute']['vencoPyRoot'])
-        folder = self.globalConfig['pathRelative']['gridOutput']
-        fileName = createFileName(globalConfig=self.globalConfig, manualLabel='', fileNameID='outputGridModeler',
-                                  datasetID=self.datasetID)
-        writeOut(data=self.activities, path=root / folder / fileName)
+        if self.globalConfig["writeOutputToDisk"]["gridOutput"]:
+            root = Path(self.localPathConfig['pathAbsolute']['vencoPyRoot'])
+            folder = self.globalConfig['pathRelative']['gridOutput']
+            fileName = createFileName(globalConfig=self.globalConfig, manualLabel='', fileNameID='outputGridModeler',
+                                      datasetID=self.datasetID)
+            writeOut(data=self.activities, path=root / folder / fileName)
 
     def removeActsNotEndingHome(self):
         if self.datasetID in ["MiD17", "VF"]:

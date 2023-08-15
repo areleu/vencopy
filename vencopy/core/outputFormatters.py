@@ -44,13 +44,14 @@ class OutputFormatter():
                     self.timeIndex))) - 1) * 365).index, inplace=True)
 
     def _writeOutput(self):
-        root = Path(self.localPathConfig['pathAbsolute']['vencoPyRoot'])
-        folder = self.globalConfig['pathRelative']['formatterOutput']
+        if self.globalConfig["writeOutputToDisk"]["formatterOutput"]:
+            root = Path(self.localPathConfig['pathAbsolute']['vencoPyRoot'])
+            folder = self.globalConfig['pathRelative']['formatterOutput']
 
-        fileName = createFileName(globalConfig=self.globalConfig, manualLabel=(
-            '_' + self.profileName + ''),
-            fileNameID='outputOutputFormatter', datasetID=self.datasetID)
-        writeOut(data=self.profile, path=root / folder / fileName)
+            fileName = createFileName(globalConfig=self.globalConfig, manualLabel=(
+                '_' + self.profileName + ''),
+                fileNameID='outputOutputFormatter', datasetID=self.datasetID)
+            writeOut(data=self.profile, path=root / folder / fileName)
 
     def createTimeseries(self):
         profiles = (self.drain, self.uncontrolledCharge, self.chargingPower,
