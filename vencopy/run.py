@@ -40,32 +40,30 @@ if __name__ == "__main__":
     vpData = parseData(configDict=configDict)
     vpData.process()
 
-    vpGrid = GridModeler(
-        configDict=configDict,
-        activities=vpData.activities
-    )
+    vpGrid = GridModeler(configDict=configDict, activities=vpData.activities)
     vpGrid.assignGrid()
 
-    vpFlex = FlexEstimator(
-        configDict=configDict, activities=vpGrid.activities
-    )
+    vpFlex = FlexEstimator(configDict=configDict, activities=vpGrid.activities)
     vpFlex.estimateTechnicalFlexibilityIterating()
 
     vpDiary = DiaryBuilder(configDict=configDict, activities=vpFlex.activities)
     vpDiary.createDiaries()
 
-    vpProfile = ProfileAggregator(
-        configDict=configDict, activities=vpDiary.activities, profiles=vpDiary
-    )
+    vpProfile = ProfileAggregator(configDict=configDict, activities=vpDiary.activities, profiles=vpDiary)
     vpProfile.aggregateProfile()
 
     vpOutput = OutputFormatter(configDict=configDict, profiles=vpProfile)
     vpOutput.createTimeseries()
 
-    vpNormProf = Normalizer(
-        configDict=configDict, profiles=vpOutput
+    vpNormProf = Normalizer(configDict=configDict, profiles=vpOutput)
+    vpNormProf.normalize(
+        flow_profiles={"drain": vpOutput.drain, "uncontrolledCharge": vpOutput.uncontrolledCharge},
+        state_profiles={
+            "maxBatteryLevel": vpOutput.maxBatteryLevelWeekly,
+            "minBatteryLevel": vpOutput.minBatteryLevelWeekly,
+        },
+        capacity_profiles={"chargeCapacity": vpOutput.chargingPower},
     )
-    vpNormProf.normalize()
 
     # vpEval = Evaluator(configDict=configDict, parseData=pd.Series(data=vpData, index=[datasetID]))
     # vpEval.plotParkingAndPowers(vpGrid=vpGrid)
