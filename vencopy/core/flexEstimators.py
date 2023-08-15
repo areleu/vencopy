@@ -19,7 +19,6 @@ class FlexEstimator:
         self.datasetID = configDict["globalConfig"]["dataset"]
         self.flexConfig = configDict['flexConfig']
         self.globalConfig = configDict['globalConfig']
-        self.localPathConfig = configDict['localPathConfig']
         self.upperBatLev = self.flexConfig[
             'Battery_capacity'] * self.flexConfig['Maximum_SOC']
         self.lowerBatLev = self.flexConfig[
