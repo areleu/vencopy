@@ -502,7 +502,7 @@ class ParkInference:
     def addParkingRows(self, activities: pd.DataFrame):
         """
         Wrapper function generating park activity rows between the trip data from the original MID dataset. Some
-        utility attributes are being added such as isFirstActivity, isLastActivity or the hhPersonID of the next and
+        utility attributes are being added such as isFirstActivity, isLastActivity or the uniqueID of the next and
         previous activity. Redundant time observations are dropped after timestamp creation for start and end time of
         each activity. Overnight trips (e.g. extending from 23:00 at survey day to 1:30 on the consecutive day) are
         split up into two trips. The first one extends to the end of the day (00:00) and the other one is appended
@@ -1402,6 +1402,7 @@ class ParseVF(IntermediateParsing):
         super().__init__(
             configDict=configDict, datasetID=datasetID, debug=debug, loadEncrypted=loadEncrypted
         )
+        self.parkInference = ParkInference(configDict=configDict)
 
     def _loadData(self):
         """
@@ -1529,7 +1530,7 @@ class ParseVF(IntermediateParsing):
         self._checkFilterDict()
         self._filter(self.filterDict)
         self._filterConsistentHours()
-        self._addParkingRows()
+        self.activities = self.parkInference.addParkingRows(activities=self.activities)
         self._subsetVehicleSegment()
         self._cleanupDataset()
         self.writeOutput()
@@ -1552,6 +1553,7 @@ class ParseKiD(IntermediateParsing):
             loadEncrypted=loadEncrypted,
             debug=debug
         )
+        self.parkInference = ParkInference(configDict=configDict)
 
     def _loadData(self):
         rawDataPathTrips = (
@@ -1669,7 +1671,7 @@ class ParseKiD(IntermediateParsing):
         self._checkFilterDict()
         self._filter(self.filterDict)
         self._filterConsistentHours()
-        self._addParkingRows()
+        self.activities = self.parkInference.addParkingRows(activities=self.activities)
         self._subsetVehicleSegment()
         self._cleanupDataset()
         self.writeOutput()
