@@ -21,13 +21,11 @@ class DiaryBuilder:
     def __init__(
         self, configDict: dict, activities: pd.DataFrame, isWeekDiary: bool = False
     ):
-        self.diaryConfig = configDict["diaryConfig"]
-        self.globalConfig = configDict["globalConfig"]
-        self.localPathConfig = configDict["localPathConfig"]
-        self.flexConfig = configDict["flexConfig"]
-        self.datasetID = configDict["globalConfig"]["dataset"]
+        self.devConfig = configDict["devConfig"]
+        self.appConfig = configDict["appConfig"]
+        self.datasetID = configDict["appConfig"]["global"]["dataset"]
         self.activities = activities
-        self.deltaTime = configDict["diaryConfig"]["TimeDelta"]
+        self.deltaTime = configDict["appConfig"]["diaryBuilders"]["TimeDelta"]
         self.isWeekDiary = isWeekDiary
         self._updateActivities()
         self.drain = None
@@ -36,9 +34,8 @@ class DiaryBuilder:
         self.maxBatteryLevel = None
         self.minBatteryLevel = None
         self.distributor = TimeDiscretiser(datasetID=self.datasetID,
-                                           globalConfig=self.globalConfig,
-                                           localPathConfig=self.localPathConfig,
-                                           flexConfig=self.flexConfig,
+                                           devConfig=self.devConfig,
+                                           appConfig=self.appConfig,
                                            activities=self.activities,
                                            dt=self.deltaTime,
                                            isWeek=isWeekDiary)
@@ -583,9 +580,8 @@ class TimeDiscretiser:
             activities: pd.DataFrame,
             dt: int,
             datasetID: str,
-            globalConfig: dict,
-            localPathConfig: dict,
-            flexConfig: dict,
+            appConfig: dict,
+            devPathConfig: dict,
             isWeek: bool = False):
         """
         Class for discretisation of activities to fixed temporal resolution

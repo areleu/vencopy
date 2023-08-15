@@ -6,9 +6,8 @@
 
 # This config holds specifications for the venco.py development.
 
-globalConfig:
+global:
   pathRelative:
-      plots: ./output/evaluator/
       parseOutput: ./output/dataParser/
       diaryOutput: ./output/diaryBuilder/
       gridOutput: ./output/gridModeler/
@@ -35,7 +34,7 @@ globalConfig:
     VF:
         tripsDataRaw: MiD2017_Wege.dta
         vehiclesDataRaw: tripDataMergedWVehicleData.csv
-  DiskFileNames:
+  diskFileNames:
     outputDataParser: vencopyOutputDataParser
     outputGridModeler: vencopyOutputGridModeler
     outputFlexEstimator: vencopyOutputFlexEstimator
