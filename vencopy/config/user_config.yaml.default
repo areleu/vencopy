@@ -20,13 +20,10 @@ global:
       formatterOutput: True
       normaliserOutput: True
   pathAbsolute:
-      MiD08:
-      MiD17:
-      KiD:
-      VF:
-      VM4:
-      UK:
-      vencopyRoot:  
+      MiD08: PATH_TO_DATA_FOLDER
+      MiD17: PATH_TO_DATA_FOLDER  # e.g. C:/MiD/proprietary/B2/STATA
+      KiD: PATH_TO_DATA_FOLDER 
+      vencopyRoot: [USER FOLDER ROOT]
 
 
 dataParsers:
