@@ -59,8 +59,8 @@ if __name__ == "__main__":
     vpNormProf.normalize(
         flow_profiles={"drain": vpOutput.drain, "uncontrolledCharge": vpOutput.uncontrolledCharge},
         state_profiles={
-            "maxBatteryLevel": vpOutput.maxBatteryLevelWeekly,
-            "minBatteryLevel": vpOutput.minBatteryLevelWeekly,
+            "maxBatteryLevel": vpOutput.maxBatteryLevel,
+            "minBatteryLevel": vpOutput.minBatteryLevel,
         },
         capacity_profiles={"chargeCapacity": vpOutput.chargingPower},
     )
