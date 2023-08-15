@@ -164,12 +164,13 @@ class Aggregator():
                        self.weekdayProfiles[7]], ignore_index=True))
 
     def _writeOutput(self):
-        root = Path(self.localPathConfig['pathAbsolute']['vencoPyRoot'])
-        folder = self.globalConfig['pathRelative']['aggregatorOutput']
-        fileName = createFileName(globalConfig=self.globalConfig, manualLabel=(
-            '_' + self.profileName + 'Week'),
-            fileNameID='outputProfileAggregator', datasetID=self.datasetID)
-        writeOut(data=self.weeklyProfile, path=root / folder / fileName)
+        if self.globalConfig["writeOutputToDisk"]["aggregatorOutput"]:
+            root = Path(self.localPathConfig['pathAbsolute']['vencoPyRoot'])
+            folder = self.globalConfig['pathRelative']['aggregatorOutput']
+            fileName = createFileName(globalConfig=self.globalConfig, manualLabel=(
+                '_' + self.profileName + 'Week'),
+                fileNameID='outputProfileAggregator', datasetID=self.datasetID)
+            writeOut(data=self.weeklyProfile, path=root / folder / fileName)
 
     def performAggregation(self, profile: pd.DataFrame, profileName: str, method: str):
         self.profile = profile

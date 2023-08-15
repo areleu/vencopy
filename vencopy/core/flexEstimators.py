@@ -417,11 +417,12 @@ class FlexEstimator:
         return actsFilt.reset_index()
 
     def writeOutput(self):
-        root = Path(self.localPathConfig['pathAbsolute']['vencoPyRoot'])
-        folder = self.globalConfig['pathRelative']['flexOutput']
-        fileName = createFileName(globalConfig=self.globalConfig, manualLabel='', file='outputFlexEstimator',
-                                  datasetID=self.datasetID)
-        writeOut(data=self.activities, path=root / folder / fileName)
+        if self.globalConfig["writeOutputToDisk"]["flexOutput"]:
+            root = Path(self.localPathConfig['pathAbsolute']['vencoPyRoot'])
+            folder = self.globalConfig['pathRelative']['flexOutput']
+            fileName = createFileName(globalConfig=self.globalConfig, manualLabel='', file='outputFlexEstimator',
+                                    datasetID=self.datasetID)
+            writeOut(data=self.activities, path=root / folder / fileName)
 
     def estimateTechnicalFlexibility_noBoundaryConstraints(self):
         """
@@ -483,11 +484,11 @@ class FlexEstimator:
         """ A single iteration of calculation maximum battery levels, uncontrolled charging and minimum battery levels
         for each trip. Initial battery level for first iteration loop per uniqueID in index. Start battery level will be
         set to end battery level consecutively. Function operates on class attribute self.activities.
-        
+
         Args:
             maxIter (int): Maximum iteration limit if epsilon threshold is never reached.
             eps (float): Share of total aggregated battery fleet capacity (e.g. 0.01 for 1% would relate to a threshold of 100 Wh per car for a 10 kWh battery capacity.)
-            batCap (float): Average nominal battery capacity per vehicle in kWh. 
+            batCap (float): Average nominal battery capacity per vehicle in kWh.
             nVehicles (int): Number of vehicles in the empiric mobility pattern data set.
         """
         batteryLevelMaxEnd = self.upperBatLev * self.flexConfig['Start_SOC']
