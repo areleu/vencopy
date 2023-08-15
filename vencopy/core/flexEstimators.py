@@ -6,12 +6,6 @@ __birthdate__ = "21.04.2022"
 __status__ = "dev"  # options are: dev, test, prod
 __license__ = "BSD-3-Clause"
 
-# ----- imports & packages ------
-if __package__ is None or __package__ == "":
-    import sys
-    from os import path
-
-    sys.path.append(path.dirname(path.dirname(path.dirname(__file__))))
 
 from pathlib import Path
 from profilehooks import profile

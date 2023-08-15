@@ -7,13 +7,6 @@ __status__ = "test"  # options are: dev, test, prod
 __license__ = "BSD-3-Clause"
 
 
-# ----- imports & packages ------
-if __package__ is None or __package__ == "":
-    import sys
-    from os import path
-
-    sys.path.append(path.dirname(path.dirname(__file__)))
-
 import time
 from pathlib import Path
 from vencopy.core.dataParsers import parseData
@@ -22,12 +15,7 @@ from vencopy.core.gridModelers import GridModeler
 from vencopy.core.flexEstimators import FlexEstimator
 from vencopy.core.profileAggregators import ProfileAggregator
 from vencopy.core.outputFormatters import OutputFormatter
-
-# from vencopy.core.evaluators import Evaluator
-from vencopy.utils.globalFunctions import (
-    loadConfigDict,
-    createOutputFolders,
-)
+from vencopy.utils.globalFunctions import loadConfigDict, createOutputFolders
 
 if __name__ == "__main__":
     startTime = time.time()

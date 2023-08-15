@@ -6,12 +6,6 @@ __birthdate__ = "21.04.2022"
 __status__ = "dev"  # options are: dev, test, prod
 
 
-if __package__ is None or __package__ == "":
-    import sys
-    from os import path
-
-    sys.path.append(path.dirname(path.dirname(path.dirname(__file__))))
-
 import pprint
 import warnings
 from typing import Union
@@ -21,11 +15,7 @@ from zipfile import ZipFile
 import numpy as np
 import pandas as pd
 
-from vencopy.utils.globalFunctions import (
-    createFileName,
-    replace_vec,
-    writeOut,
-)
+from vencopy.utils.globalFunctions import createFileName, replace_vec, writeOut
 from vencopy.utils.globalFunctions import returnDictBottomKeys, returnDictBottomValues
 
 

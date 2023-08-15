@@ -6,11 +6,6 @@ __birthdate__ = "01.07.2022"
 __status__ = "dev"  # options are: dev, test, prod
 __license__ = "BSD-3-Clause"
 
-if __package__ is None or __package__ == "":
-    import sys
-    from os import path
-
-    sys.path.append(path.dirname(path.dirname(path.dirname(__file__))))
 
 from pathlib import Path
 
