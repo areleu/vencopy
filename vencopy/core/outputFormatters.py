@@ -31,8 +31,7 @@ class OutputFormatter():
         # shift input profiles to the right weekday and start with first bin of chosen weekday
         self.annualProfile = self.profile.iloc[(
             (startWeekday - 1) * ((len(list(self.timeIndex))) - 1)):]
-        self.annualProfile = self.annualProfile.append(
-            [self.profile] * 52, ignore_index=True)
+        self.annualProfile = pd.DataFrame(self.annualProfile.to_list() * 53)
         self.annualProfile.drop(
             self.annualProfile.tail(
                 len(self.annualProfile) - ((len(list(
@@ -42,7 +41,7 @@ class OutputFormatter():
         if self.user_config["global"]["writeOutputToDisk"]["formatterOutput"]:
             root = Path(self.user_config["global"]['pathAbsolute']['vencopyRoot'])
             folder = self.dev_config["global"]['pathRelative']['formatterOutput']
-            fileName = createFileName(dev_config=self.dev_config, user_config=self.user_config, manualLabel='', fileNameID='outputOutputFormatter',
+            fileName = createFileName(dev_config=self.dev_config, user_config=self.user_config, manualLabel=self.profileName, fileNameID='outputOutputFormatter',
                                       datasetID=self.datasetID)
             writeOut(data=self.annualProfile, path=root / folder / fileName)
 

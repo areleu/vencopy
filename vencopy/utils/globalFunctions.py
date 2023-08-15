@@ -113,8 +113,7 @@ def createFileName(dev_config: dict, user_config: dict, manualLabel: str, fileNa
     """
     if datasetID is None:
         return f"{dev_config['global']['diskFileNames'][fileNameID]}_{user_config['global']['runLabel']}_{manualLabel}.{suffix}"
-    return f"{dev_config['global']['diskFileNames'][fileNameID]}_{user_config['global']['runLabel']}_{manualLabel}" \
-           f"{datasetID}.{suffix}"
+    return f"{dev_config['global']['diskFileNames'][fileNameID]}_{user_config['global']['runLabel']}_{manualLabel}_{datasetID}.{suffix}"
 
 
 def mergeVariables(data, variableData, variables):

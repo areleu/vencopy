@@ -162,7 +162,7 @@ class Aggregator():
         if self.user_config["global"]["writeOutputToDisk"]["aggregatorOutput"]:
             root = Path(self.user_config["global"]['pathAbsolute']['vencopyRoot'])
             folder = self.dev_config["global"]['pathRelative']['aggregatorOutput']
-            fileName = createFileName(dev_config=self.dev_config, user_config=self.user_config, manualLabel='', fileNameID='outputProfileAggregator',
+            fileName = createFileName(dev_config=self.dev_config, user_config=self.user_config, manualLabel=self.profileName, fileNameID='outputProfileAggregator',
                                       datasetID=self.datasetID)
             writeOut(data=self.activities, path=root / folder / fileName)
 
