@@ -1,5 +1,4 @@
-# PyCharm project setup (.idea), jupyter notebook folders and precompiled bytecode (__pycache__)
-/.idea/
+# Jupyter notebook folders and precompiled bytecode (__pycache__)
 *__pycache__/
 .ipynb_checkpoints
 .pytest_cache
@@ -10,36 +9,28 @@
 /dist
 
 # Old folder before time-implementation
-/vencopy/classes 
+/vencopy/classes
 /picklefiles/
 
 # log files
 debug.log
 Makefile
 make.bat
+/test
 
 # Git version conflict files
 *.py.orig
 
 # Output folders and checkpoint files such as pickle and HDF5 files
 /vencopy/output/*
-/vencopy/snippets/out
+/vencopy/snippets
 *.p
 *.h5f
 
-# files with local paths
+# files with user-specific local paths
 vencopy/config/localPathConfig.yaml
 
 # VS-Code
 .vscode
 /docs/_build/
 *.code-workspace
-clusters.py
-clusters.csv
-plots.ipynb
-
-# Verification notebook
-verificationTimeBranch.ipynb
-
-# Old snippets on fix hourly resolution
-vencopy/snippets/run_oldVP.py
