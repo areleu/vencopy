@@ -20,20 +20,10 @@ global:
       formatterOutput: True
       normaliserOutput: True
   pathAbsolute:
-<<<<<<< Updated upstream:vencopy/config/user_config.yaml.default
       MiD08: PATH_TO_DATA_FOLDER
       MiD17: PATH_TO_DATA_FOLDER  # e.g. C:/MiD/proprietary/B2/STATA
-      KiD: PATH_TO_DATA_FOLDER 
+      KiD: PATH_TO_DATA_FOLDER
       vencopyRoot: [USER FOLDER ROOT]
-=======
-    MiD08: C:/work/Data/MiD08/MiD 2008_DVD/MiD 2008_DVD/Daten/STATA/STATA_Public Use File
-    MiD17: C:/work/Data/MiD17/B2_Regional-DatensatzpaketEncrypted/STATA
-    KiD: C:/work/Data/KiD/KiD2010_public_use_file/Daten/05_STATA/05-01_STATA-KiD2010_public_use_file
-    VF: C:/work/Data/MiD17/B1_Standard-DatensatzpaketEncrypted/STATA
-    VM4: C:/work/Data/VMo4Orte
-    UK: C:/work/Data/UK
-    vencopyRoot: C:/work/VencoPy/VencoPy_internal/vencopy/vencopy
->>>>>>> Stashed changes:vencopy/config/user_config.yaml
 
 
 dataParsers:
