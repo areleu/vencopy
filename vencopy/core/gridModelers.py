@@ -136,10 +136,10 @@ class GridModeler:
         return self.activities
 
     def _writeOutput(self):
-        if self.globalConfig["writeOutputToDisk"]["gridOutput"]:
-            root = Path(self.localPathConfig['pathAbsolute']['vencoPyRoot'])
-            folder = self.globalConfig['pathRelative']['gridOutput']
-            fileName = createFileName(globalConfig=self.globalConfig, manualLabel='', fileNameID='outputGridModeler',
+        if self.devConfig["global"]["writeOutputToDisk"]["gridOutput"]:
+            root = Path(self.appConfig["global"]['pathAbsolute']['vencopyRoot'])
+            folder = self.devConfig["global"]['pathRelative']['gridOutput']
+            fileName = createFileName(appConfig=self.appConfig, manualLabel='', fileNameID='outputGridModeler',
                                       datasetID=self.datasetID)
             writeOut(data=self.activities, path=root / folder / fileName)
 

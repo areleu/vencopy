@@ -482,7 +482,7 @@ class DataParser:
 
     def writeOutput(self):
         if self.appConfig["global"]["writeOutputToDisk"]["parseOutput"]:
-            root = Path(self.appConfig["global"]["pathAbsolute"]["vencoPyRoot"])
+            root = Path(self.appConfig["global"]["pathAbsolute"]["vencopyRoot"])
             folder = self.devConfig["global"]["pathRelative"]["parseOutput"]
             fileName = createFileName(
                 globalConfig=self.appConfig["global"],

@@ -410,11 +410,11 @@ class FlexEstimator:
         return actsFilt.reset_index()
 
     def _writeOutput(self):
-        if self.globalConfig["writeOutputToDisk"]["flexOutput"]:
-            root = Path(self.localPathConfig['pathAbsolute']['vencoPyRoot'])
-            folder = self.globalConfig['pathRelative']['flexOutput']
-            fileName = createFileName(globalConfig=self.globalConfig, manualLabel='', file='outputFlexEstimator',
-                                    datasetID=self.datasetID)
+        if self.devConfig["global"]["writeOutputToDisk"]["flexOutput"]:
+            root = Path(self.appConfig["global"]['pathAbsolute']['vencopyRoot'])
+            folder = self.devConfig["global"]['pathRelative']['flexOutput']
+            fileName = createFileName(appConfig=self.appConfig, manualLabel='', fileNameID='outputFlexEstimator',
+                                      datasetID=self.datasetID)
             writeOut(data=self.activities, path=root / folder / fileName)
 
     def estimateTechnicalFlexibility_noBoundaryConstraints(self):
