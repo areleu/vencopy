@@ -378,9 +378,9 @@ class DataParser:
             data set.
         """
         complexFilters = pd.DataFrame(index=self.activities.index)
-        complexFilters = complexFilters.join(self.__filterInconsistentSpeedTrips())
-        complexFilters = complexFilters.join(self.__filterInconsistentTravelTimes())
-        complexFilters = complexFilters.join(self.__filterOverlappingTrips())
+        complexFilters = complexFilters.join(self._filterInconsistentSpeedTrips())
+        complexFilters = complexFilters.join(self._filterInconsistentTravelTimes())
+        complexFilters = complexFilters.join(self._filterOverlappingTrips())
         return complexFilters
 
     def _filterInconsistentSpeedTrips(self):
