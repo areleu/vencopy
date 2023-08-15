@@ -104,7 +104,7 @@ class GridModeler:
     def assignGrid(self):
         """
         Wrapper function for grid assignment. The number of iterations for
-        assignGridViaProbabilities() and transactionStartHour() and seed for
+        assignGridViaProbabilities() and seed for
         reproduction of random numbers can be specified here.
         """
         if self.gridModel == 'simple':
