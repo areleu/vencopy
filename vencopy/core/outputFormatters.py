@@ -17,7 +17,7 @@ class OutputFormatter():
         self.appConfig = configDict['appConfig']
         self.devConfig = configDict['devConfig']
         self.datasetID = self.appConfig["global"]["dataset"]
-        self.deltaTime = self.appConfig['dataParsers']['TimeDelta']
+        self.deltaTime = self.appConfig['diaryBuilders']['TimeDelta']
         self.timeIndex = list(pd.timedelta_range(
             start='00:00:00', end='24:00:00', freq=f'{self.deltaTime}T'))
         self.drain = profiles.drainWeekly
@@ -44,7 +44,7 @@ class OutputFormatter():
             folder = self.devConfig["global"]['pathRelative']['formatterOutput']
             fileName = createFileName(devConfig=self.devConfig, appConfig=self.appConfig, manualLabel='', fileNameID='outputOutputFormatter',
                                       datasetID=self.datasetID)
-            writeOut(data=self.activities, path=root / folder / fileName)
+            writeOut(data=self.annualProfile, path=root / folder / fileName)
 
     def createTimeseries(self):
         profiles = (self.drain, self.uncontrolledCharge, self.chargingPower,

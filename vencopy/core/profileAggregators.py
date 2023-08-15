@@ -21,8 +21,8 @@ class ProfileAggregator():
         self.appConfig = configDict['appConfig']
         self.devConfig = configDict['devConfig']
         self.datasetID = self.appConfig["global"]["dataset"]
-        self.weighted = self.appConfig["global"]['weightFlowProfiles']
-        self.alpha = self.appConfig["global"]['alpha']
+        self.weighted = self.appConfig["profileAggregators"]['weightFlowProfiles']
+        self.alpha = self.appConfig["profileAggregators"]['alpha']
         self.activities = activities
         self.profiles = profiles
         self.weights = self.activities.loc[
@@ -159,7 +159,7 @@ class Aggregator():
                        self.weekdayProfiles[7]], ignore_index=True))
 
     def _writeOutput(self):
-        if self.devConfig["global"]["writeOutputToDisk"]["aggregatorOutput"]:
+        if self.appConfig["global"]["writeOutputToDisk"]["aggregatorOutput"]:
             root = Path(self.appConfig["global"]['pathAbsolute']['vencopyRoot'])
             folder = self.devConfig["global"]['pathRelative']['aggregatorOutput']
             fileName = createFileName(devConfig=self.devConfig, appConfig=self.appConfig, manualLabel='', fileNameID='outputProfileAggregator',
