@@ -35,36 +35,18 @@ class DiaryBuilder:
         self.deltaTime = configDict["diaryConfig"]["TimeDelta"]
         self.isWeekDiary = isWeekDiary
         self._updateActivities()
-        self.distributedActivities = TimeDiscretiser(
-            datasetID=self.datasetID,
-            globalConfig=self.globalConfig,
-            localPathConfig=self.localPathConfig,
-            flexConfig=self.flexConfig,
-            activities=self.activities,
-            dt=self.deltaTime,
-            isWeek=isWeekDiary,
-            method="distribute",
-        )
-        self.selectedActivities = TimeDiscretiser(
-            datasetID=self.datasetID,
-            globalConfig=self.globalConfig,
-            localPathConfig=self.localPathConfig,
-            flexConfig=self.flexConfig,
-            activities=self.activities,
-            dt=self.deltaTime,
-            isWeek=isWeekDiary,
-            method="select",
-        )
-        self.dynamicActivities = TimeDiscretiser(
-            datasetID=self.datasetID,
-            globalConfig=self.globalConfig,
-            localPathConfig=self.localPathConfig,
-            flexConfig=self.flexConfig,
-            activities=self.activities,
-            dt=self.deltaTime,
-            isWeek=isWeekDiary,
-            method="dynamic",
-        )
+        self.drain = None
+        self.chargingPower = None
+        self.uncontrolledCharge = None
+        self.maxBatteryLevel = None
+        self.minBatteryLevel = None
+        self.distributor = TimeDiscretiser(datasetID=self.datasetID,
+                                           globalConfig=self.globalConfig,
+                                           localPathConfig=self.localPathConfig,
+                                           flexConfig=self.flexConfig,
+                                           activities=self.activities,
+                                           dt=self.deltaTime,
+                                           isWeek=isWeekDiary)
 
     def _updateActivities(self):
         """
@@ -102,23 +84,11 @@ class DiaryBuilder:
 
     def createDiaries(self):
         start_time = time.time()
-        self.drain = self.distributedActivities.discretise(column="drain")
-        self.chargingPower = self.selectedActivities.discretise(
-            column="availablePower")
-        self.maxBatteryLevel = self.dynamicActivities.discretise(
-            column="maxBatteryLevelStart"
-        )
-        self.minBatteryLevel = self.dynamicActivities.discretise(
-            column="minBatteryLevelEnd"
-        )
-        self.uncontrolledCharge = self.dynamicActivities.discretise(
-            column="uncontrolledCharge"
-        )
-
-        # Redundant, was only used for debugging
-        self.uncontrolledCharge_DiscrSOC = self.uncontrolledCharging(
-            maxBatLev=self.maxBatteryLevel)
-
+        self.drain = self.distributor.discretise(profile=self.drain, profileName="drain", method="distribute")
+        self.chargingPower = self.distributor.discretise(profile=self.chargingPower, profileName="availablePower", method="select")
+        self.uncontrolledCharge = self.distributor.discretise(profile=self.uncontrolledCharge, profileName="uncontrolledCharge", method="dynamic")
+        self.maxBatteryLevel = self.distributor.discretise(profile=self.maxBatteryLevel, profileName="maxBatteryLevelStart", method="dynamic")
+        self.minBatteryLevel = self.distributor.discretise(profile=self.minBatteryLevel, profileName="minBatteryLevelEnd", method="dynamic")
         needed_time = time.time() - start_time
         print(f"Needed time to discretise all columns: {needed_time}.")
 
@@ -618,7 +588,6 @@ class TimeDiscretiser:
             activities: pd.DataFrame,
             dt: int,
             datasetID: str,
-            method: str,
             globalConfig: dict,
             localPathConfig: dict,
             flexConfig: dict,
@@ -647,11 +616,9 @@ class TimeDiscretiser:
             act (pd.dataFrame): _description_
             column (str): String specifying the column of the activities data set that should be discretized
             dt (pd.TimeDelta): _description_
-            method (str): The discretisation method. Must be one of 'distribute' or 'select'.
         """
         self.activities = activities
         self.datasetID = datasetID
-        self.method = method
         self.dataToDiscretise = None
         self.localPathConfig = localPathConfig
         self.globalConfig = globalConfig
@@ -704,7 +671,6 @@ class TimeDiscretiser:
         self._correctValues()
         self._correctTimestamp()
 
-    # FIXME: Rename to selectColumns?
     def _removeColumns(self):
         """
         Removes additional columns not used in the TimeDiscretiser class.
@@ -1212,14 +1178,16 @@ class TimeDiscretiser:
         )
         writeOut(data=self.activities, path=root / folder / fileName)
 
-    def discretise(self, column: str):
-        self.columnToDiscretise: Optional[str] = column
+    def discretise(self, profile, profileName: str, method: str):
+        self.columnToDiscretise: Optional[str] = profileName
+        self.dataToDiscretise = profile
+        self.method = method
         print(f"Starting to discretise {self.columnToDiscretise}.")
         startTimeDiaryBuilder = time.time()
         self._datasetCleanup()
         self._identifyBinShares()
         self._allocateBinShares()
-        # self._writeOutput()
+        self._writeOutput()
         print(f"Discretisation finished for {self.columnToDiscretise}.")
         elapsedTimeDiaryBuilder = time.time() - startTimeDiaryBuilder
         print(f"Needed time to discretise {self.columnToDiscretise}: {elapsedTimeDiaryBuilder}.")
