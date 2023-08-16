@@ -43,11 +43,5 @@ if __name__ == "__main__":
     vpPost.week_to_annual(profiles=vpProfile)
     vpPost.normalize()
 
-    # vpEval = Evaluator(configDict=configDict, parseData=pd.Series(data=vpData, index=[datasetID]))
-    # vpEval.plotParkingAndPowers(vpGrid=vpGrid)
-    # vpEval.hourlyAggregates = vpEval.calcVariableSpecAggregates(by=["tripStartWeekday"])
-    # vpEval.plotAggregates()
-    # vpEval.plotProfiles(flexEstimator=vpFlex)
-
     elapsedTime = time.time() - startTime
     print(f"Elapsed time: {elapsedTime}.")
