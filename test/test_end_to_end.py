@@ -1,6 +1,6 @@
 import pytest
 import pandas as pd
-from vencopy.workflows import standard
+from vencopy.deprecated.workflows import standard
 
 @pytest.fixture(scope='module')
 def ref():

@@ -6,11 +6,6 @@ __birthdate__ = "01.07.2022"
 __status__ = "dev"  # options are: dev, test, prod
 __license__ = "BSD-3-Clause"
 
-if __package__ is None or __package__ == "":
-    import sys
-    from os import path
-
-    sys.path.append(path.dirname(path.dirname(path.dirname(__file__))))
 
 from pathlib import Path
 
@@ -26,45 +21,24 @@ class DiaryBuilder:
     def __init__(
         self, configDict: dict, activities: pd.DataFrame, isWeekDiary: bool = False
     ):
-        self.diaryConfig = configDict["diaryConfig"]
-        self.globalConfig = configDict["globalConfig"]
-        self.localPathConfig = configDict["localPathConfig"]
-        self.flexConfig = configDict["flexConfig"]
-        self.datasetID = configDict["globalConfig"]["dataset"]
+        self.dev_config = configDict["dev_config"]
+        self.user_config = configDict["user_config"]
+        self.datasetID = configDict["user_config"]["global"]["dataset"]
         self.activities = activities
-        self.deltaTime = configDict["diaryConfig"]["TimeDelta"]
+        self.deltaTime = configDict["user_config"]["diaryBuilders"]["TimeDelta"]
         self.isWeekDiary = isWeekDiary
         self._updateActivities()
-        self.distributedActivities = TimeDiscretiser(
-            datasetID=self.datasetID,
-            globalConfig=self.globalConfig,
-            localPathConfig=self.localPathConfig,
-            flexConfig=self.flexConfig,
-            activities=self.activities,
-            dt=self.deltaTime,
-            isWeek=isWeekDiary,
-            method="distribute",
-        )
-        self.selectedActivities = TimeDiscretiser(
-            datasetID=self.datasetID,
-            globalConfig=self.globalConfig,
-            localPathConfig=self.localPathConfig,
-            flexConfig=self.flexConfig,
-            activities=self.activities,
-            dt=self.deltaTime,
-            isWeek=isWeekDiary,
-            method="select",
-        )
-        self.dynamicActivities = TimeDiscretiser(
-            datasetID=self.datasetID,
-            globalConfig=self.globalConfig,
-            localPathConfig=self.localPathConfig,
-            flexConfig=self.flexConfig,
-            activities=self.activities,
-            dt=self.deltaTime,
-            isWeek=isWeekDiary,
-            method="dynamic",
-        )
+        self.drain = None
+        self.chargingPower = None
+        self.uncontrolledCharge = None
+        self.maxBatteryLevel = None
+        self.minBatteryLevel = None
+        self.distributor = TimeDiscretiser(datasetID=self.datasetID,
+                                           dev_config=self.dev_config,
+                                           user_config=self.user_config,
+                                           activities=self.activities,
+                                           dt=self.deltaTime,
+                                           isWeek=isWeekDiary)
 
     def _updateActivities(self):
         """
@@ -102,23 +76,11 @@ class DiaryBuilder:
 
     def createDiaries(self):
         start_time = time.time()
-        self.drain = self.distributedActivities.discretise(column="drain")
-        self.chargingPower = self.selectedActivities.discretise(
-            column="availablePower")
-        self.maxBatteryLevel = self.dynamicActivities.discretise(
-            column="maxBatteryLevelStart"
-        )
-        self.minBatteryLevel = self.dynamicActivities.discretise(
-            column="minBatteryLevelEnd"
-        )
-        self.uncontrolledCharge = self.dynamicActivities.discretise(
-            column="uncontrolledCharge"
-        )
-
-        # Redundant, was only used for debugging
-        self.uncontrolledCharge_DiscrSOC = self.uncontrolledCharging(
-            maxBatLev=self.maxBatteryLevel)
-
+        self.drain = self.distributor.discretise(profile=self.drain, profileName="drain", method="distribute")
+        self.chargingPower = self.distributor.discretise(profile=self.chargingPower, profileName="availablePower", method="select")
+        self.uncontrolledCharge = self.distributor.discretise(profile=self.uncontrolledCharge, profileName="uncontrolledCharge", method="dynamic")
+        self.maxBatteryLevel = self.distributor.discretise(profile=self.maxBatteryLevel, profileName="maxBatteryLevelStart", method="dynamic")
+        self.minBatteryLevel = self.distributor.discretise(profile=self.minBatteryLevel, profileName="minBatteryLevelEnd", method="dynamic")
         needed_time = time.time() - start_time
         print(f"Needed time to discretise all columns: {needed_time}.")
 
@@ -618,10 +580,8 @@ class TimeDiscretiser:
             activities: pd.DataFrame,
             dt: int,
             datasetID: str,
-            method: str,
-            globalConfig: dict,
-            localPathConfig: dict,
-            flexConfig: dict,
+            user_config: dict,
+            dev_config: dict,
             isWeek: bool = False):
         """
         Class for discretisation of activities to fixed temporal resolution
@@ -647,15 +607,12 @@ class TimeDiscretiser:
             act (pd.dataFrame): _description_
             column (str): String specifying the column of the activities data set that should be discretized
             dt (pd.TimeDelta): _description_
-            method (str): The discretisation method. Must be one of 'distribute' or 'select'.
         """
         self.activities = activities
         self.datasetID = datasetID
-        self.method = method
         self.dataToDiscretise = None
-        self.localPathConfig = localPathConfig
-        self.globalConfig = globalConfig
-        self.flexConfig = flexConfig
+        self.user_config = user_config
+        self.dev_config = dev_config
         self.quantum = pd.Timedelta(value=1, unit="min")
         self.dt = dt  # e.g. 15 min
         self.isWeek = isWeek
@@ -704,7 +661,6 @@ class TimeDiscretiser:
         self._correctValues()
         self._correctTimestamp()
 
-    # FIXME: Rename to selectColumns?
     def _removeColumns(self):
         """
         Removes additional columns not used in the TimeDiscretiser class.
@@ -933,8 +889,8 @@ class TimeDiscretiser:
             d.loc[d['tripID'].isna(), 'valPerBin'] = d.loc[
                 d['tripID'].isna(), 'valPerBin'].apply(
                 self.enforceBatteryLimit, how='upper',
-                lim=self.flexConfig[
-                    'Battery_capacity'] * self.flexConfig['Maximum_SOC'])
+                lim=self.user_config["flexEstimators"][
+                    'Battery_capacity'] * self.user_config["flexEstimators"]['Maximum_SOC'])
         elif valCol == "minBatteryLevelEnd":
             d['chargePerBin'
               ] = self.activities.availablePower * self.dt / 60 * -1
@@ -946,8 +902,8 @@ class TimeDiscretiser:
             d.loc[d['tripID'].isna(), 'valPerBin'] = d.loc[
                 d['tripID'].isna(), 'valPerBin'].apply(
                     self.enforceBatteryLimit, how='lower',
-                    lim=self.flexConfig[
-                        'Battery_capacity'] * self.flexConfig['Minimum_SOC'])
+                    lim=self.user_config["flexEstimators"][
+                        'Battery_capacity'] * self.user_config["flexEstimators"]['Minimum_SOC'])
 
     def increaseLevelPerBin(self,
                             socStart: float,
@@ -1164,14 +1120,6 @@ class TimeDiscretiser:
             raise ValueError(
                 f"Additional {droppedActivities} activities dropped as the sum of all {self.columnToDiscretise} activities for the specific ID was zero.")
 
-    # UNUSED
-    # def _overlappingActivities(self):
-    #     """
-    #     Implements a strategy to treat overlapping bin, especially important for lower time resolution (e.g. 1h).
-    #     """
-    #     # define other strategies to treat overlapping events here
-    #     pass
-
     def _allocateWeek(self):
         """
         Wrapper method for allocating respective values per bin to days within a week. Expects that the activities
@@ -1210,24 +1158,28 @@ class TimeDiscretiser:
         return s
 
     def _writeOutput(self):
-        root = Path(self.localPathConfig["pathAbsolute"]["vencoPyRoot"])
-        folder = self.globalConfig["pathRelative"]["diaryOutput"]
-        fileName = createFileName(
-            globalConfig=self.globalConfig,
-            manualLabel=self.columnToDiscretise,
-            fileNameID="outputDiaryBuilder",
-            datasetID=self.datasetID,
-        )
-        writeOut(data=self.activities, path=root / folder / fileName)
+        if self.user_config["global"]["writeOutputToDisk"]["diaryOutput"]:
+            root = Path(self.user_config["global"]["pathAbsolute"]["vencopyRoot"])
+            folder = self.dev_config["global"]["pathRelative"]["diaryOutput"]
+            fileName = createFileName(
+                dev_config=self.dev_config,
+                user_config=self.user_config,
+                manualLabel=self.columnToDiscretise,
+                fileNameID="outputDiaryBuilder",
+                datasetID=self.datasetID
+            )
+            writeOut(data=self.activities, path=root / folder / fileName)
 
-    def discretise(self, column: str):
-        self.columnToDiscretise: Optional[str] = column
+    def discretise(self, profile, profileName: str, method: str):
+        self.columnToDiscretise: Optional[str] = profileName
+        self.dataToDiscretise = profile
+        self.method = method
         print(f"Starting to discretise {self.columnToDiscretise}.")
         startTimeDiaryBuilder = time.time()
         self._datasetCleanup()
         self._identifyBinShares()
         self._allocateBinShares()
-        # self._writeOutput()
+        self._writeOutput()
         print(f"Discretisation finished for {self.columnToDiscretise}.")
         elapsedTimeDiaryBuilder = time.time() - startTimeDiaryBuilder
         print(f"Needed time to discretise {self.columnToDiscretise}: {elapsedTimeDiaryBuilder}.")

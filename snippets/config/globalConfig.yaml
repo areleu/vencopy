@@ -50,7 +50,6 @@ files:
         inputDataDriveProfiles: inputProfiles_Drive # inputProfiles_Drive_RUNLABEL_MiD17.csv
         inputDataPlugProfiles: inputProfiles_Plug # inputProfiles_Plug_RUNLABEL_MiD17.csv
         output: vencopy
-        transactionStartHour: inputTransactionStartHour
         vencoPyOutput: vencoPyOutput
         flexPlotName: flexProfileComparison
     MiD08:
@@ -75,7 +74,6 @@ files:
         inputDataPlugProfiles: inputProfiles_Plug
         output: vencopy
         flexPlotName: flexProfileComparison
-        transactionStartHour: transactionStartHour
         outputDataParser: vencopyOutputDataParser
         outputGridModeler: vencopyOutputGridModeler
         outputFlexEstimator: vencopyOutputFlexEstimator

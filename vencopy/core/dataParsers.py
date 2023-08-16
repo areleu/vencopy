@@ -6,12 +6,6 @@ __birthdate__ = "21.04.2022"
 __status__ = "dev"  # options are: dev, test, prod
 
 
-if __package__ is None or __package__ == "":
-    import sys
-    from os import path
-
-    sys.path.append(path.dirname(path.dirname(path.dirname(__file__))))
-
 import pprint
 import warnings
 from typing import Union
@@ -21,11 +15,7 @@ from zipfile import ZipFile
 import numpy as np
 import pandas as pd
 
-from vencopy.utils.globalFunctions import (
-    createFileName,
-    replace_vec,
-    writeOut,
-)
+from vencopy.utils.globalFunctions import createFileName, replace_vec, writeOut
 from vencopy.utils.globalFunctions import returnDictBottomKeys, returnDictBottomValues
 
 
@@ -59,14 +49,13 @@ class DataParser:
         :param datasetID: Currently, MiD08 and MiD17 are implemented as travel
                           survey data sets
         :param loadEncrypted: If True, load an encrypted ZIP file as specified
-                              in parseConfig
+                              in user_config
         """
-        self.parseConfig = configDict["parseConfig"]
-        self.localPathConfig = configDict["localPathConfig"]
-        self.globalConfig = configDict["globalConfig"]
-        self.datasetID = self.__checkDatasetID(datasetID, self.parseConfig)
-        filepath = (Path(self.localPathConfig["pathAbsolute"][self.datasetID]
-                         ) / self.globalConfig["files"][self.datasetID]["tripsDataRaw"])
+        self.user_config = configDict["user_config"]
+        self.dev_config = configDict["dev_config"]
+        self.datasetID = self.__checkDatasetID(datasetID)
+        filepath = (Path(self.user_config["global"]["pathAbsolute"][self.datasetID]
+                         ) / self.dev_config["global"]["files"][self.datasetID]["tripsDataRaw"])
         self.rawDataPath = filepath
         self.rawData = None
         self.activities = None
@@ -80,7 +69,7 @@ class DataParser:
             print(
                 f"Starting to retrieve local data file from {self.rawDataPath}.")
             self._loadData()
-        nDebugLines = configDict["globalConfig"]["nDebugLines"]
+        nDebugLines = self.user_config["global"]["nDebugLines"]
         self.rawData = self.rawData.loc[0: nDebugLines - 1, :] if debug else self.rawData.copy()
         if debug:
             print("Running in debug mode.")
@@ -122,7 +111,7 @@ class DataParser:
         Since the MiD data sets are only accessible by an extensive data
         security contract, VencoPy provides the possibility to access
         encrypted zip files. An encryption password has to be given in
-        parseConfig.yaml in order to access the encrypted file. Loaded data
+        user_config.yaml in order to access the encrypted file. Loaded data
         is stored in self.rawData
 
         :param pathToZip: path from current working directory to the zip file
@@ -136,7 +125,7 @@ class DataParser:
                     myzip.open(
                         pathInZip,
                         pwd=bytes(
-                            self.parseConfig["encryptionPW"], encoding="utf-8"),
+                            self.user_config["dataParsers"]["encryptionPW"], encoding="utf-8"),
                     ),
                     convert_categoricals=False,
                     convert_dates=False,
@@ -157,20 +146,20 @@ class DataParser:
             f"Finished loading {len(self.rawData)} rows of raw data of type {self.rawDataPath.suffix}."
         )
 
-    def __checkDatasetID(self, datasetID: str, parseConfig: dict) -> str:
+    def __checkDatasetID(self, datasetID: str) -> str:
         """
-        General check if data set ID is defined in parseConfig.yaml
+        General check if data set ID is defined in dev_config.yaml
 
         :param datasetID: list of strings declaring the datasetIDs
                           to be read in
-        :param parseConfig: A yaml config file holding a dictionary with the
+        :param user_config: A yaml config file holding a dictionary with the
                             keys 'pathRelative' and 'pathAbsolute'
         :return: Returns a string value of a mobility data
         """
-        availableDatasetIDs = parseConfig["dataVariables"]["datasetID"]
+        availableDatasetIDs = self.dev_config["dataParsers"]["dataVariables"]["datasetID"]
         assert datasetID in availableDatasetIDs, (
             f"Defined datasetID {datasetID} not specified "
-            f"under dataVariables in parseConfig. "
+            f"under dataVariables in dev_config. "
             f"Specified datasetIDs are {availableDatasetIDs}"
         )
         return datasetID
@@ -178,14 +167,14 @@ class DataParser:
     def _harmonizeVariables(self):
         """
         Harmonizes the input data variables to match internal VencoPy names
-        given as specified in the mapping in parseConfig['dataVariables'].
+        given as specified in the mapping in dev_config['dataVariables'].
         Since the MiD08 does not provide a combined household and person
         unique identifier, it is synthesized of the both IDs.
 
         :return: None
         """
         replacementDict = self._createReplacementDict(
-            self.datasetID, self.parseConfig["dataVariables"]
+            self.datasetID, self.dev_config["dataParsers"]["dataVariables"]
         )
         dataRenamed = self.activities.rename(columns=replacementDict)
         self.activities = dataRenamed
@@ -194,7 +183,7 @@ class DataParser:
     def _createReplacementDict(self, datasetID: str, dictRaw: dict) -> dict:
         """
         Creates the mapping dictionary from raw data variable names to VencoPy
-        internal variable names as specified in parseConfig.yaml
+        internal variable names as specified in dev_config.yaml
         for the specified data set.
 
         :param datasetID: list of strings declaring the datasetIDs to be read
@@ -205,7 +194,7 @@ class DataParser:
         if datasetID not in dictRaw["datasetID"]:
             raise ValueError(
                 f"Data set {datasetID} not specified in"
-                f"parseConfig variable dictionary."
+                f"dev_config variable dictionary."
             )
         listIndex = dictRaw["datasetID"].index(datasetID)
         return {val[listIndex]: key for (key, val) in dictRaw.items()}
@@ -282,7 +271,7 @@ class DataParser:
                 )
             elif iKey not in ["include", "exclude", "greaterThan", "smallerThan"]:
                 warnings.warn(
-                    f"A filter dictionary was defined in the parseConfig with an unknown filtering key."
+                    f"A filter dictionary was defined in the dev_config with an unknown filtering key."
                     f"Current filtering keys comprise include, exclude, smallerThan and greaterThan."
                     f"Continuing with ignoring the dictionary {iKey}"
                 )
@@ -290,10 +279,10 @@ class DataParser:
 
     def __setIncludeFilter(self, includeFilterDict: dict, dataIndex) -> pd.DataFrame:
         """
-        Read-in function for include filter dict from parseConfig.yaml
+        Read-in function for include filter dict from dev_config.yaml
 
         :param includeFilterDict: Dictionary of include filters defined
-                                in parseConfig.yaml
+                                in dev_config.yaml
         :param dataIndex: Index for the data frame
         :return: Returns a data frame with individuals using car
                 as a mode of transport
@@ -306,10 +295,10 @@ class DataParser:
 
     def __setExcludeFilter(self, excludeFilterDict: dict, dataIndex) -> pd.DataFrame:
         """
-        Read-in function for exclude filter dict from parseConfig.yaml
+        Read-in function for exclude filter dict from dev_config.yaml
 
         :param excludeFilterDict: Dictionary of exclude filters defined
-                                  in parseConfig.yaml
+                                  in dev_config.yaml
         :param dataIndex: Index for the data frame
         :return: Returns a filtered data frame with exclude filters
         """
@@ -321,10 +310,10 @@ class DataParser:
 
     def __setGreaterThanFilter(self, greaterThanFilterDict: dict, dataIndex):
         """
-        Read-in function for greaterThan filter dict from parseConfig.yaml
+        Read-in function for greaterThan filter dict from dev_config.yaml
 
         :param greaterThanFilterDict: Dictionary of greater than filters
-                                      defined in parseConfig.yaml
+                                      defined in dev_config.yaml
         :param dataIndex: Index for the data frame
         :return:
         """
@@ -338,7 +327,7 @@ class DataParser:
             if len(greaterElements) > 0:
                 warnings.warn(
                     f"You specified more than one value as lower limit for filtering column {greaterCol}."
-                    f"Only considering the last element given in the parseConfig."
+                    f"Only considering the last element given in the dev_config."
                 )
         return greaterThanFilterCols
 
@@ -346,10 +335,10 @@ class DataParser:
         self, smallerThanFilterDict: dict, dataIndex
     ) -> pd.DataFrame:
         """
-        Read-in function for smallerThan filter dict from parseConfig.yaml
+        Read-in function for smallerThan filter dict from dev_config.yaml
 
         :param smallerThanFilterDict: Dictionary of smaller than filters
-               defined in parseConfig.yaml
+               defined in dev_config.yaml
         :param dataIndex: Index for the data frame
         :return: Returns a data frame of trips covering
                  a distance of less than 1000 km
@@ -364,7 +353,7 @@ class DataParser:
             if len(smallerElements) > 0:
                 warnings.warn(
                     f"You specified more than one value as upper limit for filtering column {smallerCol}."
-                    f"Only considering the last element given in the parseConfig."
+                    f"Only considering the last element given in the dev_config."
                 )
         return smallerThanFilterCols
 
@@ -378,9 +367,9 @@ class DataParser:
             data set.
         """
         complexFilters = pd.DataFrame(index=self.activities.index)
-        complexFilters = complexFilters.join(self.__filterInconsistentSpeedTrips())
-        complexFilters = complexFilters.join(self.__filterInconsistentTravelTimes())
-        complexFilters = complexFilters.join(self.__filterOverlappingTrips())
+        complexFilters = complexFilters.join(self._filterInconsistentSpeedTrips())
+        complexFilters = complexFilters.join(self._filterInconsistentTravelTimes())
+        complexFilters = complexFilters.join(self._filterOverlappingTrips())
         return complexFilters
 
     def _filterInconsistentSpeedTrips(self):
@@ -397,9 +386,9 @@ class DataParser:
         )
 
         return (
-            self.activities["averageSpeed"] > self.parseConfig["filterDicts"][
+            self.activities["averageSpeed"] > self.dev_config["dataParsers"]["filterDicts"][
                 "lowerSpeedThreshold"]) & (
-            self.activities["averageSpeed"] <= self.parseConfig["filterDicts"][
+            self.activities["averageSpeed"] <= self.dev_config["dataParsers"]["filterDicts"][
                 "higherSpeedThreshold"])
 
     def _filterInconsistentTravelTimes(self):
@@ -440,30 +429,6 @@ class DataParser:
         ret.name = "noOverlapNextTrips"
         return ret
 
-    # METHOD MOST LIKELY DEPRECATED
-    # def __overlapPeriods(self, data, period) -> pd.Series:
-    #     """
-    #     New implementation of identifying trips that overlap with previous trips.
-
-    #     Args:
-    #         data (pd.DataFrame): Trip data set including the two variables timestampStart and timestampEnd
-    #         characterizing a trip
-    #         period (int): Trip identifier within trip diary in survey day to compare every trip to
-
-    #     Returns:
-    #         pd.Series: A boolean Series being True for non-overlapping trips and False for overlapping trips. Has the
-    #         same index as the MID data.
-    #     """
-    #     dat = data.copy()
-
-    #     if self.datasetID == "KiD":
-    #         tripDoesNotOverlap = self.__identifyOverlappingTrips(dat, "vehicleID", period)
-    #     else:
-    #         tripDoesNotOverlap = self.__identifyOverlappingTrips(
-    #         dat, "hhPersonID", period
-    #     )
-    #     return tripDoesNotOverlap
-
     def __identifyOverlappingTrips(
             self, dat: pd.DataFrame, period: int) -> pd.Series:
         """ Calculates a boolean vector of same length as dat that is True if the current trip does not overlap with
@@ -473,7 +438,7 @@ class DataParser:
 
         Args:
             dat (pd.DataFrame): A trip data set containing consecutive trips containing at least the columns id_col,
-                timestampStart, timestampEnd. 
+                timestampStart, timestampEnd.
             id_col (str): Column that differentiates units of trips e.g. daily trips carried out by the same vehicle.
             period (int): Forward looking period to compare trip overlap. Should be the maximum number of trip that one
                 vehicle carries out in a time interval (e.g. day) in the data set.
@@ -508,10 +473,36 @@ class DataParser:
             f"This corresponds to {lenData / len(filterData)* 100} percent of the original data."
         )
 
-    def _addParkingRows(self):
+    def process(self):
+        """
+        Wrapper function for harmonising and filtering the dataset.
+        """
+        raise NotImplementedError("Implement process method for DataParser.")
+
+    def writeOutput(self):
+        if self.user_config["global"]["writeOutputToDisk"]["parseOutput"]:
+            root = Path(self.user_config["global"]["pathAbsolute"]["vencopyRoot"])
+            folder = self.dev_config["global"]["pathRelative"]["parseOutput"]
+            fileName = createFileName(
+                dev_config=self.dev_config,
+                user_config=self.user_config,
+                fileNameID="outputDataParser",
+                datasetID=self.datasetID,
+                manualLabel=''
+            )
+            writeOut(data=self.activities, path=root / folder / fileName)
+
+
+class ParkInference:
+    def __init__(self, configDict) -> None:
+        self.user_config = configDict['user_config']
+        self.activities = None
+        self.overnightSplitter = OvernightSplitter()
+
+    def addParkingRows(self, activities: pd.DataFrame):
         """
         Wrapper function generating park activity rows between the trip data from the original MID dataset. Some
-        utility attributes are being added such as isFirstActivity, isLastActivity or the hhPersonID of the next and
+        utility attributes are being added such as isFirstActivity, isLastActivity or the uniqueID of the next and
         previous activity. Redundant time observations are dropped after timestamp creation for start and end time of
         each activity. Overnight trips (e.g. extending from 23:00 at survey day to 1:30 on the consecutive day) are
         split up into two trips. The first one extends to the end of the day (00:00) and the other one is appended
@@ -522,7 +513,8 @@ class DataParser:
         trips in such a way that the estimated trip distance the next day is appended in the morning hours of the survey
         day?
         """
-        splitOvernightTrips = self.parseConfig['splitOvernightTrips']
+        self.activities = activities
+        splitOvernightTrips = self.user_config["dataParsers"]['splitOvernightTrips']
         self.__copyRows()
         self.__addUtilAttributes()
         self.__addParkActAfterLastTrip()
@@ -535,21 +527,17 @@ class DataParser:
         self.__ONSplitDecider(split=splitOvernightTrips)  # ON = overnight
         self.__addTimeDeltaCol()
         self.__uniqueIndex()
-
-        print(
-            f'Finished activity composition with {self.activities["tripID"].fillna(0).astype(bool).sum()} trips '
-            f'and {self.activities["parkID"].fillna(0).astype(bool).sum()} parking activites.'
-        )
+        print(f'Finished activity composition with {self.activities["tripID"].fillna(0).astype(bool).sum()} trips '
+            f'and {self.activities["parkID"].fillna(0).astype(bool).sum()} parking activites.')
+        return self.activities
 
     def __copyRows(self):
         # Adding skeleton duplicate rows for parking activities
         self.activities = pd.concat(
             [self.activities] * 2).sort_index(ignore_index=True)
         self.activities["parkID"] = self.activities["tripID"]
-        self.activities.loc[range(
-            0, len(self.activities), 2), "tripID"] = pd.NA
-        self.activities.loc[range(
-            1, len(self.activities), 2), "parkID"] = pd.NA
+        self.activities.loc[range(0, len(self.activities), 2), "tripID"] = pd.NA
+        self.activities.loc[range(1, len(self.activities), 2), "parkID"] = pd.NA
 
     def __addUtilAttributes(self):
         # Adding additional attribute columns for convenience
@@ -583,26 +571,25 @@ class DataParser:
         ] = pd.NA
         self.activities["colFromIndex"] = self.activities.index
         self.activities = self.activities.sort_values(
-            by=["colFromIndex", "tripID"])
+        by=["colFromIndex", "tripID"])
 
     def _dropRedundantCols(self):
         # Clean-up of temporary redundant columns
-        self.activities.drop(
-            columns=[
-                "tripStartClock",
-                "tripEndClock",
-                "tripStartYear",
-                "tripStartMonth",
-                "tripStartWeek",
-                "tripStartHour",
-                "tripStartMinute",
-                "tripEndHour",
-                "tripEndMinute",
-                "uniqueID_prev",
-                "uniqueID_next",
-                "colFromIndex",
-            ],
-            inplace=True,
+        self.activities.drop(columns=[
+            "tripStartClock",
+            "tripEndClock",
+            "tripStartYear",
+            "tripStartMonth",
+            "tripStartWeek",
+            "tripStartHour",
+            "tripStartMinute",
+            "tripEndHour",
+            "tripEndMinute",
+            "uniqueID_prev",
+            "uniqueID_next",
+            "colFromIndex",
+        ],
+        inplace=True,
         )
 
     def __removeParkActsAfterOvernightTrips(self):
@@ -655,7 +642,7 @@ class DataParser:
     def __updateParkActStart(self, parkingActwoFirst: pd.Series):
         """Updating park start timestamps for newly added rows"""
         set_ts = self.activities.loc[parkingActwoFirst.index -
-                                     1, "timestampEnd"]
+                                        1, "timestampEnd"]
         set_ts.index = self.activities.loc[
             parkingActwoFirst.index, "timestampStart"
         ].index
@@ -664,9 +651,9 @@ class DataParser:
     def __updateParkActEnd(self, parkingActwoLast: pd.Series):
         """Updating park end timestamps for newly added rows"""
         set_ts = self.activities.loc[parkingActwoLast.index +
-                                     1, "timestampStart"]
+                                        1, "timestampStart"]
         set_ts.index = self.activities.loc[parkingActwoLast.index,
-                                           "timestampEnd"].index
+                                            "timestampEnd"].index
         self.activities.loc[parkingActwoLast.index, "timestampEnd"] = set_ts
 
     def __updateTimestampFirstParkAct(self):
@@ -675,7 +662,7 @@ class DataParser:
             self.activities["isFirstActivity"]
         )
         self.activities.loc[idxActs, "timestampStart"] = replace_vec(
-            self.activities.loc[idxActs, "timestampEnd"], hour=0, minute=0
+        self.activities.loc[idxActs, "timestampEnd"], hour=0, minute=0
         )
 
     def __updateTimestampLastParkAct(self):
@@ -693,18 +680,10 @@ class DataParser:
                             "tripEndNextDay"] = pd.NA
 
     def __addNextAndPrevIDs(self):
-        self.activities.loc[
-            ~self.activities["tripID"].isna(), "actID"
-        ] = self.activities["tripID"]
-        self.activities.loc[
-            ~self.activities["parkID"].isna(), "actID"
-        ] = self.activities["parkID"]
-        self.activities.loc[
-            ~self.activities["isLastActivity"], "nextActID"
-        ] = self.activities.loc[:, "actID"].shift(-1)
-        self.activities.loc[
-            ~self.activities["isFirstActivity"], "prevActID"
-        ] = self.activities.loc[:, "actID"].shift(1)
+        self.activities.loc[~self.activities["tripID"].isna(), "actID"] = self.activities["tripID"]
+        self.activities.loc[~self.activities["parkID"].isna(), "actID"] = self.activities["parkID"]
+        self.activities.loc[~self.activities["isLastActivity"], "nextActID"] = self.activities.loc[:, "actID"].shift(-1)
+        self.activities.loc[~self.activities["isFirstActivity"], "prevActID"] = self.activities.loc[:, "actID"].shift(1)
 
     def __ONSplitDecider(self, split: bool):
         """Boolean function that differentiates if overnight trips should be split (split==True) or not (split==False).
@@ -715,12 +694,68 @@ class DataParser:
             such a way that the estimated trip distance the next day is appended in the morning hours of the survey day?
         """
         if split:
-            self.__splitOvernightTrips()
+            self.activities = self.overnightSplitter.splitOvernightTrips(activities=self.activities)
         else:
             self.__setONVarFalseForLastActTrip()
             self.__neglectONTrips()
 
-    def __splitOvernightTrips(self):
+    def __setONVarFalseForLastActTrip(self):
+        """This function treats the edge case of trips being the last activity in the daily activity chain, i.e. trips
+        ending exactly at 00:00. They are falsely labelled as overnight trips which is corrected here.
+
+        """
+        idxLastActTrips = (self.activities["isLastActivity"]) & ~(
+            self.activities["tripID"].isna()
+        )
+        idxLastTripEndMidnight = (
+            idxLastActTrips
+            & (self.activities.loc[idxLastActTrips, "timestampEnd"].dt.hour == 0)
+            & (self.activities.loc[idxLastActTrips, "timestampEnd"].dt.minute == 0)
+        )
+        self.tripEndNextDayRaw = self.activities["tripEndNextDay"]
+        self.activities.loc[idxLastTripEndMidnight, "tripEndNextDay"] = False
+
+    def __neglectONTrips(self):
+        """
+        Removes all overnight trips from the activities data set based on the column 'tripEndNextDay'. Updates
+        timestamp end (to 00:00) and isLastActivity for the new last parking activities. Overwrites self.activities.
+        """
+        # Column for lastActivity setting later
+        self.activities["tripEndNextDay_next"] = self.activities[
+            "tripEndNextDay"
+        ].shift(-1, fill_value=False)
+
+        # Get rid of overnight trips
+        idxNoONTrip = ~(self.activities["tripEndNextDay"].fillna(False))
+        self.activities = self.activities.loc[idxNoONTrip, :]
+
+        # Update isLastActivity and timestampEnd variables and clean-up column
+        idxNewLastAct = self.activities["tripEndNextDay_next"]
+        idxNewLastAct = idxNewLastAct.fillna(False).astype(bool)
+        self.activities.loc[idxNewLastAct, "isLastActivity"] = True
+        self.activities.loc[idxNewLastAct, "timestampEnd"] = replace_vec(
+            self.activities.loc[idxNewLastAct, "timestampStart"], hour=0, minute=0
+        ) + pd.Timedelta(1, "d")
+        self.activities = self.activities.drop(columns=["tripEndNextDay_next"])
+
+    def __addTimeDeltaCol(self):
+        # Add timedelta column
+        self.activities["timedelta"] = (
+            self.activities["timestampEnd"] - self.activities["timestampStart"]
+        )
+
+    def __uniqueIndex(self):
+        self.activities.drop(columns=["level_0"], inplace=True)
+        self.activities.reset_index(
+            inplace=True
+        )  # Due to copying and appending rows, the index has to be reset
+
+
+class OvernightSplitter:
+    def __init__(self):
+        self.activities = None
+
+    def splitOvernightTrips(self, activities: pd.DataFrame) -> pd.DataFrame:
         """Wrapper function for treating edge case trips ending not in the 24 hours of the survey day but stretch
         to the next day. Those overnight (ON) are split up into an evening trip at the regular survey day and a
         morning trip at the next day. Trip distances are split according to the time the person spent on that trip.
@@ -738,28 +773,22 @@ class DataParser:
         These edge cases are documented and quantified in issue #358 'Sum of all distances of dataParser at end equals
         sum of all distances after filtering'.
         """
+        self.activities = activities
+
         # Split overnight trips and add next day distance in the morning (tripID=0)
         isONTrip, overnightTripsAdd = self.__getOvernightActs()
-        overnightTripsAddTS = self.__adjustONTimestamps(
-            trips=overnightTripsAdd)
+        overnightTripsAddTS = self.__adjustONTimestamps(trips=overnightTripsAdd)
         self.__setAllLastActEndTSToZero()
         morningTrips = self.__setONTripIDZero(trips=overnightTripsAddTS)
-        morningTrips = self.__adjustMorningTripDistance(
-            overnightTrips=overnightTripsAdd, morningTrips=morningTrips
-        )
-        self.__adjustEveningTripDistance(
-            morningTrips=morningTrips, isONTrip=isONTrip)
+        morningTrips = self.__adjustMorningTripDistance(overnightTrips=overnightTripsAdd, morningTrips=morningTrips)
+        self.__adjustEveningTripDistance(morningTrips=morningTrips, isONTrip=isONTrip)
         self.__setFirstLastActs(morningTrips=morningTrips)
-        isPrevFirstActs = self.__getPrevFirstAct(
-            morningTrips=morningTrips
-        )  # Activities that were previously firstActs
+        isPrevFirstActs = self.__getPrevFirstAct(morningTrips=morningTrips)  # Activities that were previously firstActs
         morningTrips_noOverlap, isPrevFirstActs = self.__neglectOverlapMorningTrips(
             morningTrips=morningTrips, isPrevFirstActs=isPrevFirstActs
         )
         morningTrips_add = self.__setNextParkingTSStart(
-            morningTrips=morningTrips_noOverlap,
-            isONTrip=isONTrip,
-            isPrevFirstActs=isPrevFirstActs,
+            morningTrips=morningTrips_noOverlap, isONTrip=isONTrip, isPrevFirstActs=isPrevFirstActs
         )
         self.__addMorningTrips(morningTrips=morningTrips_add)
         self.__removeFirstParkingAct()
@@ -768,6 +797,7 @@ class DataParser:
         self.__checkAndAssert()
         self.__dropONCol()
         self.__sortActivities()
+        return self.activities
 
     def __getOvernightActs(self):
         indexOvernightActs = (
@@ -821,8 +851,8 @@ class DataParser:
         return trips
 
     def __adjustMorningTripDistance(
-        self, overnightTrips: pd.DataFrame, morningTrips: pd.DataFrame
-    ):
+            self, overnightTrips: pd.DataFrame, morningTrips: pd.DataFrame
+        ):
         # Splitting the total distance to morning and evening trip time-share dependent
         morningTrips["timedelta_total"] = (
             overnightTrips["timestampEnd"] - overnightTrips["timestampStart"]
@@ -844,8 +874,8 @@ class DataParser:
         return morningTrips
 
     def __adjustEveningTripDistance(
-        self, morningTrips: pd.DataFrame, isONTrip: pd.Series
-    ):
+            self, morningTrips: pd.DataFrame, isONTrip: pd.Series
+        ):
         self.activities.loc[isONTrip, "tripDistance"] = (
             morningTrips["timeShare_evening"] *
             morningTrips["totalTripDistance"]
@@ -863,11 +893,10 @@ class DataParser:
         )
 
     def __neglectOverlapMorningTrips(
-        self, morningTrips: pd.DataFrame, isPrevFirstActs: pd.DataFrame
-    ):
+            self, morningTrips: pd.DataFrame, isPrevFirstActs: pd.DataFrame
+        ):
         # Option 1 of treating overlaps: After concatenation in the end
-        firstTripsEnd = self.activities.loc[isPrevFirstActs, "timestampEnd"].copy(
-        )
+        firstTripsEnd = self.activities.loc[isPrevFirstActs, "timestampEnd"].copy()
         firstTripsEnd.index = morningTrips.index  # Adjust index for comparison
 
         # Filter out morning parts of overnight trip split for persons that already have morning trips in that period
@@ -876,24 +905,22 @@ class DataParser:
 
         # Filter out neglected activities from prevFirstActs accordingly
         neglectOvernightIdx = neglectOvernight
-        neglectOvernightIdx.index = isPrevFirstActs[
-            isPrevFirstActs
-        ].index  # Align index for filtering
+        neglectOvernightIdx.index = isPrevFirstActs[isPrevFirstActs].index  # Align index for filtering
         neglectOvernightIdx = neglectOvernightIdx[neglectOvernightIdx]
         isPrevFirstActs[neglectOvernightIdx.index] = False
 
         return morningTrips_noOverlap, isPrevFirstActs
 
     def __setNextParkingTSStart(
-        self,
-        morningTrips: pd.DataFrame,
-        isONTrip: pd.Series,
-        isPrevFirstActs: pd.DataFrame,
-    ):
+            self,
+            morningTrips: pd.DataFrame,
+            isONTrip: pd.Series,
+            isPrevFirstActs: pd.DataFrame,
+        ):
         # Setting start timestamp of previously first activity (parking) to end timestamp of morning split of ON trip
         ts_new = morningTrips.loc[isONTrip, "timestampEnd"]
         ts_new.index = self.activities.loc[isPrevFirstActs,
-                                           "timestampStart"].index
+                                            "timestampStart"].index
         self.activities.loc[isPrevFirstActs, "timestampStart"] = ts_new
         self.activities.loc[isPrevFirstActs, "isFirstActivity"] = False
 
@@ -904,8 +931,8 @@ class DataParser:
         )
 
     def __updateNextActID(
-        self, prevFirstActs: pd.DataFrame, morningTrips: pd.DataFrame
-    ):
+            self, prevFirstActs: pd.DataFrame, morningTrips: pd.DataFrame
+        ):
         nextActs = prevFirstActs.loc[prevFirstActs["prevActID"] == 0, "actID"]
         nextActs.index = morningTrips.index
         ret = morningTrips.copy()
@@ -914,9 +941,7 @@ class DataParser:
 
     def __addMorningTrips(self, morningTrips: pd.DataFrame):
         # Appending overnight morning trips
-        self.activities = pd.concat(
-            [self.activities, morningTrips],
-        )
+        self.activities = pd.concat([self.activities, morningTrips])
 
     def __removeFirstParkingAct(self):
         # Removing first parking activities for persons where first activity is a trip (starting at 00:00)
@@ -974,8 +999,7 @@ class DataParser:
             self.activities["uniqueID"].isin(uniqueIDsOvernight), :
         ]
         actsOvernight = acts.loc[acts["tripID"] == 0, :]
-
-        # Next trip after morning part of overnight split
+                # Next trip after morning part of overnight split
         actsNextTrip = acts.loc[acts["prevActID"] == 0, :]
         return actsOvernight.loc[
             ~actsOvernight["uniqueID"].isin(
@@ -1013,73 +1037,6 @@ class DataParser:
         self.activities = self.activities.sort_values(
             by=["uniqueID", "timestampStart"])
 
-    def __setONVarFalseForLastActTrip(self):
-        """This function treats the edge case of trips being the last activity in the daily activity chain, i.e. trips
-        ending exactly at 00:00. They are falsely labelled as overnight trips which is corrected here.
-
-        """
-        idxLastActTrips = (self.activities["isLastActivity"]) & ~(
-            self.activities["tripID"].isna()
-        )
-        idxLastTripEndMidnight = (
-            idxLastActTrips
-            & (self.activities.loc[idxLastActTrips, "timestampEnd"].dt.hour == 0)
-            & (self.activities.loc[idxLastActTrips, "timestampEnd"].dt.minute == 0)
-        )
-        self.tripEndNextDayRaw = self.activities["tripEndNextDay"]
-        self.activities.loc[idxLastTripEndMidnight, "tripEndNextDay"] = False
-
-    def __neglectONTrips(self):
-        """
-        Removes all overnight trips from the activities data set based on the column 'tripEndNextDay'. Updates
-        timestamp end (to 00:00) and isLastActivity for the new last parking activities. Overwrites self.activities.
-        """
-        # Column for lastActivity setting later
-        self.activities["tripEndNextDay_next"] = self.activities[
-            "tripEndNextDay"
-        ].shift(-1, fill_value=False)
-
-        # Get rid of overnight trips
-        idxNoONTrip = ~(self.activities["tripEndNextDay"].fillna(False))
-        self.activities = self.activities.loc[idxNoONTrip, :]
-
-        # Update isLastActivity and timestampEnd variables and clean-up column
-        idxNewLastAct = self.activities["tripEndNextDay_next"]
-        idxNewLastAct = idxNewLastAct.fillna(False).astype(bool)
-        self.activities.loc[idxNewLastAct, "isLastActivity"] = True
-        self.activities.loc[idxNewLastAct, "timestampEnd"] = replace_vec(
-            self.activities.loc[idxNewLastAct, "timestampStart"], hour=0, minute=0
-        ) + pd.Timedelta(1, "d")
-        self.activities = self.activities.drop(columns=["tripEndNextDay_next"])
-
-    def __addTimeDeltaCol(self):
-        # Add timedelta column
-        self.activities["timedelta"] = (
-            self.activities["timestampEnd"] - self.activities["timestampStart"]
-        )
-
-    def __uniqueIndex(self):
-        self.activities.drop(columns=["level_0"], inplace=True)
-        self.activities.reset_index(
-            inplace=True
-        )  # Due to copying and appending rows, the index has to be reset
-
-    def process(self):
-        """
-        Wrapper function for harmonising and filtering the dataset.
-        """
-        raise NotImplementedError("Implement process method for DataParser.")
-
-    def writeOutput(self):
-        root = Path(self.localPathConfig["pathAbsolute"]["vencoPyRoot"])
-        folder = self.globalConfig["pathRelative"]["parseOutput"]
-        fileName = createFileName(
-            globalConfig=self.globalConfig,
-            fileNameID="outputDataParser",
-            datasetID=self.datasetID,
-        )
-        writeOut(data=self.activities, path=root / folder / fileName)
-
 
 class IntermediateParsing(DataParser):
     def __init__(
@@ -1089,17 +1046,16 @@ class IntermediateParsing(DataParser):
         Intermediate parsing class.
 
         :param configDict: VencoPy config dictionary consisting at least of
-                           the config dictionaries globalConfig,
-                           parseConfig and localPathConfig.
+                           the config dictionaries.
         :param datasetID: A string identifying the MiD data set.
         :param loadEncrypted: Boolean. If True, data is read from encrypted
                               file. For this, a possword has to be
-                              specified in parseConfig['PW'].
+                              specified in user_config['PW'].
         """
         super().__init__(
             configDict, datasetID=datasetID, loadEncrypted=loadEncrypted, debug=debug
         )
-        self.filterDict = self.parseConfig["filterDicts"][self.datasetID]
+        self.filterDict = self.dev_config["dataParsers"]["filterDicts"][self.datasetID]
         self.varDataTypeDict = {}
         self.columns = self.__compileVariableList()
 
@@ -1114,11 +1070,11 @@ class IntermediateParsing(DataParser):
 
         :return: List of variables
         """
-        listIndex = self.parseConfig["dataVariables"]["datasetID"].index(
+        listIndex = self.dev_config["dataParsers"]["dataVariables"]["datasetID"].index(
             self.datasetID)
         variables = [
             val[listIndex] if val[listIndex] != "NA" else "NA"
-            for key, val in self.parseConfig["dataVariables"].items()
+            for key, val in self.dev_config["dataParsers"]["dataVariables"].items()
         ]
 
         variables.remove(self.datasetID)
@@ -1161,7 +1117,7 @@ class IntermediateParsing(DataParser):
         :return: None
         """
         # Filter for dataset specific columns
-        conversionDict = self.parseConfig["inputDTypes"][self.datasetID]
+        conversionDict = self.dev_config["dataParsers"]["inputDTypes"][self.datasetID]
         keys = {iCol for iCol in conversionDict.keys()
                 if iCol in self.activities.columns}
         self.varDataTypeDict = {
@@ -1224,11 +1180,11 @@ class IntermediateParsing(DataParser):
         :param colName: Name of the column in self.activities where the explicit
                         string info is stored
         :param varName: Name of the VencoPy internal variable given in
-                        config/parseConfig['dataVariables']
+                        dev_config/dataParsers['dataVariables']
         :return: None
         """
         self.activities.loc[:, colName] = self.activities.loc[:, varName].replace(
-            self.parseConfig["Replacements"][self.datasetID][varName]
+            self.dev_config["dataParsers"]["Replacements"][self.datasetID][varName]
         )
 
     def __composeTimestamp(
@@ -1288,16 +1244,16 @@ class IntermediateParsing(DataParser):
         Harmonises ID variables for all datasets.
         """
         self.activities["uniqueID"] = (
-            self.activities[str(self.parseConfig["IDVariablesNames"]
+            self.activities[str(self.dev_config["dataParsers"]["IDVariablesNames"]
                                 [self.datasetID])]
         ).astype(int)
         print("Finished harmonization of ID variables.")
 
     def _subsetVehicleSegment(self):
-        if self.parseConfig['subsetVehicleSegment']:
-            self.activities = self.activities[(
-                self.activities['vehicleSegmentStr'] == self.parseConfig['vehicleSegment'][self.datasetID])]
-            print(f"The subset contains only vehicles of the class {self.parseConfig['vehicleSegment'][self.datasetID]} for a total of {len(self.activities.uniqueID.unique())} individual vehicles.")
+        if self.user_config["dataParsers"]['subsetVehicleSegment']:
+            self.activities = self.activities[
+                self.activities['vehicleSegmentStr'] == self.user_config["dataParsers"]['vehicleSegment'][self.datasetID]]
+            print(f'The subset contains only vehicles of the class {(self.user_config["dataParsers"]["vehicleSegment"][self.datasetID])} for a total of {len(self.activities.uniqueID.unique())} individual vehicles.')
 
     def _cleanupDataset(self):
         self.activities.drop(
@@ -1336,6 +1292,7 @@ class ParseMiD(IntermediateParsing):
             loadEncrypted=loadEncrypted,
             debug=debug,
         )
+        self.parkInference = ParkInference(configDict=configDict)
 
     def __harmonizeVariables(self):
         """
@@ -1348,7 +1305,7 @@ class ParseMiD(IntermediateParsing):
         :return: None
         """
         replacementDict = self._createReplacementDict(
-            self.datasetID, self.parseConfig["dataVariables"]
+            self.datasetID, self.dev_config["dataParsers"]["dataVariables"]
         )
         activitiesRenamed = self.activities.rename(columns=replacementDict)
         if self.datasetID == "MiD08":
@@ -1415,8 +1372,9 @@ class ParseMiD(IntermediateParsing):
         self._checkFilterDict()
         self._filter(self.filterDict)
         self._filterConsistentHours()
-        self._addParkingRows()
+        self.activities = self.parkInference.addParkingRows(activities=self.activities)
         self._cleanupDataset()
+        self.writeOutput()
         print("Parsing MiD dataset completed.")
         return self.activities
 
@@ -1444,6 +1402,7 @@ class ParseVF(IntermediateParsing):
         super().__init__(
             configDict=configDict, datasetID=datasetID, debug=debug, loadEncrypted=loadEncrypted
         )
+        self.parkInference = ParkInference(configDict=configDict)
 
     def _loadData(self):
         """
@@ -1451,12 +1410,12 @@ class ParseVF(IntermediateParsing):
         rawDataPathVehicles is an internal dataset from VF
         """
         rawDataPathTrips = (
-            Path(self.localPathConfig["pathAbsolute"][self.datasetID])
-            / self.globalConfig["files"][self.datasetID]["tripsDataRaw"]
+            Path(self.user_config["global"]["pathAbsolute"][self.datasetID])
+            / self.dev_config["global"]["files"][self.datasetID]["tripsDataRaw"]
         )
         rawDataPathVehicles = (
-            Path(self.localPathConfig["pathAbsolute"][self.datasetID])
-            / self.globalConfig["files"][self.datasetID]["vehiclesDataRaw"]
+            Path(self.user_config["global"]["pathAbsolute"][self.datasetID])
+            / self.dev_config["global"]["files"][self.datasetID]["vehiclesDataRaw"]
         )
         rawDataTrips = pd.read_stata(
             rawDataPathTrips,
@@ -1479,13 +1438,13 @@ class ParseVF(IntermediateParsing):
     def __harmonizeVariables(self):
         """
         Harmonizes the input data variables to match internal VencoPy names given as specified in the mapping in
-        parseConfig['dataVariables']. Mappings for MiD08 and MiD17 are given. Since the MiD08 does not provide a
+        self.dev_config["dataParsers"]['dataVariables']. Mappings for MiD08 and MiD17 are given. Since the MiD08 does not provide a
         combined household and person unique identifier, it is synthesized of the both IDs.
 
         :return: None
         """
         replacementDict = self._createReplacementDict(
-            self.datasetID, self.parseConfig["dataVariables"]
+            self.datasetID, self.dev_config["dataParsers"]["dataVariables"]
         )
         dataRenamed = self.activities.rename(columns=replacementDict)
         if self.datasetID == "MiD08":
@@ -1571,9 +1530,10 @@ class ParseVF(IntermediateParsing):
         self._checkFilterDict()
         self._filter(self.filterDict)
         self._filterConsistentHours()
-        self._addParkingRows()
+        self.activities = self.parkInference.addParkingRows(activities=self.activities)
         self._subsetVehicleSegment()
         self._cleanupDataset()
+        self.writeOutput()
         print("Parsing VF dataset completed.")
         return self.activities
 
@@ -1593,15 +1553,16 @@ class ParseKiD(IntermediateParsing):
             loadEncrypted=loadEncrypted,
             debug=debug
         )
+        self.parkInference = ParkInference(configDict=configDict)
 
     def _loadData(self):
         rawDataPathTrips = (
-            Path(self.localPathConfig["pathAbsolute"][self.datasetID])
-            / self.globalConfig["files"][self.datasetID]["tripsDataRaw"]
+            Path(self.user_config["global"]["pathAbsolute"][self.datasetID])
+            / self.dev_config["global"]["files"][self.datasetID]["tripsDataRaw"]
         )
         rawDataPathVehicles = (
-            Path(self.localPathConfig["pathAbsolute"][self.datasetID])
-            / self.globalConfig["files"][self.datasetID]["vehiclesDataRaw"]
+            Path(self.user_config["global"]["pathAbsolute"][self.datasetID])
+            / self.dev_config["global"]["files"][self.datasetID]["vehiclesDataRaw"]
         )
         rawDataTrips = pd.read_stata(
             rawDataPathTrips,
@@ -1710,16 +1671,17 @@ class ParseKiD(IntermediateParsing):
         self._checkFilterDict()
         self._filter(self.filterDict)
         self._filterConsistentHours()
-        self._addParkingRows()
+        self.activities = self.parkInference.addParkingRows(activities=self.activities)
         self._subsetVehicleSegment()
         self._cleanupDataset()
+        self.writeOutput()
         print("Parsing KiD dataset completed.")
         return self.activities
 
 
 def parseData(configDict: dict) -> Union[ParseMiD, ParseKiD, ParseVF]:
-    datasetID = configDict["globalConfig"]["dataset"]
-    debug = configDict["globalConfig"]["debug"]
+    datasetID = configDict["user_config"]["global"]["dataset"]
+    debug = configDict["user_config"]["global"]["debug"]
     delegate = {"MiD17": ParseMiD, "KiD": ParseKiD, "VF": ParseVF}
     return delegate[datasetID](
         configDict=configDict, datasetID=datasetID, debug=debug

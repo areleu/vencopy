@@ -20,17 +20,7 @@ def loadConfigDict(basePath):
     :param configNames: Tuple containing names of config files to be loaded
     :return: Dictionary with opened yaml config files
     """
-    configNames = (
-        "globalConfig",
-        "localPathConfig",
-        "parseConfig",
-        "diaryConfig",
-        "gridConfig",
-        "flexConfig",
-        "outputConfig",
-        "aggregatorConfig",
-        "evaluatorConfig",
-    )
+    configNames = ("user_config", "dev_config")
     configPath = basePath / 'config'
     configDict = {}
     for configName in configNames:
@@ -97,24 +87,24 @@ def createOutputFolders(configDict: dict):
     :param: config dictionary
     :return: None
     """
-    root = Path(configDict['localPathConfig']['pathAbsolute']['vencoPyRoot'])
+    root = Path(configDict['user_config']['global']['pathAbsolute']['vencopyRoot'])
     mainDir = 'output'
     if not os.path.exists(Path(root / mainDir)):
         os.mkdir(Path(root / mainDir))
     subDirs = ('dataParser', 'diaryBuilder', 'gridModeler',
-               'flexEstimator', 'profileAggregator', 'outputFormatter', 'evaluator')
+               'flexEstimator', 'profileAggregator', 'outputFormatter', 'normaliser')
     for subDir in subDirs:
         if not os.path.exists(Path(root / mainDir / subDir)):
             os.mkdir(Path(root / mainDir / subDir))
 
 
-def createFileName(globalConfig: dict, fileNameID: str, datasetID: str, manualLabel: str = '',
+def createFileName(dev_config: dict, user_config: dict, manualLabel: str, fileNameID: str, datasetID: str,
                    suffix: str = 'csv'):
     """
     Generic method used for fileString compilation throughout the VencoPy framework. This method does not write any
     files but just creates the file name including the filetype suffix.
 
-    :param globalConfig: global config file for paths
+    :param user_config: user config file for paths
     :param fileNameID: ID of respective data file as specified in global config
     :param datasetID: Manual specification of data set ID e.g. 'MiD17'
     :param manualLabel: Optional manual label to add to filename
@@ -122,9 +112,8 @@ def createFileName(globalConfig: dict, fileNameID: str, datasetID: str, manualLa
     :return: Full name of file to be written.
     """
     if datasetID is None:
-        return f"{globalConfig['files'][fileNameID]}_{globalConfig['labels']['runLabel']}_{manualLabel}.{suffix}"
-    return f"{globalConfig['files'][datasetID][fileNameID]}_{globalConfig['labels']['runLabel']}_{manualLabel}" \
-           f"{datasetID}.{suffix}"
+        return f"{dev_config['global']['diskFileNames'][fileNameID]}_{user_config['global']['runLabel']}_{manualLabel}.{suffix}"
+    return f"{dev_config['global']['diskFileNames'][fileNameID]}_{user_config['global']['runLabel']}_{manualLabel}_{datasetID}.{suffix}"
 
 
 def mergeVariables(data, variableData, variables):
@@ -155,36 +144,6 @@ def mergeDataToWeightsAndDays(diaryData, ParseData):
 
 def calculateWeightedAverage(col, weightCol):
     return sum(col * weightCol) / sum(weightCol)
-
-
-def writeProfilesToCSV(profileDictOut, globalConfig: dict, localPathConfig: dict, singleFile=True, datasetID='MiD17'):
-    """
-    Function to write VencoPy profiles to either one or five .csv files in the output folder specified in outputFolder.
-
-    :param outputFolder: path to output folder
-    :param profileDictOut: Dictionary with profile names in keys and profiles as pd.Series containing a VencoPy
-           profile each to be written in value
-    :param singleFile: If True, all profiles will be appended and written to one .csv file. If False, five files are
-           written
-    :param strAdd: String addition for filenames
-    :return: None
-    """
-
-    if singleFile:
-        dataOut = pd.DataFrame(profileDictOut)
-        dataOut.to_csv(Path(
-            localPathConfig['pathAbsolute']['vencoPyRoot']) / globalConfig['pathRelative']['flexOutput'] /
-            createFileName(globalConfig=globalConfig,
-                           fileKey='output',
-                           manualLabel=globalConfig['labels']['technologyLabel'],
-                           datasetID=datasetID),
-            header=True)
-    else:
-        for iName, iProf in profileDictOut.items():
-            iProf.to_csv(Path(
-                localPathConfig['pathAbsolute']['vencoPyRoot']) / globalConfig['pathRelative']['flexOutput'] /
-                Path(f'vencopy_{iName}_{datasetID}.csv'),
-                header=True)
 
 
 def writeOut(data: pd.DataFrame, path: Path):
