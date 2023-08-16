@@ -1252,12 +1252,12 @@ class IntermediateParsing(DataParser):
 
     def _subset_vehicle_segment(self):
         if self.user_config["dataParsers"]['subsetVehicleSegment']:
-            self.trips = self.trips[
-                self.trips['vehicleSegmentStr'] == self.user_config["dataParsers"]['vehicleSegment'][self.datasetID]]
-            print(f'The subset contains only vehicles of the class {(self.user_config["dataParsers"]["vehicleSegment"][self.datasetID])} for a total of {len(self.trips.uniqueID.unique())} individual vehicles.')
+            self.activities = self.activities[
+                self.activities['vehicleSegmentStr'] == self.user_config["dataParsers"]['vehicleSegment'][self.datasetID]]
+            print(f'The subset contains only vehicles of the class {(self.user_config["dataParsers"]["vehicleSegment"][self.datasetID])} for a total of {len(self.activities.uniqueID.unique())} individual vehicles.')
 
     def _cleanup_dataset(self):
-        self.trips.drop(
+        self.activities.drop(
             columns=['level_0',
                      'tripIsIntermodal',
                      'timedelta_total',
