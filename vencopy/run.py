@@ -15,7 +15,6 @@ from vencopy.core.gridModelers import GridModeler
 from vencopy.core.flexEstimators import FlexEstimator
 from vencopy.core.profileAggregators import ProfileAggregator
 from vencopy.core.postProcessors import PostProcessing
-from vencopy.core.normalizers import Normalizer
 from vencopy.utils.globalFunctions import loadConfigDict, createOutputFolders
 
 if __name__ == "__main__":
