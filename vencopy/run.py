@@ -14,7 +14,8 @@ from vencopy.core.diaryBuilders import DiaryBuilder
 from vencopy.core.gridModelers import GridModeler
 from vencopy.core.flexEstimators import FlexEstimator
 from vencopy.core.profileAggregators import ProfileAggregator
-from vencopy.core.outputFormatters import OutputFormatter
+from vencopy.core.postProcessors import PostProcessing
+from vencopy.core.normalizers import Normalizer
 from vencopy.utils.globalFunctions import loadConfigDict, createOutputFolders
 
 if __name__ == "__main__":
@@ -27,27 +28,27 @@ if __name__ == "__main__":
     vpData = parseData(configDict=configDict)
     vpData.process()
 
-    vpGrid = GridModeler(
-        configDict=configDict,
-        activities=vpData.activities
-    )
+    vpGrid = GridModeler(configDict=configDict, activities=vpData.activities)
     vpGrid.assignGrid()
 
-    vpFlex = FlexEstimator(
-        configDict=configDict, activities=vpGrid.activities
-    )
+    vpFlex = FlexEstimator(configDict=configDict, activities=vpGrid.activities)
     vpFlex.estimateTechnicalFlexibilityIterating()
 
     vpDiary = DiaryBuilder(configDict=configDict, activities=vpFlex.activities)
     vpDiary.createDiaries()
 
-    vpProfile = ProfileAggregator(
-        configDict=configDict, activities=vpDiary.activities, profiles=vpDiary
-    )
+    vpProfile = ProfileAggregator(configDict=configDict, activities=vpDiary.activities, profiles=vpDiary)
     vpProfile.aggregateProfiles()
 
-    vpOutput = OutputFormatter(configDict=configDict, profiles=vpProfile)
-    vpOutput.createTimeseries()
+    vpPost = PostProcessing(configDict=configDict)
+    vpPost.week_to_annual(profiles=vpProfile)
+    vpPost.normalize()
+
+    # vpEval = Evaluator(configDict=configDict, parseData=pd.Series(data=vpData, index=[datasetID]))
+    # vpEval.plotParkingAndPowers(vpGrid=vpGrid)
+    # vpEval.hourlyAggregates = vpEval.calcVariableSpecAggregates(by=["tripStartWeekday"])
+    # vpEval.plotAggregates()
+    # vpEval.plotProfiles(flexEstimator=vpFlex)
 
     elapsedTime = time.time() - startTime
     print(f"Elapsed time: {elapsedTime}.")
