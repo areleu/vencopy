@@ -59,7 +59,7 @@ class PostProcessing:
         for pname, p in zip(pnames, profiles):
             self.__store_input(name=pname, profile=p)
             self.annual_profiles[pname] = self.__createAnnualProfiles(profile=p)
-            if self.user_config["global"]["writeOutputToDisk"]["absolute_annual_output"]:
+            if self.user_config["global"]["writeOutputToDisk"]["processorOutput"]["absolute_annual_profiles"]:
                 self._write_output(
                     profile_name=pname, profile=self.annual_profiles[pname], filename_id="outputPostProcessorAnnual"
                 )
@@ -91,7 +91,7 @@ class PostProcessing:
                 f" rated power of {self.__rated_power_simple}kW was used."
             )
 
-        write = self.user_config["global"]["writeOutputToDisk"]["normalized_annual_output"]
+        write = self.user_config["global"]["writeOutputToDisk"]["processorOutput"]["normalised_annual_profiles"]
 
         # Normalization basis: Total annual energy
         for key, value in p_dict["flow_profiles"].items():
