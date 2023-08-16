@@ -14,11 +14,10 @@ from vencopy.utils.globalFunctions import createFileName, writeOut
 
 
 class PostProcessing:
-    """This class contains functions to post process aggregated venco.py profiles. As of now (August 2023), the class
-    contains cloning weekly profiles to year and normalizing it with different normalization bases.
-
     """
-
+    This class contains functions to post process aggregated venco.py profiles. As of now (August 2023), the class
+    contains cloning weekly profiles to year and normalizing it with different normalization bases.
+    """
     def __init__(self, configDict: dict):
         self.user_config = configDict["user_config"]
         self.dev_config = configDict["dev_config"]
