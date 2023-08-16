@@ -11,8 +11,10 @@ import yaml
 from pathlib import Path
 import os
 
+from vencopy.core.dataParsers import DataParser
 
-def loadConfigDict(basePath):
+
+def loadConfigDict(basePath: Path) -> dict:
     # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
     """
     Generic function to load and open yaml config files.
@@ -21,7 +23,7 @@ def loadConfigDict(basePath):
     :return: Dictionary with opened yaml config files
     """
     configNames = ("user_config", "dev_config")
-    configPath = basePath / "config"
+    configPath = Path(basePath) / "config"
     configDict = {}
     for configName in configNames:
         filePath = (configPath / configName).with_suffix(".yaml")
@@ -71,7 +73,7 @@ def returnDictBottomValues(baseDict: dict, lst: list = None) -> list:
     return lst
 
 
-def replace_vec(series, year=None, month=None, day=None, hour=None, minute=None):
+def replace_vec(series, year=None, month=None, day=None, hour=None, minute=None) -> pd.Series:
     return pd.to_datetime(
         {
             "year": series.dt.year if year is None else year,
@@ -102,7 +104,7 @@ def createOutputFolders(configDict: dict):
 
 def createFileName(
     dev_config: dict, user_config: dict, manualLabel: str, fileNameID: str, datasetID: str, suffix: str = "csv"
-):
+) -> str:
     """
     Generic method used for fileString compilation throughout the VencoPy framework. This method does not write any
     files but just creates the file name including the filetype suffix.
@@ -119,7 +121,7 @@ def createFileName(
     return f"{dev_config['global']['diskFileNames'][fileNameID]}_{user_config['global']['runLabel']}_{manualLabel}_{datasetID}.{suffix}"
 
 
-def mergeVariables(data, variableData, variables):
+def merge_variables(data: pd.DataFrame, variableData: pd.DataFrame, variables: list) -> pd.DataFrame:
     """
     Global VencoPy function to merge MiD variables to trip distance, purpose or grid connection data.
 
@@ -139,11 +141,11 @@ def mergeVariables(data, variableData, variables):
     return mergedData
 
 
-def mergeDataToWeightsAndDays(diaryData, ParseData):
-    return mergeVariables(data=diaryData, variableData=ParseData.data, variables=["tripStartWeekday", "tripWeight"])
+def merge_to_weights_and_days(diaryData: pd.DataFrame, ParseData: DataParser) -> pd.DataFrame:
+    return merge_variables(data=diaryData, variableData=ParseData.data, variables=["tripStartWeekday", "tripWeight"])
 
 
-def calculateWeightedAverage(col, weightCol):
+def weighted_mean(col: pd.Series, weightCol: pd.Series) -> float:
     return sum(col * weightCol) / sum(weightCol)
 
 
@@ -152,7 +154,7 @@ def writeOut(data: pd.DataFrame, path: Path):
     print(f"Dataset written to {path}.")
 
 
-def dumpReferenceData(data: pd.DataFrame, tag: str, path: Path):
+def dump_reference_data(data: pd.DataFrame, tag: str, path: Path):
     """_summary_
 
     Args:

@@ -255,7 +255,9 @@ class WeekDiaryBuilder:
             sample = pd.concat([sample, df])
         return sample
 
-    def composeWeekActivities(self, nWeeks: int = 10, seed: Optional[int] = None, replace: bool = False) -> pd.DataFrame:
+    def composeWeekActivities(
+        self, nWeeks: int = 10, seed: Optional[int] = None, replace: bool = False
+    ) -> pd.DataFrame:
         """
         Wrapper function to call function for sampling each person (day mobility) to a specific week in a
         specified category. activityID and uniqueID are adapted to cover the weekly pattern of the sampled mobility
@@ -311,7 +313,7 @@ class WeekDiaryBuilder:
         acts["uniqueID"] = acts["categoryID"].apply(str) + acts["weekID"].apply(str)
         return acts
 
-    def __orderViaWeekday(self, acts) -> pd.DataFrame:
+    def __orderViaWeekday(self, acts: pd.DataFrame) -> pd.DataFrame:
         return acts.sort_values(by=["uniqueID", "tripStartWeekday", "timestampStartCorrected"])
 
     def __adjustActID(self, acts: pd.DataFrame) -> pd.DataFrame:
@@ -424,7 +426,7 @@ class WeekDiaryBuilder:
         """
         return (~acts["parkID"].isna()) & (acts["isFirstActivity"]) & ~(acts["tripStartWeekday"] == 1)
 
-    def __getLastParkActsWOSun(self, acts) -> pd.Series:
+    def __getLastParkActsWOSun(self, acts: pd.DataFrame) -> pd.Series:
         """
         Select all last park activities except the last activities of Sundays - those will be the last
         activities of the week and thus remain unchanged.
@@ -1073,7 +1075,7 @@ class TimeDiscretiser:
                 s.loc[start:end] = value
         return s
 
-    def _writeOutput(self):
+    def _write_output(self):
         if self.user_config["global"]["writeOutputToDisk"]["diaryOutput"]:
             root = Path(self.user_config["global"]["pathAbsolute"]["vencopyRoot"])
             folder = self.dev_config["global"]["pathRelative"]["diaryOutput"]
@@ -1095,7 +1097,7 @@ class TimeDiscretiser:
         self._datasetCleanup()
         self._identifyBinShares()
         self._allocateBinShares()
-        self._writeOutput()
+        self._write_output()
         print(f"Discretisation finished for {self.columnToDiscretise}.")
         elapsedTimeDiaryBuilder = time.time() - startTimeDiaryBuilder
         print(f"Needed time to discretise {self.columnToDiscretise}: {elapsedTimeDiaryBuilder}.")

@@ -39,7 +39,7 @@ class PostProcessing:
     def __store_input(self, name: str, profile: pd.Series):
         self.input_profiles[name] = profile
 
-    def __createAnnualProfiles(self, profile: pd.Series):
+    def __create_annual_profiles(self, profile: pd.Series) -> pd.Series:
         startWeekday = self.user_config["postProcessing"]["startWeekday"]  # (1: Monday, 7: Sunday)
         nTimeSlotsPerDay = len(list(self.timeIndex))
 
@@ -59,14 +59,14 @@ class PostProcessing:
         pnames = ("drain", "uncontrolled_charge", "charge_power", "max_battery_level", "min_battery_level")
         for pname, p in zip(pnames, profiles):
             self.__store_input(name=pname, profile=p)
-            self.annual_profiles[pname] = self.__createAnnualProfiles(profile=p)
+            self.annual_profiles[pname] = self.__create_annual_profiles(profile=p)
             if self.user_config["global"]["writeOutputToDisk"]["absolute_annual_output"]:
                 self._write_output(
                     profile_name=pname, profile=self.annual_profiles[pname], filename_id="outputPostProcessorAnnual"
                 )
         print("Run finished.")
 
-    def __categorize_profiles(self, profiles: dict):
+    def __categorize_profiles(self, profiles: dict) -> dict:
         p_dict = {}
         p_dict["flow_profiles"] = {}
         p_dict["flow_profiles"] = {
