@@ -1,10 +1,10 @@
-__version__ = '0.1.X'
-__maintainer__ = 'Niklas Wulff'
-__contributors__ = 'Fabia Miorelli, Parth Butte'
-__email__ = 'niklas.wulff@dlr.de'
-__birthdate__ = '31.12.2019'
-__status__ = 'prod'  # options are: dev, test, prod
-__license__ = 'BSD-3-Clause'
+__version__ = "0.1.X"
+__maintainer__ = "Niklas Wulff"
+__contributors__ = "Fabia Miorelli, Parth Butte"
+__email__ = "niklas.wulff@dlr.de"
+__birthdate__ = "31.12.2019"
+__status__ = "prod"  # options are: dev, test, prod
+__license__ = "BSD-3-Clause"
 
 import pandas as pd
 import yaml
@@ -21,10 +21,10 @@ def loadConfigDict(basePath):
     :return: Dictionary with opened yaml config files
     """
     configNames = ("user_config", "dev_config")
-    configPath = basePath / 'config'
+    configPath = basePath / "config"
     configDict = {}
     for configName in configNames:
-        filePath = (configPath / configName).with_suffix('.yaml')
+        filePath = (configPath / configName).with_suffix(".yaml")
         with open(filePath) as ipf:
             configDict[configName] = yaml.load(ipf, Loader=yaml.SafeLoader)
     return configDict
@@ -73,11 +73,14 @@ def returnDictBottomValues(baseDict: dict, lst: list = None) -> list:
 
 def replace_vec(series, year=None, month=None, day=None, hour=None, minute=None):
     return pd.to_datetime(
-        {'year': series.dt.year if year is None else year,
-         'month': series.dt.month if month is None else month,
-         'day': series.dt.day if day is None else day,
-         'hour': series.dt.hour if hour is None else hour,
-         'minute': series.dt.minute if minute is None else minute})
+        {
+            "year": series.dt.year if year is None else year,
+            "month": series.dt.month if month is None else month,
+            "day": series.dt.day if day is None else day,
+            "hour": series.dt.hour if hour is None else hour,
+            "minute": series.dt.minute if minute is None else minute,
+        }
+    )
 
 
 def createOutputFolders(configDict: dict):
@@ -87,19 +90,19 @@ def createOutputFolders(configDict: dict):
     :param: config dictionary
     :return: None
     """
-    root = Path(configDict['user_config']['global']['pathAbsolute']['vencopyRoot'])
-    mainDir = 'output'
+    root = Path(configDict["user_config"]["global"]["pathAbsolute"]["vencopyRoot"])
+    mainDir = "output"
     if not os.path.exists(Path(root / mainDir)):
         os.mkdir(Path(root / mainDir))
-    subDirs = ('dataParser', 'diaryBuilder', 'gridModeler',
-               'flexEstimator', 'profileAggregator', 'outputFormatter', 'normaliser')
+    subDirs = ("dataParser", "diaryBuilder", "gridModeler", "flexEstimator", "profileAggregator", "postProcessing")
     for subDir in subDirs:
         if not os.path.exists(Path(root / mainDir / subDir)):
             os.mkdir(Path(root / mainDir / subDir))
 
 
-def createFileName(dev_config: dict, user_config: dict, manualLabel: str, fileNameID: str, datasetID: str,
-                   suffix: str = 'csv'):
+def createFileName(
+    dev_config: dict, user_config: dict, manualLabel: str, fileNameID: str, datasetID: str, suffix: str = "csv"
+):
     """
     Generic method used for fileString compilation throughout the VencoPy framework. This method does not write any
     files but just creates the file name including the filetype suffix.
@@ -126,20 +129,18 @@ def mergeVariables(data, variableData, variables):
     :return: The merged data
     """
 
-    variableDataUnique = variableData.loc[~variableData['genericID'].duplicated(
-    ), :]
-    variables.append('genericID')
-    variableDataMerge = variableDataUnique.loc[:, variables].set_index(
-        'genericID')
-    if 'genericID' not in data.index.names:
-        data.set_index('genericID', inplace=True, drop=True)
-    mergedData = pd.concat([variableDataMerge, data], axis=1, join='inner')
+    variableDataUnique = variableData.loc[~variableData["genericID"].duplicated(), :]
+    variables.append("genericID")
+    variableDataMerge = variableDataUnique.loc[:, variables].set_index("genericID")
+    if "genericID" not in data.index.names:
+        data.set_index("genericID", inplace=True, drop=True)
+    mergedData = pd.concat([variableDataMerge, data], axis=1, join="inner")
     mergedData.reset_index(inplace=True)
     return mergedData
 
 
 def mergeDataToWeightsAndDays(diaryData, ParseData):
-    return mergeVariables(data=diaryData, variableData=ParseData.data, variables=['tripStartWeekday', 'tripWeight'])
+    return mergeVariables(data=diaryData, variableData=ParseData.data, variables=["tripStartWeekday", "tripWeight"])
 
 
 def calculateWeightedAverage(col, weightCol):
@@ -148,7 +149,7 @@ def calculateWeightedAverage(col, weightCol):
 
 def writeOut(data: pd.DataFrame, path: Path):
     data.to_csv(path)
-    print(f'Dataset written to {path}.')
+    print(f"Dataset written to {path}.")
 
 
 def dumpReferenceData(data: pd.DataFrame, tag: str, path: Path):
@@ -159,4 +160,4 @@ def dumpReferenceData(data: pd.DataFrame, tag: str, path: Path):
         path (Path): _description_
     """
     path.mkdir(exist_ok=True, parents=True)
-    data.to_hdf(path / f'{tag}.h5f', key=tag)
+    data.to_hdf(path / f"{tag}.h5f", key=tag)

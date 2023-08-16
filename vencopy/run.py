@@ -14,7 +14,7 @@ from vencopy.core.diaryBuilders import DiaryBuilder
 from vencopy.core.gridModelers import GridModeler
 from vencopy.core.flexEstimators import FlexEstimator
 from vencopy.core.profileAggregators import ProfileAggregator
-from vencopy.core.outputFormatters import OutputFormatter
+from vencopy.core.postProcessors import PostProcessing
 from vencopy.core.normalizers import Normalizer
 from vencopy.utils.globalFunctions import loadConfigDict, createOutputFolders
 
@@ -40,18 +40,9 @@ if __name__ == "__main__":
     vpProfile = ProfileAggregator(configDict=configDict, activities=vpDiary.activities, profiles=vpDiary)
     vpProfile.aggregateProfiles()
 
-    vpOutput = OutputFormatter(configDict=configDict, profiles=vpProfile)
-    vpOutput.createTimeseries()
-
-    vpNormProf = Normalizer(configDict=configDict, profiles=vpOutput)
-    vpNormProf.normalize(
-        flow_profiles={"drain": vpOutput.drain, "uncontrolledCharge": vpOutput.uncontrolledCharge},
-        state_profiles={
-            "maxBatteryLevel": vpOutput.maxBatteryLevel,
-            "minBatteryLevel": vpOutput.minBatteryLevel,
-        },
-        capacity_profiles={"chargeCapacity": vpOutput.chargingPower},
-    )
+    vpPost = PostProcessing(configDict=configDict)
+    vpPost.week_to_annual(profiles=vpProfile)
+    vpPost.normalize()
 
     # vpEval = Evaluator(configDict=configDict, parseData=pd.Series(data=vpData, index=[datasetID]))
     # vpEval.plotParkingAndPowers(vpGrid=vpGrid)

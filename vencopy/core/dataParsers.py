@@ -1,9 +1,9 @@
-__version__ = "0.4.X"
+__version__ = "1.0.X"
 __maintainer__ = "Niklas Wulff"
 __contributors__ = "Fabia Miorelli"
 __email__ = "Niklas.Wulff@dlr.de"
 __birthdate__ = "21.04.2022"
-__status__ = "dev"  # options are: dev, test, prod
+__status__ = "test"  # options are: dev, test, prod
 
 
 import pprint
