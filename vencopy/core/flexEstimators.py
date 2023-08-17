@@ -538,6 +538,11 @@ class FlexEstimator:
         deltaMax = self.__getDelta(colStart="maxBatteryLevelStart", colEnd="maxBatteryLevelEnd")
         deltaMin = self.__getDelta(colStart="minBatteryLevelStart", colEnd="minBatteryLevelEnd")
 
+        print(
+            f"Finished ITERATION {1} / {maxIter}. Delta max battery level is {int(deltaMax)} / {absoluteEps} "
+            f"and delta min battery is {int(deltaMin)} / {absoluteEps}."
+        )
+
         for i in range(1, maxIter + 1):
             if deltaMax < absoluteEps and deltaMin < absoluteEps:
                 break
@@ -552,7 +557,7 @@ class FlexEstimator:
                 deltaMin = self.__getDelta(colStart="minBatteryLevelStart", colEnd="minBatteryLevelEnd")
 
             print(
-                f"Finished ITERATION {i+1} / {maxIter}. Delta max battery level is {int(deltaMax)} / {absoluteEps} "
+                f"Finished ITERATION {i} / {maxIter}. Delta max battery level is {int(deltaMax)} / {absoluteEps} "
                 f"and delta min battery is {int(deltaMin)} / {absoluteEps}."
             )
 

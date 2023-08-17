@@ -1,7 +1,7 @@
 from vencopy.utils.globalFunctions import loadConfigDict, createOutputFolders
 from vencopy.core.flexEstimators import WeekFlexEstimator
 from vencopy.core.gridModelers import GridModeler
-from vencopy.core.dataParsers import ParseMiD
+from vencopy.core.dataParsers.dataParsers import ParseMiD
 import pandas as pd
 import seaborn as sns
 from pathlib import Path

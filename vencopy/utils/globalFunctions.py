@@ -101,7 +101,7 @@ def createOutputFolders(configDict: dict):
 
 
 def createFileName(
-    dev_config: dict, user_config: dict, manualLabel: str, fileNameID: str, datasetID: str, suffix: str = "csv"
+    dev_config: dict, user_config: dict, fileNameID: str, datasetID: str, manualLabel: str = "", suffix: str = "csv"
 ) -> str:
     """
     Generic method used for fileString compilation throughout the VencoPy framework. This method does not write any

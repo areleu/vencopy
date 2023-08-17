@@ -14,7 +14,7 @@ from profilehooks import profile
 
 from snippets.flexEstimator.socMax import algo
 
-from vencopy.core.dataParsers import parseData
+from vencopy.core.dataParsers.dataParsers import parseData
 from vencopy.core.gridModelers import GridModeler
 from vencopy.core.flexEstimators import FlexEstimator
 from vencopy.utils.globalFunctions import loadConfigDict
@@ -81,7 +81,7 @@ def algo(data: pd.DataFrame, socStart: int, lower: int, upper: int):
             # idx_os = ~overshoot.isna()['delta']
             data['delta'] = data['delta'] - overshoot['delta']
             cDelta = data[['hhPersonID', 'delta']].groupby(by=['hhPersonID']).cumsum() + socStart
-            
+
             undershoot = cDelta[cDelta < lower].fillna(0)
 
             # sigDelta = np.sign(data['delta'].loc[data['hhPersonID'].isin(idxOver.index)])

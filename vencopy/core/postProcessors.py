@@ -19,12 +19,12 @@ class PostProcessing:
     contains cloning weekly profiles to year and normalizing it with different normalization bases.
     """
 
-    def __init__(self, configDict: dict):
-        self.user_config = configDict["user_config"]
-        self.dev_config = configDict["dev_config"]
-        self.datasetID = self.user_config["global"]["dataset"]
-        self.deltaTime = self.user_config["diaryBuilders"]["TimeDelta"]
-        self.timeIndex = list(pd.timedelta_range(start="00:00:00", end="24:00:00", freq=f"{self.deltaTime}T"))
+    def __init__(self, config_dict: dict):
+        self.user_config = config_dict["user_config"]
+        self.dev_config = config_dict["dev_config"]
+        self.dataset_ID = self.user_config["global"]["dataset"]
+        self.delta_time = self.user_config["diaryBuilders"]["TimeDelta"]
+        self.time_idx = list(pd.timedelta_range(start="00:00:00", end="24:00:00", freq=f"{self.delta_time}T"))
 
         self.drain = None
         self.charge_power = None
@@ -45,21 +45,21 @@ class PostProcessing:
         self.input_profiles[name] = profile
 
     def __create_annual_profiles(self, profile: pd.Series) -> pd.Series:
-        startWeekday = self.user_config["postProcessing"]["startWeekday"]  # (1: Monday, 7: Sunday)
-        nTimeSlotsPerDay = len(list(self.timeIndex))
+        start_weekday = self.user_config["postProcessing"]["start_weekday"]  # (1: Monday, 7: Sunday)
+        n_timeslots_per_day = len(list(self.time_idx))
 
         # Shift input profiles to the right weekday and start with first bin of chosen weekday
-        annual = profile.iloc[((startWeekday - 1) * (nTimeSlotsPerDay - 1)) :]
+        annual = profile.iloc[((start_weekday - 1) * (n_timeslots_per_day - 1)) :]
         annual = pd.DataFrame(annual.to_list() * 53)
-        return annual.drop(annual.tail(len(annual) - (nTimeSlotsPerDay - 1) * 365).index)
+        return annual.drop(annual.tail(len(annual) - (n_timeslots_per_day - 1) * 365).index)
 
     def week_to_annual(self, profiles: ProfileAggregator):
         profiles = (
-            profiles.drainWeekly,
-            profiles.uncontrolledChargeWeekly,
-            profiles.chargingPowerWeekly,
-            profiles.maxBatteryLevelWeekly,
-            profiles.minBatteryLevelWeekly,
+            profiles.drain_weekly,
+            profiles.uncontrolled_charge_weekly,
+            profiles.charge_power_weekly,
+            profiles.max_battery_level_weekly,
+            profiles.min_battery_level_weekly,
         )
         pnames = ("drain", "uncontrolled_charge", "charge_power", "max_battery_level", "min_battery_level")
         for pname, p in zip(pnames, profiles):
@@ -85,6 +85,12 @@ class PostProcessing:
             profile=self.input_profiles["min_battery_level"],
             base=self.user_config["flexEstimators"]["Battery_capacity"],
         )
+
+        if self.user_config["gridModelers"]["gridModel"] != "simple":
+            warnings.warn(
+                f"You selected a grid model where normalization is not meaningful. For normalization, the"
+                f" rated power of {self.user_config['gridModelers']['chargePowerSimple']}kW was used."
+            )
 
         if self.user_config["global"]["writeOutputToDisk"]["processorOutput"]["normalised_annual_profiles"]:
             self.__write_out_profiles(filename_id="outputPostProcessorNorm")
@@ -112,6 +118,6 @@ class PostProcessing:
             user_config=self.user_config,
             manualLabel=profile_name,
             fileNameID=filename_id,
-            datasetID=self.datasetID,
+            datasetID=self.dataset_ID,
         )
         writeOut(data=profile, path=root / folder / fileName)

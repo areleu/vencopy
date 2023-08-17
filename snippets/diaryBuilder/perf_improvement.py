@@ -14,7 +14,7 @@ if __package__ is None or __package__ == "":
 
 import profilehooks
 from pathlib import Path
-from vencopy.core.dataParsers import ParseMiD
+from vencopy.core.dataParsers.dataParsers import ParseMiD
 from vencopy.core.diaryBuilders import DiaryBuilder
 from vencopy.core.gridModelers import GridModeler
 from vencopy.core.flexEstimators import FlexEstimator

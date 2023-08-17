@@ -37,7 +37,7 @@ if __name__ == "__main__":
     vpDiary.createDiaries()
 
     vpProfile = ProfileAggregator(configDict=configDict, activities=vpDiary.activities, profiles=vpDiary)
-    vpProfile.aggregateProfiles()
+    vpProfile.aggregate_profiles()
 
     vpPost = PostProcessing(configDict=configDict)
     vpPost.week_to_annual(profiles=vpProfile)

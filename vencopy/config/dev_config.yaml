@@ -163,7 +163,7 @@ dataParsers:
             tripEndNextDay: "bool"
             tripIsIntermodal: "int"
             weather: "int"
-    filterDicts:
+    filters:
         lowerSpeedThreshold: 10 # Minimum speed required
         higherSpeedThreshold: 200 # Maximum speed allowed
         MiD08:
