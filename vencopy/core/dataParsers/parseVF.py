@@ -28,9 +28,9 @@ class ParseVF(IntermediateParsing):
                               specified in parseConfig['PW'].
         """
         super().__init__(configDict=configDict, datasetID=datasetID, debug=debug, loadEncrypted=loadEncrypted)
-        self.parkInference = ParkInference(configDict=configDict)
+        self.park_inference = ParkInference(configDict=configDict)
 
-    def _loadData(self):
+    def _load_data(self):
         """
         rawDataPathTrip, unlike for other MiD classes is taken from the MiD B1 dataset
         rawDataPathVehicles is an internal dataset from VF
@@ -53,9 +53,9 @@ class ParseVF(IntermediateParsing):
         rawDataVehicles = rawDataVehicles.drop(columns=["Unnamed: 0"])
         rawDataVehicles = rawDataVehicles.drop_duplicates(subset=["HP_ID"], keep="first")
         rawDataVehicles.set_index("HP_ID", inplace=True)
-        rawData = rawDataTrips.join(rawDataVehicles, on="HP_ID", rsuffix="VF")
-        self.rawData = rawData
-        print(f"Finished loading {len(self.rawData)} rows of raw data of type .dta.")
+        raw_data = rawDataTrips.join(rawDataVehicles, on="HP_ID", rsuffix="VF")
+        self.raw_data = raw_data
+        print(f"Finished loading {len(self.raw_data)} rows of raw data of type .dta.")
 
     def __harmonize_variables(self):
         """
@@ -102,12 +102,12 @@ class ParseVF(IntermediateParsing):
         :return: None
         """
         if weekday:
-            self._addStrColumnFromVariable(colName="weekdayStr", varName="tripStartWeekday")
+            self._add_string_column_from_variable(colName="weekdayStr", varName="tripStartWeekday")
         if purpose:
-            self._addStrColumnFromVariable(colName="purposeStr", varName="tripPurpose")
+            self._add_string_column_from_variable(colName="purposeStr", varName="tripPurpose")
         if vehicleSegment:
             self.trips = self.trips.replace("groß", "gross")
-            self._addStrColumnFromVariable(colName="vehicleSegmentStr", varName="vehicleSegment")
+            self._add_string_column_from_variable(colName="vehicleSegmentStr", varName="vehicleSegment")
 
     def _drop_redundant_cols(self):
         # Clean-up of temporary redundant columns
@@ -145,7 +145,7 @@ class ParseVF(IntermediateParsing):
         self._check_filter_dict()
         self._filter(self.filters)
         self._filter_consistent_hours()
-        self.activities = self.parkInference.add_parking_rows(trips=self.trips)
+        self.activities = self.park_inference.add_parking_rows(trips=self.trips)
         self._subset_vehicle_segment()
         self._cleanup_dataset()
         self.write_output()

@@ -35,7 +35,7 @@ class ParseMiD(IntermediateParsing):
             loadEncrypted=loadEncrypted,
             debug=debug,
         )
-        self.parkInference = ParkInference(configDict=configDict)
+        self.park_inference = ParkInference(configDict=configDict)
 
     def __harmonize_variables(self):
         """
@@ -67,9 +67,9 @@ class ParseMiD(IntermediateParsing):
         :return: None
         """
         if weekday:
-            self._addStrColumnFromVariable(colName="weekdayStr", varName="tripStartWeekday")
+            self._add_string_column_from_variable(colName="weekdayStr", varName="tripStartWeekday")
         if purpose:
-            self._addStrColumnFromVariable(colName="purposeStr", varName="tripPurpose")
+            self._add_string_column_from_variable(colName="purposeStr", varName="tripPurpose")
 
     def _drop_redundant_cols(self):
         # Clean-up of temporary redundant columns
@@ -109,7 +109,7 @@ class ParseMiD(IntermediateParsing):
         self._check_filter_dict()
         self._filter(self.filters)
         self._filter_consistent_hours()
-        self.activities = self.parkInference.add_parking_rows(trips=self.trips)
+        self.activities = self.park_inference.add_parking_rows(trips=self.trips)
         self._cleanup_dataset()
         self.write_output()
         print("Parsing MiD dataset completed.")

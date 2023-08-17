@@ -47,65 +47,65 @@ class DataParser:
         """
         self.user_config = configDict["user_config"]
         self.dev_config = configDict["dev_config"]
-        self.datasetID = self.__checkDatasetID(datasetID)
+        self.datasetID = self.__check_dataset_id(datasetID)
         filepath = (
             Path(self.user_config["global"]["pathAbsolute"][self.datasetID])
             / self.dev_config["global"]["files"][self.datasetID]["tripsDataRaw"]
         )
-        self.rawDataPath = filepath
-        self.rawData = None
+        self.raw_data_path = filepath
+        self.raw_data = None
         self.trips = None
         self.activities = None
         self.filters = {}
         print("Generic file parsing properties set up.")
         if loadEncrypted:
-            print(f"Starting to retrieve encrypted data file from {self.rawDataPath}.")
-            self._loadEncryptedData(pathToZip=filepath, pathInZip=fpInZip)
+            print(f"Starting to retrieve encrypted data file from {self.raw_data_path}.")
+            self._load_encrypted_data(pathToZip=filepath, pathInZip=fpInZip)
         else:
-            print(f"Starting to retrieve local data file from {self.rawDataPath}.")
-            self._loadData()
+            print(f"Starting to retrieve local data file from {self.raw_data_path}.")
+            self._load_data()
         nDebugLines = self.user_config["global"]["nDebugLines"]
-        self.rawData = self.rawData.loc[0 : nDebugLines - 1, :] if debug else self.rawData.copy()
+        self.raw_data = self.raw_data.loc[0 : nDebugLines - 1, :] if debug else self.raw_data.copy()
         if debug:
             print("Running in debug mode.")
         # Storage for original data variable that is being overwritten throughout adding of park rows
         self.tripEndNextDayRaw = None
 
-    def _loadData(self) -> pd.DataFrame:
+    def _load_data(self) -> pd.DataFrame:
         """
-        Loads data specified in self.rawDataPath and stores it in self.rawData.
+        Loads data specified in self.raw_data_path and stores it in self.raw_data.
         Raises an exception if a invalid suffix is specified in
-        self.rawDataPath.
+        self.raw_data_path.
 
         :return: None
         """
         # Future releases: Are potential error messages (.dta not being a stata
         # file even as the ending matches) readable for the user?
         # Should we have a manual error treatment here?
-        if self.rawDataPath.suffix == ".dta":
-            self.rawData = pd.read_stata(
-                self.rawDataPath,
+        if self.raw_data_path.suffix == ".dta":
+            self.raw_data = pd.read_stata(
+                self.raw_data_path,
                 convert_categoricals=False,
                 convert_dates=False,
                 preserve_dtypes=False,
             )
         # This has not been tested before the beta release
-        elif self.rawDataPath.suffix == ".csv":
-            self.rawData = pd.read_csv(self.rawDataPath)
+        elif self.raw_data_path.suffix == ".csv":
+            self.raw_data = pd.read_csv(self.raw_data_path)
         else:
             Exception(
-                f"Data type {self.rawDataPath.suffix} not yet specified. Available types so far are .dta and .csv"
+                f"Data type {self.raw_data_path.suffix} not yet specified. Available types so far are .dta and .csv"
             )
-        print(f"Finished loading {len(self.rawData)} rows of raw data of type {self.rawDataPath.suffix}.")
-        return self.rawData
+        print(f"Finished loading {len(self.raw_data)} rows of raw data of type {self.raw_data_path.suffix}.")
+        return self.raw_data
 
-    def _loadEncryptedData(self, pathToZip, pathInZip):
+    def _load_encrypted_data(self, pathToZip, pathInZip):
         """
         Since the MiD data sets are only accessible by an extensive data
         security contract, VencoPy provides the possibility to access
         encrypted zip files. An encryption password has to be given in
         user_config.yaml in order to access the encrypted file. Loaded data
-        is stored in self.rawData
+        is stored in self.raw_data
 
         :param pathToZip: path from current working directory to the zip file
                           or absolute path to zipfile
@@ -114,7 +114,7 @@ class DataParser:
         """
         with ZipFile(pathToZip) as myzip:
             if ".dta" in pathInZip:
-                self.rawData = pd.read_stata(
+                self.raw_data = pd.read_stata(
                     myzip.open(
                         pathInZip,
                         pwd=bytes(self.user_config["dataParsers"]["encryptionPW"], encoding="utf-8"),
@@ -124,7 +124,7 @@ class DataParser:
                     preserve_dtypes=False,
                 )
             else:  # if '.csv' in pathInZip:
-                self.rawData = pd.read_csv(
+                self.raw_data = pd.read_csv(
                     myzip.open(
                         pathInZip,
                         pwd=bytes(self.parseConfig["encryptionPW"], encoding="utf-8"),
@@ -133,9 +133,9 @@ class DataParser:
                     decimal=",",
                 )
 
-        print(f"Finished loading {len(self.rawData)} rows of raw data of type {self.rawDataPath.suffix}.")
+        print(f"Finished loading {len(self.raw_data)} rows of raw data of type {self.raw_data_path.suffix}.")
 
-    def __checkDatasetID(self, datasetID: str) -> str:
+    def __check_dataset_id(self, datasetID: str) -> str:
         """
         General check if data set ID is defined in dev_config.yaml
 
@@ -213,17 +213,17 @@ class DataParser:
         #  might be easy to code but hard to implement correctly. See issue #445
 
         # Application of simple value-based filters
-        simpleFilters = self.__simpleFilters()
+        simpleFilters = self.__simple_filters()
         self.dataSimple = self.trips[simpleFilters.all(axis="columns")]
 
         # Application of sophisticated filters
-        complexFilters = self._complexFilters()
+        complexFilters = self._complex_filters()
         self.trips = self.dataSimple.loc[complexFilters.all(axis="columns"), :]
 
         # Print user feedback on filtering
-        self._filterAnalysis(simpleFilters.join(complexFilters))
+        self._filter_analysis(simpleFilters.join(complexFilters))
 
-    def __simpleFilters(self) -> pd.DataFrame:
+    def __simple_filters(self) -> pd.DataFrame:
         """Apply single-column scalar value filtering as defined in the config.
 
         Returns:
@@ -235,13 +235,13 @@ class DataParser:
         # Simple filters checking single columns for specified values
         for iKey, iVal in self.filters.items():
             if iKey == "include" and iVal:
-                simpleFilter = simpleFilter.join(self.__setIncludeFilter(iVal, self.trips.index))
+                simpleFilter = simpleFilter.join(self.__set_include_filter(iVal, self.trips.index))
             elif iKey == "exclude" and iVal:
-                simpleFilter = simpleFilter.join(self.__setExcludeFilter(iVal, self.trips.index))
+                simpleFilter = simpleFilter.join(self.__set_exclude_filter(iVal, self.trips.index))
             elif iKey == "greaterThan" and iVal:
-                simpleFilter = simpleFilter.join(self.__setGreaterThanFilter(iVal, self.trips.index))
+                simpleFilter = simpleFilter.join(self.__set_greater_than_filter(iVal, self.trips.index))
             elif iKey == "smallerThan" and iVal:
-                simpleFilter = simpleFilter.join(self.__setSmallerThanFilter(iVal, self.trips.index))
+                simpleFilter = simpleFilter.join(self.__set_smaller_than_filter(iVal, self.trips.index))
             elif iKey not in ["include", "exclude", "greaterThan", "smallerThan"]:
                 warnings.warn(
                     f"A filter dictionary was defined in the dev_config with an unknown filtering key."
@@ -250,7 +250,7 @@ class DataParser:
                 )
         return simpleFilter
 
-    def __setIncludeFilter(self, includeFilterDict: dict, dataIndex: pd.Index) -> pd.DataFrame:
+    def __set_include_filter(self, includeFilterDict: dict, dataIndex: pd.Index) -> pd.DataFrame:
         """
         Read-in function for include filter dict from dev_config.yaml
 
@@ -265,7 +265,7 @@ class DataParser:
             incFilterCols[incCol] = self.trips[incCol].isin(incElements)
         return incFilterCols
 
-    def __setExcludeFilter(self, excludeFilterDict: dict, dataIndex: pd.Index) -> pd.DataFrame:
+    def __set_exclude_filter(self, excludeFilterDict: dict, dataIndex: pd.Index) -> pd.DataFrame:
         """
         Read-in function for exclude filter dict from dev_config.yaml
 
@@ -279,7 +279,7 @@ class DataParser:
             exclFilterCols[excCol] = ~self.trips[excCol].isin(excElements)
         return exclFilterCols
 
-    def __setGreaterThanFilter(self, greaterThanFilterDict: dict, dataIndex: pd.Index):
+    def __set_greater_than_filter(self, greaterThanFilterDict: dict, dataIndex: pd.Index):
         """
         Read-in function for greaterThan filter dict from dev_config.yaml
 
@@ -298,7 +298,7 @@ class DataParser:
                 )
         return greaterThanFilterCols
 
-    def __setSmallerThanFilter(self, smallerThanFilterDict: dict, dataIndex: pd.Index) -> pd.DataFrame:
+    def __set_smaller_than_filter(self, smallerThanFilterDict: dict, dataIndex: pd.Index) -> pd.DataFrame:
         """
         Read-in function for smallerThan filter dict from dev_config.yaml
 
@@ -318,7 +318,7 @@ class DataParser:
                 )
         return smallerThanFilterCols
 
-    def _complexFilters(self) -> pd.DataFrame:
+    def _complex_filters(self) -> pd.DataFrame:
         """Collects filters that compare multiple columns or derived variables or calculation results thereof. True
         in this filter means "keep row". The function needs self.trips to determine the length and the index of the
         return argument.
@@ -328,12 +328,12 @@ class DataParser:
             data set.
         """
         complexFilters = pd.DataFrame(index=self.trips.index)
-        complexFilters = complexFilters.join(self._filterInconsistentSpeedTrips())
-        complexFilters = complexFilters.join(self._filterInconsistentTravelTimes())
-        complexFilters = complexFilters.join(self._filterOverlappingTrips())
+        complexFilters = complexFilters.join(self._filter_inconsistent_speeds())
+        complexFilters = complexFilters.join(self._filter_inconsistent_travel_times())
+        complexFilters = complexFilters.join(self._filter_overlapping_trips())
         return complexFilters
 
-    def _filterInconsistentSpeedTrips(self) -> pd.Series:
+    def _filter_inconsistent_speed(self) -> pd.Series:
         """
         Filter out trips with inconsistent average speed. These trips are mainly trips where survey participant
         responses suggest that participants were travelling for the entire time they took for the whole purpose
@@ -344,11 +344,11 @@ class DataParser:
         """
         self.trips["averageSpeed"] = self.trips["tripDistance"] / (self.trips["travelTime"] / 60)
 
-        return (self.trips["averageSpeed"] > self.dev_config["dataParsers"]["filterDicts"]["lowerSpeedThreshold"]) & (
-            self.trips["averageSpeed"] <= self.dev_config["dataParsers"]["filterDicts"]["higherSpeedThreshold"]
+        return (self.trips["averageSpeed"] > self.dev_config["dataParsers"]["filters"]["lowerSpeedThreshold"]) & (
+            self.trips["averageSpeed"] <= self.dev_config["dataParsers"]["filters"]["higherSpeedThreshold"]
         )
 
-    def _filterInconsistentTravelTimes(self) -> pd.Series:
+    def _filter_inconsistent_travel_times(self) -> pd.Series:
         """Calculates a travel time from the given timestamps and compares it
         to the travel time given by the interviewees. Selects observations where
         timestamps are consistent with the travel time given.
@@ -363,7 +363,7 @@ class DataParser:
         filt.name = "travelTime"  # Required for column-join in _filter()
         return filt
 
-    def _filterOverlappingTrips(self, lookahead_periods: int = 1) -> pd.DataFrame:
+    def _filter_overlapping_trips(self, lookahead_periods: int = 1) -> pd.DataFrame:
         """
         Filter out trips carried out by the same car as next (second next, third next up to period next etc) trip but
         overlap with at least one of the period next trips.
@@ -379,14 +379,14 @@ class DataParser:
         """
         lst = []
         for p in range(1, lookahead_periods + 1):
-            ser = self.__identifyOverlappingTrips(dat=self.trips, period=p)
+            ser = self.__identify_overlapping_trips(dat=self.trips, period=p)
             ser.name = f"p={p}"
             lst.append(ser)
         ret = pd.concat(lst, axis=1).all(axis=1)
         ret.name = "noOverlapNextTrips"
         return ret
 
-    def __identifyOverlappingTrips(self, dat: pd.DataFrame, period: int) -> pd.Series:
+    def __identify_overlapping_trips(self, dat: pd.DataFrame, period: int) -> pd.Series:
         """Calculates a boolean vector of same length as dat that is True if the current trip does not overlap with
         the next trip. "Next" can relate to the consecutive trip (if period==1) or to a later trip defined by the
         period (e.g. for period==2 the trip after next). For determining if a overlap occurs the end timestamp of the
@@ -407,7 +407,7 @@ class DataParser:
         dat["tripStartsAfterPrevTrip"] = dat["timestampStart"] > dat["timestampEnd"].shift(period)
         return ~(dat["isSameIDAsPrev"] & ~dat["tripStartsAfterPrevTrip"])
 
-    def _filterAnalysis(self, filterData: pd.DataFrame):
+    def _filter_analysis(self, filterData: pd.DataFrame):
         """
         Function supplies some aggregate info of the data after filtering to the user Function does not change any
         class attributes
@@ -457,11 +457,11 @@ class IntermediateParsing(DataParser):
                               specified in user_config['PW'].
         """
         super().__init__(configDict, datasetID=datasetID, loadEncrypted=loadEncrypted, debug=debug)
-        self.filters = self.dev_config["dataParsers"]["filterDicts"][self.datasetID]
+        self.filters = self.dev_config["dataParsers"]["filters"][self.datasetID]
         self.varDataTypeDict = {}
-        self.columns = self.__compileVariableList()
+        self.columns = self.__compile_variable_list()
 
-    def __compileVariableList(self) -> list:
+    def __compile_variable_list(self) -> list:
         """
         Clean up the replacement dictionary of raw data file variable (column)
         names. This has to be done because some variables that may be relevant
@@ -479,10 +479,10 @@ class IntermediateParsing(DataParser):
         ]
 
         variables.remove(self.datasetID)
-        self.__removeNA(variables)
+        self.__remove_na(variables)
         return variables
 
-    def __removeNA(self, variables: list):
+    def __remove_na(self, variables: list):
         """
         Removes all strings that can be capitalized to 'NA' from the list
         of variables
@@ -499,13 +499,13 @@ class IntermediateParsing(DataParser):
 
     def _select_columns(self):
         """
-        Function to filter the rawData for only relevant columns as specified
+        Function to filter the raw_data for only relevant columns as specified
         by parseConfig and cleaned in self.compileVariablesList().
         Stores the subset of data in self.trips
 
         :return: None
         """
-        self.trips = self.rawData.loc[:, self.columns]
+        self.trips = self.raw_data.loc[:, self.columns]
 
     def _convert_types(self):
         """
@@ -523,7 +523,7 @@ class IntermediateParsing(DataParser):
         self.varDataTypeDict = {key: conversionDict[key] for key in conversionDict.keys() & keys}
         self.trips = self.trips.astype(self.varDataTypeDict)
 
-    def _complexFilters(self) -> pd.DataFrame:
+    def _complex_filters(self) -> pd.DataFrame:
         """Collects filters that compare multiple columns or derived variables or calculation results thereof. True
         in this filter means "keep row". The function needs self.trips to determine the length and the index of the
         return argument.
@@ -533,11 +533,11 @@ class IntermediateParsing(DataParser):
             data set.
         """
         complexFilters = pd.DataFrame(index=self.trips.index)
-        complexFilters = complexFilters.join(self._filterInconsistentSpeedTrips())
-        complexFilters = complexFilters.join(self._filterInconsistentTravelTimes())
-        complexFilters = complexFilters.join(self._filterOverlappingTrips())
+        complexFilters = complexFilters.join(self._filter_inconsistent_speeds())
+        complexFilters = complexFilters.join(self._filter_inconsistent_travel_times())
+        complexFilters = complexFilters.join(self._filter_overlapping_trips())
         complexFilters = complexFilters.join(self._filter_consistent_hours())
-        complexFilters = complexFilters.join(self._filterNoZeroLengthTrips())
+        complexFilters = complexFilters.join(self._filter_zero_length_trips())
         return complexFilters
 
     def _filter_consistent_hours(self) -> pd.Series:
@@ -566,7 +566,7 @@ class IntermediateParsing(DataParser):
         ser.name = "isNoZeroLengthTrip"
         return ser
 
-    def _addStrColumnFromVariable(self, colName: str, varName: str):
+    def _add_string_column_from_variable(self, colName: str, varName: str):
         """
         Replaces each occurence of a MiD/KiD variable e.g. 1,2,...,7 for
         weekdays with an explicitly mapped string e.g. 'MON', 'TUE',...,'SUN'.

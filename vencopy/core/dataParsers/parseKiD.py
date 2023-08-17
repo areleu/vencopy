@@ -17,9 +17,9 @@ class ParseKiD(IntermediateParsing):
         such as filters etc.
         """
         super().__init__(configDict=configDict, datasetID=datasetID, loadEncrypted=loadEncrypted, debug=debug)
-        self.parkInference = ParkInference(configDict=configDict)
+        self.park_inference = ParkInference(configDict=configDict)
 
-    def _loadData(self):
+    def _load_data(self):
         rawDataPathTrips = (
             Path(self.user_config["global"]["pathAbsolute"][self.datasetID])
             / self.dev_config["global"]["files"][self.datasetID]["tripsDataRaw"]
@@ -41,9 +41,9 @@ class ParseKiD(IntermediateParsing):
             preserve_dtypes=False,
         )
         rawDataVehicles.set_index("k00", inplace=True)
-        rawData = rawDataTrips.join(rawDataVehicles, on="k00")
-        self.rawData = rawData
-        print(f"Finished loading {len(self.rawData)} " f"rows of raw data of type .dta.")
+        raw_data = rawDataTrips.join(rawDataVehicles, on="k00")
+        self.raw_data = raw_data
+        print(f"Finished loading {len(self.raw_data)} " f"rows of raw data of type .dta.")
 
     def __change_separator(self):
         """
@@ -77,13 +77,13 @@ class ParseKiD(IntermediateParsing):
         self.trips["tripEndHour"] = pd.to_datetime(self.trips["tripEndClock"], format="%H:%M").dt.hour
         self.trips["tripEndMinute"] = pd.to_datetime(self.trips["tripEndClock"], format="%H:%M").dt.minute
         if weekday:
-            self._addStrColumnFromVariable(colName="weekdayStr", varName="tripStartWeekday")
+            self._add_string_column_from_variable(colName="weekdayStr", varName="tripStartWeekday")
         if purpose:
-            self._addStrColumnFromVariable(colName="purposeStr", varName="tripPurpose")
+            self._add_string_column_from_variable(colName="purposeStr", varName="tripPurpose")
         if vehicleSegment:
-            self._addStrColumnFromVariable(colName="vehicleSegmentStr", varName="vehicleSegment")
+            self._add_string_column_from_variable(colName="vehicleSegmentStr", varName="vehicleSegment")
 
-    def __updateEndTimestamp(self):
+    def __update_end_timestamp(self):
         """
         Separate implementation for the KID dataset. Overwrites parent method.
 
@@ -118,11 +118,11 @@ class ParseKiD(IntermediateParsing):
         self.__exclude_hours()
         self.__add_string_columns()
         self._compose_start_and_end_timestamps()
-        self.__updateEndTimestamp()
+        self.__update_end_timestamp()
         self._check_filter_dict()
         self._filter(self.filters)
         self._filter_consistent_hours()
-        self.activities = self.parkInference.add_parking_rows(trips=self.trips)
+        self.activities = self.park_inference.add_parking_rows(trips=self.trips)
         self._subset_vehicle_segment()
         self._cleanup_dataset()
         self.write_output()
