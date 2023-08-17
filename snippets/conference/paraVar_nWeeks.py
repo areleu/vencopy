@@ -1,6 +1,6 @@
 
 from vencopy.core.diaryBuilders import WeekDiaryBuilder, DiaryBuilder
-from vencopy.core.dataParsers import ParseMiD
+from vencopy.core.dataParsers.dataParsers import ParseMiD
 from vencopy.core.gridModelers import GridModeler
 from vencopy.core.flexEstimators import WeekFlexEstimator
 from vencopy.utils.globalFunctions import loadConfigDict, createOutputFolders
@@ -64,7 +64,7 @@ def composeSameSampleSizeDict(
         nSample (int): Number of runs the complete sample (with nWeeks samples) is drawn for comparison
         weekDiaryBuilder (WeekDiaryBuilder): Week diary builder instance from VencoPy
         threshold (float): SOC threshold over which charging does not occur
-        seed (int): Optional seeds for reproducible sampling. Has to match 
+        seed (int): Optional seeds for reproducible sampling. Has to match
         replace (bool): Should bootstrapping of the sample bases be allowed?
 
     Returns:
@@ -90,7 +90,7 @@ def composeSameSampleSizeDict(
 def composeMultiThresholdDict(nWeeks: int, weekDiaryBuilder: WeekDiaryBuilder, threshold: list[float],
                               seed: int = None, replace: bool = True) -> dict:
     """ Compose multiple weekly samples of the size of the nWeeks and varying charging threshold given in the list
-    of floats in threshold. 
+    of floats in threshold.
 
     Args:
         nWeeks (list[int]): List of integers defining the sample size per sample base

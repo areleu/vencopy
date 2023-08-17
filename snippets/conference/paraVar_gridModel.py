@@ -13,7 +13,7 @@ from profilehooks import profile
 sys.path.append('.')
 
 from vencopy.core.diaryBuilders import WeekDiaryBuilder
-from vencopy.core.dataParsers import ParseMiD
+from vencopy.core.dataParsers.dataParsers import ParseMiD
 from vencopy.core.gridModelers import GridModeler
 from vencopy.core.flexEstimators import WeekFlexEstimator
 from vencopy.utils.globalFunctions import loadConfigDict, createOutputFolders
@@ -50,7 +50,7 @@ if __name__ == '__main__':
         #                         gridModel='simple')
         # vpGridSmp.assignGrid()
 
-        # Probability based grid applicaion 
+        # Probability based grid applicaion
         vpGridProb = GridModeler(configDict=configDict, datasetID=datasetID, activities=vpData.activities,
                                  gridModel='probability')
         vpGridProb.assignGrid()
@@ -85,7 +85,7 @@ if __name__ == '__main__':
         acts = pickle.load(open('activities_T0.8_N500.p', 'rb'))
 
     def getWeeksDays(wdb: WeekDiaryBuilder) -> tuple[int, int]:
-        """ Retrieve the number of weeks and the number of days used for sampling from the respective sample bases 
+        """ Retrieve the number of weeks and the number of days used for sampling from the respective sample bases
         in the VencoPy week diary builder.
 
         Returns:
@@ -117,7 +117,7 @@ if __name__ == '__main__':
         'C:/repos/vencopy_paper/2022_EMPSIS/results/VencoPy_results_T0.8_N500/actsCE_T0.8_N500_probGrid.csv'))
     actsProb.to_csv(Path(
         'C:/repos/vencopy_paper/2022_EMPSIS/results/VencoPy_results_T0.8_N500/acts_T0.8_N500_probGrid.csv'))
-        
+
     # Overall averages
     totalNCE = len(actsCE)
     totalWeeks, totalDays = getWeeksDays(wdb=vpWDB)

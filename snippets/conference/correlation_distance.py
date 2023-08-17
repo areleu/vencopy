@@ -10,7 +10,7 @@ from profilehooks import profile
 # Needed to run in VSCode properties currently
 sys.path.append('.')
 
-from vencopy.core.dataParsers import ParseMiD
+from vencopy.core.dataParsers.dataParsers import ParseMiD
 from vencopy.core.gridModelers import GridModeler
 from vencopy.core.flexEstimators import WeekFlexEstimator
 from vencopy.utils.globalFunctions import loadConfigDict, createOutputFolders
@@ -43,14 +43,14 @@ if __name__ == '__main__':
     vpData = ParseMiD(configDict=configDict, datasetID=datasetID)
     vpData.process(splitOvernightTrips=False)
 
-    # Correlation 
+    # Correlation
     trips = vpData.activities.loc[~vpData.activities['tripID'].isna(), :]
     trips['tripDistance'] = trips['tripDistance'].astype(float)
-    
+
     corr = trips.apply(lambda x: x.corr(trips['tripDistance'], method='pearson'))
     corr = corr.concat([corr, trips.apply(lambda x: x.corr(trips['tripDistance'], method='kendall'))])
     corr = corr.concat([corr, trips.apply(lambda x: x.corr(trips['tripDistance'], method='spearman'))])
-    
+
     # FIXME: MCA Major component analysis
-    
+
     print('debug break')

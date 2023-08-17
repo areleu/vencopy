@@ -12,7 +12,7 @@ from pathlib import Path
 from functools import partial
 from profilehooks import profile
 
-from vencopy.core.dataParsers import parseData
+from vencopy.core.dataParsers.dataParsers import parseData
 from vencopy.core.gridModelers import GridModeler
 from vencopy.core.flexEstimators import FlexEstimator
 from vencopy.utils.globalFunctions import loadConfigDict

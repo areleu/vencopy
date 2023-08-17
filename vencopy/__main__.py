@@ -27,17 +27,17 @@ import vencopy
     help="Specify if tutorials should be copied to the user folder on set up. " "Defaults to true",
 )
 def create(name: str, tutorials: bool):
-    """VencoPy folder set up after installation"""
+    """venco.py folder set up after installation"""
     cwd = pathlib.Path(os.getcwd())
     target = cwd / name
     source = pathlib.Path(vencopy.__file__).parent.resolve()
     if not os.path.exists(target):
         os.mkdir(target)
         setupFolders(src=source, trg=target, tutorials=tutorials)
-        click.echo(f"VencoPy user folder created under {target}")
+        click.echo(f"venco.py user folder created under {target}")
     elif os.path.exists(target) and not os.path.exists(target / "run.py"):
         setupFolders(src=source, trg=target, tutorials=tutorials)
-        click.echo(f"VencoPy user folder filled under {target}")
+        click.echo(f"venco.py user folder filled under {target}")
     else:
         click.echo(
             "File run.py already exists in specified folder, for a new setup please specify a non-existent "
@@ -61,7 +61,7 @@ def setupFolders(src: pathlib.Path, trg: pathlib.Path, tutorials: bool):
     os.mkdir(trg / "output" / "diaryBuilder")
     os.mkdir(trg / "output" / "gridModeler")
     os.mkdir(trg / "output" / "flexEstimator")
-    os.mkdir(trg / "output" / "evaluator")
+    os.mkdir(trg / "output" / "postProcessor")
     os.mkdir(trg / "utils")
     shutil.copy(src=src / "run.py", dst=trg)
     shutil.copytree(src=src / "config", dst=trg / "config")
@@ -75,7 +75,7 @@ def updateLocalPathCfg(newVPRoot: pathlib.Path):
     with open(newVPRoot / "config" / "user.yaml") as f:
         user_cfg = yaml.load(f, Loader=yaml.SafeLoader)
 
-    user_cfg["pathAbsolute"]["vencoPyRoot"] = newVPRoot.__str__()
+    user_cfg["pathAbsolute"]["vencopyRoot"] = newVPRoot.__str__()
 
     with open(newVPRoot / "config" / "user.yaml", "w") as f:
         yaml.dump(user_cfg, f)
