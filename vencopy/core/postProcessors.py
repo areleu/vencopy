@@ -18,6 +18,7 @@ class PostProcessing:
     This class contains functions to post process aggregated venco.py profiles. As of now (August 2023), the class
     contains cloning weekly profiles to year and normalizing it with different normalization bases.
     """
+
     def __init__(self, configDict: dict):
         self.user_config = configDict["user_config"]
         self.dev_config = configDict["dev_config"]
@@ -58,8 +59,8 @@ class PostProcessing:
         pnames = ("drain", "uncontrolled_charge", "charge_power", "max_battery_level", "min_battery_level")
         for pname, p in zip(pnames, profiles):
             self.__store_input(name=pname, profile=p)
-            self.annual_profiles[pname] = self.__create_annual_profiles(profile=p)
-            if self.user_config["global"]["writeOutputToDisk"]["absolute_annual_output"]:
+            self.annual_profiles[pname] = self.__createAnnualProfiles(profile=p)
+            if self.user_config["global"]["writeOutputToDisk"]["processorOutput"]["absolute_annual_profiles"]:
                 self._write_output(
                     profile_name=pname, profile=self.annual_profiles[pname], filename_id="outputPostProcessorAnnual"
                 )
@@ -79,6 +80,22 @@ class PostProcessing:
         }
         return p_dict
 
+    # Simpler less generic implementation
+    def normalizeNew(self):
+        self.drain_norm = self.__normalize_flows(self.input_profiles["drain"])
+        self.drain_uc = self.__normalize_flows(self.input_profiles["uncontrolled_charge"])
+        self.charge_power = self.__normalize_states(
+            profile=self.input_profiles["charge_power"], base=self.user_config["gridModelers"]["ratedPowerSimple"]
+        )
+        self.soc_max = self.__normalize_states(
+            profile=self.input_profiles["max_battery_level"],
+            base=self.user_config["flexEstimators"]["Battery_capacity"],
+        )
+        self.soc_min = self.__normalize_states(
+            profile=self.input_profiles["min_battery_level"],
+            base=self.user_config["flexEstimators"]["Battery_capacity"],
+        )
+
     def normalize(self, profiles: ProfileAggregator = None):
         if profiles:
             p_dict = self.__categorize_profiles(profiles.profile_dict())
@@ -91,7 +108,7 @@ class PostProcessing:
                 f" rated power of {self.__rated_power_simple}kW was used."
             )
 
-        write = self.user_config["global"]["writeOutputToDisk"]["normalized_annual_output"]
+        write = self.user_config["global"]["writeOutputToDisk"]["processorOutput"]["normalised_annual_profiles"]
 
         # Normalization basis: Total annual energy
         for key, value in p_dict["flow_profiles"].items():

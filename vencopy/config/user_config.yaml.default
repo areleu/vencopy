@@ -17,8 +17,10 @@ global:
       flexOutput: False
       diaryOutput: False
       aggregatorOutput: True
-      formatterOutput: True
-      normaliserOutput: True
+      processorOutput:
+        absolute_annual_profiles: True
+        normalised_annual_profiles: True
+
   pathAbsolute:
       MiD08: PATH_TO_DATA_FOLDER
       MiD17: PATH_TO_DATA_FOLDER  # e.g. C:/MiD/proprietary/B2/STATA
@@ -132,5 +134,3 @@ profileAggregators:
 outputFormatters:
   startWeekday: 1 # 1=Monday
 
-
-normalisers:
