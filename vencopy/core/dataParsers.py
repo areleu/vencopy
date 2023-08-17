@@ -223,7 +223,8 @@ class DataParser:
         self._filterAnalysis(simpleFilters.join(complexFilters))
 
     def __simpleFilters(self) -> pd.DataFrame:
-        """Apply single-column scalar value filtering as defined in the config.
+        """
+        Apply single-column scalar value filtering as defined in the config.
 
         Returns:
             pd.DataFrame: DataFrame with boolean columns for include, exclude, greaterThan and smallerThan filters. True
