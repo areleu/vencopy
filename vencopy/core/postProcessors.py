@@ -34,7 +34,12 @@ class PostProcessing:
 
         self.input_profiles = {}
         self.annual_profiles = {}
-        self.norm_profiles = {}
+
+        self.drain_norm = None
+        self.charge_power_norm = None
+        self.uncontrolled_charge_norm = None
+        self.max_battery_level_norm = None
+        self.min_battery_level_norm = None
 
     def __store_input(self, name: str, profile: pd.Series):
         self.input_profiles[name] = profile
@@ -61,16 +66,15 @@ class PostProcessing:
             self.__store_input(name=pname, profile=p)
             self.annual_profiles[pname] = self.__create_annual_profiles(profile=p)
             if self.user_config["global"]["writeOutputToDisk"]["processorOutput"]["absolute_annual_profiles"]:
-                self._write_output(
+                self.__write_output(
                     profile_name=pname, profile=self.annual_profiles[pname], filename_id="outputPostProcessorAnnual"
                 )
         print("Run finished.")
 
-    # Simpler less generic implementation
     def normalize(self):
         self.drain_norm = self.__normalize_flows(self.input_profiles["drain"])
-        self.drain_uc = self.__normalize_flows(self.input_profiles["uncontrolled_charge"])
-        self.charge_power = self.__normalize_states(
+        self.uncontrolled_charge_norm = self.__normalize_flows(self.input_profiles["uncontrolled_charge"])
+        self.charge_power_norm = self.__normalize_states(
             profile=self.input_profiles["charge_power"], base=self.user_config["gridModelers"]["ratedPowerSimple"]
         )
         self.soc_max = self.__normalize_states(
@@ -82,13 +86,25 @@ class PostProcessing:
             base=self.user_config["flexEstimators"]["Battery_capacity"],
         )
 
+        if self.user_config["global"]["writeOutputToDisk"]["processorOutput"]["normalised_annual_profiles"]:
+            self.__write_out_profiles(filename_id="outputPostProcessorNorm")
+
     def __normalize_flows(self, profile: pd.Series) -> pd.Series:
         return profile / profile.sum()
 
     def __normalize_states(self, profile: pd.Series, base: int) -> pd.Series:
         return profile / base
 
-    def _write_output(self, profile_name: str, profile: pd.Series, filename_id: str):
+    def __write_out_profiles(self, filename_id: str):
+        self.__write_output(profile_name="drain", profile=self.drain_norm, filename_id=filename_id)
+        self.__write_output(
+            profile_name="uncontrolled_charge", profile=self.uncontrolled_charge_norm, filename_id=filename_id
+        )
+        self.__write_output(profile_name="charge_power", profile=self.charge_power_norm, filename_id=filename_id)
+        self.__write_output(profile_name="max_battery_level", profile=self.soc_max, filename_id=filename_id)
+        self.__write_output(profile_name="min_battery_level", profile=self.soc_min, filename_id=filename_id)
+
+    def __write_output(self, profile_name: str, profile: pd.Series, filename_id: str):
         root = Path(self.user_config["global"]["pathAbsolute"]["vencopyRoot"])
         folder = self.dev_config["global"]["pathRelative"]["post_processing_output"]
         fileName = createFileName(

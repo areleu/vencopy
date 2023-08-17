@@ -60,20 +60,6 @@ class ProfileAggregator:
         )
         print("Aggregation finished for all profiles.")
 
-    def profile_dict(self) -> dict:
-        """A simple output interface function to provide all resulting profiles in a dictionary with respective strings.
-
-        Returns:
-            dict: Aggregated venco.py proflile dictionary.
-        """
-        return {
-            "drain": self.drainWeekly,
-            "uncontrolled_charge": self.uncontrolledChargeWeekly,
-            "charge_power": self.chargingPowerWeekly,
-            "max_battery_level": self.maxBatteryLevelWeekly,
-            "min_battery_level": self.minBatteryLevelWeekly,
-        }
-
 
 class Aggregator:
     def __init__(
@@ -172,7 +158,7 @@ class Aggregator:
             ignore_index=True,
         )
 
-    def _writeOutput(self):
+    def __writeOutput(self):
         if self.user_config["global"]["writeOutputToDisk"]["aggregatorOutput"]:
             root = Path(self.user_config["global"]["pathAbsolute"]["vencopyRoot"])
             folder = self.dev_config["global"]["pathRelative"]["aggregatorOutput"]
@@ -193,7 +179,8 @@ class Aggregator:
         startTimeAggregator = time.time()
         self.__basicAggregation()
         self.__composeWeeklyProfile()
-        self._writeOutput()
+        if self.user_config["global"]["writeOutputToDisk"]["aggregatorOutput"]:
+            self.__writeOutput()
         print(f"Aggregation finished for {self.profileName}.")
         elapsedTimeAggregator = time.time() - startTimeAggregator
         print(f"Needed time to aggregate {self.profileName}: {elapsedTimeAggregator}.")
