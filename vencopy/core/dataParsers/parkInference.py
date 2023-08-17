@@ -6,6 +6,9 @@ __status__ = "test"  # options are: dev, test, prod
 
 import pandas as pd
 
+from vencopy.utils.globalFunctions import replace_vec
+
+
 class ParkInference:
     def __init__(self, configDict) -> None:
         self.user_config = configDict["user_config"]

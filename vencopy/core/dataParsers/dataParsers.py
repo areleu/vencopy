@@ -16,7 +16,7 @@ import numpy as np
 import pandas as pd
 
 
-from vencopy.utils.globalFunctions import createFileName, replace_vec, writeOut
+from vencopy.utils.globalFunctions import createFileName, writeOut
 from vencopy.utils.globalFunctions import returnDictBottomKeys, returnDictBottomValues
 
 
