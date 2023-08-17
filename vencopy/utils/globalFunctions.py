@@ -11,8 +11,6 @@ import yaml
 from pathlib import Path
 import os
 
-from vencopy.core.dataParsers import DataParser
-
 
 def loadConfigDict(basePath: Path) -> dict:
     # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
@@ -141,7 +139,7 @@ def merge_variables(data: pd.DataFrame, variableData: pd.DataFrame, variables: l
     return mergedData
 
 
-def merge_to_weights_and_days(diaryData: pd.DataFrame, ParseData: DataParser) -> pd.DataFrame:
+def merge_to_weights_and_days(diaryData: pd.DataFrame, ParseData: "DataParser") -> pd.DataFrame:
     return merge_variables(data=diaryData, variableData=ParseData.data, variables=["tripStartWeekday", "tripWeight"])
 
 
