@@ -429,7 +429,7 @@ class DataParser:
         """
         raise NotImplementedError("Implement process method for DataParser.")
 
-    def write_output(self):
+    def _write_output(self):
         if self.user_config["global"]["writeOutputToDisk"]["parseOutput"]:
             root = Path(self.user_config["global"]["pathAbsolute"]["vencopyRoot"])
             folder = self.dev_config["global"]["pathRelative"]["parseOutput"]
@@ -1225,7 +1225,7 @@ class ParseMiD(IntermediateParsing):
         self._filter_consistent_hours()
         self.activities = self.parkInference.add_parking_rows(trips=self.trips)
         self._cleanup_dataset()
-        self.write_output()
+        self._write_output()
         print("Parsing MiD dataset completed.")
         return self.activities
 
@@ -1369,7 +1369,7 @@ class ParseVF(IntermediateParsing):
         self.activities = self.parkInference.add_parking_rows(trips=self.trips)
         self._subset_vehicle_segment()
         self._cleanup_dataset()
-        self.write_output()
+        self._write_output()
         print("Parsing VF dataset completed.")
         return self.activities
 
@@ -1490,7 +1490,7 @@ class ParseKiD(IntermediateParsing):
         self.activities = self.parkInference.add_parking_rows(trips=self.trips)
         self._subset_vehicle_segment()
         self._cleanup_dataset()
-        self.write_output()
+        self._write_output()
         print("Parsing KiD dataset completed.")
         return self.activities
 

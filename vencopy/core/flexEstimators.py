@@ -442,7 +442,7 @@ class FlexEstimator:
             actsFilt = actsIdx.loc[~actsIdx.index.isin(tplFilt), :]
         return actsFilt.reset_index()
 
-    def _write_output(self):
+    def __write_output(self):
         if self.user_config["global"]["writeOutputToDisk"]["flexOutput"]:
             root = Path(self.user_config["global"]["pathAbsolute"]["vencopyRoot"])
             folder = self.dev_config["global"]["pathRelative"]["flexOutput"]
@@ -479,7 +479,8 @@ class FlexEstimator:
         self._auxFuelNeed()
         if self.user_config["flexEstimators"]["filterFuelNeed"]:
             self.activities = self._filterResidualNeed(acts=self.activities, indexCols=["uniqueID"])
-        self._write_output()
+        if self.user_config["global"]["writeOutputToDisk"]["flexOutput"]:
+            self.__write_output()
         print("Technical flexibility estimation ended.")
         return self.activities
 
@@ -510,7 +511,8 @@ class FlexEstimator:
         self._auxFuelNeed()
         if self.user_config["flexEstimators"]["filterFuelNeed"]:
             self.activities = self._filterResidualNeed(acts=self.activities, indexCols=["uniqueID"])
-        self._write_output()
+        if self.user_config["global"]["writeOutputToDisk"]["flexOutput"]:
+            self.__write_output()
         print("Technical flexibility estimation ended.")
         return self.activities
 
