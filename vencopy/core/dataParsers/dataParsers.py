@@ -333,7 +333,7 @@ class DataParser:
         complexFilters = complexFilters.join(self._filter_overlapping_trips())
         return complexFilters
 
-    def _filter_inconsistent_speed(self) -> pd.Series:
+    def _filter_inconsistent_speeds(self) -> pd.Series:
         """
         Filter out trips with inconsistent average speed. These trips are mainly trips where survey participant
         responses suggest that participants were travelling for the entire time they took for the whole purpose
@@ -550,7 +550,7 @@ class IntermediateParsing(DataParser):
         ser.name = "tripStartAfterEnd"
         return ser
 
-    def _filterNoZeroLengthTrips(self) -> pd.Series:
+    def _filter_zero_length_trips(self) -> pd.Series:
         """Filter out trips that start and end at same hour and minute but are not ending on next day (no 24-hour
         trips).
 
