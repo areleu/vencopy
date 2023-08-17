@@ -34,3 +34,6 @@ vencopy/config/user_config.yaml
 .vscode
 /docs/_build/
 *.code-workspace
+
+# Tutorials - they should not be changed for backwards compatibility reasons
+./tutorials

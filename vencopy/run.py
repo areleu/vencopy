@@ -27,7 +27,7 @@ if __name__ == "__main__":
     vpData = parseData(configDict=configDict)
     vpData.process()
 
-    vpGrid = GridModeler(configDict=configDict, activities=vpData.activities)
+    vpGrid = GridModeler(config_dict=configDict, activities=vpData.activities)
     vpGrid.assignGrid()
 
     vpFlex = FlexEstimator(configDict=configDict, activities=vpGrid.activities)

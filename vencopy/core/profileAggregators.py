@@ -98,7 +98,7 @@ class Aggregator:
         # Compose weekly profile from 7 separate profiles
         if self.method == "flow":
             if self.weighted:
-                self.__calculateWeightedAverageFlowProfiles(byColumn="tripStartWeekday")
+                self.__weighted_meanFlowProfiles(byColumn="tripStartWeekday")
             else:
                 self.__calculateAverageFlowProfiles(byColumn="tripStartWeekday")
         elif self.method == "state":
@@ -111,7 +111,7 @@ class Aggregator:
             weekdaySubsetAgg = weekdaySubset.mean(axis=0)
             self.weekdayProfiles.iloc[idate - 1] = weekdaySubsetAgg
 
-    def __calculateWeightedAverageFlowProfiles(self, byColumn: str):
+    def __weighted_meanFlowProfiles(self, byColumn: str):
         for idate in self.activitiesWeekday[byColumn].unique():
             weekdaySubset = self.activitiesWeekday[self.activitiesWeekday[byColumn] == idate].reset_index(drop=True)
             weekdaySubset = weekdaySubset.drop("tripStartWeekday", axis=1)
