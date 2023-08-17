@@ -82,8 +82,8 @@ we're left with 17000 profiles still in hourly values of kW. Function: `filterCo
 `libProfileCalculation.py`.
 
 3. The filtered individual profiles are then aggregated by a simple averaging of each hourly value to calculate the 
-average electricity consumption for one model vehicle for the complete EV fleet. We're left with one profile in hourly values of kW. Function: `aggregateProfiles()` in the library `libProfileCalculation.py`.
-profile in hourly values of kW. Function: `aggregateProfilesMean()` in the library `libProfileCalculation.py`.
+average electricity consumption for one model vehicle for the complete EV fleet. We're left with one profile in hourly values of kW. Function: `aggregate_profiles()` in the library `libProfileCalculation.py`.
+profile in hourly values of kW. Function: `aggregate_profilesMean()` in the library `libProfileCalculation.py`.
 
 
 This profile may later be scaled by the number of vehicles in an EV fleet and the average rated connection capacity per 
@@ -121,7 +121,7 @@ we're left with 17000 profiles still in hourly values of kW. Function: `filterCo
 3. The filtered individual profiles are then aggregated by a simple averaging of each hourly value to calculate the 
 average uncontrolled charging power for one "representative" vehicle for the complete EV fleet. We're left with one 
 
-profile in hourly values of kW. Function: `aggregateProfilesMean()` in the library `libProfileCalculation.py`.
+profile in hourly values of kW. Function: `aggregate_profilesMean()` in the library `libProfileCalculation.py`.
 
 
 4. The aggregated profile is then corrected according to more realistic specific electric consumption measurements. 
@@ -160,7 +160,7 @@ we're left with 17000 profiles still in hourly values of kW. Function: `filterCo
 
 3. The filtered individual profiles are then aggregated by a simple averaging of each hourly value to calculate the 
 average electricity consumption for one model vehicle for the complete EV fleet. We're left with one
-profile in hourly values of kW. Function: `aggregateProfilesMean()` in the library `libProfileCalculation.py`.
+profile in hourly values of kW. Function: `aggregate_profilesMean()` in the library `libProfileCalculation.py`.
 
 
 4. The aggregated profile is then corrected according to more realistic specific electric consumption measurements. 
@@ -201,7 +201,7 @@ we're left with 17000 profiles still in hourly values of l fuel. Function: `filt
 
 3. The filtered individual profiles are then aggregated by a simple averaging of each hourly value to calculate the 
 average fuel consumption for one model vehicle for the complete EV fleet. We're left with one profile in hourly values
-of l fuel. Function: `aggregateProfilesMean()` in the library `libProfileCalculation.py`.
+of l fuel. Function: `aggregate_profilesMean()` in the library `libProfileCalculation.py`.
 
 
 4. The aggregated profile is then corrected according to more realistic specific fuel consumption measurements. 
