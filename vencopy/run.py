@@ -9,7 +9,7 @@ __license__ = "BSD-3-Clause"
 
 import time
 from pathlib import Path
-from vencopy.core.dataParsers import parseData
+from vencopy.core.dataParsers.dataParsers import parseData
 from vencopy.core.diaryBuilders import DiaryBuilder
 from vencopy.core.gridModelers import GridModeler
 from vencopy.core.flexEstimators import FlexEstimator

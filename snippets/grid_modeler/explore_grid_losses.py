@@ -17,7 +17,7 @@ if __package__ is None or __package__ == "":
 
 import os
 from pathlib import Path
-from vencopy.core.dataParsers import ParseMiD
+from vencopy.core.dataParsers.dataParsers import ParseMiD
 from vencopy.core.gridModelers import GridModeler
 from vencopy.core.flexEstimators import FlexEstimator
 from vencopy.utils.globalFunctions import loadConfigDict, createOutputFolders

@@ -13,7 +13,7 @@ from profilehooks import profile
 sys.path.append('.')
 
 from vencopy.core.diaryBuilders import WeekDiaryBuilder
-from vencopy.core.dataParsers import ParseMiD
+from vencopy.core.dataParsers.dataParsers import ParseMiD
 from vencopy.core.gridModelers import GridModeler
 from vencopy.core.flexEstimators import WeekFlexEstimator
 from vencopy.utils.globalFunctions import loadConfigDict, createOutputFolders
@@ -68,7 +68,7 @@ if __name__ == '__main__':
         acts = pickle.load(open('activities_T0.8_N500.p', 'rb'))
 
     def getWeeksDays(wdb: WeekDiaryBuilder) -> tuple[int, int]:
-        """ Retrieve the number of weeks and the number of days used for sampling from the respective sample bases 
+        """ Retrieve the number of weeks and the number of days used for sampling from the respective sample bases
         in the VencoPy week diary builder.
 
         Returns:

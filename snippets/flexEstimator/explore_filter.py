@@ -1,5 +1,5 @@
 from vencopy.utils.globalFunctions import loadConfigDict, createOutputFolders
-from vencopy.core.dataParsers import ParseMiD
+from vencopy.core.dataParsers.dataParsers import ParseMiD
 from vencopy.core.gridModelers import GridModeler
 from vencopy.core.diaryBuilders import WeekDiaryBuilder
 from vencopy.core.flexEstimators import FlexEstimator, WeekFlexEstimator

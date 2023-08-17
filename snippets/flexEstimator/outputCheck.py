@@ -14,7 +14,7 @@ if __package__ is None or __package__ == "":
 
 from pathlib import Path
 import matplotlib.pyplot as plt
-from vencopy.core.dataParsers import parseData
+from vencopy.core.dataParsers.dataParsers import parseData
 from vencopy.core.gridModelers import GridModeler
 from vencopy.core.flexEstimators import FlexEstimator
 
