@@ -10,7 +10,7 @@ import pandas as pd
 import warnings
 
 from vencopy.core.profileAggregators import ProfileAggregator
-from vencopy.utils.globalFunctions import createFileName, write_out
+from vencopy.utils.globalFunctions import create_file_name, write_out
 
 
 class PostProcessing:
@@ -113,7 +113,7 @@ class PostProcessing:
     def __write_output(self, profile_name: str, profile: pd.Series, filename_id: str):
         root = Path(self.user_config["global"]["pathAbsolute"]["vencopyRoot"])
         folder = self.dev_config["global"]["pathRelative"]["post_processing_output"]
-        fileName = createFileName(
+        fileName = create_file_name(
             dev_config=self.dev_config,
             user_config=self.user_config,
             manualLabel=profile_name,

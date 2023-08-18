@@ -15,7 +15,7 @@ import numpy as np
 import pandas as pd
 
 
-from vencopy.utils.globalFunctions import createFileName, write_out
+from vencopy.utils.globalFunctions import create_file_name, write_out
 from vencopy.utils.globalFunctions import return_lowest_level_dict_keys, return_lowest_level_dict_values
 
 
@@ -433,7 +433,7 @@ class DataParser:
         if self.user_config["global"]["writeOutputToDisk"]["parseOutput"]:
             root = Path(self.user_config["global"]["pathAbsolute"]["vencopyRoot"])
             folder = self.dev_config["global"]["pathRelative"]["parseOutput"]
-            fileName = createFileName(
+            fileName = create_file_name(
                 dev_config=self.dev_config,
                 user_config=self.user_config,
                 fileNameID="outputDataParser",

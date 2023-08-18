@@ -34,7 +34,7 @@ if __name__ == "__main__":
     vpFlex.estimateTechnicalFlexibilityIterating()
 
     vpDiary = DiaryBuilder(configDict=configDict, activities=vpFlex.activities)
-    vpDiary.createDiaries()
+    vpDiary.create_diaries()
 
     vpProfile = ProfileAggregator(configDict=configDict, activities=vpDiary.activities, profiles=vpDiary)
     vpProfile.aggregate_profiles()
