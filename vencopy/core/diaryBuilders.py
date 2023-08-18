@@ -1,4 +1,4 @@
-__version__ = "1.0.X"
+__version__ = "1.0.0"
 __maintainer__ = "Niklas Wulff, Fabia Miorelli"
 __birthdate__ = "01.07.2022"
 __status__ = "test"  # options are: dev, test, prod
