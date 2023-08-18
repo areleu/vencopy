@@ -9,12 +9,12 @@ GridModeler Class
 .. image:: ../figures/IOgridModeler.png
 	:width: 800
 	:align: center
-	
+
 GridModeler Input
 ---------------------------------------------------
 **Config File (gridConfig.yaml):**
 
-* chargingInfrastructureMappings (assigns True-False to the respective type of charging infrastucture)
+* charging_infrastructure_mappings (assigns True-False to the respective type of charging infrastucture)
 
 
 
@@ -22,7 +22,7 @@ GridModeler Output
 ---------------------------------------------------
 **Output Functions:**
 
-* vpGrid = GridModeler(configDict=configDict, datasetID=datasetID)
+* vpGrid = GridModeler(configs=configs, dataset=dataset)
 * vpGrid.assignSimpleGridViaPurposes()
 * vpGrid.writeOutGridAvailability()
 

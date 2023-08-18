@@ -1,8 +1,6 @@
-__version__ = "1.0.X"
-__author__ = "Niklas Wulff"
-__contributors__ = "Fabia Miorelli, Benjamin Fuchs"
-__email__ = "niklas.wulff@dlr.de"
-__credits__ = "German Aerospace Center (DLR)"
+__version__ = "1.0.0"
+__maintainer__ = "Niklas Wulff, Fabia Miorelli"
+__status__ = "test"  # options are: dev, test, prod
 __license__ = "BSD-3-Clause"
 
 import os
@@ -27,16 +25,18 @@ import vencopy
     help="Specify if tutorials should be copied to the user folder on set up. " "Defaults to true",
 )
 def create(name: str, tutorials: bool):
-    """venco.py folder set up after installation"""
+    """
+    venco.py folder set up after installation
+    """
     cwd = pathlib.Path(os.getcwd())
     target = cwd / name
     source = pathlib.Path(vencopy.__file__).parent.resolve()
     if not os.path.exists(target):
         os.mkdir(target)
-        setupFolders(src=source, trg=target, tutorials=tutorials)
+        setup_folders(src=source, trg=target, tutorials=tutorials)
         click.echo(f"venco.py user folder created under {target}")
     elif os.path.exists(target) and not os.path.exists(target / "run.py"):
-        setupFolders(src=source, trg=target, tutorials=tutorials)
+        setup_folders(src=source, trg=target, tutorials=tutorials)
         click.echo(f"venco.py user folder filled under {target}")
     else:
         click.echo(
@@ -45,7 +45,7 @@ def create(name: str, tutorials: bool):
         )
 
 
-def setupFolders(src: pathlib.Path, trg: pathlib.Path, tutorials: bool):
+def setup_folders(src: pathlib.Path, trg: pathlib.Path, tutorials: bool):
     """
     Setup function to create a vencopy user folder and to copy run, config and tutorial files from the package source.
 
@@ -61,6 +61,7 @@ def setupFolders(src: pathlib.Path, trg: pathlib.Path, tutorials: bool):
     os.mkdir(trg / "output" / "diaryBuilder")
     os.mkdir(trg / "output" / "gridModeler")
     os.mkdir(trg / "output" / "flexEstimator")
+    os.mkdir(trg / "output" / "profileAggregator")
     os.mkdir(trg / "output" / "postProcessor")
     os.mkdir(trg / "utils")
     shutil.copy(src=src / "run.py", dst=trg)
@@ -68,16 +69,16 @@ def setupFolders(src: pathlib.Path, trg: pathlib.Path, tutorials: bool):
     if tutorials:
         raise (NotImplementedError("Tutorials for the new venco.py iteration are not yet implemented."))
         # shutil.copytree(src=src / "tutorials", dst=trg / "tutorials")
-    updateLocalPathCfg(newVPRoot=trg)
+    update_config(new_vencopy_root=trg)
 
 
-def updateLocalPathCfg(newVPRoot: pathlib.Path):
-    with open(newVPRoot / "config" / "user.yaml") as f:
+def update_config(new_vencopy_root: pathlib.Path):
+    with open(new_vencopy_root / "config" / "user.yaml") as f:
         user_cfg = yaml.load(f, Loader=yaml.SafeLoader)
 
-    user_cfg["pathAbsolute"]["vencopyRoot"] = newVPRoot.__str__()
+    user_cfg["absolute_path"]["vencopy_root"] = new_vencopy_root.__str__()
 
-    with open(newVPRoot / "config" / "user.yaml", "w") as f:
+    with open(new_vencopy_root / "config" / "user.yaml", "w") as f:
         yaml.dump(user_cfg, f)
 
 

@@ -1,8 +1,8 @@
-__version__ = "1.0.X"
+__version__ = "1.0.0"
 __maintainer__ = "Niklas Wulff, Fabia Miorelli"
-__email__ = "Niklas.Wulff@dlr.de"
 __birthdate__ = "17.08.2023"
 __status__ = "test"  # options are: dev, test, prod
+__license__ = "BSD-3-Clause"
 
 
 import pandas as pd
@@ -12,7 +12,7 @@ from vencopy.core.dataParsers.parkInference import ParkInference
 
 
 class ParseMiD(IntermediateParsing):
-    def __init__(self, configDict: dict, datasetID: str, loadEncrypted=False, debug=False):
+    def __init__(self, configs: dict, dataset: str, load_encrypted=False, debug=False):
         """
         Class for parsing MiD data sets. The VencoPy configs globalConfig,
         parseConfig and localPathConfig have to be given on instantiation as
@@ -21,39 +21,41 @@ class ParseMiD(IntermediateParsing):
         an encrypted ZIP-file. For this, a password has to be given in the
         parseConfig.
 
-        :param configDict: VencoPy config dictionary consisting at least of the
+        :param configs: VencoPy config dictionary consisting at least of the
                            config dictionaries globalConfig, parseConfig and
                            localPathConfig.
-        :param datasetID: A string identifying the MiD data set.
-        :param loadEncrypted: Boolean. If True, data is read from encrypted
+        :param dataset: A string identifying the MiD data set.
+        :param load_encrypted: Boolean. If True, data is read from encrypted
                               file. For this, a possword has to be
                               specified in parseConfig['PW'].
         """
         super().__init__(
-            configDict=configDict,
-            datasetID=datasetID,
-            loadEncrypted=loadEncrypted,
+            configs=configs,
+            dataset=dataset,
+            load_encrypted=load_encrypted,
             debug=debug,
         )
-        self.park_inference = ParkInference(configDict=configDict)
+        self.park_inference = ParkInference(configs=configs)
 
     def __harmonize_variables(self):
         """
         Harmonizes the input data variables to match internal VencoPy names
-        given as specified in the mapping in parseConfig['dataVariables'].
+        given as specified in the mapping in parseConfig['data_variables'].
         So far mappings for MiD08 and MiD17 are given. Since the MiD08 does
         not provide a combined household and person unique identifier, it is
         synthesized of the both IDs.
 
         :return: None
         """
-        replacementDict = self._create_replacement_dict(self.datasetID, self.dev_config["dataParsers"]["dataVariables"])
-        activitiesRenamed = self.trips.rename(columns=replacementDict)
-        if self.datasetID == "MiD08":
-            activitiesRenamed["hhPersonID"] = (
-                activitiesRenamed["hhID"].astype("string") + activitiesRenamed["personID"].astype("string")
+        replacement_dict = self._create_replacement_dict(
+            self.dataset, self.dev_config["dataParsers"]["data_variables"]
+        )
+        activities_renamed = self.trips.rename(columns=replacement_dict)
+        if self.dataset == "MiD08":
+            activities_renamed["household_person_id"] = (
+                activities_renamed["household_id"].astype("string") + activities_renamed["person_id"].astype("string")
             ).astype("int")
-        self.trips = activitiesRenamed
+        self.trips = activities_renamed
         print("Finished harmonization of variables.")
 
     def __add_string_columns(self, weekday=True, purpose=True):
@@ -67,27 +69,27 @@ class ParseMiD(IntermediateParsing):
         :return: None
         """
         if weekday:
-            self._add_string_column_from_variable(colName="weekdayStr", varName="tripStartWeekday")
+            self._add_string_column_from_variable(col_name="weekday_string", var_name="trip_start_weekday")
         if purpose:
-            self._add_string_column_from_variable(colName="purposeStr", varName="tripPurpose")
+            self._add_string_column_from_variable(col_name="purpose_string", var_name="trip_purpose")
 
     def _drop_redundant_cols(self):
         # Clean-up of temporary redundant columns
         self.trips.drop(
             columns=[
-                "isMIVDriver",
-                "tripStartClock",
-                "tripEndClock",
-                "tripStartYear",
-                "tripStartMonth",
-                "tripStartWeek",
-                "tripStartHour",
-                "tripStartMinute",
-                "tripEndHour",
-                "tripEndMinute",
-                "uniqueID_prev",
-                "uniqueID_next",
-                "colFromIndex",
+                "is_driver",
+                "trip_start_clock",
+                "trip_end_clock",
+                "trip_start_year",
+                "trip_start_month",
+                "trip_start_week",
+                "trip_start_hour",
+                "trip_start_minute",
+                "trip_end_hour",
+                "trip_end_minute",
+                "previous_unique_id",
+                "next_unique_id",
+                "column_from_index",
             ],
             inplace=True,
         )
@@ -114,4 +116,3 @@ class ParseMiD(IntermediateParsing):
         self.write_output()
         print("Parsing MiD dataset completed.")
         return self.activities
-

@@ -1,9 +1,8 @@
-__version__ = "1.0.X"
-__maintainer__ = "Niklas Wulff"
-__contributors__ = "Fabia Miorelli"
-__email__ = "Niklas.Wulff@dlr.de"
-__birthdate__ = "21.04.2022"
+__version__ = "1.0.0"
+__maintainer__ = "Niklas Wulff, Fabia Miorelli"
+__birthdate__ = "17.08.2023"
 __status__ = "test"  # options are: dev, test, prod
+__license__ = "BSD-3-Clause"
 
 
 import pprint
@@ -15,12 +14,12 @@ import numpy as np
 import pandas as pd
 
 
-from vencopy.utils.globalFunctions import createFileName, writeOut
-from vencopy.utils.globalFunctions import returnDictBottomKeys, returnDictBottomValues
+from vencopy.utils.globalFunctions import create_file_name, write_out
+from vencopy.utils.globalFunctions import return_lowest_level_dict_keys, return_lowest_level_dict_values
 
 
 class DataParser:
-    def __init__(self, configDict: dict, datasetID: str, debug, fpInZip=None, loadEncrypted=False):
+    def __init__(self, configs: dict, dataset: str, debug, zip_filepath=None, load_encrypted=False):
         """
         Basic class for parsing a mobility survey trip data set. Currently both
         German travel surveys MiD 2008 and MiD 2017 are pre-configured and one
@@ -31,25 +30,25 @@ class DataParser:
         password has to be supplied in the parseConfig.
         Columns relevant for the EV simulation are selected from the entirety
         of the data and renamed to VencoPy internal variable names given in
-        the dictionary parseConfig['dataVariables'] for the respective survey
-        data set. Manually configured exclude, include, greaterThan and
-        smallerThan filters are applied as they are specified in parseConfig.
+        the dictionary parseConfig['data_variables'] for the respective survey
+        data set. Manually configured exclude, include, greater_than and
+        smaller_than filters are applied as they are specified in parseConfig.
         For some columns, raw data is transferred to human readable strings
         and respective columns are added. Pandas timestamp columns are
         synthesized from the given trip start and trip end time information.
 
-        :param configDict: A dictionary containing multiple yaml config files
-        :param datasetID: Currently, MiD08 and MiD17 are implemented as travel
+        :param configs: A dictionary containing multiple yaml config files
+        :param dataset: Currently, MiD08 and MiD17 are implemented as travel
                           survey data sets
-        :param loadEncrypted: If True, load an encrypted ZIP file as specified
+        :param load_encrypted: If True, load an encrypted ZIP file as specified
                               in user_config
         """
-        self.user_config = configDict["user_config"]
-        self.dev_config = configDict["dev_config"]
-        self.datasetID = self.__check_dataset_id(datasetID)
+        self.user_config = configs["user_config"]
+        self.dev_config = configs["dev_config"]
+        self.dataset = self.__check_dataset_id(dataset)
         filepath = (
-            Path(self.user_config["global"]["pathAbsolute"][self.datasetID])
-            / self.dev_config["global"]["files"][self.datasetID]["tripsDataRaw"]
+            Path(self.user_config["global"]["absolute_path"][self.dataset])
+            / self.dev_config["global"]["files"][self.dataset]["trips_data_raw"]
         )
         self.raw_data_path = filepath
         self.raw_data = None
@@ -57,18 +56,18 @@ class DataParser:
         self.activities = None
         self.filters = {}
         print("Generic file parsing properties set up.")
-        if loadEncrypted:
+        if load_encrypted:
             print(f"Starting to retrieve encrypted data file from {self.raw_data_path}.")
-            self._load_encrypted_data(pathToZip=filepath, pathInZip=fpInZip)
+            self._load_encrypted_data(zip_path=filepath, path_zip_data=zip_filepath)
         else:
             print(f"Starting to retrieve local data file from {self.raw_data_path}.")
             self._load_data()
-        nDebugLines = self.user_config["global"]["nDebugLines"]
-        self.raw_data = self.raw_data.loc[0 : nDebugLines - 1, :] if debug else self.raw_data.copy()
+        number_lines_debug = self.user_config["global"]["number_lines_debug"]
+        self.raw_data = self.raw_data.loc[0 : number_lines_debug - 1, :] if debug else self.raw_data.copy()
         if debug:
             print("Running in debug mode.")
         # Storage for original data variable that is being overwritten throughout adding of park rows
-        self.tripEndNextDayRaw = None
+        self.trips_end_next_day_raw = None
 
     def _load_data(self) -> pd.DataFrame:
         """
@@ -98,7 +97,7 @@ class DataParser:
         print(f"Finished loading {len(self.raw_data)} rows of raw data of type {self.raw_data_path.suffix}.")
         return self.raw_data
 
-    def _load_encrypted_data(self, pathToZip, pathInZip):
+    def _load_encrypted_data(self, zip_path, path_zip_data):
         """
         Since the MiD data sets are only accessible by an extensive data
         security contract, VencoPy provides the possibility to access
@@ -106,27 +105,27 @@ class DataParser:
         user_config.yaml in order to access the encrypted file. Loaded data
         is stored in self.raw_data
 
-        :param pathToZip: path from current working directory to the zip file
+        :param zip_path: path from current working directory to the zip file
                           or absolute path to zipfile
-        :param pathInZip: Path to trip data file within the encrypted zipfile
+        :param path_zip_data: Path to trip data file within the encrypted zipfile
         :return: None
         """
-        with ZipFile(pathToZip) as myzip:
-            if ".dta" in pathInZip:
+        with ZipFile(zip_path) as myzip:
+            if ".dta" in path_zip_data:
                 self.raw_data = pd.read_stata(
                     myzip.open(
-                        pathInZip,
-                        pwd=bytes(self.user_config["dataParsers"]["encryptionPW"], encoding="utf-8"),
+                        path_zip_data,
+                        pwd=bytes(self.user_config["dataParsers"]["encryption_password"], encoding="utf-8"),
                     ),
                     convert_categoricals=False,
                     convert_dates=False,
                     preserve_dtypes=False,
                 )
-            else:  # if '.csv' in pathInZip:
+            else:  # if '.csv' in path_zip_data:
                 self.raw_data = pd.read_csv(
                     myzip.open(
-                        pathInZip,
-                        pwd=bytes(self.parseConfig["encryptionPW"], encoding="utf-8"),
+                        path_zip_data,
+                        pwd=bytes(self.user_config["dataParsers"]["encryption_password"], encoding="utf-8"),
                     ),
                     sep=";",
                     decimal=",",
@@ -134,53 +133,55 @@ class DataParser:
 
         print(f"Finished loading {len(self.raw_data)} rows of raw data of type {self.raw_data_path.suffix}.")
 
-    def __check_dataset_id(self, datasetID: str) -> str:
+    def __check_dataset_id(self, dataset: str) -> str:
         """
         General check if data set ID is defined in dev_config.yaml
 
-        :param datasetID: list of strings declaring the datasetIDs
+        :param dataset: list of strings declaring the datasetIDs
                           to be read in
         :param user_config: A yaml config file holding a dictionary with the
-                            keys 'pathRelative' and 'pathAbsolute'
+                            keys 'relative_path' and 'absolute_path'
         :return: Returns a string value of a mobility data
         """
-        availableDatasetIDs = self.dev_config["dataParsers"]["dataVariables"]["datasetID"]
-        assert datasetID in availableDatasetIDs, (
-            f"Defined datasetID {datasetID} not specified "
-            f"under dataVariables in dev_config. "
-            f"Specified datasetIDs are {availableDatasetIDs}"
+        available_dataset_IDs = self.dev_config["dataParsers"]["data_variables"]["dataset"]
+        assert dataset in available_dataset_IDs, (
+            f"Defined dataset {dataset} not specified "
+            f"under data_variables in dev_config. "
+            f"Specified datasetIDs are {available_dataset_IDs}"
         )
-        return datasetID
+        return dataset
 
     def _harmonize_variables(self):
         """
         Harmonizes the input data variables to match internal VencoPy names
-        given as specified in the mapping in dev_config['dataVariables'].
+        given as specified in the mapping in dev_config['data_variables'].
         Since the MiD08 does not provide a combined household and person
         unique identifier, it is synthesized of the both IDs.
 
         :return: None
         """
-        replacementDict = self._create_replacement_dict(self.datasetID, self.dev_config["dataParsers"]["dataVariables"])
-        dataRenamed = self.trips.rename(columns=replacementDict)
-        self.trips = dataRenamed
+        replacement_dict = self._create_replacement_dict(
+            self.dataset, self.dev_config["dataParsers"]["data_variables"]
+        )
+        data_renamed = self.trips.rename(columns=replacement_dict)
+        self.trips = data_renamed
         print("Finished harmonization of variables.")
 
-    def _create_replacement_dict(self, datasetID: str, dictRaw: dict) -> dict:
+    def _create_replacement_dict(self, dataset: str, dict_raw: dict) -> dict:
         """
         Creates the mapping dictionary from raw data variable names to VencoPy
         internal variable names as specified in dev_config.yaml
         for the specified data set.
 
-        :param datasetID: list of strings declaring the datasetIDs to be read
-        :param dictRaw: Contains dictionary of the raw data
+        :param dataset: list of strings declaring the datasetIDs to be read
+        :param dict_raw: Contains dictionary of the raw data
         :return: Dictionary with internal names as keys and raw data column
                  names as values.
         """
-        if datasetID not in dictRaw["datasetID"]:
-            raise ValueError(f"Data set {datasetID} not specified in" f"dev_config variable dictionary.")
-        listIndex = dictRaw["datasetID"].index(datasetID)
-        return {val[listIndex]: key for (key, val) in dictRaw.items()}
+        if dataset not in dict_raw["dataset"]:
+            raise ValueError(f"Data set {dataset} not specified in" f"dev_config variable dictionary.")
+        list_index = dict_raw["dataset"].index(dataset)
+        return {val[list_index]: key for (key, val) in dict_raw.items()}
 
     def _check_filter_dict(self):
         """
@@ -191,20 +192,20 @@ class DataParser:
         :return: None
         """
         assert all(
-            isinstance(val, list) for val in returnDictBottomValues(baseDict=self.filters)
+            isinstance(val, list) for val in return_lowest_level_dict_values(dictionary=self.filters)
         ), "All values in filter dictionaries have to be lists, but are not"
 
     def _filter(self, filters: dict = None):
         """
         Wrapper function to carry out filtering for the four filter logics of
-        including, excluding, greaterThan and smallerThan.
+        including, excluding, greater_than and smaller_than.
         If a filters is defined with a different key, a warning is thrown.
         Filters are defined inclusively, thus boolean vectors will select
         elements (TRUE) that stay in the data set.
 
         :return: None. The function operates on self.trips class-internally.
         """
-        print(f"Starting filtering, applying {len(returnDictBottomKeys(filters))} filters.")
+        print(f"Starting filtering, applying {len(return_lowest_level_dict_keys(filters))} filters.")
         # Future releases: as discussed before we could indeed work here with a plug and pray approach.
         #  we would need to introduce a filter manager and a folder structure where to look for filters.
         #  this is very similar code than the one from ioproc. If we want to go down this route we should
@@ -212,113 +213,115 @@ class DataParser:
         #  might be easy to code but hard to implement correctly. See issue #445
 
         # Application of simple value-based filters
-        simpleFilters = self.__simple_filters()
-        self.dataSimple = self.trips[simpleFilters.all(axis="columns")]
+        simple_filters = self.__simple_filters()
+        self.data_simple = self.trips[simple_filters.all(axis="columns")]
 
         # Application of sophisticated filters
-        complexFilters = self._complex_filters()
-        self.trips = self.dataSimple.loc[complexFilters.all(axis="columns"), :]
+        complex_filters = self._complex_filters()
+        self.trips = self.data_simple.loc[complex_filters.all(axis="columns"), :]
 
         # Print user feedback on filtering
-        self._filter_analysis(simpleFilters.join(complexFilters))
+        self._filter_analysis(simple_filters.join(complex_filters))
 
     def __simple_filters(self) -> pd.DataFrame:
-        """Apply single-column scalar value filtering as defined in the config.
+        """
+        Apply single-column scalar value filtering as defined in the config.
 
         Returns:
-            pd.DataFrame: DataFrame with boolean columns for include, exclude, greaterThan and smallerThan filters. True
+            pd.DataFrame: DataFrame with boolean columns for include, exclude, greater_than and smaller_than filters. True
             means keep the row.
         """
-        simpleFilter = pd.DataFrame(index=self.trips.index)
+        simple_filter = pd.DataFrame(index=self.trips.index)
 
         # Simple filters checking single columns for specified values
-        for iKey, iVal in self.filters.items():
-            if iKey == "include" and iVal:
-                simpleFilter = simpleFilter.join(self.__set_include_filter(iVal, self.trips.index))
-            elif iKey == "exclude" and iVal:
-                simpleFilter = simpleFilter.join(self.__set_exclude_filter(iVal, self.trips.index))
-            elif iKey == "greaterThan" and iVal:
-                simpleFilter = simpleFilter.join(self.__set_greater_than_filter(iVal, self.trips.index))
-            elif iKey == "smallerThan" and iVal:
-                simpleFilter = simpleFilter.join(self.__set_smaller_than_filter(iVal, self.trips.index))
-            elif iKey not in ["include", "exclude", "greaterThan", "smallerThan"]:
+        for i_key, i_value in self.filters.items():
+            if i_key == "include" and i_value:
+                simple_filter = simple_filter.join(self.__set_include_filter(i_value, self.trips.index))
+            elif i_key == "exclude" and i_value:
+                simple_filter = simple_filter.join(self.__set_exclude_filter(i_value, self.trips.index))
+            elif i_key == "greater_than" and i_value:
+                simple_filter = simple_filter.join(self.__set_greater_than_filter(i_value, self.trips.index))
+            elif i_key == "smaller_than" and i_value:
+                simple_filter = simple_filter.join(self.__set_smaller_than_filter(i_value, self.trips.index))
+            elif i_key not in ["include", "exclude", "greater_than", "smaller_than"]:
                 warnings.warn(
                     f"A filter dictionary was defined in the dev_config with an unknown filtering key."
-                    f"Current filtering keys comprise include, exclude, smallerThan and greaterThan."
-                    f"Continuing with ignoring the dictionary {iKey}"
+                    f"Current filtering keys comprise include, exclude, smaller_than and greater_than."
+                    f"Continuing with ignoring the dictionary {i_key}"
                 )
-        return simpleFilter
+        return simple_filter
 
-    def __set_include_filter(self, includeFilterDict: dict, dataIndex: pd.Index) -> pd.DataFrame:
+    def __set_include_filter(self, include_filter_dict: dict, data_idx: pd.Index) -> pd.DataFrame:
         """
         Read-in function for include filter dict from dev_config.yaml
 
-        :param includeFilterDict: Dictionary of include filters defined
+        :param include_filter_dict: Dictionary of include filters defined
                                 in dev_config.yaml
-        :param dataIndex: Index for the data frame
+        :param data_idx: Index for the data frame
         :return: Returns a data frame with individuals using car
                 as a mode of transport
         """
-        incFilterCols = pd.DataFrame(index=dataIndex, columns=includeFilterDict.keys())
-        for incCol, incElements in includeFilterDict.items():
-            incFilterCols[incCol] = self.trips[incCol].isin(incElements)
-        return incFilterCols
+        inc_filter_cols = pd.DataFrame(index=data_idx, columns=include_filter_dict.keys())
+        for inc_col, inc_elements in include_filter_dict.items():
+            inc_filter_cols[inc_col] = self.trips[inc_col].isin(inc_elements)
+        return inc_filter_cols
 
-    def __set_exclude_filter(self, excludeFilterDict: dict, dataIndex: pd.Index) -> pd.DataFrame:
+    def __set_exclude_filter(self, exclude_filter_dict: dict, data_idx: pd.Index) -> pd.DataFrame:
         """
         Read-in function for exclude filter dict from dev_config.yaml
 
-        :param excludeFilterDict: Dictionary of exclude filters defined
+        :param exclude_filter_dict: Dictionary of exclude filters defined
                                   in dev_config.yaml
-        :param dataIndex: Index for the data frame
+        :param data_idx: Index for the data frame
         :return: Returns a filtered data frame with exclude filters
         """
-        exclFilterCols = pd.DataFrame(index=dataIndex, columns=excludeFilterDict.keys())
-        for excCol, excElements in excludeFilterDict.items():
-            exclFilterCols[excCol] = ~self.trips[excCol].isin(excElements)
-        return exclFilterCols
+        excl_filter_cols = pd.DataFrame(index=data_idx, columns=exclude_filter_dict.keys())
+        for exc_col, exc_elements in exclude_filter_dict.items():
+            excl_filter_cols[exc_col] = ~self.trips[exc_col].isin(exc_elements)
+        return excl_filter_cols
 
-    def __set_greater_than_filter(self, greaterThanFilterDict: dict, dataIndex: pd.Index):
+    def __set_greater_than_filter(self, greater_than_filter_dict: dict, data_idx: pd.Index):
         """
-        Read-in function for greaterThan filter dict from dev_config.yaml
+        Read-in function for greater_than filter dict from dev_config.yaml
 
-        :param greaterThanFilterDict: Dictionary of greater than filters
+        :param greater_than_filter_dict: Dictionary of greater than filters
                                       defined in dev_config.yaml
-        :param dataIndex: Index for the data frame
+        :param data_idx: Index for the data frame
         :return:
         """
-        greaterThanFilterCols = pd.DataFrame(index=dataIndex, columns=greaterThanFilterDict.keys())
-        for greaterCol, greaterElements in greaterThanFilterDict.items():
-            greaterThanFilterCols[greaterCol] = self.trips[greaterCol] >= greaterElements.pop()
-            if len(greaterElements) > 0:
+        greater_than_filter_cols = pd.DataFrame(index=data_idx, columns=greater_than_filter_dict.keys())
+        for greater_col, greater_elements in greater_than_filter_dict.items():
+            greater_than_filter_cols[greater_col] = self.trips[greater_col] >= greater_elements.pop()
+            if len(greater_elements) > 0:
                 warnings.warn(
-                    f"You specified more than one value as lower limit for filtering column {greaterCol}."
+                    f"You specified more than one value as lower limit for filtering column {greater_col}."
                     f"Only considering the last element given in the dev_config."
                 )
-        return greaterThanFilterCols
+        return greater_than_filter_cols
 
-    def __set_smaller_than_filter(self, smallerThanFilterDict: dict, dataIndex: pd.Index) -> pd.DataFrame:
+    def __set_smaller_than_filter(self, smaller_than_filter_dict: dict, data_idx: pd.Index) -> pd.DataFrame:
         """
-        Read-in function for smallerThan filter dict from dev_config.yaml
+        Read-in function for smaller_than filter dict from dev_config.yaml
 
-        :param smallerThanFilterDict: Dictionary of smaller than filters
+        :param smaller_than_filter_dict: Dictionary of smaller than filters
                defined in dev_config.yaml
-        :param dataIndex: Index for the data frame
+        :param data_idx: Index for the data frame
         :return: Returns a data frame of trips covering
                  a distance of less than 1000 km
         """
-        smallerThanFilterCols = pd.DataFrame(index=dataIndex, columns=smallerThanFilterDict.keys())
-        for smallerCol, smallerElements in smallerThanFilterDict.items():
-            smallerThanFilterCols[smallerCol] = self.trips[smallerCol] <= smallerElements.pop()
-            if len(smallerElements) > 0:
+        smaller_than_filter_cols = pd.DataFrame(index=data_idx, columns=smaller_than_filter_dict.keys())
+        for smaller_col, smaller_elements in smaller_than_filter_dict.items():
+            smaller_than_filter_cols[smaller_col] = self.trips[smaller_col] <= smaller_elements.pop()
+            if len(smaller_elements) > 0:
                 warnings.warn(
-                    f"You specified more than one value as upper limit for filtering column {smallerCol}."
+                    f"You specified more than one value as upper limit for filtering column {smaller_col}."
                     f"Only considering the last element given in the dev_config."
                 )
-        return smallerThanFilterCols
+        return smaller_than_filter_cols
 
     def _complex_filters(self) -> pd.DataFrame:
-        """Collects filters that compare multiple columns or derived variables or calculation results thereof. True
+        """
+        Collects filters that compare multiple columns or derived variables or calculation results thereof. True
         in this filter means "keep row". The function needs self.trips to determine the length and the index of the
         return argument.
 
@@ -326,11 +329,11 @@ class DataParser:
             pd.DataFrame: DataFrame with a boolean column per complex filter. True means keep the row in the trips
             data set.
         """
-        complexFilters = pd.DataFrame(index=self.trips.index)
-        complexFilters = complexFilters.join(self._filter_inconsistent_speeds())
-        complexFilters = complexFilters.join(self._filter_inconsistent_travel_times())
-        complexFilters = complexFilters.join(self._filter_overlapping_trips())
-        return complexFilters
+        complex_filters = pd.DataFrame(index=self.trips.index)
+        complex_filters = complex_filters.join(self._filter_inconsistent_speeds())
+        complex_filters = complex_filters.join(self._filter_inconsistent_travel_times())
+        complex_filters = complex_filters.join(self._filter_overlapping_trips())
+        return complex_filters
 
     def _filter_inconsistent_speeds(self) -> pd.Series:
         """
@@ -341,14 +344,15 @@ class DataParser:
         :return: Boolean vector with observations marked True that should be
         kept in the data set
         """
-        self.trips["averageSpeed"] = self.trips["tripDistance"] / (self.trips["travelTime"] / 60)
+        self.trips["averageSpeed"] = self.trips["trip_distance"] / (self.trips["travel_time"] / 60)
 
-        return (self.trips["averageSpeed"] > self.dev_config["dataParsers"]["filters"]["lowerSpeedThreshold"]) & (
-            self.trips["averageSpeed"] <= self.dev_config["dataParsers"]["filters"]["higherSpeedThreshold"]
+        return (self.trips["averageSpeed"] > self.dev_config["dataParsers"]["filters"]["lower_speed_threshold"]) & (
+            self.trips["averageSpeed"] <= self.dev_config["dataParsers"]["filters"]["higher_speed_threshold"]
         )
 
     def _filter_inconsistent_travel_times(self) -> pd.Series:
-        """Calculates a travel time from the given timestamps and compares it
+        """
+        Calculates a travel time from the given timestamps and compares it
         to the travel time given by the interviewees. Selects observations where
         timestamps are consistent with the travel time given.
 
@@ -356,10 +360,10 @@ class DataParser:
         kept in the data set
         """
         self.trips["travelTime_ts"] = (
-            (self.trips["timestampEnd"] - self.trips["timestampStart"]).dt.total_seconds().div(60).astype(int)
+            (self.trips["timestamp_end"] - self.trips["timestamp_start"]).dt.total_seconds().div(60).astype(int)
         )
-        filt = self.trips["travelTime_ts"] == self.trips["travelTime"]
-        filt.name = "travelTime"  # Required for column-join in _filter()
+        filt = self.trips["travelTime_ts"] == self.trips["travel_time"]
+        filt.name = "travel_time"  # Required for column-join in _filter()
         return filt
 
     def _filter_overlapping_trips(self, lookahead_periods: int = 1) -> pd.DataFrame:
@@ -368,7 +372,7 @@ class DataParser:
         overlap with at least one of the period next trips.
 
         Args:
-            data (pd.DataFrame): Trip data set including the two variables timestampStart and timestampEnd
+            data (pd.DataFrame): Trip data set including the two variables timestamp_start and timestamp_end
             characterizing a trip
 
         Returns:
@@ -377,23 +381,24 @@ class DataParser:
             next trip, period==2 no overlap with second next trip etc.).
         """
         lst = []
-        for p in range(1, lookahead_periods + 1):
-            ser = self.__identify_overlapping_trips(dat=self.trips, period=p)
-            ser.name = f"p={p}"
+        for profile in range(1, lookahead_periods + 1):
+            ser = self.__identify_overlapping_trips(dat=self.trips, period=profile)
+            ser.name = f"profile={profile}"
             lst.append(ser)
         ret = pd.concat(lst, axis=1).all(axis=1)
-        ret.name = "noOverlapNextTrips"
+        ret.name = "no_overlap_next_trips"
         return ret
 
     def __identify_overlapping_trips(self, dat: pd.DataFrame, period: int) -> pd.Series:
-        """Calculates a boolean vector of same length as dat that is True if the current trip does not overlap with
+        """
+        Calculates a boolean vector of same length as dat that is True if the current trip does not overlap with
         the next trip. "Next" can relate to the consecutive trip (if period==1) or to a later trip defined by the
         period (e.g. for period==2 the trip after next). For determining if a overlap occurs the end timestamp of the
         current trip is compared to the start timestamp of the "next" trip.
 
         Args:
             dat (pd.DataFrame): A trip data set containing consecutive trips containing at least the columns id_col,
-                timestampStart, timestampEnd.
+                timestamp_start, timestamp_end.
             id_col (str): Column that differentiates units of trips e.g. daily trips carried out by the same vehicle.
             period (int): Forward looking period to compare trip overlap. Should be the maximum number of trip that one
                 vehicle carries out in a time interval (e.g. day) in the data set.
@@ -402,26 +407,26 @@ class DataParser:
             pd.Series: A boolean vector that is True if the trip does not overlap with the period-next trip but belongs
                 to the same vehicle.
         """
-        dat["isSameIDAsPrev"] = dat["uniqueID"] == dat["uniqueID"].shift(period)
-        dat["tripStartsAfterPrevTrip"] = dat["timestampStart"] > dat["timestampEnd"].shift(period)
-        return ~(dat["isSameIDAsPrev"] & ~dat["tripStartsAfterPrevTrip"])
+        dat["is_same_id_as_previous"] = dat["unique_id"] == dat["unique_id"].shift(period)
+        dat["trip_starts_after_previous_trip"] = dat["timestamp_start"] > dat["timestamp_end"].shift(period)
+        return ~(dat["is_same_id_as_previous"] & ~dat["trip_starts_after_previous_trip"])
 
-    def _filter_analysis(self, filterData: pd.DataFrame):
+    def _filter_analysis(self, filter_data: pd.DataFrame):
         """
         Function supplies some aggregate info of the data after filtering to the user Function does not change any
         class attributes
 
-        :param filterData:
+        :param filter_data:
         :return: None
         """
-        lenData = sum(filterData.all(axis="columns"))
-        boolDict = {iCol: sum(filterData[iCol]) for iCol in filterData}
+        len_data = sum(filter_data.all(axis="columns"))
+        bool_dict = {i_column: sum(filter_data[i_column]) for i_column in filter_data}
         print("The following number of observations were taken into account after filtering:")
-        pprint.pprint(boolDict)
-        # print(f'{filterData["averageSpeed"].sum()} trips have plausible average speeds')
-        # print(f'{(~filterData["tripDoesNotOverlap"]).sum()} trips overlap and were thus filtered out')
-        print(f"All filters combined yielded that a total of {lenData} trips are taken into account.")
-        print(f"This corresponds to {lenData / len(filterData)* 100} percent of the original data.")
+        pprint.pprint(bool_dict)
+        # print(f'{filter_data["averageSpeed"].sum()} trips have plausible average speeds')
+        # print(f'{(~filter_data["tripDoesNotOverlap"]).sum()} trips overlap and were thus filtered out')
+        print(f"All filters combined yielded that a total of {len_data} trips are taken into account.")
+        print(f"This corresponds to {len_data / len(filter_data)* 100} percent of the original data.")
 
     def process(self):
         """
@@ -430,34 +435,34 @@ class DataParser:
         raise NotImplementedError("Implement process method for DataParser.")
 
     def write_output(self):
-        if self.user_config["global"]["writeOutputToDisk"]["parseOutput"]:
-            root = Path(self.user_config["global"]["pathAbsolute"]["vencopyRoot"])
-            folder = self.dev_config["global"]["pathRelative"]["parseOutput"]
-            fileName = createFileName(
+        if self.user_config["global"]["write_output_to_disk"]["parse_output"]:
+            root = Path(self.user_config["global"]["absolute_path"]["vencopy_root"])
+            folder = self.dev_config["global"]["relative_path"]["parse_output"]
+            file_name = create_file_name(
                 dev_config=self.dev_config,
                 user_config=self.user_config,
-                fileNameID="outputDataParser",
-                datasetID=self.datasetID,
-                manualLabel="",
+                file_name_id="output_dataParser",
+                dataset=self.dataset,
+                manual_label="",
             )
-            writeOut(data=self.activities, path=root / folder / fileName)
+            write_out(data=self.activities, path=root / folder / file_name)
 
 
 class IntermediateParsing(DataParser):
-    def __init__(self, configDict: dict, datasetID: str, debug, loadEncrypted=False):
+    def __init__(self, configs: dict, dataset: str, debug, load_encrypted=False):
         """
         Intermediate parsing class.
 
-        :param configDict: VencoPy config dictionary consisting at least of
+        :param configs: VencoPy config dictionary consisting at least of
                            the config dictionaries.
-        :param datasetID: A string identifying the MiD data set.
-        :param loadEncrypted: Boolean. If True, data is read from encrypted
+        :param dataset: A string identifying the MiD data set.
+        :param load_encrypted: Boolean. If True, data is read from encrypted
                               file. For this, a possword has to be
                               specified in user_config['PW'].
         """
-        super().__init__(configDict, datasetID=datasetID, loadEncrypted=loadEncrypted, debug=debug)
-        self.filters = self.dev_config["dataParsers"]["filters"][self.datasetID]
-        self.varDataTypeDict = {}
+        super().__init__(configs, dataset=dataset, load_encrypted=load_encrypted, debug=debug)
+        self.filters = self.dev_config["dataParsers"]["filters"][self.dataset]
+        self.var_datatype_dict = {}
         self.columns = self.__compile_variable_list()
 
     def __compile_variable_list(self) -> list:
@@ -471,13 +476,13 @@ class IntermediateParsing(DataParser):
 
         :return: List of variables
         """
-        listIndex = self.dev_config["dataParsers"]["dataVariables"]["datasetID"].index(self.datasetID)
+        list_index = self.dev_config["dataParsers"]["data_variables"]["dataset"].index(self.dataset)
         variables = [
-            val[listIndex] if val[listIndex] != "NA" else "NA"
-            for key, val in self.dev_config["dataParsers"]["dataVariables"].items()
+            val[list_index] if val[list_index] != "NA" else "NA"
+            for _, val in self.dev_config["dataParsers"]["data_variables"].items()
         ]
 
-        variables.remove(self.datasetID)
+        variables.remove(self.dataset)
         self.__remove_na(variables)
         return variables
 
@@ -509,7 +514,7 @@ class IntermediateParsing(DataParser):
     def _convert_types(self):
         """
         Convert raw column types to predefined python types as specified in
-        parseConfig['inputDTypes'][datasetID]. This is mainly done for
+        parseConfig['input_data_types'][dataset]. This is mainly done for
         performance reasons. But also in order to avoid index values that are
         of type int to be cast to float. The function operates only on
         self.trips and writes back changes to self.trips
@@ -517,13 +522,14 @@ class IntermediateParsing(DataParser):
         :return: None
         """
         # Filter for dataset specific columns
-        conversionDict = self.dev_config["dataParsers"]["inputDTypes"][self.datasetID]
-        keys = {iCol for iCol in conversionDict.keys() if iCol in self.trips.columns}
-        self.varDataTypeDict = {key: conversionDict[key] for key in conversionDict.keys() & keys}
-        self.trips = self.trips.astype(self.varDataTypeDict)
+        conversion_dict = self.dev_config["dataParsers"]["input_data_types"][self.dataset]
+        keys = {i_column for i_column in conversion_dict.keys() if i_column in self.trips.columns}
+        self.var_datatype_dict = {key: conversion_dict[key] for key in conversion_dict.keys() & keys}
+        self.trips = self.trips.astype(self.var_datatype_dict)
 
     def _complex_filters(self) -> pd.DataFrame:
-        """Collects filters that compare multiple columns or derived variables or calculation results thereof. True
+        """
+        Collects filters that compare multiple columns or derived variables or calculation results thereof. True
         in this filter means "keep row". The function needs self.trips to determine the length and the index of the
         return argument.
 
@@ -531,13 +537,13 @@ class IntermediateParsing(DataParser):
             pd.DataFrame: DataFrame with a boolean column per complex filter. True means keep the row in the activities
             data set.
         """
-        complexFilters = pd.DataFrame(index=self.trips.index)
-        complexFilters = complexFilters.join(self._filter_inconsistent_speeds())
-        complexFilters = complexFilters.join(self._filter_inconsistent_travel_times())
-        complexFilters = complexFilters.join(self._filter_overlapping_trips())
-        complexFilters = complexFilters.join(self._filter_consistent_hours())
-        complexFilters = complexFilters.join(self._filter_zero_length_trips())
-        return complexFilters
+        complex_filters = pd.DataFrame(index=self.trips.index)
+        complex_filters = complex_filters.join(self._filter_inconsistent_speeds())
+        complex_filters = complex_filters.join(self._filter_inconsistent_travel_times())
+        complex_filters = complex_filters.join(self._filter_overlapping_trips())
+        complex_filters = complex_filters.join(self._filter_consistent_hours())
+        complex_filters = complex_filters.join(self._filter_zero_length_trips())
+        return complex_filters
 
     def _filter_consistent_hours(self) -> pd.Series:
         """
@@ -545,12 +551,13 @@ class IntermediateParsing(DataParser):
 
         :return: Returns a boolean Series indicating erroneous rows (trips) with False.
         """
-        ser = self.trips["timestampStart"] <= self.trips["timestampEnd"]
-        ser.name = "tripStartAfterEnd"
+        ser = self.trips["timestamp_start"] <= self.trips["timestamp_end"]
+        ser.name = "trip_start_after_end"
         return ser
 
     def _filter_zero_length_trips(self) -> pd.Series:
-        """Filter out trips that start and end at same hour and minute but are not ending on next day (no 24-hour
+        """
+        Filter out trips that start and end at same hour and minute but are not ending on next day (no 24-hour
         trips).
 
         Returns:
@@ -558,54 +565,54 @@ class IntermediateParsing(DataParser):
         """
 
         ser = ~(
-            (self.trips.loc[:, "tripStartHour"] == self.trips.loc[:, "tripEndHour"])
-            & (self.trips.loc[:, "tripStartMinute"] == self.trips.loc[:, "tripEndMinute"])
-            & (~self.trips.loc[:, "tripEndNextDay"])
+            (self.trips.loc[:, "trip_start_hour"] == self.trips.loc[:, "trip_end_hour"])
+            & (self.trips.loc[:, "trip_start_minute"] == self.trips.loc[:, "trip_end_minute"])
+            & (~self.trips.loc[:, "trip_end_next_day"])
         )
-        ser.name = "isNoZeroLengthTrip"
+        ser.name = "is_no_zero_length_trip"
         return ser
 
-    def _add_string_column_from_variable(self, colName: str, varName: str):
+    def _add_string_column_from_variable(self, col_name: str, var_name: str):
         """
         Replaces each occurence of a MiD/KiD variable e.g. 1,2,...,7 for
         weekdays with an explicitly mapped string e.g. 'MON', 'TUE',...,'SUN'.
 
-        :param colName: Name of the column in self.trips where the explicit
+        :param col_name: Name of the column in self.trips where the explicit
                         string info is stored
-        :param varName: Name of the VencoPy internal variable given in
-                        dev_config/dataParsers['dataVariables']
+        :param var_name: Name of the VencoPy internal variable given in
+                        dev_config/dataParsers['data_variables']
         :return: None
         """
-        self.trips.loc[:, colName] = self.trips.loc[:, varName].replace(
-            self.dev_config["dataParsers"]["Replacements"][self.datasetID][varName]
+        self.trips.loc[:, col_name] = self.trips.loc[:, var_name].replace(
+            self.dev_config["dataParsers"]["replacements"][self.dataset][var_name]
         )
 
-    def __composeTimestamp(
+    def __compose_timestamp(
         self,
         data: pd.DataFrame = None,
-        colYear: str = "tripStartYear",
-        colWeek: str = "tripStartWeek",
-        colDay: str = "tripStartWeekday",
-        colHour: str = "tripStartHour",
-        colMin: str = "tripStartMinute",
-        colName: str = "timestampStart",
+        col_year: str = "trip_start_year",
+        col_week: str = "trip_start_week",
+        col_day: str = "trip_start_weekday",
+        col_hour: str = "trip_start_hour",
+        col_min: str = "trip_start_minute",
+        col_name: str = "timestamp_start",
     ) -> np.datetime64:
         """
         :param data: a data frame
-        :param colYear: year of start of a particular trip
-        :param colWeek: week of start of a particular trip
-        :param colDay: weekday of start of a particular trip
-        :param colHour: hour of start of a particular trip
-        :param colMin: minute of start of a particular trip
-        :param colName:
+        :param col_year: year of start of a particular trip
+        :param col_week: week of start of a particular trip
+        :param col_day: weekday of start of a particular trip
+        :param col_hour: hour of start of a particular trip
+        :param col_min: minute of start of a particular trip
+        :param col_name:
         :return: Returns a detailed time stamp
         """
-        data[colName] = (
-            pd.to_datetime(data.loc[:, colYear], format="%Y")
-            + pd.to_timedelta(data.loc[:, colWeek] * 7, unit="days")
-            + pd.to_timedelta(data.loc[:, colDay], unit="days")
-            + pd.to_timedelta(data.loc[:, colHour], unit="hour")
-            + pd.to_timedelta(data.loc[:, colMin], unit="minute")
+        data[col_name] = (
+            pd.to_datetime(data.loc[:, col_year], format="%Y")
+            + pd.to_timedelta(data.loc[:, col_week] * 7, unit="days")
+            + pd.to_timedelta(data.loc[:, col_day], unit="days")
+            + pd.to_timedelta(data.loc[:, col_hour], unit="hour")
+            + pd.to_timedelta(data.loc[:, col_min], unit="minute")
         )
         # return data
 
@@ -613,56 +620,54 @@ class IntermediateParsing(DataParser):
         """
         :return: Returns start and end time of a trip
         """
-        self.__composeTimestamp(data=self.trips)  # Starting timestamp
-        self.__composeTimestamp(
+        self.__compose_timestamp(data=self.trips)  # Starting timestamp
+        self.__compose_timestamp(
             data=self.trips,  # Ending timestamps
-            colHour="tripEndHour",
-            colMin="tripEndMinute",
-            colName="timestampEnd",
+            col_hour="trip_end_hour",
+            col_min="trip_end_minute",
+            col_name="timestamp_end",
         )
 
     def _update_end_timestamp(self):
         """
         Updates the end timestamp for overnight trips adding 1 day
 
-        :return: None, only acts on the class variable
+        :return: None, only activities on the class variable
         """
-        endsFollowingDay = self.trips["tripEndNextDay"] == 1
-        self.trips.loc[endsFollowingDay, "timestampEnd"] = self.trips.loc[
-            endsFollowingDay, "timestampEnd"
+        ends_following_day = self.trips["trip_end_next_day"] == 1
+        self.trips.loc[ends_following_day, "timestamp_end"] = self.trips.loc[
+            ends_following_day, "timestamp_end"
         ] + pd.offsets.Day(1)
 
     def _harmonize_variables_unique_id_names(self):
         """
         Harmonises ID variables for all datasets.
         """
-        self.trips["uniqueID"] = (
-            self.trips[str(self.dev_config["dataParsers"]["IDVariablesNames"][self.datasetID])]
+        self.trips["unique_id"] = (
+            self.trips[str(self.dev_config["dataParsers"]["id_variables_names"][self.dataset])]
         ).astype(int)
         print("Finished harmonization of ID variables.")
 
     def _subset_vehicle_segment(self):
-        if self.user_config["dataParsers"]["subsetVehicleSegment"]:
+        if self.user_config["dataParsers"]["subset_vehicle_segment"]:
             self.activities = self.activities[
-                self.activities["vehicleSegmentStr"]
-                == self.user_config["dataParsers"]["vehicleSegment"][self.datasetID]
+                self.activities["vehicle_segment_string"]
+                == self.user_config["dataParsers"]["vehicle_segment"][self.dataset]
             ]
             print(
-                f'The subset contains only vehicles of the class {(self.user_config["dataParsers"]["vehicleSegment"][self.datasetID])} for a total of {len(self.activities.uniqueID.unique())} individual vehicles.'
+                f'The subset contains only vehicles of the class {(self.user_config["dataParsers"]["vehicle_segment"][self.dataset])} for a total of {len(self.activities.unique_id.unique())} individual vehicles.'
             )
 
     def _cleanup_dataset(self):
         self.activities.drop(
             columns=[
                 "level_0",
-                "tripIsIntermodal",
+                "trip_is_intermodal",
                 "timedelta_total",
                 "timedelta_morning",
-                "timeShare_morning",
-                "timeShare_evening",
-                "totalTripDistance",
+                "time_share_morning",
+                "time_share_evening",
+                "total_trip_distance",
             ],
             inplace=True,
         )
-
-

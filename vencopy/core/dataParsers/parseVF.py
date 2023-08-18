@@ -1,16 +1,19 @@
-__version__ = "1.0.X"
+__version__ = "1.0.0"
 __maintainer__ = "Niklas Wulff, Fabia Miorelli"
-__email__ = "Niklas.Wulff@dlr.de"
 __birthdate__ = "17.08.2023"
 __status__ = "test"  # options are: dev, test, prod
+__license__ = "BSD-3-Clause"
+
 
 import pandas as pd
+from pathlib import Path
 
 from vencopy.core.dataParsers.dataParsers import IntermediateParsing
 from vencopy.core.dataParsers.parkInference import ParkInference
 
+
 class ParseVF(IntermediateParsing):
-    def __init__(self, configDict: dict, datasetID: str, debug, loadEncrypted=False):
+    def __init__(self, configs: dict, dataset: str, debug, load_encrypted=False):
         """
         Class for parsing MiD data sets. The VencoPy configs globalConfig,
         parseConfig and localPathConfig have to be given on instantiation as
@@ -19,79 +22,81 @@ class ParseVF(IntermediateParsing):
         an encrypted ZIP-file. For this, a password has to be given in the
         parseConfig.
 
-        :param configDict: VencoPy config dictionary consisting at least of the
+        :param configs: VencoPy config dictionary consisting at least of the
                            config dictionaries globalConfig, parseConfig and
                            localPathConfig.
-        :param datasetID: A string identifying the MiD data set.
-        :param loadEncrypted: Boolean. If True, data is read from encrypted
+        :param dataset: A string identifying the MiD data set.
+        :param load_encrypted: Boolean. If True, data is read from encrypted
                               file. For this, a possword has to be
                               specified in parseConfig['PW'].
         """
-        super().__init__(configDict=configDict, datasetID=datasetID, debug=debug, loadEncrypted=loadEncrypted)
-        self.park_inference = ParkInference(configDict=configDict)
+        super().__init__(configs=configs, dataset=dataset, debug=debug, load_encrypted=load_encrypted)
+        self.park_inference = ParkInference(configs=configs)
 
     def _load_data(self):
         """
-        rawDataPathTrip, unlike for other MiD classes is taken from the MiD B1 dataset
-        rawDataPathVehicles is an internal dataset from VF
+        raw_data_path_trips, unlike for other MiD classes is taken from the MiD B1 dataset
+        raw_data_path_vehicles is an internal dataset from VF
         """
-        rawDataPathTrips = (
-            Path(self.user_config["global"]["pathAbsolute"][self.datasetID])
-            / self.dev_config["global"]["files"][self.datasetID]["tripsDataRaw"]
+        raw_data_path_trips = (
+            Path(self.user_config["global"]["absolute_path"][self.dataset])
+            / self.dev_config["global"]["files"][self.dataset]["trips_data_raw"]
         )
-        rawDataPathVehicles = (
-            Path(self.user_config["global"]["pathAbsolute"][self.datasetID])
-            / self.dev_config["global"]["files"][self.datasetID]["vehiclesDataRaw"]
+        raw_data_path_vehicles = (
+            Path(self.user_config["global"]["absolute_path"][self.dataset])
+            / self.dev_config["global"]["files"][self.dataset]["vehicles_data_raw"]
         )
-        rawDataTrips = pd.read_stata(
-            rawDataPathTrips,
+        raw_data_trips = pd.read_stata(
+            raw_data_path_trips,
             convert_categoricals=False,
             convert_dates=False,
             preserve_dtypes=False,
         )
-        rawDataVehicles = pd.read_csv(rawDataPathVehicles, encoding="ISO-8859-1")
-        rawDataVehicles = rawDataVehicles.drop(columns=["Unnamed: 0"])
-        rawDataVehicles = rawDataVehicles.drop_duplicates(subset=["HP_ID"], keep="first")
-        rawDataVehicles.set_index("HP_ID", inplace=True)
-        raw_data = rawDataTrips.join(rawDataVehicles, on="HP_ID", rsuffix="VF")
+        raw_data_vehicles = pd.read_csv(raw_data_path_vehicles, encoding="ISO-8859-1")
+        raw_data_vehicles = raw_data_vehicles.drop(columns=["Unnamed: 0"])
+        raw_data_vehicles = raw_data_vehicles.drop_duplicates(subset=["HP_ID"], keep="first")
+        raw_data_vehicles.set_index("HP_ID", inplace=True)
+        raw_data = raw_data_trips.join(raw_data_vehicles, on="HP_ID", rsuffix="VF")
         self.raw_data = raw_data
         print(f"Finished loading {len(self.raw_data)} rows of raw data of type .dta.")
 
     def __harmonize_variables(self):
         """
         Harmonizes the input data variables to match internal VencoPy names given as specified in the mapping in
-        self.dev_config["dataParsers"]['dataVariables']. Mappings for MiD08 and MiD17 are given. Since the MiD08 does not provide a
+        self.dev_config["dataParsers"]['data_variables']. Mappings for MiD08 and MiD17 are given. Since the MiD08 does not provide a
         combined household and person unique identifier, it is synthesized of the both IDs.
 
         :return: None
         """
-        replacementDict = self._create_replacement_dict(self.datasetID, self.dev_config["dataParsers"]["dataVariables"])
-        dataRenamed = self.trips.rename(columns=replacementDict)
-        if self.datasetID == "MiD08":
-            dataRenamed["hhPersonID"] = (
-                dataRenamed["hhID"].astype("string") + dataRenamed["personID"].astype("string")
+        replacement_dict = self._create_replacement_dict(
+            self.dataset, self.dev_config["dataParsers"]["data_variables"]
+        )
+        data_renamed = self.trips.rename(columns=replacement_dict)
+        if self.dataset == "MiD08":
+            data_renamed["household_person_id"] = (
+                data_renamed["household_id"].astype("string") + data_renamed["person_id"].astype("string")
             ).astype("int")
-        self.trips = dataRenamed
+        self.trips = data_renamed
         print("Finished harmonization of variables")
 
     def __pad_missing_car_segments(self):
-        # remove vehicleSegment nicht zuzuordnen
-        self.trips = self.trips[self.trips.vehicleSegment != "nicht zuzuordnen"]
+        # remove vehicle_segment nicht zuzuordnen
+        self.trips = self.trips[self.trips.vehicle_segment != "nicht zuzuordnen"]
         # pad missing car segments
-        # self.trips.vehicleSegment = self.trips.groupby('hhID').vehicleSegment.transform('first')
-        # self.trips.drivetrain = self.trips.groupby('hhID').drivetrain.transform('first')
-        # self.trips.vehicleID = self.trips.groupby('hhID').vehicleID.transform('first')
+        # self.trips.vehicle_segment = self.trips.groupby('household_id').vehicle_segment.transform('first')
+        # self.trips.drivetrain = self.trips.groupby('household_id').drivetrain.transform('first')
+        # self.trips.vehicleID = self.trips.groupby('household_id').vehicleID.transform('first')
         # remove remaining NaN
-        self.trips = self.trips.dropna(subset=["vehicleSegment"])
-        # self.trips = self.trips.dropna(subset=['vehicleSegment', 'drivetrain', 'vehicleID'])
+        self.trips = self.trips.dropna(subset=["vehicle_segment"])
+        # self.trips = self.trips.dropna(subset=['vehicle_segment', 'drivetrain', 'vehicleID'])
 
     def __exclude_hours(self):
         """
         Removes trips where both start and end trip time are missing. KID-specific function.
         """
-        self.trips = self.trips.dropna(subset=["tripStartClock", "tripEndClock"])
+        self.trips = self.trips.dropna(subset=["trip_start_clock", "trip_end_clock"])
 
-    def __add_string_columns(self, weekday=True, purpose=True, vehicleSegment=True):
+    def __add_string_columns(self, weekday=True, purpose=True, vehicle_segment=True):
         """
         Adds string columns for either weekday or purpose.
 
@@ -102,29 +107,29 @@ class ParseVF(IntermediateParsing):
         :return: None
         """
         if weekday:
-            self._add_string_column_from_variable(colName="weekdayStr", varName="tripStartWeekday")
+            self._add_string_column_from_variable(colName="weekday_string", varName="trip_start_weekday")
         if purpose:
-            self._add_string_column_from_variable(colName="purposeStr", varName="tripPurpose")
-        if vehicleSegment:
+            self._add_string_column_from_variable(colName="purpose_string", varName="trip_purpose")
+        if vehicle_segment:
             self.trips = self.trips.replace("groß", "gross")
-            self._add_string_column_from_variable(colName="vehicleSegmentStr", varName="vehicleSegment")
+            self._add_string_column_from_variable(colName="vehicle_segment_string", varName="vehicle_segment")
 
     def _drop_redundant_cols(self):
         # Clean-up of temporary redundant columns
         self.trips.drop(
             columns=[
-                "tripStartClock",
-                "tripEndClock",
-                "tripStartYear",
-                "tripStartMonth",
-                "tripStartWeek",
-                "tripStartHour",
-                "tripStartMinute",
-                "tripEndHour",
-                "tripEndMinute",
-                "uniqueID_prev",
-                "uniqueID_next",
-                "colFromIndex",
+                "trip_start_clock",
+                "trip_end_clock",
+                "trip_start_year",
+                "trip_start_month",
+                "trip_start_week",
+                "trip_start_hour",
+                "trip_start_minute",
+                "trip_end_hour",
+                "trip_end_minute",
+                "previous_unique_id",
+                "next_unique_id",
+                "column_from_index",
             ],
             inplace=True,
         )
@@ -151,4 +156,3 @@ class ParseVF(IntermediateParsing):
         self.write_output()
         print("Parsing VF dataset completed.")
         return self.activities
-

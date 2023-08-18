@@ -1,9 +1,7 @@
-__version__ = "0.4.X"
-__maintainer__ = "Niklas Wulff"
-__contributors__ = "Fabia Miorelli"
-__email__ = "Niklas.Wulff@dlr.de"
-__birthdate__ = "29.07.2022"
-__status__ = "dev"  # options are: dev, test, prod
+__version__ = "1.0.0"
+__maintainer__ = "Niklas Wulff, Fabia Miorelli"
+__birthdate__ = "01.04.2023"
+__status__ = "test"  # options are: dev, test, prod
 __license__ = "BSD-3-Clause"
 
 
@@ -12,32 +10,32 @@ from pathlib import Path
 import pandas as pd
 
 from vencopy.core.diaryBuilders import DiaryBuilder
-from vencopy.utils.globalFunctions import createFileName, writeOut
+from vencopy.utils.globalFunctions import create_file_name, write_out
 
 
 class ProfileAggregator:
-    def __init__(self, config_dict: dict, activities: pd.DataFrame, profiles: DiaryBuilder):
-        self.user_config = config_dict["user_config"]
-        self.dev_config = config_dict["dev_config"]
-        self.dataset_id = self.user_config["global"]["dataset"]
-        self.weighted = self.user_config["profileAggregators"]["weightFlowProfiles"]
+    def __init__(self, configs: dict, activities: pd.DataFrame, profiles: DiaryBuilder):
+        self.user_config = configs["user_config"]
+        self.dev_config = configs["dev_config"]
+        self.dataset = self.user_config["global"]["dataset"]
+        self.weighted = self.user_config["profileAggregators"]["weight_flow_profiles"]
         self.alpha = self.user_config["profileAggregators"]["alpha"]
         self.activities = activities
         self.profiles = profiles
         self.weights = (
-            self.activities.loc[:, ["uniqueID", "tripWeight"]]
-            .drop_duplicates(subset=["uniqueID"])
+            self.activities.loc[:, ["unique_id", "trip_weight"]]
+            .drop_duplicates(subset=["unique_id"])
             .reset_index(drop=True)
-            .set_index("uniqueID")
+            .set_index("unique_id")
         )
         self.drain = profiles.drain
-        self.charge_power = profiles.charge_power
-        self.uncontrolled_charge = profiles.uncontrolled_charge
+        self.charging_power = profiles.charging_power
+        self.uncontrolled_charging = profiles.uncontrolled_charging
         self.max_battery_level = profiles.max_battery_level
         self.min_battery_level = profiles.min_battery_level
         self.aggregator = Aggregator(
             activities=self.activities,
-            dataset_id=self.dataset_id,
+            dataset=self.dataset,
             user_config=self.user_config,
             dev_config=self.dev_config,
             weighted=self.weighted,
@@ -45,77 +43,77 @@ class ProfileAggregator:
         )
 
     def aggregate_profiles(self):
-        self.drain_weekly = self.aggregator.perform_aggregation(profile=self.drain, pname="drain", method="flow")
+        self.drain_weekly = self.aggregator.perform_aggregation(profile=self.drain, profile_name="drain", method="flow")
         self.charge_power_weekly = self.aggregator.perform_aggregation(
-            profile=self.charge_power, pname="charge_power", method="flow"
+            profile=self.charging_power, profile_name="charge_power", method="flow"
         )
         self.uncontrolled_charge_weekly = self.aggregator.perform_aggregation(
-            profile=self.uncontrolled_charge, pname="uncontrolled_charge", method="flow"
+            profile=self.uncontrolled_charging, profile_name="uncontrolled_charge", method="flow"
         )
         self.max_battery_level_weekly = self.aggregator.perform_aggregation(
-            profile=self.max_battery_level, pname="max_battery_level", method="state"
+            profile=self.max_battery_level, profile_name="max_battery_level", method="state"
         )
         self.min_battery_level_weekly = self.aggregator.perform_aggregation(
-            profile=self.min_battery_level, pname="min_battery_level", method="state"
+            profile=self.min_battery_level, profile_name="min_battery_level", method="state"
         )
         print("Aggregation finished for all profiles.")
 
 
 class Aggregator:
     def __init__(
-        self, activities: pd.DataFrame, dataset_id: str, alpha: int, user_config: dict, dev_config: dict, weighted: bool
+        self, activities: pd.DataFrame, dataset: str, alpha: int, user_config: dict, dev_config: dict, weighted: bool
     ):
-        self.dataset_id = dataset_id
+        self.dataset = dataset
         self.alpha = alpha
         self.activities = activities
         self.weighted = weighted
         self.user_config = user_config
         self.dev_config = dev_config
 
-    def __basic_aggregation(self, by_column: str = "tripStartWeekday") -> pd.Series:
+    def __basic_aggregation(self, by_column: str = "trip_start_weekday") -> pd.Series:
         self.weekday_profiles = pd.DataFrame(columns=self.profile.columns, index=range(1, 8))
-        cols = ["uniqueID", "tripWeight"] + [by_column]
+        cols = ["unique_id", "trip_weight"] + [by_column]
         self.activities_subset = (
-            self.activities[cols].copy().drop_duplicates(subset=["uniqueID"]).reset_index(drop=True)
+            self.activities[cols].copy().drop_duplicates(subset=["unique_id"]).reset_index(drop=True)
         )
-        self.activities_weekday = pd.merge(self.profile, self.activities_subset, on="uniqueID", how="inner")
-        # self.profile.drop('uniqueID', axis=1, inplace=True)
-        self.activities_weekday = self.activities_weekday.set_index("uniqueID")
+        self.activities_weekday = pd.merge(self.profile, self.activities_subset, on="unique_id", how="inner")
+        # self.profile.drop('unique_id', axis=1, inplace=True)
+        self.activities_weekday = self.activities_weekday.set_index("unique_id")
         # Compose weekly profile from 7 separate profiles
         if self.method == "flow":
             if self.weighted:
-                self.__weighted_mean_flow_profiles(by_column="tripStartWeekday")
+                self.__caculate_weighted_mean_flow_profiles(by_column="trip_start_weekday")
             else:
-                self.__calculate_average_flow_profiles(by_column="tripStartWeekday")
+                self.__calculate_average_flow_profiles(by_column="trip_start_weekday")
         elif self.method == "state":
-            self.__agg_state_profiles(by_column="tripStartWeekday", alpha=self.alpha)
+            self.__aggregate_state_profiles(by_column="trip_start_weekday", alpha=self.alpha)
 
     def __calculate_average_flow_profiles(self, by_column: str):
         for idate in self.activities_weekday[by_column].unique():
             weekday_subset = self.activities_weekday[self.activities_weekday[by_column] == idate].reset_index(drop=True)
-            weekday_subset = weekday_subset.drop(columns=["tripStartWeekday", "tripWeight"], axis=1)
+            weekday_subset = weekday_subset.drop(columns=["trip_start_weekday", "trip_weight"], axis=1)
             weekday_subset_agg = weekday_subset.mean(axis=0)
             self.weekday_profiles.iloc[idate - 1] = weekday_subset_agg
 
-    def __weighted_mean_flow_profiles(self, by_column: str):
+    def __caculate_weighted_mean_flow_profiles(self, by_column: str):
         for idate in self.activities_weekday[by_column].unique():
             weekday_subset = self.activities_weekday[self.activities_weekday[by_column] == idate].reset_index(drop=True)
-            weekday_subset = weekday_subset.drop("tripStartWeekday", axis=1)
+            weekday_subset = weekday_subset.drop("trip_start_weekday", axis=1)
             # aggregate activities_weekday to one profile by multiplying by weights
-            weight_sum = sum(weekday_subset.tripWeight)
-            weekday_subset_weight = weekday_subset.apply(lambda x: x * weekday_subset.tripWeight.values)
-            weekday_subset_weight = weekday_subset_weight.drop("tripWeight", axis=1)
+            weight_sum = sum(weekday_subset.trip_weight)
+            weekday_subset_weight = weekday_subset.apply(lambda x: x * weekday_subset.trip_weight.values)
+            weekday_subset_weight = weekday_subset_weight.drop("trip_weight", axis=1)
             weekday_subset_weight_agg = weekday_subset_weight.sum() / weight_sum
             self.weekday_profiles.iloc[idate - 1] = weekday_subset_weight_agg
 
-    def __agg_state_profiles(self, by_column: str, alpha: int = 10):
+    def __aggregate_state_profiles(self, by_column: str, alpha: int = 10):
         """
         Selects the alpha (100 - alpha) percentile from maximum battery level
         (minimum batttery level) profile for each hour. If alpha = 10, the
         10%-biggest (10%-smallest) value is selected, all values beyond are
         disregarded as outliers.
 
-        :param by_column: Currently tripWeekday
+        :param by_column: Currently trip_weekday
         :param alpha: Percentage, giving the amount of profiles whose mobility demand can not be
             fulfilled after selection.
         :return: No return. Result is written to self.weekday_profiles with bins
@@ -124,14 +122,14 @@ class Aggregator:
         for idate in self.activities_weekday[by_column].unique():
             levels = self.activities_weekday.copy()
             weekday_subset = levels[levels[by_column] == idate].reset_index(drop=True)
-            weekday_subset = weekday_subset.drop(columns=["tripStartWeekday", "tripWeight"])
+            weekday_subset = weekday_subset.drop(columns=["trip_start_weekday", "trip_weight"])
             weekday_subset = weekday_subset.convert_dtypes()
-            if self.pname == "max_battery_level":
+            if self.profile_name == "max_battery_level":
                 self.weekday_profiles.iloc[idate - 1] = weekday_subset.quantile(1 - (alpha / 100))
-            elif self.pname == "min_battery_level":
+            elif self.profile_name == "min_battery_level":
                 self.weekday_profiles.iloc[idate - 1] = weekday_subset.quantile(alpha / 100)
             else:
-                raise NotImplementedError(f"An unknown profile {self.pname} was selected.")
+                raise NotImplementedError(f"An unknown profile {self.profile_name} was selected.")
 
     def __compose_week_profile(self):
         # input is self.weekday_profiles
@@ -159,32 +157,32 @@ class Aggregator:
         )
 
     def __write_output(self):
-        if self.user_config["global"]["writeOutputToDisk"]["aggregatorOutput"]:
-            root = Path(self.user_config["global"]["pathAbsolute"]["vencopyRoot"])
-            folder = self.dev_config["global"]["pathRelative"]["aggregatorOutput"]
-            fileName = createFileName(
+        if self.user_config["global"]["write_output_to_disk"]["aggregator_output"]:
+            root = Path(self.user_config["global"]["absolute_path"]["vencopy_root"])
+            folder = self.dev_config["global"]["relative_path"]["aggregator_output"]
+            file_name = create_file_name(
                 dev_config=self.dev_config,
                 user_config=self.user_config,
-                manualLabel=self.pname,
-                fileNameID="outputProfileAggregator",
-                dataset_id=self.dataset_id,
+                manual_label=self.profile_name,
+                file_name_id="output_profileAggregator",
+                dataset=self.dataset,
             )
-            writeOut(data=self.activities, path=root / folder / fileName)
+            write_out(data=self.activities, path=root / folder / file_name)
 
-    def perform_aggregation(self, profile: pd.DataFrame, pname: str, method: str) -> pd.DataFrame:
+    def perform_aggregation(self, profile: pd.DataFrame, profile_name: str, method: str) -> pd.DataFrame:
         self.profile = profile
-        self.pname = pname
+        self.profile_name = profile_name
         self.method = method
-        print(f"Starting to aggregate {self.pname} to fleet level based on day of the week.")
+        print(f"Starting to aggregate {self.profile_name} to fleet level based on day of the week.")
         start_time_agg = time.time()
         self.__basic_aggregation()
         self.__compose_week_profile()
-        if self.user_config["global"]["writeOutputToDisk"]["aggregatorOutput"]:
+        if self.user_config["global"]["write_output_to_disk"]["aggregator_output"]:
             self.__write_output()
-        print(f"Aggregation finished for {self.pname}.")
+        print(f"Aggregation finished for {self.profile_name}.")
         elapsed_time_agg = time.time() - start_time_agg
-        print(f"Needed time to aggregate {self.pname}: {elapsed_time_agg}.")
+        print(f"Needed time to aggregate {self.profile_name}: {elapsed_time_agg}.")
         self.profile = None
-        self.pname = None
+        self.profile_name = None
         self.method = None
         return self.weekly_profile
