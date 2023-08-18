@@ -235,7 +235,7 @@ Filtering Functionalities in FlexEstimator
 
 In the following, filtering procedures in VencoPy for individual profiles are documented. Filtering occurs after
 the completion of the main calculation steps using selectors. These are calculated based only on the four flow-related
-profiles (consumption, plugPower, uncontrolledCharge and auxilliaryFuelConsumption) in `calcProfileSelectors()` and
+profiles (consumption, plugPower, uncontrolled_charging and auxilliaryFuelConsumption) in `calcProfileSelectors()` and
 applied to both flow-profiles and state-profiles.
 
 Four criteria are applied to select individual profiles that are eligible for load shifting.

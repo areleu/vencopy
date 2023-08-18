@@ -15,7 +15,7 @@ global:
   write_output_to_disk:
       parse_output: False
       gridOutput: False
-      flexOutput: False
+      flex_output: False
       diary_output: False
       aggregatorOutput: True
       processorOutput:
@@ -113,7 +113,7 @@ gridModelers:
 flexEstimators:
   filterFuelNeed: True # Should activity chains that require fuel for trip distance satisfaction be filtered out?
   battery_capacity: 50 # in kWh, input assumption for battery capacity
-  Electric_consumption: 18.0 # in kWh/100km, input assumption for specific electric consumption
+  electric_consumption: 18.0 # in kWh/100km, input assumption for specific electric consumption
   Fuel_consumption: 1.0 # in l/100km, input assumption for specific fuel consumption for auxiliary fuel
   Start_SOC: 0.5 # State-of-charge between 0 and 1 at beginning of activity chain
   maximum_soc: 0.97 # in %

@@ -335,7 +335,7 @@ class TimeDiscretiser:
             the columns column, 'drain_per_bin', 'value_per_bin', 'park_id' and
             'number_bins'.
             column (str): The column to descritize. Currently only
-            max_battery_level_start and minBatteryLevelStart are implemented.
+            max_battery_level_start and min_battery_level_start are implemented.
         """
         if column == "max_battery_level_start":
             data["drain_per_bin"] = (self.activities.drain / data.number_bins) * -1
@@ -378,7 +378,7 @@ class TimeDiscretiser:
             the columns column, 'available_power', 'trip_id' and
             'number_bins'.
             column (str): The column to descritize. Currently only
-            max_battery_level_start and minBatteryLevelStart are implemented.
+            max_battery_level_start and min_battery_level_start are implemented.
         """
         if column == "max_battery_level_start":
             data["charge_per_bin"] = self.activities.available_power * self.time_resolution / 60
@@ -628,12 +628,12 @@ class TimeDiscretiser:
         trips["unique_id"] = trips["unique_id"].astype(int)
         return trips.groupby(by="unique_id").apply(self.assign_bins)
 
-    def assign_bins(self, acts: pd.DataFrame) -> pd.Series:
+    def assign_bins(self, activities: pd.DataFrame) -> pd.Series:
         """
         Assigns values for every unique_id based on first and last bin.
         """
         s = pd.Series(index=range(self.number_time_slots), dtype=float)
-        for _, itrip in acts.iterrows():
+        for _, itrip in activities.iterrows():
             start = itrip["first_bin"]
             end = itrip["last_bin"]
             value = itrip["value_per_bin"]

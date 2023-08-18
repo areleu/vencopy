@@ -632,7 +632,7 @@ class IntermediateParsing(DataParser):
         """
         Updates the end timestamp for overnight trips adding 1 day
 
-        :return: None, only acts on the class variable
+        :return: None, only activities on the class variable
         """
         ends_following_day = self.trips["trip_end_next_day"] == 1
         self.trips.loc[ends_following_day, "timestamp_end"] = self.trips.loc[

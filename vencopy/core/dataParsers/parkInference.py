@@ -279,7 +279,7 @@ class OvernightSplitter:
         self.__set_first_last_acts(morning_trips=morning_trips)
         is_prev_first_acts = self.__get_prev_first_act(
             morning_trips=morning_trips
-        )  # Activities that were previously firstActs
+        )  # Activities that were previously first_activities
         morning_trips_no_overlap, is_prev_first_acts = self.__neglect_overlap_morning_trips(
             morning_trips=morning_trips, is_prev_first_acts=is_prev_first_acts
         )
@@ -449,10 +449,10 @@ class OvernightSplitter:
         Identifies the household person IDs that should be neglected.
         """
         unique_ids_overnight = self.trips.loc[self.trips["trip_id"] == 0, "unique_id"]
-        acts = self.trips.loc[self.trips["unique_id"].isin(unique_ids_overnight), :]
-        activities_overnight = acts.loc[acts["trip_id"] == 0, :]
+        activities = self.trips.loc[self.trips["unique_id"].isin(unique_ids_overnight), :]
+        activities_overnight = activities.loc[activities["trip_id"] == 0, :]
         # Next trip after morning part of overnight split
-        acts_next_trip = acts.loc[acts["prevActID"] == 0, :]
+        acts_next_trip = activities.loc[activities["prevActID"] == 0, :]
         return activities_overnight.loc[~activities_overnight["unique_id"].isin(acts_next_trip["unique_id"]), "unique_id"]
 
     def __neglect_zero_trip_ID_from_acts(self, id_neglect: pd.Series):

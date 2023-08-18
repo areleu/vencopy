@@ -142,7 +142,7 @@ class GridModeler:
         and values being floats between 0 and 1. The factor is the LOSS FACTOR not the EFFICIENCY, thus 0.1 applied to
         a rated power of 11 kW will yield an available power of 9.9 kW.
 
-        :param acts [bool]: Should electric losses in the charging equipment be considered?
+        :param activities [bool]: Should electric losses in the charging equipment be considered?
         :param losses [bool]: Should electric losses in the charging equipment be considered?
         """
         if self.user_config["gridModelers"]["losses"]:
