@@ -203,7 +203,7 @@ class ParkInference:
             & (self.trips.loc[idxLastActTrips, "timestampEnd"].dt.hour == 0)
             & (self.trips.loc[idxLastActTrips, "timestampEnd"].dt.minute == 0)
         )
-        self.tripEndNextDayRaw = self.trips["tripEndNextDay"]
+        self.trips_end_next_day_raw = self.trips["tripEndNextDay"]
         self.trips.loc[idxLastTripEndMidnight, "tripEndNextDay"] = False
 
     def __neglectONTrips(self):

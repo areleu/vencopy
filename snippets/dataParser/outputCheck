@@ -15,12 +15,12 @@ if __package__ is None or __package__ == "":
 from pathlib import Path
 import matplotlib.pyplot as plt
 from vencopy.core.dataParsers import ParseMiD
-from vencopy.utils.globalFunctions import loadConfigDict
+from vencopy.utils.globalFunctions import load_configs
 
 basePath = Path(__file__).parent.parent
 configNames = ("globalConfig", "localPathConfig", "parseConfig", "diaryConfig",
                "gridConfig", "flexConfig", "aggregatorConfig", "evaluatorConfig")
-configDict = loadConfigDict(configNames, basePath)
+configDict = load_configs(configNames, basePath)
 vpData = ParseMiD(configDict=configDict, datasetID='MiD17', debug=False)
 vpData.process()
 

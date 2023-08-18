@@ -7,7 +7,7 @@ from profilehooks import profile
 # Needed to run in VSCode properties currently
 sys.path.append('.')
 
-from vencopy.scripts.globalFunctions import loadConfigDict, createOutputFolders
+from vencopy.scripts.globalFunctions import load_configs, createOutputFolders
 from vencopy.classes.evaluators import Evaluator
 from vencopy.classes.flexEstimators import FlexEstimator
 from vencopy.classes.gridModelers import GridModeler
@@ -29,7 +29,7 @@ if __name__ == '__main__':
     configNames = ('globalConfig', 'localPathConfig', 'parseConfig', 'tripConfig', 'gridConfig', 'flexConfig',
                    'evaluatorConfig')
     basePath = Path(__file__).parent.parent
-    configDict = loadConfigDict(configNames, basePath)
+    configDict = load_configs(configNames, basePath)
     createOutputFolders(configDict=configDict)
 
     vpData = ParseMiD(configDict=configDict, datasetID=datasetID, loadEncrypted=False)

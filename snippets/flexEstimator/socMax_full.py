@@ -17,7 +17,7 @@ from snippets.flexEstimator.socMax import algo
 from vencopy.core.dataParsers.dataParsers import parseData
 from vencopy.core.gridModelers import GridModeler
 from vencopy.core.flexEstimators import FlexEstimator
-from vencopy.utils.globalFunctions import loadConfigDict
+from vencopy.utils.globalFunctions import load_configs
 
 # print(os.getcwd())
 
@@ -27,7 +27,7 @@ socStart = 25
 upper = 50
 lower = 0
 
-configDict = loadConfigDict(basePath=Path('./vencopy/'))
+configDict = load_configs(basePath=Path('./vencopy/'))
 
 vpData = parseData(configDict=configDict)
 vpData.process()

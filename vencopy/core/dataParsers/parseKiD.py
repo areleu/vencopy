@@ -5,18 +5,19 @@ __birthdate__ = "17.08.2023"
 __status__ = "test"  # options are: dev, test, prod
 
 import pandas as pd
+from pathlib import Path
 
 from vencopy.core.dataParsers.dataParsers import IntermediateParsing
 from vencopy.core.dataParsers.parkInference import ParkInference
 
 class ParseKiD(IntermediateParsing):
-    def __init__(self, configDict: dict, datasetID: str, debug, loadEncrypted=False):
+    def __init__(self, configDict: dict, datasetID: str, debug, load_encrypted=False):
         """
         Inherited data class to differentiate between abstract interfaces such
         as vencopy internal variable namings and data set specific functions
         such as filters etc.
         """
-        super().__init__(configDict=configDict, datasetID=datasetID, loadEncrypted=loadEncrypted, debug=debug)
+        super().__init__(configDict=configDict, datasetID=datasetID, load_encrypted=load_encrypted, debug=debug)
         self.park_inference = ParkInference(configDict=configDict)
 
     def _load_data(self):

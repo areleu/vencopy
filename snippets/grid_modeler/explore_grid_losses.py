@@ -20,7 +20,7 @@ from pathlib import Path
 from vencopy.core.dataParsers.dataParsers import ParseMiD
 from vencopy.core.gridModelers import GridModeler
 from vencopy.core.flexEstimators import FlexEstimator
-from vencopy.utils.globalFunctions import loadConfigDict, createOutputFolders
+from vencopy.utils.globalFunctions import load_configs, createOutputFolders
 
 if __name__ == "__main__":
     # Set dataset and config to analyze, create output folders
@@ -28,7 +28,7 @@ if __name__ == "__main__":
     datasetID = "MiD17"
     # basePath = Path(__file__).parent.parent.parent
     configNames = ("globalConfig", "localPathConfig", "parseConfig", "gridConfig", "flexConfig")
-    configDict = loadConfigDict(configNames, basePath=Path(os.getcwd()) / 'vencopy')
+    configDict = load_configs(configNames, basePath=Path(os.getcwd()) / 'vencopy')
     createOutputFolders(configDict=configDict)
 
     vpData = ParseMiD(configDict=configDict, datasetID=datasetID, debug=True)

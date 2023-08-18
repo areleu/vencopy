@@ -12,13 +12,13 @@ from vencopy.classes.tripDiaryBuilders import TripDiaryBuilder
 from vencopy.classes.gridModelers import GridModeler
 from vencopy.classes.flexEstimators import FlexEstimator
 from vencopy.classes.evaluators import Evaluator
-from vencopy.scripts.globalFunctions import loadConfigDict, createOutputFolders
+from vencopy.scripts.globalFunctions import load_configs, createOutputFolders
 
 print("Current working directory: {0}".format(os.getcwd()))
 
 
 configNames = ('globalConfig', 'localPathConfig', 'parseConfig', 'tripConfig', 'gridConfig', 'flexConfig', 'evaluatorConfig')
-configDict = loadConfigDict(configNames)
+configDict = load_configs(configNames)
 
 # Set reference dataset
 datasetID = 'MiD17'

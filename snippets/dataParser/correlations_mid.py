@@ -1,4 +1,4 @@
-from vencopy.utils.globalFunctions import loadConfigDict, createOutputFolders
+from vencopy.utils.globalFunctions import load_configs, createOutputFolders
 from vencopy.core.flexEstimators import WeekFlexEstimator
 from vencopy.core.gridModelers import GridModeler
 from vencopy.core.dataParsers.dataParsers import ParseMiD
@@ -12,7 +12,7 @@ sys.path.append('.')
 
 
 basePath = Path(__file__).parent
-configDict = loadConfigDict(basePath=basePath)
+configDict = load_configs(basePath=basePath)
 
 vpData = parseData(configDict=configDict)
 vpData.process()

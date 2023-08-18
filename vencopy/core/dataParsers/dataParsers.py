@@ -20,7 +20,7 @@ from vencopy.utils.globalFunctions import returnDictBottomKeys, returnDictBottom
 
 
 class DataParser:
-    def __init__(self, configDict: dict, datasetID: str, debug, fpInZip=None, loadEncrypted=False):
+    def __init__(self, configDict: dict, datasetID: str, debug, zip_filepath=None, load_encrypted=False):
         """
         Basic class for parsing a mobility survey trip data set. Currently both
         German travel surveys MiD 2008 and MiD 2017 are pre-configured and one
@@ -41,7 +41,7 @@ class DataParser:
         :param configDict: A dictionary containing multiple yaml config files
         :param datasetID: Currently, MiD08 and MiD17 are implemented as travel
                           survey data sets
-        :param loadEncrypted: If True, load an encrypted ZIP file as specified
+        :param load_encrypted: If True, load an encrypted ZIP file as specified
                               in user_config
         """
         self.user_config = configDict["user_config"]
@@ -57,9 +57,9 @@ class DataParser:
         self.activities = None
         self.filters = {}
         print("Generic file parsing properties set up.")
-        if loadEncrypted:
+        if load_encrypted:
             print(f"Starting to retrieve encrypted data file from {self.raw_data_path}.")
-            self._load_encrypted_data(pathToZip=filepath, pathInZip=fpInZip)
+            self._load_encrypted_data(zip_path=filepath, path_zip_data=zip_filepath)
         else:
             print(f"Starting to retrieve local data file from {self.raw_data_path}.")
             self._load_data()
@@ -68,7 +68,7 @@ class DataParser:
         if debug:
             print("Running in debug mode.")
         # Storage for original data variable that is being overwritten throughout adding of park rows
-        self.tripEndNextDayRaw = None
+        self.trips_end_next_day_raw = None
 
     def _load_data(self) -> pd.DataFrame:
         """
@@ -98,7 +98,7 @@ class DataParser:
         print(f"Finished loading {len(self.raw_data)} rows of raw data of type {self.raw_data_path.suffix}.")
         return self.raw_data
 
-    def _load_encrypted_data(self, pathToZip, pathInZip):
+    def _load_encrypted_data(self, zip_path, path_zip_data):
         """
         Since the MiD data sets are only accessible by an extensive data
         security contract, VencoPy provides the possibility to access
@@ -106,26 +106,26 @@ class DataParser:
         user_config.yaml in order to access the encrypted file. Loaded data
         is stored in self.raw_data
 
-        :param pathToZip: path from current working directory to the zip file
+        :param zip_path: path from current working directory to the zip file
                           or absolute path to zipfile
-        :param pathInZip: Path to trip data file within the encrypted zipfile
+        :param path_zip_data: Path to trip data file within the encrypted zipfile
         :return: None
         """
-        with ZipFile(pathToZip) as myzip:
-            if ".dta" in pathInZip:
+        with ZipFile(zip_path) as myzip:
+            if ".dta" in path_zip_data:
                 self.raw_data = pd.read_stata(
                     myzip.open(
-                        pathInZip,
+                        path_zip_data,
                         pwd=bytes(self.user_config["dataParsers"]["encryptionPW"], encoding="utf-8"),
                     ),
                     convert_categoricals=False,
                     convert_dates=False,
                     preserve_dtypes=False,
                 )
-            else:  # if '.csv' in pathInZip:
+            else:  # if '.csv' in path_zip_data:
                 self.raw_data = pd.read_csv(
                     myzip.open(
-                        pathInZip,
+                        path_zip_data,
                         pwd=bytes(self.parseConfig["encryptionPW"], encoding="utf-8"),
                     ),
                     sep=";",
@@ -444,18 +444,18 @@ class DataParser:
 
 
 class IntermediateParsing(DataParser):
-    def __init__(self, configDict: dict, datasetID: str, debug, loadEncrypted=False):
+    def __init__(self, configDict: dict, datasetID: str, debug, load_encrypted=False):
         """
         Intermediate parsing class.
 
         :param configDict: VencoPy config dictionary consisting at least of
                            the config dictionaries.
         :param datasetID: A string identifying the MiD data set.
-        :param loadEncrypted: Boolean. If True, data is read from encrypted
+        :param load_encrypted: Boolean. If True, data is read from encrypted
                               file. For this, a possword has to be
                               specified in user_config['PW'].
         """
-        super().__init__(configDict, datasetID=datasetID, loadEncrypted=loadEncrypted, debug=debug)
+        super().__init__(configDict, datasetID=datasetID, load_encrypted=load_encrypted, debug=debug)
         self.filters = self.dev_config["dataParsers"]["filters"][self.datasetID]
         self.varDataTypeDict = {}
         self.columns = self.__compile_variable_list()

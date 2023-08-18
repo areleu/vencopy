@@ -15,20 +15,20 @@ from vencopy.core.gridModelers import GridModeler
 from vencopy.core.flexEstimators import FlexEstimator
 from vencopy.core.profileAggregators import ProfileAggregator
 from vencopy.core.postProcessors import PostProcessing
-from vencopy.utils.globalFunctions import loadConfigDict, createOutputFolders
+from vencopy.utils.globalFunctions import load_configs, createOutputFolders
 
 if __name__ == "__main__":
     startTime = time.time()
 
     basePath = Path(__file__).parent
-    configDict = loadConfigDict(basePath=basePath)
+    configDict = load_configs(basePath=basePath)
     createOutputFolders(configDict=configDict)
 
     vpData = parseData(configDict=configDict)
     vpData.process()
 
     vpGrid = GridModeler(config_dict=configDict, activities=vpData.activities)
-    vpGrid.assignGrid()
+    vpGrid.assign_grid()
 
     vpFlex = FlexEstimator(configDict=configDict, activities=vpGrid.activities)
     vpFlex.estimateTechnicalFlexibilityIterating()

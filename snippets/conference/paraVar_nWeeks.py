@@ -3,7 +3,7 @@ from vencopy.core.diaryBuilders import WeekDiaryBuilder, DiaryBuilder
 from vencopy.core.dataParsers.dataParsers import ParseMiD
 from vencopy.core.gridModelers import GridModeler
 from vencopy.core.flexEstimators import WeekFlexEstimator
-from vencopy.utils.globalFunctions import loadConfigDict, createOutputFolders
+from vencopy.utils.globalFunctions import load_configs, createOutputFolders
 import sys
 import pickle
 import numpy as np
@@ -178,7 +178,7 @@ if __name__ == '__main__':
     configNames = ('globalConfig', 'localPathConfig', 'parseConfig', 'gridConfig', 'flexConfig', 'diaryConfig',
                    'evaluatorConfig')
     basePath = Path(__file__).parent.parent.parent / 'vencopy'
-    configDict = loadConfigDict(configNames, basePath)
+    configDict = load_configs(configNames, basePath)
     createOutputFolders(configDict=configDict)
 
     CALC = True

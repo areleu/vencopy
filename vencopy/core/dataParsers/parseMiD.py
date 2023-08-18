@@ -12,7 +12,7 @@ from vencopy.core.dataParsers.parkInference import ParkInference
 
 
 class ParseMiD(IntermediateParsing):
-    def __init__(self, configDict: dict, datasetID: str, loadEncrypted=False, debug=False):
+    def __init__(self, configDict: dict, datasetID: str, load_encrypted=False, debug=False):
         """
         Class for parsing MiD data sets. The VencoPy configs globalConfig,
         parseConfig and localPathConfig have to be given on instantiation as
@@ -25,14 +25,14 @@ class ParseMiD(IntermediateParsing):
                            config dictionaries globalConfig, parseConfig and
                            localPathConfig.
         :param datasetID: A string identifying the MiD data set.
-        :param loadEncrypted: Boolean. If True, data is read from encrypted
+        :param load_encrypted: Boolean. If True, data is read from encrypted
                               file. For this, a possword has to be
                               specified in parseConfig['PW'].
         """
         super().__init__(
             configDict=configDict,
             datasetID=datasetID,
-            loadEncrypted=loadEncrypted,
+            load_encrypted=load_encrypted,
             debug=debug,
         )
         self.park_inference = ParkInference(configDict=configDict)

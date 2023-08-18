@@ -6,14 +6,14 @@ sys.path.append(path.dirname(path.dirname(__file__)))
 from pathlib import Path
 
 from vencopy.core.flexEstimators import WeekFlexEstimator
-from vencopy.utils.globalFunctions import loadConfigDict, createOutputFolders
+from vencopy.utils.globalFunctions import load_configs, createOutputFolders
 
 
 datasetID = "MiD17"
 basePath = Path(__file__).parent.parent
 configNames = ("globalConfig", "localPathConfig", "parseConfig", "diaryConfig",
                "gridConfig", "flexConfig", "aggregatorConfig", "evaluatorConfig")
-configDict = loadConfigDict(configNames, basePath=Path('./vencopy/'))
+configDict = load_configs(configNames, basePath=Path('./vencopy/'))
 
 # Test data set
 df_test = pd.DataFrame(columns=['tripID', 'parkID', 'actID', 'isFirstActivity', 'isLastActivity', 'timestampStart',

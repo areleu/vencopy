@@ -1,5 +1,5 @@
 
-from vencopy.utils.globalFunctions import loadConfigDict, createOutputFolders
+from vencopy.utils.globalFunctions import load_configs, createOutputFolders
 from vencopy.core.flexEstimators import WeekFlexEstimator
 from vencopy.core.diaryBuilders import WeekDiaryBuilder, DiaryBuilder
 from vencopy.core.gridModelers import GridModeler
@@ -33,7 +33,7 @@ if __name__ == '__main__':
     configNames = ('globalConfig', 'localPathConfig', 'parseConfig', 'gridConfig', 'flexConfig', 'diaryConfig',
                    'evaluatorConfig')
     basePath = Path(__file__).parent.parent.parent / 'vencopy'
-    configDict = loadConfigDict(configNames, basePath)
+    configDict = load_configs(configNames, basePath)
     createOutputFolders(configDict=configDict)
 
     CALC = True

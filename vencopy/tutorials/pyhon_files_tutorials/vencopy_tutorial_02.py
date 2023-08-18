@@ -9,13 +9,13 @@ from ruamel.yaml import YAML
 sys.path.append(path.dirname(path.dirname(path.dirname(path.dirname(__file__)))))
 
 from vencopy.classes.dataParsers import DataParser
-from vencopy.scripts.globalFunctions import loadConfigDict, createOutputFolders
+from vencopy.scripts.globalFunctions import load_configs, createOutputFolders
 
 print("Current working directory: {0}".format(os.getcwd()))
 
 
 configNames = ('globalConfig', 'localPathConfig', 'parseConfig', 'tripConfig', 'gridConfig', 'flexConfig', 'evaluatorConfig')
-configDict = loadConfigDict(configNames)
+configDict = load_configs(configNames)
 
 # Adapt relative paths in config for tutorials
 configDict['globalConfig']['pathRelative']['plots'] = Path(__file__).parent.parent.parent / configDict['globalConfig']['pathRelative']['plots']

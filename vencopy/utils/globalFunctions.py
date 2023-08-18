@@ -12,7 +12,7 @@ from pathlib import Path
 import os
 
 
-def loadConfigDict(basePath: Path) -> dict:
+def load_configs(basePath: Path) -> dict:
     # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
     """
     Generic function to load and open yaml config files.

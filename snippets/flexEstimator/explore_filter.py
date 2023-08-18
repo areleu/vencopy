@@ -1,4 +1,4 @@
-from vencopy.utils.globalFunctions import loadConfigDict, createOutputFolders
+from vencopy.utils.globalFunctions import load_configs, createOutputFolders
 from vencopy.core.dataParsers.dataParsers import ParseMiD
 from vencopy.core.gridModelers import GridModeler
 from vencopy.core.diaryBuilders import WeekDiaryBuilder
@@ -12,7 +12,7 @@ sys.path.append(path.dirname(path.dirname(__file__)))
 
 datasetID = "MiD17"
 configNames = ("globalConfig", "localPathConfig", "parseConfig", "gridConfig", "flexConfig")
-configDict = loadConfigDict(configNames, basePath=Path(os.getcwd()) / 'vencopy')
+configDict = load_configs(configNames, basePath=Path(os.getcwd()) / 'vencopy')
 createOutputFolders(configDict=configDict)
 
 vpData = ParseMiD(configDict=configDict, datasetID=datasetID, debug=True)
