@@ -47,7 +47,7 @@ class PostProcessor:
 
     def __week_to_annual_profile(self, profile: pd.Series) -> pd.Series:
         start_weekday = self.user_config["postProcessor"]["start_weekday"]  # (1: Monday, 7: Sunday)
-        n_timeslots_per_day = len(list(self.time_idx))
+        n_timeslots_per_day = len(list(self.time_index))
         # Shift input profiles to the right weekday and start with first bin of chosen weekday
         annual = profile.iloc[((start_weekday - 1) * (n_timeslots_per_day - 1)) :]
         annual = pd.DataFrame(annual.to_list() * 53)

@@ -172,7 +172,7 @@ class ParkInference:
         idx_acts = ~(self.trips["park_id"].isna()) & (self.trips["is_last_activity"])
         self.trips.loc[idx_acts, "timestamp_end"] = replace_vec(
             self.trips.loc[idx_acts, "timestamp_start"], hour=0, minute=0
-        ) + pd.time_delta(1, "d")
+        ) + pd.Timedelta(1, "d")
 
     def __set_trip_attrs_na_for_park_acts(self):
         # Set trip_end_next_day to False for all park activities
@@ -308,7 +308,7 @@ class OvernightSplitter:
 
     def __adjust_ON_timestamps(self, trips: pd.DataFrame) -> pd.DataFrame:
         tripsRes = trips.copy()
-        tripsRes["timestamp_end"] = tripsRes.loc[:, "timestamp_end"] - pd.time_delta(1, "d")
+        tripsRes["timestamp_end"] = tripsRes.loc[:, "timestamp_end"] - pd.Timedelta(1, "d")
         tripsRes["timestamp_start"] = replace_vec(tripsRes.loc[:, "timestamp_end"], hour=0, minute=0)
         return tripsRes
 

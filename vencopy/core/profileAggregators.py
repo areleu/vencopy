@@ -29,8 +29,8 @@ class ProfileAggregator:
             .set_index("unique_id")
         )
         self.drain = profiles.drain
-        self.charging_power = profiles.charge_power
-        self.uncontrolled_charging = profiles.uncontrolled_charge
+        self.charging_power = profiles.charging_power
+        self.uncontrolled_charging = profiles.uncontrolled_charging
         self.max_battery_level = profiles.max_battery_level
         self.min_battery_level = profiles.min_battery_level
         self.aggregator = Aggregator(

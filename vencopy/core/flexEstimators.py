@@ -58,7 +58,7 @@ class FlexEstimator:
         self.activities.loc[self.is_park, "max_charge_volume"] = (
             self.activities.loc[self.is_park, "available_power"]
             * self.activities.loc[self.is_park, "time_delta"]
-            / pd.time_delta("1 hour")
+            / pd.Timedelta("1 hour")
         )
 
     def __battery_level_max(self, start_level: float) -> pd.Series:
@@ -407,7 +407,7 @@ class FlexEstimator:
             return pd.NA
         delta_battery_level = self.upper_battery_level - start_battery_level
         time_for_charge = delta_battery_level / power  # in hours
-        return start_timestamp + pd.time_delta(value=time_for_charge, unit="h").round(freq="s")
+        return start_timestamp + pd.Timedelta(value=time_for_charge, unit="h").round(freq="s")
 
     def _auxiliary_fuel_need(self):
         self.activities["auxiliary_fuel_need"] = (
@@ -461,12 +461,6 @@ class FlexEstimator:
         boundary constraints for controlled charging and feeding electricity back into the grid on an indvidiual vehicle
         basis. If filter_fuel_need is True, only electrifiable days are considered.
 
-        Args:
-            filter_fuel_need (bool): If true, it is ensured that all trips can be fulfilled by battery electric vehicles
-            specified by battery size and specific consumption as given in the config. Here, not only trips but cars
-            days are filtered out.
-            startBatteryLevel (float): Initial battery level of every activity chain.
-
         Returns:
             pd.DataFrame: Activities data set comprising uncontrolled charging and flexible charging constraints for
             each car.
@@ -490,12 +484,6 @@ class FlexEstimator:
         boundary constraints for controlled charging and feeding electricity back into the grid on an indvidiual vehicle
         basis. If filter_fuel_need is True, only electrifiable days are considered.
 
-        Args:
-            filter_fuel_need (bool): If true, it is ensured that all trips can be fulfilled by battery electric vehicles
-            specified by battery size and specific consumption as given in the config. Here, not only trips but cars
-            days are filtered out.
-            startBatteryLevel (float): Initial battery level of every activity chain.
-
         Returns:
             pd.DataFrame: Activities data set comprising uncontrolled charging and flexible charging constraints for
             each car.
@@ -503,7 +491,7 @@ class FlexEstimator:
         self._drain()
         self._max_charge_volume_per_parking_activity()
         self.__iterative_battery_level_calculation(
-            maxIter=self.user_config["flexEstimators"]["max_iterations"],
+            max_iteration=self.user_config["flexEstimators"]["max_iterations"],
             epsilon=self.user_config["flexEstimators"]["epsilon_battery_level"],
             battery_capacity=self.user_config["flexEstimators"]["battery_capacity"],
             number_vehicles=len(self.activities["unique_id"].unique()),
@@ -516,13 +504,14 @@ class FlexEstimator:
         print("Technical flexibility estimation ended.")
         return self.activities
 
-    def __iterative_battery_level_calculation(self, maxIter: int, epsilon: float, battery_capacity: float, number_vehicles: int):
-        """A single iteration of calculation maximum battery levels, uncontrolled charging and minimum battery levels
+    def __iterative_battery_level_calculation(self, max_iteration: int, epsilon: float, battery_capacity: float, number_vehicles: int):
+        """
+        A single iteration of calculation maximum battery levels, uncontrolled charging and minimum battery levels
         for each trip. Initial battery level for first iteration loop per unique_id in index. Start battery level will be
         set to end battery level consecutively. Function operates on class attribute self.activities.
 
         Args:
-            maxIter (int): Maximum iteration limit if epsilon threshold is never reached.
+            max_iteration (int): Maximum iteration limit if epsilon threshold is never reached.
             epsilon (float): Share of total aggregated battery fleet capacity (e.g. 0.01 for 1% would relate to a threshold of 100 Wh per car for a 10 kWh battery capacity.)
             battery_capacity (float): Average nominal battery capacity per vehicle in kWh.
             number_vehicles (int): Number of vehicles in the empiric mobility pattern data set.
@@ -539,11 +528,11 @@ class FlexEstimator:
         min_delta = self.__get_delta(start_column="min_battery_level_start", end_column="min_battery_level_end")
 
         print(
-            f"Finished iteration {1} / {maxIter}. Delta max battery level is {int(max_delta)} / {absolute_epsilon} "
+            f"Finished iteration {1} / {max_iteration}. Delta max battery level is {int(max_delta)} / {absolute_epsilon} "
             f"and delta min battery is {int(min_delta)} / {absolute_epsilon}."
         )
 
-        for i in range(1, maxIter + 1):
+        for i in range(1, max_iteration + 1):
             if max_delta < absolute_epsilon and min_delta < absolute_epsilon:
                 break
 
@@ -557,7 +546,7 @@ class FlexEstimator:
                 min_delta = self.__get_delta(start_column="min_battery_level_start", end_column="min_battery_level_end")
 
             print(
-                f"Finished iteration {i} / {maxIter}. Delta max battery level is {int(max_delta)} / {absolute_epsilon} "
+                f"Finished iteration {i} / {max_iteration}. Delta max battery level is {int(max_delta)} / {absolute_epsilon} "
                 f"and delta min battery is {int(min_delta)} / {absolute_epsilon}."
             )
 

@@ -21,7 +21,7 @@ class DiaryBuilder:
         self.user_config = configs["user_config"]
         self.dataset = configs["user_config"]["global"]["dataset"]
         self.activities = activities
-        self.delta_time = configs["user_config"]["diaryBuilders"]["time_delta"]
+        self.time_resolution = configs["user_config"]["diaryBuilders"]["time_resolution"]
         self.is_week_diary = is_week_diary
         self.__update_activities()
         self.drain = None
@@ -34,7 +34,7 @@ class DiaryBuilder:
             dev_config=self.dev_config,
             user_config=self.user_config,
             activities=self.activities,
-            time_resolution=self.delta_time,
+            time_resolution=self.time_resolution,
             is_week=is_week_diary,
         )
 
@@ -51,8 +51,8 @@ class DiaryBuilder:
         """
         Rounds timestamps to predifined resolution.
         """
-        self.activities["timestamp_start_corrected"] = self.activities["timestamp_start"].dt.round(f"{self.delta_time}min")
-        self.activities["timestamp_end_corrected"] = self.activities["timestamp_end"].dt.round(f"{self.delta_time}min")
+        self.activities["timestamp_start_corrected"] = self.activities["timestamp_start"].dt.round(f"{self.time_resolution}min")
+        self.activities["timestamp_end_corrected"] = self.activities["timestamp_end"].dt.round(f"{self.time_resolution}min")
         self.activities["activity_duration"] = (
             self.activities["timestamp_end_corrected"] - self.activities["timestamp_start_corrected"]
         )
@@ -63,7 +63,7 @@ class DiaryBuilder:
         """
         start_length = len(self.activities)
         self.activities = self.activities.drop(
-            self.activities[self.activities.activity_duration == pd.time_delta(0)].index.to_list()
+            self.activities[self.activities.activity_duration == pd.Timedelta(0)].index.to_list()
         )
         end_length = len(self.activities)
         print(
@@ -121,17 +121,17 @@ class TimeDiscretiser:
 
         Args:
             activities (pd.dataFrame): _description_
-            time_resolution (pd.time_delta): _description_
+            time_resolution (pd.Timedelta): _description_
         """
         self.activities = activities
         self.dataset = dataset
         self.data_to_discretise = None
         self.user_config = user_config
         self.dev_config = dev_config
-        self.quantum = pd.time_delta(value=1, unit="min")
+        self.quantum = pd.Timedelta(value=1, unit="min")
         self.time_resolution = time_resolution  # e.g. 15 min
         self.is_week = is_week
-        self.number_time_slots = int(self.__number_slots_per_interval(interval=pd.time_delta(value=self.time_resolution, unit="min")))
+        self.number_time_slots = int(self.__number_slots_per_interval(interval=pd.Timedelta(value=self.time_resolution, unit="min")))
         if is_week:
             self.time_delta = pd.timedelta_range(start="00:00:00", end="168:00:00", freq=f"{self.time_resolution}T")
             self.weekdays = self.activities["weekday_string"].unique()
@@ -140,7 +140,7 @@ class TimeDiscretiser:
         self.time_index = list(self.time_delta)
         self.discrete_data = None
 
-    def __number_slots_per_interval(self, interval: pd.time_delta) -> int:
+    def __number_slots_per_interval(self, interval: pd.Timedelta) -> int:
         """
         Check if interval is an integer multiple of quantum.
         The minimum resolution is 1 min, case for resolution below 1 min.
@@ -154,7 +154,7 @@ class TimeDiscretiser:
                 )
             )
         quot = interval.seconds / 3600 / 24
-        quot_day = pd.time_delta(value=24, unit="h") / interval
+        quot_day = pd.Timedelta(value=24, unit="h") / interval
         if (1 / quot) % int(1 / quot) == 0:  # or (quot % int(1) == 0):
             return quot_day
         else:
@@ -267,7 +267,7 @@ class TimeDiscretiser:
         )
         self.__removes_zero_length_activities()
         self.data_to_discretise["number_bins"] = self.data_to_discretise["activity_duration"] / (
-            pd.time_delta(value=self.time_resolution, unit="min")
+            pd.Timedelta(value=self.time_resolution, unit="min")
         )
         if not self.data_to_discretise["number_bins"].apply(float.is_integer).all():
             raise ValueError("Not all bin counts are integers.")
@@ -577,7 +577,7 @@ class TimeDiscretiser:
         """
         start_length = len(self.data_to_discretise)
         indeces_no_length_activities = self.data_to_discretise[
-            self.data_to_discretise.activity_duration == pd.time_delta(0)
+            self.data_to_discretise.activity_duration == pd.Timedelta(0)
         ].index.to_list()
         self.ids_with_no_length_activities = self.data_to_discretise.loc[indeces_no_length_activities]["unique_id"].unique()
         self.data_to_discretise = self.data_to_discretise.drop(indeces_no_length_activities)
