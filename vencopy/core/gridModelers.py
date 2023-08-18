@@ -100,12 +100,12 @@ class GridModeler:
         """
         Adjusts charging power to zero if parking duration shorter than 15 minutes.
         """
-        # park_id != pd.NA and timedelta <= 15 minutes
+        # park_id != pd.NA and time_delta <= 15 minutes
         self.activities.loc[
             (
                 (self.activities["park_id"].notna())
                 & (
-                    (self.activities["timedelta"] / np.timedelta64(1, "s"))
+                    (self.activities["time_delta"] / np.timedelta64(1, "s"))
                     <= self.user_config["gridModelers"]["minimumParkingTime"]
                 )
             ),
@@ -146,14 +146,14 @@ class GridModeler:
         :param losses [bool]: Should electric losses in the charging equipment be considered?
         """
         if self.user_config["gridModelers"]["losses"]:
-            self.activities["availablePower"] = self.activities["ratedPower"] - (
+            self.activities["available_power"] = self.activities["ratedPower"] - (
                 self.activities["ratedPower"]
                 * self.activities["ratedPower"].apply(
                     lambda x: self.user_config["gridModelers"]["loss_factor"][f"rated_power_{str(x)}"]
                 )
             )
         else:
-            self.activities["availablePower"] = self.activities["ratedPower"]
+            self.activities["available_power"] = self.activities["ratedPower"]
         return self.activities
 
     def __writeOutput(self):

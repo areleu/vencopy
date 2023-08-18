@@ -23,12 +23,12 @@ class PostProcessor:
         self.user_config = configs["user_config"]
         self.dev_config = configs["dev_config"]
         self.dataset = self.user_config["global"]["dataset"]
-        self.delta_time = self.user_config["diaryBuilders"]["TimeDelta"]
+        self.delta_time = self.user_config["diaryBuilders"]["time_delta"]
         self.time_idx = list(pd.timedelta_range(start="00:00:00", end="24:00:00", freq=f"{self.delta_time}T"))
 
         self.drain = None
-        self.charge_power = None
-        self.uncontrolled_charge = None
+        self.charging_power = None
+        self.uncontrolled_charging = None
         self.max_battery_level = None
         self.min_battery_level = None
 
@@ -78,11 +78,11 @@ class PostProcessor:
         )
         self.soc_max = self.__normalize_states(
             profile=self.input_profiles["max_battery_level"],
-            base=self.user_config["flexEstimators"]["Battery_capacity"],
+            base=self.user_config["flexEstimators"]["battery_capacity"],
         )
         self.soc_min = self.__normalize_states(
             profile=self.input_profiles["min_battery_level"],
-            base=self.user_config["flexEstimators"]["Battery_capacity"],
+            base=self.user_config["flexEstimators"]["battery_capacity"],
         )
 
         if self.user_config["gridModelers"]["gridModel"] != "simple":
