@@ -1,10 +1,12 @@
 __version__ = "1.0.X"
 __maintainer__ = "Niklas Wulff, Fabia Miorelli"
-__email__ = "Niklas.Wulff@dlr.de"
 __birthdate__ = "17.08.2023"
 __status__ = "test"  # options are: dev, test, prod
+__license__ = "BSD-3-Clause"
+
 
 import pandas as pd
+from pathlib import Path
 
 from vencopy.core.dataParsers.dataParsers import IntermediateParsing
 from vencopy.core.dataParsers.parkInference import ParkInference
@@ -33,16 +35,16 @@ class ParseVF(IntermediateParsing):
 
     def _load_data(self):
         """
-        rawDataPathTrip, unlike for other MiD classes is taken from the MiD B1 dataset
+        raw_data_path_trips, unlike for other MiD classes is taken from the MiD B1 dataset
         raw_data_path_vehicles is an internal dataset from VF
         """
         raw_data_path_trips = (
-            Path(self.user_config["global"]["pathAbsolute"][self.dataset])
-            / self.dev_config["global"]["files"][self.dataset]["tripsDataRaw"]
+            Path(self.user_config["global"]["absolute_path"][self.dataset])
+            / self.dev_config["global"]["files"][self.dataset]["trips_data_raw"]
         )
         raw_data_path_vehicles = (
-            Path(self.user_config["global"]["pathAbsolute"][self.dataset])
-            / self.dev_config["global"]["files"][self.dataset]["vehiclesDataRaw"]
+            Path(self.user_config["global"]["absolute_path"][self.dataset])
+            / self.dev_config["global"]["files"][self.dataset]["vehicles_data_raw"]
         )
         raw_data_trips = pd.read_stata(
             raw_data_path_trips,
@@ -61,18 +63,18 @@ class ParseVF(IntermediateParsing):
     def __harmonize_variables(self):
         """
         Harmonizes the input data variables to match internal VencoPy names given as specified in the mapping in
-        self.dev_config["dataParsers"]['dataVariables']. Mappings for MiD08 and MiD17 are given. Since the MiD08 does not provide a
+        self.dev_config["dataParsers"]['data_variables']. Mappings for MiD08 and MiD17 are given. Since the MiD08 does not provide a
         combined household and person unique identifier, it is synthesized of the both IDs.
 
         :return: None
         """
         replacement_dict = self._create_replacement_dict(
-            self.dataset, self.dev_config["dataParsers"]["dataVariables"]
+            self.dataset, self.dev_config["dataParsers"]["data_variables"]
         )
         data_renamed = self.trips.rename(columns=replacement_dict)
         if self.dataset == "MiD08":
-            data_renamed["hhPersonID"] = (
-                data_renamed["hhID"].astype("string") + data_renamed["personID"].astype("string")
+            data_renamed["household_person_id"] = (
+                data_renamed["household_id"].astype("string") + data_renamed["person_id"].astype("string")
             ).astype("int")
         self.trips = data_renamed
         print("Finished harmonization of variables")
@@ -81,9 +83,9 @@ class ParseVF(IntermediateParsing):
         # remove vehicle_segment nicht zuzuordnen
         self.trips = self.trips[self.trips.vehicle_segment != "nicht zuzuordnen"]
         # pad missing car segments
-        # self.trips.vehicle_segment = self.trips.groupby('hhID').vehicle_segment.transform('first')
-        # self.trips.drivetrain = self.trips.groupby('hhID').drivetrain.transform('first')
-        # self.trips.vehicleID = self.trips.groupby('hhID').vehicleID.transform('first')
+        # self.trips.vehicle_segment = self.trips.groupby('household_id').vehicle_segment.transform('first')
+        # self.trips.drivetrain = self.trips.groupby('household_id').drivetrain.transform('first')
+        # self.trips.vehicleID = self.trips.groupby('household_id').vehicleID.transform('first')
         # remove remaining NaN
         self.trips = self.trips.dropna(subset=["vehicle_segment"])
         # self.trips = self.trips.dropna(subset=['vehicle_segment', 'drivetrain', 'vehicleID'])
@@ -92,7 +94,7 @@ class ParseVF(IntermediateParsing):
         """
         Removes trips where both start and end trip time are missing. KID-specific function.
         """
-        self.trips = self.trips.dropna(subset=["tripStartClock", "tripEndClock"])
+        self.trips = self.trips.dropna(subset=["trip_start_clock", "trip_end_clock"])
 
     def __add_string_columns(self, weekday=True, purpose=True, vehicle_segment=True):
         """
@@ -105,29 +107,29 @@ class ParseVF(IntermediateParsing):
         :return: None
         """
         if weekday:
-            self._add_string_column_from_variable(colName="weekdayStr", varName="tripStartWeekday")
+            self._add_string_column_from_variable(colName="weekday_string", varName="trip_start_weekday")
         if purpose:
-            self._add_string_column_from_variable(colName="purposeStr", varName="tripPurpose")
+            self._add_string_column_from_variable(colName="purpose_string", varName="trip_purpose")
         if vehicle_segment:
             self.trips = self.trips.replace("groß", "gross")
-            self._add_string_column_from_variable(colName="vehicleSegmentStr", varName="vehicle_segment")
+            self._add_string_column_from_variable(colName="vehicle_segment_string", varName="vehicle_segment")
 
     def _drop_redundant_cols(self):
         # Clean-up of temporary redundant columns
         self.trips.drop(
             columns=[
-                "tripStartClock",
-                "tripEndClock",
-                "tripStartYear",
-                "tripStartMonth",
-                "tripStartWeek",
-                "tripStartHour",
-                "tripStartMinute",
-                "tripEndHour",
-                "tripEndMinute",
-                "uniqueID_prev",
-                "uniqueID_next",
-                "colFromIndex",
+                "trip_start_clock",
+                "trip_end_clock",
+                "trip_start_year",
+                "trip_start_month",
+                "trip_start_week",
+                "trip_start_hour",
+                "trip_start_minute",
+                "trip_end_hour",
+                "trip_end_minute",
+                "previous_unique_id",
+                "next_unique_id",
+                "column_from_index",
             ],
             inplace=True,
         )

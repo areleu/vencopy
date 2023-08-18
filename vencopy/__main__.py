@@ -75,7 +75,7 @@ def updateLocalPathCfg(newVPRoot: pathlib.Path):
     with open(newVPRoot / "config" / "user.yaml") as f:
         user_cfg = yaml.load(f, Loader=yaml.SafeLoader)
 
-    user_cfg["pathAbsolute"]["vencopyRoot"] = newVPRoot.__str__()
+    user_cfg["absolute_path"]["vencopy_root"] = newVPRoot.__str__()
 
     with open(newVPRoot / "config" / "user.yaml", "w") as f:
         yaml.dump(user_cfg, f)

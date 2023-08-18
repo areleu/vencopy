@@ -1,7 +1,7 @@
-__version__ = "0.4.X"
+__version__ = "1.0.X"
 __maintainer__ = "Niklas Wulff, Fabia Miorelli"
-__birthdate__ = "12.07.2023"
-__status__ = "dev"  # options are: dev, test, prod
+__birthdate__ = "01.08.2023"
+__status__ = "test"  # options are: dev, test, prod
 __license__ = "BSD-3-Clause"
 
 
@@ -64,7 +64,7 @@ class PostProcessor:
         for pname, p in zip(pnames, profiles):
             self.__store_input(name=pname, profile=p)
             self.annual_profiles[pname] = self.__week_to_annual_profile(profile=p)
-            if self.user_config["global"]["writeOutputToDisk"]["processorOutput"]["absolute_annual_profiles"]:
+            if self.user_config["global"]["write_output_to_disk"]["processorOutput"]["absolute_annual_profiles"]:
                 self.__write_output(
                     profile_name=pname, profile=self.annual_profiles[pname], filename_id="outputPostProcessorAnnual"
                 )
@@ -91,7 +91,7 @@ class PostProcessor:
                 f" rated power of {self.user_config['gridModelers']['chargePowerSimple']}kW was used."
             )
 
-        if self.user_config["global"]["writeOutputToDisk"]["processorOutput"]["normalised_annual_profiles"]:
+        if self.user_config["global"]["write_output_to_disk"]["processorOutput"]["normalised_annual_profiles"]:
             self.__write_out_profiles(filename_id="outputPostProcessorNorm")
 
     def __normalize_flows(self, profile: pd.Series) -> pd.Series:
@@ -110,13 +110,13 @@ class PostProcessor:
         self.__write_output(profile_name="min_battery_level", profile=self.soc_min, filename_id=filename_id)
 
     def __write_output(self, profile_name: str, profile: pd.Series, filename_id: str):
-        root = Path(self.user_config["global"]["pathAbsolute"]["vencopyRoot"])
-        folder = self.dev_config["global"]["pathRelative"]["post_processing_output"]
-        fileName = create_file_name(
+        root = Path(self.user_config["global"]["absolute_path"]["vencopy_root"])
+        folder = self.dev_config["global"]["relative_path"]["post_processing_output"]
+        file_name = create_file_name(
             dev_config=self.dev_config,
             user_config=self.user_config,
-            manualLabel=profile_name,
-            fileNameID=filename_id,
+            manual_label=profile_name,
+            file_name_id=filename_id,
             dataset=self.dataset,
         )
-        write_out(data=profile, path=root / folder / fileName)
+        write_out(data=profile, path=root / folder / file_name)

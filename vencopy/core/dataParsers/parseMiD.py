@@ -1,8 +1,8 @@
 __version__ = "1.0.X"
 __maintainer__ = "Niklas Wulff, Fabia Miorelli"
-__email__ = "Niklas.Wulff@dlr.de"
 __birthdate__ = "17.08.2023"
 __status__ = "test"  # options are: dev, test, prod
+__license__ = "BSD-3-Clause"
 
 
 import pandas as pd
@@ -40,7 +40,7 @@ class ParseMiD(IntermediateParsing):
     def __harmonize_variables(self):
         """
         Harmonizes the input data variables to match internal VencoPy names
-        given as specified in the mapping in parseConfig['dataVariables'].
+        given as specified in the mapping in parseConfig['data_variables'].
         So far mappings for MiD08 and MiD17 are given. Since the MiD08 does
         not provide a combined household and person unique identifier, it is
         synthesized of the both IDs.
@@ -48,12 +48,12 @@ class ParseMiD(IntermediateParsing):
         :return: None
         """
         replacement_dict = self._create_replacement_dict(
-            self.dataset, self.dev_config["dataParsers"]["dataVariables"]
+            self.dataset, self.dev_config["dataParsers"]["data_variables"]
         )
         activities_renamed = self.trips.rename(columns=replacement_dict)
         if self.dataset == "MiD08":
-            activities_renamed["hhPersonID"] = (
-                activities_renamed["hhID"].astype("string") + activities_renamed["personID"].astype("string")
+            activities_renamed["household_person_id"] = (
+                activities_renamed["household_id"].astype("string") + activities_renamed["person_id"].astype("string")
             ).astype("int")
         self.trips = activities_renamed
         print("Finished harmonization of variables.")
@@ -69,27 +69,27 @@ class ParseMiD(IntermediateParsing):
         :return: None
         """
         if weekday:
-            self._add_string_column_from_variable(col_name="weekdayStr", var_name="tripStartWeekday")
+            self._add_string_column_from_variable(col_name="weekday_string", var_name="trip_start_weekday")
         if purpose:
-            self._add_string_column_from_variable(col_name="purposeStr", var_name="tripPurpose")
+            self._add_string_column_from_variable(col_name="purpose_string", var_name="trip_purpose")
 
     def _drop_redundant_cols(self):
         # Clean-up of temporary redundant columns
         self.trips.drop(
             columns=[
-                "isMIVDriver",
-                "tripStartClock",
-                "tripEndClock",
-                "tripStartYear",
-                "tripStartMonth",
-                "tripStartWeek",
-                "tripStartHour",
-                "tripStartMinute",
-                "tripEndHour",
-                "tripEndMinute",
-                "uniqueID_prev",
-                "uniqueID_next",
-                "colFromIndex",
+                "is_driver",
+                "trip_start_clock",
+                "trip_end_clock",
+                "trip_start_year",
+                "trip_start_month",
+                "trip_start_week",
+                "trip_start_hour",
+                "trip_start_minute",
+                "trip_end_hour",
+                "trip_end_minute",
+                "previous_unique_id",
+                "next_unique_id",
+                "column_from_index",
             ],
             inplace=True,
         )

@@ -1,9 +1,7 @@
-__version__ = "0.1.X"
-__maintainer__ = "Niklas Wulff"
-__contributors__ = "Fabia Miorelli"
-__email__ = "Niklas.Wulff@dlr.de"
-__birthdate__ = "21.04.2022"
-__status__ = "dev"  # options are: dev, test, prod
+__version__ = "1.0.X"
+__maintainer__ = "Niklas Wulff, Fabia Miorelli"
+__birthdate__ = "01.07.2022"
+__status__ = "test"  # options are: dev, test, prod
 __license__ = "BSD-3-Clause"
 
 
@@ -36,7 +34,7 @@ class GridModeler:
         :return: None
         """
         print("Starting with charge connection replacement of location purposes.")
-        self.charging_availability = self.activities.purposeStr.replace(self.grid_availability_simple)
+        self.charging_availability = self.activities.purpose_string.replace(self.grid_availability_simple)
         # self.charging_availability = (~(self.charging_availability != True))  # check condition if not, needed?
         self.charging_availability = self.charging_availability * self.user_config["gridModelers"]["ratedPowerSimple"]
         self.activities["ratedPower"] = self.charging_availability
@@ -51,11 +49,11 @@ class GridModeler:
         """
         activitiesNoHome = []
         print("Starting with charge connection replacement of location purposes.")
-        for purpose in self.activities.purposeStr.unique():
+        for purpose in self.activities.purpose_string.unique():
             if purpose == "HOME":
                 activitiesHome = self.__home_probability_distribution(setSeed=42)
             else:
-                subset = self.activities.loc[self.activities.purposeStr == purpose].copy()
+                subset = self.activities.loc[self.activities.purpose_string == purpose].copy()
                 power = list((self.user_config["gridModelers"]["gridAvailabilityDistribution"][purpose]).keys())
                 probability = list(self.user_config["gridModelers"]["gridAvailabilityDistribution"][purpose].values())
                 urng = np.random.default_rng(setSeed)  # universal non-uniform random number
@@ -84,9 +82,9 @@ class GridModeler:
         """
 
         purpose = "HOME"
-        homeActivities = self.activities.loc[self.activities.purposeStr == purpose].copy()
-        households = homeActivities[["hhID"]].reset_index(drop=True)
-        households = households.drop_duplicates(subset="hhID").copy()  # 73850 unique HH
+        homeActivities = self.activities.loc[self.activities.purpose_string == purpose].copy()
+        households = homeActivities[["household_id"]].reset_index(drop=True)
+        households = households.drop_duplicates(subset="household_id").copy()  # 73850 unique HH
         power = list((self.user_config["gridModelers"]["gridAvailabilityDistribution"][purpose]).keys())
         probability = list(self.user_config["gridModelers"]["gridAvailabilityDistribution"][purpose].values())
         urng = np.random.default_rng(setSeed)  # universal non-uniform random number
@@ -94,18 +92,18 @@ class GridModeler:
         self.charging_availability = rng.rvs(len(households))
         self.charging_availability = [power[i] for i in self.charging_availability]
         households.loc[:, ("ratedPower")] = self.charging_availability
-        households.set_index("hhID", inplace=True)
-        homeActivities = homeActivities.join(households, on="hhID")
+        households.set_index("household_id", inplace=True)
+        homeActivities = homeActivities.join(households, on="household_id")
         return homeActivities
 
     def __adjust_power_short_parking_time(self) -> pd.DataFrame:
         """
         Adjusts charging power to zero if parking duration shorter than 15 minutes.
         """
-        # parkID != pd.NA and timedelta <= 15 minutes
+        # park_id != pd.NA and timedelta <= 15 minutes
         self.activities.loc[
             (
-                (self.activities["parkID"].notna())
+                (self.activities["park_id"].notna())
                 & (
                     (self.activities["timedelta"] / np.timedelta64(1, "s"))
                     <= self.user_config["gridModelers"]["minimumParkingTime"]
@@ -159,22 +157,22 @@ class GridModeler:
         return self.activities
 
     def __writeOutput(self):
-        if self.user_config["global"]["writeOutputToDisk"]["gridOutput"]:
-            root = Path(self.user_config["global"]["pathAbsolute"]["vencopyRoot"])
-            folder = self.dev_config["global"]["pathRelative"]["gridOutput"]
-            fileName = create_file_name(
+        if self.user_config["global"]["write_output_to_disk"]["gridOutput"]:
+            root = Path(self.user_config["global"]["absolute_path"]["vencopy_root"])
+            folder = self.dev_config["global"]["relative_path"]["gridOutput"]
+            file_name = create_file_name(
                 dev_config=self.dev_config,
                 user_config=self.user_config,
-                manualLabel="",
-                fileNameID="outputGridModeler",
+                manual_label="",
+                file_name_id="outputGridModeler",
                 dataset=self.dataset,
             )
-            write_out(data=self.activities, path=root / folder / fileName)
+            write_out(data=self.activities, path=root / folder / file_name)
 
     def __remove_activities_not_ending_home(self):
         if self.dataset in ["MiD17", "VF"]:
             lastActsNotHome = self.activities.loc[
-                (self.activities["purposeStr"] != "HOME") & (self.activities["isLastActivity"]), :
+                (self.activities["purpose_string"] != "HOME") & (self.activities["is_last_activity"]), :
             ].copy()
-            id_to_remove = lastActsNotHome["uniqueID"].unique()
-            self.activities = self.activities.loc[~self.activities["uniqueID"].isin(id_to_remove), :].copy()
+            id_to_remove = lastActsNotHome["unique_id"].unique()
+            self.activities = self.activities.loc[~self.activities["unique_id"].isin(id_to_remove), :].copy()

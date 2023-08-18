@@ -1,14 +1,15 @@
 #-*- coding:utf-8 -*-
-
-# __version__ = '0.1.X'
-# __birthdate__ = '15.08.2023'
-# __status__ = 'dev'  # options are: dev, test, prod
+# __version__ = "1.0.X"
+# __maintainer__ = "Niklas Wulff, Fabia Miorelli"
+# __birthdate__ = "15.08.2023"
+# __status__ = "test"  # options are: dev, test, prod
+# __license__ = "BSD-3-Clause"
 
 # This config holds specifications for the venco.py development.
 
 global:
-    pathRelative:
-        parseOutput: ./output/dataParser/
+    relative_path:
+        parse_output: ./output/dataParser/
         diaryOutput: ./output/diaryBuilder/
         gridOutput: ./output/gridModeler/
         flexOutput: ./output/flexEstimator/
@@ -23,17 +24,17 @@ global:
             enryptedZipFileB2: B2_Regional-DatensatzpaketEncrypted.zip
             householdsDataRaw: MiD2017_Regional_Haushalte.csv
             personsDataRaw: MiD2017_Regional_Personen.csv
-            tripsDataRaw: MiD2017_Regional_Wege.dta
+            trips_data_raw: MiD2017_Regional_Wege.dta
         MiD08:
             householdsDataRaw: MiD2008_PUF_Haushalte.dta
             personDataRaw: MiD2008_PUF_Personen.dta
-            tripsDataRaw: MiD2008_PUF_Wege.dta
+            trips_data_raw: MiD2008_PUF_Wege.dta
         KiD:
-            tripsDataRaw: KiD2010-Fahrten-Datei-puf.dta
-            vehiclesDataRaw: KiD2010-Fahrzeug-Datei-puf.dta
+            trips_data_raw: KiD2010-Fahrten-Datei-puf.dta
+            vehicles_data_raw: KiD2010-Fahrzeug-Datei-puf.dta
         VF:
-            tripsDataRaw: MiD2017_Wege.dta
-            vehiclesDataRaw: tripDataMergedWVehicleData.csv
+            trips_data_raw: MiD2017_Wege.dta
+            vehicles_data_raw: tripDataMergedWVehicleData.csv
     diskFileNames:
         outputDataParser: vencopyOutputDataParser
         outputGridModeler: vencopyOutputGridModeler
@@ -44,34 +45,34 @@ global:
         outputPostProcessorNorm: vencopy_output_postProcessing_normalized
 
 dataParsers:
-    dataVariables:
+    data_variables:
         dataset: ["MiD08", "MiD17", "KiD", "VF"]
-        isMIVDriver: ["pkw_f", "W_VM_G", "NA", "NA"]
-        hhID: ["hhid", "H_ID_Reg", "NA", "H_ID"]
+        is_driver: ["pkw_f", "W_VM_G", "NA", "NA"]
+        household_id: ["household_id", "H_ID_Reg", "NA", "H_ID"]
         vehicleID: ["NA", "NA", "k00", "A_ID"] # Fahrzeug ID
-        vehicleSegment: ["NA", "NA", "k01", "seg_kba_gr"] # Fahrzeugart
+        vehicle_segment: ["NA", "NA", "k01", "seg_kba_gr"] # Fahrzeugart
         drivetrain: ["NA", "NA", "NA", "A_ANTRIEB"]
-        personID: ["pid", "P_ID", "NA", "P_ID"]
-        hhPersonID: ["NA", "HP_ID_Reg", "NA", "HP_ID"]
-        tripID: ["wid", "W_ID", "f00", "W_ID"]
+        person_id: ["pid", "P_ID", "NA", "P_ID"]
+        household_person_id: ["NA", "HP_ID_Reg", "NA", "HP_ID"]
+        trip_id: ["wid", "W_ID", "f00", "W_ID"]
         tripWeight: ["w_gew", "W_GEW", "k93", "W_GEW"]
         tripScaleFactor: ["NA", "W_HOCH", "k90", "W_HOCH"]
-        tripStartClock: ["st_time", "W_SZ", "f04", "W_SZ"]
-        tripEndClock: ["en_time", "W_AZ", "f10a", "W_AZ"]
-        tripPurpose: ["w04", "zweck", "f07a", "zweck"]
-        tripDistance: ["wegkm_k", "wegkm", "f14", "wegkm_imp"]
-        travelTime: ["wegmin_k", "wegmin_imp1", "f15", "wegmin_imp1"]
-        tripStartYear: ["stich_j", "ST_JAHR", "NA", "ST_JAHR"]
-        tripStartMonth: ["stich_m", "ST_MONAT", "NA", "ST_MONAT"]
-        tripStartWeek: ["stichwo", "ST_WOCHE", "NA", "ST_WOCHE"]
-        tripStartWeekday: ["stichtag", "ST_WOTAG", "NA", "ST_WOTAG"]
-        tripStartHour: ["st_std", "W_SZS", "NA", "W_SZS"]
-        tripStartMinute: ["st_min", "W_SZM", "NA", "W_SZM"]
-        tripStartDate: ["NA", "NA", "k22d", "NA"]
-        tripEndHour: ["en_std", "W_AZS", "NA", "W_AZS"]
-        tripEndMinute: ["en_min", "W_AZM", "NA", "W_AZM"]
-        tripEndNextDay: ["en_dat", "W_FOLGETAG", "NA", "W_FOLGETAG"]
-        tripIsIntermodal: ["NA", "weg_intermod", "NA", "weg_intermod"]
+        trip_start_clock: ["st_time", "W_SZ", "f04", "W_SZ"]
+        trip_end_clock: ["en_time", "W_AZ", "f10a", "W_AZ"]
+        trip_purpose: ["w04", "zweck", "f07a", "zweck"]
+        trip_distance: ["wegkm_k", "wegkm", "f14", "wegkm_imp"]
+        travel_time: ["wegmin_k", "wegmin_imp1", "f15", "wegmin_imp1"]
+        trip_start_year: ["stich_j", "ST_JAHR", "NA", "ST_JAHR"]
+        trip_start_month: ["stich_m", "ST_MONAT", "NA", "ST_MONAT"]
+        trip_start_week: ["stichwo", "ST_WOCHE", "NA", "ST_WOCHE"]
+        trip_start_weekday: ["stichtag", "ST_WOTAG", "NA", "ST_WOTAG"]
+        trip_start_hour: ["st_std", "W_SZS", "NA", "W_SZS"]
+        trip_start_minute: ["st_min", "W_SZM", "NA", "W_SZM"]
+        trip_start_date: ["NA", "NA", "k22d", "NA"]
+        trip_end_hour: ["en_std", "W_AZS", "NA", "W_AZS"]
+        trip_end_minute: ["en_min", "W_AZM", "NA", "W_AZM"]
+        trip_end_next_day: ["en_dat", "W_FOLGETAG", "NA", "W_FOLGETAG"]
+        trip_is_intermodal: ["NA", "weg_intermod", "NA", "weg_intermod"]
         # weather: ["NA", "wetter", "NA", "wetter"]
         # economicStatus: ["NA", "oek_status", "NA", "oek_status"]
         # hhBuilding: ["NA", "hhtyp2", "NA", "hhtyp2"] # Gebäudetyp detailliert
@@ -84,28 +85,28 @@ dataParsers:
         #    tripStartLocation: [ 'NA', 'KKZ_SO' ]
         #    tripEndLocation: [ 'NA', 'KKZ_ZO' ]
     IDVariablesNames:
-        MiD08: "hhPersonID"
-        MiD17: "hhPersonID"
+        MiD08: "household_person_id"
+        MiD17: "household_person_id"
         KiD: "vehicleID"
-        VF: "hhPersonID"
+        VF: "household_person_id"
     inputDTypes:
         MiD17:
-            isMIVDriver: "bool"
-            hhPersonID: "int"
-            tripID: "int"
+            is_driver: "bool"
+            household_person_id: "int"
+            trip_id: "int"
             tripWeight: "float"
-            tripPurpose: "int"
-            tripDistance: "float"
-            tripStartYear: "int"
-            tripStartMonth: "int"
-            tripStartWeek: "int"
-            tripStartWeekday: "int"
-            tripStartHour: "int"
-            tripStartMinute: "int"
-            tripEndHour: "int"
-            tripEndMinute: "int"
-            tripEndNextDay: "bool"
-            tripIsIntermodal: "int"
+            trip_purpose: "int"
+            trip_distance: "float"
+            trip_start_year: "int"
+            trip_start_month: "int"
+            trip_start_week: "int"
+            trip_start_weekday: "int"
+            trip_start_hour: "int"
+            trip_start_minute: "int"
+            trip_end_hour: "int"
+            trip_end_minute: "int"
+            trip_end_next_day: "bool"
+            trip_is_intermodal: "int"
             weather: "int"
             economicStatus: "int"
             hhType: "int"
@@ -116,105 +117,105 @@ dataParsers:
             areaType: "int"
             garage: "int"
         MiD08:
-            isMIVDriver: "bool"
-            hhPersonID: "int"
-            tripID: "int"
+            is_driver: "bool"
+            household_person_id: "int"
+            trip_id: "int"
             tripWeight: "float"
-            tripPurpose: "int"
-            tripDistance: "float"
-            tripStartYear: "int"
-            tripStartMonth: "int"
-            tripStartWeek: "int"
-            tripStartWeekday: "int"
-            tripStartHour: "int"
-            tripStartMinute: "int"
-            tripEndHour: "int"
-            tripEndMinute: "int"
-            tripEndNextDay: "bool"
-            tripIsIntermodal: "int"
+            trip_purpose: "int"
+            trip_distance: "float"
+            trip_start_year: "int"
+            trip_start_month: "int"
+            trip_start_week: "int"
+            trip_start_weekday: "int"
+            trip_start_hour: "int"
+            trip_start_minute: "int"
+            trip_end_hour: "int"
+            trip_end_minute: "int"
+            trip_end_next_day: "bool"
+            trip_is_intermodal: "int"
         KiD:
             vehicleID: "int"
-            tripID: "int"
+            trip_id: "int"
             tripWeight: "float"
-            tripStartClock: "str"
-            tripEndClock: "str"
-            tripPurpose: "int"
-            tripDistance: "float"
-            travelTime: "int"
-            tripStartDate: "str"
+            trip_start_clock: "str"
+            trip_end_clock: "str"
+            trip_purpose: "int"
+            trip_distance: "float"
+            travel_time: "int"
+            trip_start_date: "str"
             areaType: "int"
         VF:
-            isMIVDriver: "bool"
+            is_driver: "bool"
             vehicleID: "int"
             drivetrain: "str"
-            hhPersonID: "int"
-            tripID: "int"
+            household_person_id: "int"
+            trip_id: "int"
             tripWeight: "float"
-            tripPurpose: "int"
-            tripDistance: "float"
-            tripStartYear: "int"
-            tripStartMonth: "int"
-            tripStartWeek: "int"
-            tripStartWeekday: "int"
-            tripStartHour: "int"
-            tripStartMinute: "int"
-            tripEndHour: "int"
-            tripEndMinute: "int"
-            tripEndNextDay: "bool"
-            tripIsIntermodal: "int"
+            trip_purpose: "int"
+            trip_distance: "float"
+            trip_start_year: "int"
+            trip_start_month: "int"
+            trip_start_week: "int"
+            trip_start_weekday: "int"
+            trip_start_hour: "int"
+            trip_start_minute: "int"
+            trip_end_hour: "int"
+            trip_end_minute: "int"
+            trip_end_next_day: "bool"
+            trip_is_intermodal: "int"
             weather: "int"
     filters:
         lowerSpeedThreshold: 10 # Minimum speed required
         higherSpeedThreshold: 200 # Maximum speed allowed
         MiD08:
             include:
-                isMIVDriver: [1]
+                is_driver: [1]
             exclude:
-                tripStartHour: [301]
-                tripStartMinute: [301]
-                tripEndHour: [301]
-                tripEndMinute: [301]
-                tripStartClock: ["301:00"]
-                tripEndClock: ["301:00"]
-                tripPurpose: [97, 98]
+                trip_start_hour: [301]
+                trip_start_minute: [301]
+                trip_end_hour: [301]
+                trip_end_minute: [301]
+                trip_start_clock: ["301:00"]
+                trip_end_clock: ["301:00"]
+                trip_purpose: [97, 98]
             greaterThan:
             smallerThan:
-                tripDistance: [1000]
+                trip_distance: [1000]
         MiD17:
             include:
-                isMIVDriver: [1]
+                is_driver: [1]
             exclude:
-                tripStartHour: [99, 701]
-                tripEndHour: [99, 701]
-                tripStartClock: [" "]
-                tripEndClock: [" "]
-                tripPurpose: [99]
-                tripIsIntermodal: [1, 703, 708]
+                trip_start_hour: [99, 701]
+                trip_end_hour: [99, 701]
+                trip_start_clock: [" "]
+                trip_end_clock: [" "]
+                trip_purpose: [99]
+                trip_is_intermodal: [1, 703, 708]
             greaterThan:
             smallerThan:
-                tripDistance: [1000]
+                trip_distance: [1000]
         KiD:
             include:
             exclude:
-                tripStartDate: ["-1"]
-                tripPurpose: [-1]
+                trip_start_date: ["-1"]
+                trip_purpose: [-1]
             greaterThan:
             smallerThan:
-                tripDistance: [3000]
+                trip_distance: [3000]
         VF:
             include:
             exclude:
-                tripStartHour: [99, 701]
-                tripEndHour: [99, 701]
-                tripStartClock: [" "]
-                tripEndClock: [" "]
-                tripPurpose: [99]
+                trip_start_hour: [99, 701]
+                trip_end_hour: [99, 701]
+                trip_start_clock: [" "]
+                trip_end_clock: [" "]
+                trip_purpose: [99]
             greaterThan:
             smallerThan:
-                tripDistance: [1000]
-    Replacements:
+                trip_distance: [1000]
+    replacements:
         MiD08:
-            tripStartWeekday:
+            trip_start_weekday:
                 1: "MON"
                 2: "TUE"
                 3: "WED"
@@ -222,7 +223,7 @@ dataParsers:
                 5: "FRI"
                 6: "SAT"
                 7: "SUN"
-            tripPurpose:
+            trip_purpose:
                 1: "WORK" # Erreichen des Arbeitsplatzes
                 2: "WORK" # dienstlich/geschäftlich
                 3: "SCHOOL" # Erreichen der Ausbildungsstätte/Schule
@@ -238,7 +239,7 @@ dataParsers:
                 32: "SCHOOL" # Kindertagesstaette oder Kindergarten (MiD08)
                 99: "NA" # keine Angabe
         MiD17:
-            tripStartWeekday:
+            trip_start_weekday:
                 1: "MON"
                 2: "TUE"
                 3: "WED"
@@ -246,7 +247,7 @@ dataParsers:
                 5: "FRI"
                 6: "SAT"
                 7: "SUN"
-            tripPurpose:
+            trip_purpose:
                 1: "WORK" # Erreichen des Arbeitsplatzes
                 2: "WORK" # dienstlich/geschäftlich
                 3: "SCHOOL" # Erreichen der Ausbildungsstätte/Schule
@@ -262,7 +263,7 @@ dataParsers:
                 32: "SCHOOL" # Kindertagesstaette oder Kindergarten (MiD08)
                 99: "NA" # keine Angabe
         KiD:
-            tripStartWeekday:
+            trip_start_weekday:
                 0: "MON"
                 1: "TUE"
                 2: "WED"
@@ -270,7 +271,7 @@ dataParsers:
                 4: "FRI"
                 5: "SAT"
                 6: "SUN"
-            tripPurpose:
+            trip_purpose:
                 # 1-5 dienstliche/geschäftliche Fahrtzwecken
                 1: "TRANSPORT" # Holen, Bringen, Transportieren von Gütern, Waren, Material, Maschinen, Geräten
                 2: "SERVICES" # Fahrt zur Erbringung beruflicher Leistungen
@@ -285,7 +286,7 @@ dataParsers:
                 10: "PEOPLE_MOBILITY" # Holen, Bringen, Befördern von Personen (privat)
                 11: "OTHER" # sonstige private Erledigung
                 12: "HOME" # Fahrt nach Hause
-            vehicleSegment:
+            vehicle_segment:
                 1: "Light motorised vehicle"
                 2: "Car"
                 3: "Van"
@@ -297,7 +298,7 @@ dataParsers:
                 9: "Agriculture and forestry tractor unit"
                 11: "Other"
         VF:
-            tripStartWeekday:
+            trip_start_weekday:
                 1: "MON"
                 2: "TUE"
                 3: "WED"
@@ -305,7 +306,7 @@ dataParsers:
                 5: "FRI"
                 6: "SAT"
                 7: "SUN"
-            tripPurpose:
+            trip_purpose:
                 1: "WORK" # Erreichen des Arbeitsplatzes
                 2: "WORK" # dienstlich/geschäftlich
                 3: "SCHOOL" # Erreichen der Ausbildungsstätte/Schule
@@ -320,7 +321,7 @@ dataParsers:
                 31: "SCHOOL" # Zur Schule oder Vorschule (MiD08)
                 32: "SCHOOL" # Kindertagesstaette oder Kindergarten (MiD08)
                 99: "NA" # keine Angabe
-            vehicleSegment:
+            vehicle_segment:
                 "klein": "S"
                 "kompakt": "S"
                 "mittel": "M"
