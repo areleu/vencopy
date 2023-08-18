@@ -9,7 +9,7 @@ authors = [
 license = "BSD-3-Clause"
 readme = "README.md"
 packages = [{ include = "vencopy" }] #'vencopy.core', 'vencopy.utils'
-url = 'https://gitlab.com/dlr-ve/vencopy'
+url = 'https://gitlab.com/dlr-ve/esy/vencopy/vencopy'
 
 
 # install_requires=[]
@@ -24,6 +24,8 @@ ruamel.yaml = "^0.2.5"
 click = "^8.1.3"
 pyyaml = "^6.0"
 
+[project.optional-dependencies]
+dev = ["black"]
 
 [build-system]
 requires = ["poetry-core"]
