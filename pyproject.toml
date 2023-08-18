@@ -6,10 +6,52 @@ authors = [
     "Niklas Wulff <niklas.wulff@dlr.de>",
     "Fabia Miorelli <fabia.miorelli@dlr.de>",
 ]
+maintainers = ["Niklas Wulff <niklas.wulff@dlr.de>"]
 license = "BSD-3-Clause"
 readme = "README.md"
 packages = [{ include = "vencopy" }] #'vencopy.core', 'vencopy.utils'
-url = 'https://gitlab.com/dlr-ve/vencopy'
+
+#packages = [
+#    { include = "my_package", from = "lib" },
+#]
+
+homepage = 'https://gitlab.com/dlr-ve/esy/vencopy/vencopy'
+repository = 'https://gitlab.com/dlr-ve/esy/vencopy/vencopy.git'
+documentation = 'https://vencopy.readthedocs.io/en/latest/index.html'
+keywords = [
+    "energy",
+    "transport",
+    "mobility",
+    "electric vehicles",
+    "EVs",
+    "research software",
+    "energy system analysis",
+    "electricity demand",
+    "load shifting",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Researchers",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX",
+    "Operating System :: Unix",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Topic :: Utilities",
+
+]
+include = [
+    #    { path = "tests", format = "sdist" },
+    #    { path = "for_wheel.txt", format = ["sdist", "wheel"] }
+]
+exclude = [
+    #    "my_package/excluded.py"
+]
 
 
 # install_requires=[]
@@ -23,6 +65,12 @@ pandas = "<= 1.5.2"
 ruamel.yaml = "^0.2.5"
 click = "^8.1.3"
 pyyaml = "^6.0"
+
+[tool.poetry.group.docs.dependencies]
+sphinx = "*"
+
+[tool.poetry.group.dev.dependencies]
+black = "*"
 
 
 [build-system]
