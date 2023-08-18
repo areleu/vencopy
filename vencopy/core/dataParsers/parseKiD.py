@@ -56,8 +56,8 @@ class ParseKiD(IntermediateParsing):
         """
         for i, x in enumerate(list(self.trips.trip_distance)):
             self.trips.at[i, "trip_distance"] = x.replace(",", ".")
-        for i, x in enumerate(list(self.trips.tripWeight)):
-            self.trips.at[i, "tripWeight"] = x.replace(",", ".")
+        for i, x in enumerate(list(self.trips.trip_weight)):
+            self.trips.at[i, "trip_weight"] = x.replace(",", ".")
 
     def __add_string_columns(self, weekday=True, purpose=True, vehicle_segment=True):
         """

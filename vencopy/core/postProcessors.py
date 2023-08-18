@@ -23,8 +23,9 @@ class PostProcessor:
         self.user_config = configs["user_config"]
         self.dev_config = configs["dev_config"]
         self.dataset = self.user_config["global"]["dataset"]
-        self.delta_time = self.user_config["diaryBuilders"]["time_delta"]
-        self.time_idx = list(pd.timedelta_range(start="00:00:00", end="24:00:00", freq=f"{self.delta_time}T"))
+        self.time_resolution = self.user_config["diaryBuilders"]["time_resolution"]
+        self.time_delta = pd.timedelta_range(start="00:00:00", end="24:00:00", freq=f"{self.time_resolution}T")
+        self.time_index = list(self.time_delta)
 
         self.drain = None
         self.charging_power = None
@@ -60,13 +61,13 @@ class PostProcessor:
             profiles.max_battery_level_weekly,
             profiles.min_battery_level_weekly,
         )
-        pnames = ("drain", "uncontrolled_charge", "charge_power", "max_battery_level", "min_battery_level")
-        for pname, p in zip(pnames, profiles):
-            self.__store_input(name=pname, profile=p)
-            self.annual_profiles[pname] = self.__week_to_annual_profile(profile=p)
-            if self.user_config["global"]["write_output_to_disk"]["processorOutput"]["absolute_annual_profiles"]:
+        profile_names = ("drain", "uncontrolled_charge", "charge_power", "max_battery_level", "min_battery_level")
+        for profile_name, profile in zip(profile_names, profiles):
+            self.__store_input(name=profile_name, profile=profile)
+            self.annual_profiles[profile_name] = self.__week_to_annual_profile(profile=profile)
+            if self.user_config["global"]["write_output_to_disk"]["processor_output"]["absolute_annual_profiles"]:
                 self.__write_output(
-                    profile_name=pname, profile=self.annual_profiles[pname], filename_id="outputPostProcessorAnnual"
+                    profile_name=profile_name, profile=self.annual_profiles[profile_name], filename_id="output_postProcessor_annual"
                 )
         print("Run finished.")
 
@@ -88,11 +89,11 @@ class PostProcessor:
         if self.user_config["gridModelers"]["grid_model"] != "simple":
             warnings.warn(
                 f"You selected a grid model where normalization is not meaningful. For normalization, the"
-                f" rated power of {self.user_config['gridModelers']['chargePowerSimple']}kW was used."
+                f" rated power of {self.user_config['gridModelers']['rated_power_simple']}kW was used."
             )
 
-        if self.user_config["global"]["write_output_to_disk"]["processorOutput"]["normalised_annual_profiles"]:
-            self.__write_out_profiles(filename_id="outputPostProcessorNorm")
+        if self.user_config["global"]["write_output_to_disk"]["processor_output"]["normalised_annual_profiles"]:
+            self.__write_out_profiles(filename_id="output_postProcessor_normalised")
 
     def __normalize_flows(self, profile: pd.Series) -> pd.Series:
         return profile / profile.sum()
@@ -111,7 +112,7 @@ class PostProcessor:
 
     def __write_output(self, profile_name: str, profile: pd.Series, filename_id: str):
         root = Path(self.user_config["global"]["absolute_path"]["vencopy_root"])
-        folder = self.dev_config["global"]["relative_path"]["post_processing_output"]
+        folder = self.dev_config["global"]["relative_path"]["processor_output"]
         file_name = create_file_name(
             dev_config=self.dev_config,
             user_config=self.user_config,

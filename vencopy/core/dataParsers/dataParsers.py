@@ -31,8 +31,8 @@ class DataParser:
         Columns relevant for the EV simulation are selected from the entirety
         of the data and renamed to VencoPy internal variable names given in
         the dictionary parseConfig['data_variables'] for the respective survey
-        data set. Manually configured exclude, include, greaterThan and
-        smallerThan filters are applied as they are specified in parseConfig.
+        data set. Manually configured exclude, include, greater_than and
+        smaller_than filters are applied as they are specified in parseConfig.
         For some columns, raw data is transferred to human readable strings
         and respective columns are added. Pandas timestamp columns are
         synthesized from the given trip start and trip end time information.
@@ -198,7 +198,7 @@ class DataParser:
     def _filter(self, filters: dict = None):
         """
         Wrapper function to carry out filtering for the four filter logics of
-        including, excluding, greaterThan and smallerThan.
+        including, excluding, greater_than and smaller_than.
         If a filters is defined with a different key, a warning is thrown.
         Filters are defined inclusively, thus boolean vectors will select
         elements (TRUE) that stay in the data set.
@@ -228,7 +228,7 @@ class DataParser:
         Apply single-column scalar value filtering as defined in the config.
 
         Returns:
-            pd.DataFrame: DataFrame with boolean columns for include, exclude, greaterThan and smallerThan filters. True
+            pd.DataFrame: DataFrame with boolean columns for include, exclude, greater_than and smaller_than filters. True
             means keep the row.
         """
         simple_filter = pd.DataFrame(index=self.trips.index)
@@ -239,14 +239,14 @@ class DataParser:
                 simple_filter = simple_filter.join(self.__set_include_filter(i_value, self.trips.index))
             elif i_key == "exclude" and i_value:
                 simple_filter = simple_filter.join(self.__set_exclude_filter(i_value, self.trips.index))
-            elif i_key == "greaterThan" and i_value:
+            elif i_key == "greater_than" and i_value:
                 simple_filter = simple_filter.join(self.__set_greater_than_filter(i_value, self.trips.index))
-            elif i_key == "smallerThan" and i_value:
+            elif i_key == "smaller_than" and i_value:
                 simple_filter = simple_filter.join(self.__set_smaller_than_filter(i_value, self.trips.index))
-            elif i_key not in ["include", "exclude", "greaterThan", "smallerThan"]:
+            elif i_key not in ["include", "exclude", "greater_than", "smaller_than"]:
                 warnings.warn(
                     f"A filter dictionary was defined in the dev_config with an unknown filtering key."
-                    f"Current filtering keys comprise include, exclude, smallerThan and greaterThan."
+                    f"Current filtering keys comprise include, exclude, smaller_than and greater_than."
                     f"Continuing with ignoring the dictionary {i_key}"
                 )
         return simple_filter
@@ -282,7 +282,7 @@ class DataParser:
 
     def __set_greater_than_filter(self, greater_than_filter_dict: dict, data_idx: pd.Index):
         """
-        Read-in function for greaterThan filter dict from dev_config.yaml
+        Read-in function for greater_than filter dict from dev_config.yaml
 
         :param greater_than_filter_dict: Dictionary of greater than filters
                                       defined in dev_config.yaml
@@ -301,7 +301,7 @@ class DataParser:
 
     def __set_smaller_than_filter(self, smaller_than_filter_dict: dict, data_idx: pd.Index) -> pd.DataFrame:
         """
-        Read-in function for smallerThan filter dict from dev_config.yaml
+        Read-in function for smaller_than filter dict from dev_config.yaml
 
         :param smaller_than_filter_dict: Dictionary of smaller than filters
                defined in dev_config.yaml
@@ -346,8 +346,8 @@ class DataParser:
         """
         self.trips["averageSpeed"] = self.trips["trip_distance"] / (self.trips["travel_time"] / 60)
 
-        return (self.trips["averageSpeed"] > self.dev_config["dataParsers"]["filters"]["lowerSpeedThreshold"]) & (
-            self.trips["averageSpeed"] <= self.dev_config["dataParsers"]["filters"]["higherSpeedThreshold"]
+        return (self.trips["averageSpeed"] > self.dev_config["dataParsers"]["filters"]["lower_speed_threshold"]) & (
+            self.trips["averageSpeed"] <= self.dev_config["dataParsers"]["filters"]["higher_speed_threshold"]
         )
 
     def _filter_inconsistent_travel_times(self) -> pd.Series:
@@ -381,9 +381,9 @@ class DataParser:
             next trip, period==2 no overlap with second next trip etc.).
         """
         lst = []
-        for p in range(1, lookahead_periods + 1):
-            ser = self.__identify_overlapping_trips(dat=self.trips, period=p)
-            ser.name = f"p={p}"
+        for profile in range(1, lookahead_periods + 1):
+            ser = self.__identify_overlapping_trips(dat=self.trips, period=profile)
+            ser.name = f"profile={profile}"
             lst.append(ser)
         ret = pd.concat(lst, axis=1).all(axis=1)
         ret.name = "no_overlap_next_trips"
@@ -514,7 +514,7 @@ class IntermediateParsing(DataParser):
     def _convert_types(self):
         """
         Convert raw column types to predefined python types as specified in
-        parseConfig['inputDTypes'][dataset]. This is mainly done for
+        parseConfig['input_data_types'][dataset]. This is mainly done for
         performance reasons. But also in order to avoid index values that are
         of type int to be cast to float. The function operates only on
         self.trips and writes back changes to self.trips
@@ -522,7 +522,7 @@ class IntermediateParsing(DataParser):
         :return: None
         """
         # Filter for dataset specific columns
-        conversion_dict = self.dev_config["dataParsers"]["inputDTypes"][self.dataset]
+        conversion_dict = self.dev_config["dataParsers"]["input_data_types"][self.dataset]
         keys = {i_column for i_column in conversion_dict.keys() if i_column in self.trips.columns}
         self.var_datatype_dict = {key: conversion_dict[key] for key in conversion_dict.keys() & keys}
         self.trips = self.trips.astype(self.var_datatype_dict)

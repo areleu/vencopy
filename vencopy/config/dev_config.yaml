@@ -13,21 +13,19 @@ global:
         diary_output: ./output/diaryBuilder/
         grid_output: ./output/gridModeler/
         flex_output: ./output/flexEstimator/
-        aggregatorOutput: ./output/profileAggregator/
-        post_processing_output: ./output/PostProcessor/
-        evalOutput: ./output/evaluator/
-        scripts: ./scripts/
+        aggregator_output: ./output/profileAggregator/
+        processor_output: ./output/postProcessor/
         config: ./config/
     files:
         MiD17:
-            enryptedZipFileB1: B1_Standard-DatensatzpaketEncrypted.zip
-            enryptedZipFileB2: B2_Regional-DatensatzpaketEncrypted.zip
-            householdsDataRaw: MiD2017_Regional_Haushalte.csv
-            personsDataRaw: MiD2017_Regional_Personen.csv
+            enrypted_zip_file_B1: B1_Standard-DatensatzpaketEncrypted.zip
+            enrypted_zip_file_B2: B2_Regional-DatensatzpaketEncrypted.zip
+            households_data_raw: MiD2017_Regional_Haushalte.csv
+            persons_data_raw: MiD2017_Regional_Personen.csv
             trips_data_raw: MiD2017_Regional_Wege.dta
         MiD08:
-            householdsDataRaw: MiD2008_PUF_Haushalte.dta
-            personDataRaw: MiD2008_PUF_Personen.dta
+            households_data_raw: MiD2008_PUF_Haushalte.dta
+            person_data_raw: MiD2008_PUF_Personen.dta
             trips_data_raw: MiD2008_PUF_Wege.dta
         KiD:
             trips_data_raw: KiD2010-Fahrten-Datei-puf.dta
@@ -35,14 +33,14 @@ global:
         VF:
             trips_data_raw: MiD2017_Wege.dta
             vehicles_data_raw: tripDataMergedWVehicleData.csv
-    diskFileNames:
-        outputDataParser: vencopyOutputDataParser
-        outputGridModeler: vencopyOutputGridModeler
-        outputFlexEstimator: vencopyOutputFlexEstimator
-        outputDiaryBuilder: vencopyOutputDiaryBuilder
-        outputProfileAggregator: vencopyOutputProfileAggregator
-        outputPostProcessorAnnual: vencopy_output_postProcessing_annual
-        outputPostProcessorNorm: vencopy_output_postProcessing_normalized
+    disk_file_names:
+        output_dataParser: vencopyOutputDataParser
+        output_gridModeler: vencopyOutputGridModeler
+        output_flexEstimator: vencopyOutputFlexEstimator
+        output_diaryBuilder: vencopyOutputDiaryBuilder
+        output_profileAggregator: vencopyOutputProfileAggregator
+        output_postProcessor_annual: vencopy_output_postProcessor_annual
+        output_postProcessor_normalised: vencopy_output_postProcessor_normalized
 
 dataParsers:
     data_variables:
@@ -55,8 +53,8 @@ dataParsers:
         person_id: ["pid", "P_ID", "NA", "P_ID"]
         household_person_id: ["NA", "HP_ID_Reg", "NA", "HP_ID"]
         trip_id: ["wid", "W_ID", "f00", "W_ID"]
-        tripWeight: ["w_gew", "W_GEW", "k93", "W_GEW"]
-        tripScaleFactor: ["NA", "W_HOCH", "k90", "W_HOCH"]
+        trip_weight: ["w_gew", "W_GEW", "k93", "W_GEW"]
+        trip_scale_factor: ["NA", "W_HOCH", "k90", "W_HOCH"]
         trip_start_clock: ["st_time", "W_SZ", "f04", "W_SZ"]
         trip_end_clock: ["en_time", "W_AZ", "f10a", "W_AZ"]
         trip_purpose: ["w04", "zweck", "f07a", "zweck"]
@@ -74,27 +72,27 @@ dataParsers:
         trip_end_next_day: ["en_dat", "W_FOLGETAG", "NA", "W_FOLGETAG"]
         trip_is_intermodal: ["NA", "weg_intermod", "NA", "weg_intermod"]
         # weather: ["NA", "wetter", "NA", "wetter"]
-        # economicStatus: ["NA", "oek_status", "NA", "oek_status"]
-        # hhBuilding: ["NA", "hhtyp2", "NA", "hhtyp2"] # Gebäudetyp detailliert
-        # hhType: ["NA", "haustyp", "NA", "haustyp"]
-        # hpAge: ["NA", "alter_gr5", "NA", "alter_gr5"]
-        # hpJob: ["NA", "taet", "NA", "NA"]
+        # economic_status: ["NA", "oek_status", "NA", "oek_status"]
+        # household_building: ["NA", "hhtyp2", "NA", "hhtyp2"] # Gebäudetyp detailliert
+        # household_type: ["NA", "haustyp", "NA", "haustyp"]
+        # household_person_age: ["NA", "alter_gr5", "NA", "alter_gr5"]
+        # household_person_job: ["NA", "taet", "NA", "NA"]
         # bundesland: ["NA", "BLAND", "NA", "BLAND"]
-        # areaType: ["NA", "SKTYP", "k50", "SKTYP"]
+        # area_type: ["NA", "SKTYP", "k50", "SKTYP"]
         # garage: ["NA", "garage", "NA", "garage"]
         #    tripStartLocation: [ 'NA', 'KKZ_SO' ]
         #    tripEndLocation: [ 'NA', 'KKZ_ZO' ]
-    IDVariablesNames:
+    id_variables_names:
         MiD08: "household_person_id"
         MiD17: "household_person_id"
         KiD: "vehicleID"
         VF: "household_person_id"
-    inputDTypes:
+    input_data_types:
         MiD17:
             is_driver: "bool"
             household_person_id: "int"
             trip_id: "int"
-            tripWeight: "float"
+            trip_weight: "float"
             trip_purpose: "int"
             trip_distance: "float"
             trip_start_year: "int"
@@ -108,19 +106,19 @@ dataParsers:
             trip_end_next_day: "bool"
             trip_is_intermodal: "int"
             weather: "int"
-            economicStatus: "int"
-            hhType: "int"
+            economic_status: "int"
+            household_type: "int"
             hhStatus: "int"
-            hpAge: "int"
-            hpJob: "int"
+            household_person_age: "int"
+            household_person_job: "int"
             bundesland: "int"
-            areaType: "int"
+            area_type: "int"
             garage: "int"
         MiD08:
             is_driver: "bool"
             household_person_id: "int"
             trip_id: "int"
-            tripWeight: "float"
+            trip_weight: "float"
             trip_purpose: "int"
             trip_distance: "float"
             trip_start_year: "int"
@@ -136,21 +134,21 @@ dataParsers:
         KiD:
             vehicleID: "int"
             trip_id: "int"
-            tripWeight: "float"
+            trip_weight: "float"
             trip_start_clock: "str"
             trip_end_clock: "str"
             trip_purpose: "int"
             trip_distance: "float"
             travel_time: "int"
             trip_start_date: "str"
-            areaType: "int"
+            area_type: "int"
         VF:
             is_driver: "bool"
             vehicleID: "int"
             drivetrain: "str"
             household_person_id: "int"
             trip_id: "int"
-            tripWeight: "float"
+            trip_weight: "float"
             trip_purpose: "int"
             trip_distance: "float"
             trip_start_year: "int"
@@ -165,8 +163,8 @@ dataParsers:
             trip_is_intermodal: "int"
             weather: "int"
     filters:
-        lowerSpeedThreshold: 10 # Minimum speed required
-        higherSpeedThreshold: 200 # Maximum speed allowed
+        lower_speed_threshold: 10 # Minimum speed required
+        higher_speed_threshold: 200 # Maximum speed allowed
         MiD08:
             include:
                 is_driver: [1]
@@ -178,8 +176,8 @@ dataParsers:
                 trip_start_clock: ["301:00"]
                 trip_end_clock: ["301:00"]
                 trip_purpose: [97, 98]
-            greaterThan:
-            smallerThan:
+            greater_than:
+            smaller_than:
                 trip_distance: [1000]
         MiD17:
             include:
@@ -191,16 +189,16 @@ dataParsers:
                 trip_end_clock: [" "]
                 trip_purpose: [99]
                 trip_is_intermodal: [1, 703, 708]
-            greaterThan:
-            smallerThan:
+            greater_than:
+            smaller_than:
                 trip_distance: [1000]
         KiD:
             include:
             exclude:
                 trip_start_date: ["-1"]
                 trip_purpose: [-1]
-            greaterThan:
-            smallerThan:
+            greater_than:
+            smaller_than:
                 trip_distance: [3000]
         VF:
             include:
@@ -210,8 +208,8 @@ dataParsers:
                 trip_start_clock: [" "]
                 trip_end_clock: [" "]
                 trip_purpose: [99]
-            greaterThan:
-            smallerThan:
+            greater_than:
+            smaller_than:
                 trip_distance: [1000]
     replacements:
         MiD08:

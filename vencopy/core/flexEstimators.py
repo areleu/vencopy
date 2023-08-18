@@ -412,7 +412,7 @@ class FlexEstimator:
     def _auxiliary_fuel_need(self):
         self.activities["auxiliary_fuel_need"] = (
             self.activities["residual_need"]
-            * self.user_config["flexEstimators"]["Fuel_consumption"]
+            * self.user_config["flexEstimators"]["fuel_consumption"]
             / self.user_config["flexEstimators"]["electric_consumption"]
         )
 
@@ -459,10 +459,10 @@ class FlexEstimator:
         """
         Main run function for the class WeekFlexEstimator. Calculates uncontrolled charging as well as technical
         boundary constraints for controlled charging and feeding electricity back into the grid on an indvidiual vehicle
-        basis. If filterFuelNeed is True, only electrifiable days are considered.
+        basis. If filter_fuel_need is True, only electrifiable days are considered.
 
         Args:
-            filterFuelNeed (bool): If true, it is ensured that all trips can be fulfilled by battery electric vehicles
+            filter_fuel_need (bool): If true, it is ensured that all trips can be fulfilled by battery electric vehicles
             specified by battery size and specific consumption as given in the config. Here, not only trips but cars
             days are filtered out.
             startBatteryLevel (float): Initial battery level of every activity chain.
@@ -473,11 +473,11 @@ class FlexEstimator:
         """
         self._drain()
         self._max_charge_volume_per_parking_activity()
-        self.__battery_level_max(start_level=self.upper_battery_level * self.user_config["flexEstimators"]["Start_SOC"])
+        self.__battery_level_max(start_level=self.upper_battery_level * self.user_config["flexEstimators"]["start_soc"])
         self._uncontrolled_charging()
         self.__battery_level_min()
         self._auxiliary_fuel_need()
-        if self.user_config["flexEstimators"]["filterFuelNeed"]:
+        if self.user_config["flexEstimators"]["filter_fuel_need"]:
             self.activities = self._filter_residual_need(activities=self.activities, index_columns=["unique_id"])
         if self.user_config["global"]["write_output_to_disk"]["flex_output"]:
             self.__write_output()
@@ -488,10 +488,10 @@ class FlexEstimator:
         """
         Main run function for the class WeekFlexEstimator. Calculates uncontrolled charging as well as technical
         boundary constraints for controlled charging and feeding electricity back into the grid on an indvidiual vehicle
-        basis. If filterFuelNeed is True, only electrifiable days are considered.
+        basis. If filter_fuel_need is True, only electrifiable days are considered.
 
         Args:
-            filterFuelNeed (bool): If true, it is ensured that all trips can be fulfilled by battery electric vehicles
+            filter_fuel_need (bool): If true, it is ensured that all trips can be fulfilled by battery electric vehicles
             specified by battery size and specific consumption as given in the config. Here, not only trips but cars
             days are filtered out.
             startBatteryLevel (float): Initial battery level of every activity chain.
@@ -503,13 +503,13 @@ class FlexEstimator:
         self._drain()
         self._max_charge_volume_per_parking_activity()
         self.__iterative_battery_level_calculation(
-            maxIter=self.user_config["flexEstimators"]["maxIterations"],
+            maxIter=self.user_config["flexEstimators"]["max_iterations"],
             epsilon=self.user_config["flexEstimators"]["epsilon_battery_level"],
             battery_capacity=self.user_config["flexEstimators"]["battery_capacity"],
             number_vehicles=len(self.activities["unique_id"].unique()),
         )
         self._auxiliary_fuel_need()
-        if self.user_config["flexEstimators"]["filterFuelNeed"]:
+        if self.user_config["flexEstimators"]["filter_fuel_need"]:
             self.activities = self._filter_residual_need(activities=self.activities, index_columns=["unique_id"])
         if self.user_config["global"]["write_output_to_disk"]["flex_output"]:
             self.__write_output()
@@ -527,7 +527,7 @@ class FlexEstimator:
             battery_capacity (float): Average nominal battery capacity per vehicle in kWh.
             number_vehicles (int): Number of vehicles in the empiric mobility pattern data set.
         """
-        max_battery_level_end = self.upper_battery_level * self.user_config["flexEstimators"]["Start_SOC"]
+        max_battery_level_end = self.upper_battery_level * self.user_config["flexEstimators"]["start_soc"]
         min_battery_level_start = self.lower_battery_level
         absolute_epsilon = int(self.__absolute_epsilon(epsilon=epsilon, battery_capacity=battery_capacity, number_vehicles=number_vehicles))
 

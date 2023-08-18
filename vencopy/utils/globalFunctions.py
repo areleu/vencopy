@@ -112,8 +112,8 @@ def create_file_name(
     :return: Full name of file to be written.
     """
     if dataset is None:
-        return f"{dev_config['global']['diskFileNames'][file_name_id]}_{user_config['global']['runLabel']}_{manual_label}.{suffix}"
-    return f"{dev_config['global']['diskFileNames'][file_name_id]}_{user_config['global']['runLabel']}_{manual_label}_{dataset}.{suffix}"
+        return f"{dev_config['global']['disk_file_names'][file_name_id]}_{user_config['global']['run_label']}_{manual_label}.{suffix}"
+    return f"{dev_config['global']['disk_file_names'][file_name_id]}_{user_config['global']['run_label']}_{manual_label}_{dataset}.{suffix}"
 
 
 def merge_variables(data: pd.DataFrame, dataset: pd.DataFrame, variables: list) -> pd.DataFrame:

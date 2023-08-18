@@ -17,7 +17,7 @@ DataParser Input
 
 * data_variables (selects the variables from the original dataset)
 * IDVariablesNames (selects the name of unique identifiers of the vehicle/person carrying out the trip)
-* inputDTypes (specifies the data type of the data variables)
+* input_data_types (specifies the data type of the data variables)
 * filterDicts (assigns values to the filters, which include inclusion, exclusion and equality relationships)
 * replacements (replaces numeric variables with more explicita variables)
 

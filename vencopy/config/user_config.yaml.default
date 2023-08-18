@@ -11,14 +11,14 @@ global:
   dataset: MiD17 # options are MiD08, MiD17, VF, KiD
   debug: True
   number_lines_debug: 5000
-  runLabel:
+  run_label:
   write_output_to_disk:
       parse_output: False
       grid_output: False
       flex_output: False
       diary_output: False
-      aggregatorOutput: True
-      processorOutput:
+      aggregator_output: True
+      processor_output:
         absolute_annual_profiles: True
         normalised_annual_profiles: True
 
@@ -111,27 +111,27 @@ gridModelers:
 
 
 flexEstimators:
-  filterFuelNeed: True # Should activity chains that require fuel for trip distance satisfaction be filtered out?
+  filter_fuel_need: True # Should activity chains that require fuel for trip distance satisfaction be filtered out?
   battery_capacity: 50 # in kWh, input assumption for battery capacity
   electric_consumption: 18.0 # in kWh/100km, input assumption for specific electric consumption
-  Fuel_consumption: 1.0 # in l/100km, input assumption for specific fuel consumption for auxiliary fuel
-  Start_SOC: 0.5 # State-of-charge between 0 and 1 at beginning of activity chain
+  fuel_consumption: 1.0 # in l/100km, input assumption for specific fuel consumption for auxiliary fuel
+  start_soc: 0.5 # State-of-charge between 0 and 1 at beginning of activity chain
   maximum_soc: 0.97 # in %
   minimum_soc: 0.03 # in %
-  maxIterations: 10  # Technical parameter --> not to user config
+  max_iterations: 10  # Technical parameter --> not to user config
   epsilon_battery_level: 0.0001  # Iterations stop once the difference between start and end battery level have decreased to this share of fleet battery level
 
 
 diaryBuilders:
   time_delta: 15
-  isWeekDiary: False # Determine if the activity data set comprises weekly activity chains (synthesized by WeekDiaryBuilder)
+  is_week_diary: False # Determine if the activity data set comprises weekly activity chains (synthesized by WeekDiaryBuilder)
 
 
 profileAggregators:
-  weightFlowProfiles: False # Currently only used for flow profile aggregation
+  weight_flow_profiles: False # Currently only used for flow profile aggregation
   alpha: 10 # Only used for state profile aggregation
 
 
 outputFormatters:
-  startWeekday: 1 # 1=Monday
+  start_weekday: 1 # 1=Monday
 
