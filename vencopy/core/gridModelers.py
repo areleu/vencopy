@@ -11,7 +11,7 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 from scipy.stats.sampling import DiscreteAliasUrn
-from vencopy.utils.globalFunctions import createFileName, write_out
+from vencopy.utils.globalFunctions import create_file_name, write_out
 
 
 class GridModeler:
@@ -162,7 +162,7 @@ class GridModeler:
         if self.user_config["global"]["writeOutputToDisk"]["gridOutput"]:
             root = Path(self.user_config["global"]["pathAbsolute"]["vencopyRoot"])
             folder = self.dev_config["global"]["pathRelative"]["gridOutput"]
-            fileName = createFileName(
+            fileName = create_file_name(
                 dev_config=self.dev_config,
                 user_config=self.user_config,
                 manualLabel="",

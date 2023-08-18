@@ -98,7 +98,7 @@ def create_output_folders(configDict: dict):
             os.mkdir(Path(root / main_dir / sub_dir))
 
 
-def createFileName(
+def create_file_name(
     dev_config: dict, user_config: dict, fileNameID: str, datasetID: str, manualLabel: str = "", suffix: str = "csv"
 ) -> str:
     """

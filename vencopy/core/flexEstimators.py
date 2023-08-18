@@ -11,7 +11,7 @@ from pathlib import Path
 from profilehooks import profile
 
 import pandas as pd
-from vencopy.utils.globalFunctions import createFileName, write_out
+from vencopy.utils.globalFunctions import create_file_name, write_out
 
 
 class FlexEstimator:
@@ -446,7 +446,7 @@ class FlexEstimator:
         if self.user_config["global"]["writeOutputToDisk"]["flexOutput"]:
             root = Path(self.user_config["global"]["pathAbsolute"]["vencopyRoot"])
             folder = self.dev_config["global"]["pathRelative"]["flexOutput"]
-            fileName = createFileName(
+            fileName = create_file_name(
                 user_config=self.user_config,
                 dev_config=self.dev_config,
                 manualLabel="",
