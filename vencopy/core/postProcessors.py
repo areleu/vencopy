@@ -13,16 +13,16 @@ from vencopy.core.profileAggregators import ProfileAggregator
 from vencopy.utils.globalFunctions import create_file_name, write_out
 
 
-class PostProcessing:
+class PostProcessor:
     """
     This class contains functions to post process aggregated venco.py profiles. As of now (August 2023), the class
     contains cloning weekly profiles to year and normalizing it with different normalization bases.
     """
 
-    def __init__(self, config_dict: dict):
-        self.user_config = config_dict["user_config"]
-        self.dev_config = config_dict["dev_config"]
-        self.dataset_ID = self.user_config["global"]["dataset"]
+    def __init__(self, configs: dict):
+        self.user_config = configs["user_config"]
+        self.dev_config = configs["dev_config"]
+        self.dataset = self.user_config["global"]["dataset"]
         self.delta_time = self.user_config["diaryBuilders"]["TimeDelta"]
         self.time_idx = list(pd.timedelta_range(start="00:00:00", end="24:00:00", freq=f"{self.delta_time}T"))
 
@@ -44,16 +44,15 @@ class PostProcessing:
     def __store_input(self, name: str, profile: pd.Series):
         self.input_profiles[name] = profile
 
-    def __create_annual_profiles(self, profile: pd.Series) -> pd.Series:
-        start_weekday = self.user_config["postProcessing"]["start_weekday"]  # (1: Monday, 7: Sunday)
+    def __week_to_annual_profile(self, profile: pd.Series) -> pd.Series:
+        start_weekday = self.user_config["PostProcessor"]["start_weekday"]  # (1: Monday, 7: Sunday)
         n_timeslots_per_day = len(list(self.time_idx))
-
         # Shift input profiles to the right weekday and start with first bin of chosen weekday
         annual = profile.iloc[((start_weekday - 1) * (n_timeslots_per_day - 1)) :]
         annual = pd.DataFrame(annual.to_list() * 53)
         return annual.drop(annual.tail(len(annual) - (n_timeslots_per_day - 1) * 365).index)
 
-    def week_to_annual(self, profiles: ProfileAggregator):
+    def create_annual_profiles(self, profiles: ProfileAggregator):
         profiles = (
             profiles.drain_weekly,
             profiles.uncontrolled_charge_weekly,
@@ -64,14 +63,14 @@ class PostProcessing:
         pnames = ("drain", "uncontrolled_charge", "charge_power", "max_battery_level", "min_battery_level")
         for pname, p in zip(pnames, profiles):
             self.__store_input(name=pname, profile=p)
-            self.annual_profiles[pname] = self.__create_annual_profiles(profile=p)
+            self.annual_profiles[pname] = self.__week_to_annual_profile(profile=p)
             if self.user_config["global"]["writeOutputToDisk"]["processorOutput"]["absolute_annual_profiles"]:
                 self.__write_output(
                     profile_name=pname, profile=self.annual_profiles[pname], filename_id="outputPostProcessorAnnual"
                 )
         print("Run finished.")
 
-    def normalize(self):
+    def normalise(self):
         self.drain_norm = self.__normalize_flows(self.input_profiles["drain"])
         self.uncontrolled_charge_norm = self.__normalize_flows(self.input_profiles["uncontrolled_charge"])
         self.charge_power_norm = self.__normalize_states(
@@ -118,6 +117,6 @@ class PostProcessing:
             user_config=self.user_config,
             manualLabel=profile_name,
             fileNameID=filename_id,
-            datasetID=self.dataset_ID,
+            dataset=self.dataset,
         )
         write_out(data=profile, path=root / folder / fileName)

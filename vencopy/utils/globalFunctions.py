@@ -21,12 +21,12 @@ def load_configs(base_path: Path) -> dict:
     """
     config_names = ("user_config", "dev_config")
     config_path = Path(base_path) / "config"
-    configDict = {}
+    configs = {}
     for config_name in config_names:
         file_path = (config_path / config_name).with_suffix(".yaml")
         with open(file_path) as ipf:
-            configDict[config_name] = yaml.load(ipf, Loader=yaml.SafeLoader)
-    return configDict
+            configs[config_name] = yaml.load(ipf, Loader=yaml.SafeLoader)
+    return configs
 
 
 def return_lowest_level_dict_keys(dictionary: dict, lst: list = None) -> list:
@@ -81,25 +81,25 @@ def replace_vec(series, year=None, month=None, day=None, hour=None, minute=None)
     )
 
 
-def create_output_folders(configDict: dict):
+def create_output_folders(configs: dict):
     """
     Function to crete vencopy output folder and subfolders
 
     :param: config dictionary
     :return: None
     """
-    root = Path(configDict["user_config"]["global"]["pathAbsolute"]["vencopyRoot"])
+    root = Path(configs["user_config"]["global"]["pathAbsolute"]["vencopyRoot"])
     main_dir = "output"
     if not os.path.exists(Path(root / main_dir)):
         os.mkdir(Path(root / main_dir))
-    sub_dirs = ("dataParser", "diaryBuilder", "gridModeler", "flexEstimator", "profileAggregator", "postProcessing")
+    sub_dirs = ("dataParser", "diaryBuilder", "gridModeler", "flexEstimator", "profileAggregator", "PostProcessor")
     for sub_dir in sub_dirs:
         if not os.path.exists(Path(root / main_dir / sub_dir)):
             os.mkdir(Path(root / main_dir / sub_dir))
 
 
 def create_file_name(
-    dev_config: dict, user_config: dict, fileNameID: str, datasetID: str, manualLabel: str = "", suffix: str = "csv"
+    dev_config: dict, user_config: dict, fileNameID: str, dataset: str, manualLabel: str = "", suffix: str = "csv"
 ) -> str:
     """
     Generic method used for fileString compilation throughout the VencoPy framework. This method does not write any
@@ -107,14 +107,14 @@ def create_file_name(
 
     :param user_config: user config file for paths
     :param fileNameID: ID of respective data file as specified in global config
-    :param datasetID: Manual specification of data set ID e.g. 'MiD17'
+    :param dataset: Manual specification of data set ID e.g. 'MiD17'
     :param manualLabel: Optional manual label to add to filename
     :param filetypeStr: filetype to be written to hard disk
     :return: Full name of file to be written.
     """
-    if datasetID is None:
+    if dataset is None:
         return f"{dev_config['global']['diskFileNames'][fileNameID]}_{user_config['global']['runLabel']}_{manualLabel}.{suffix}"
-    return f"{dev_config['global']['diskFileNames'][fileNameID]}_{user_config['global']['runLabel']}_{manualLabel}_{datasetID}.{suffix}"
+    return f"{dev_config['global']['diskFileNames'][fileNameID]}_{user_config['global']['runLabel']}_{manualLabel}_{dataset}.{suffix}"
 
 
 def merge_variables(data: pd.DataFrame, dataset: pd.DataFrame, variables: list) -> pd.DataFrame:

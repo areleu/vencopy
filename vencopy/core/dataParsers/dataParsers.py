@@ -20,7 +20,7 @@ from vencopy.utils.globalFunctions import return_lowest_level_dict_keys, return_
 
 
 class DataParser:
-    def __init__(self, config_dict: dict, dataset_ID: str, debug, zip_filepath=None, load_encrypted=False):
+    def __init__(self, configs: dict, dataset: str, debug, zip_filepath=None, load_encrypted=False):
         """
         Basic class for parsing a mobility survey trip data set. Currently both
         German travel surveys MiD 2008 and MiD 2017 are pre-configured and one
@@ -38,18 +38,18 @@ class DataParser:
         and respective columns are added. Pandas timestamp columns are
         synthesized from the given trip start and trip end time information.
 
-        :param config_dict: A dictionary containing multiple yaml config files
-        :param dataset_ID: Currently, MiD08 and MiD17 are implemented as travel
+        :param configs: A dictionary containing multiple yaml config files
+        :param dataset: Currently, MiD08 and MiD17 are implemented as travel
                           survey data sets
         :param load_encrypted: If True, load an encrypted ZIP file as specified
                               in user_config
         """
-        self.user_config = config_dict["user_config"]
-        self.dev_config = config_dict["dev_config"]
-        self.dataset_ID = self.__check_dataset_id(dataset_ID)
+        self.user_config = configs["user_config"]
+        self.dev_config = configs["dev_config"]
+        self.dataset = self.__check_dataset_id(dataset)
         filepath = (
-            Path(self.user_config["global"]["pathAbsolute"][self.dataset_ID])
-            / self.dev_config["global"]["files"][self.dataset_ID]["tripsDataRaw"]
+            Path(self.user_config["global"]["pathAbsolute"][self.dataset])
+            / self.dev_config["global"]["files"][self.dataset]["tripsDataRaw"]
         )
         self.raw_data_path = filepath
         self.raw_data = None
@@ -134,23 +134,23 @@ class DataParser:
 
         print(f"Finished loading {len(self.raw_data)} rows of raw data of type {self.raw_data_path.suffix}.")
 
-    def __check_dataset_id(self, dataset_ID: str) -> str:
+    def __check_dataset_id(self, dataset: str) -> str:
         """
         General check if data set ID is defined in dev_config.yaml
 
-        :param dataset_ID: list of strings declaring the datasetIDs
+        :param dataset: list of strings declaring the datasetIDs
                           to be read in
         :param user_config: A yaml config file holding a dictionary with the
                             keys 'pathRelative' and 'pathAbsolute'
         :return: Returns a string value of a mobility data
         """
-        available_dataset_IDs = self.dev_config["dataParsers"]["dataVariables"]["datasetID"]
-        assert dataset_ID in available_dataset_IDs, (
-            f"Defined dataset_ID {dataset_ID} not specified "
+        available_dataset_IDs = self.dev_config["dataParsers"]["dataVariables"]["dataset"]
+        assert dataset in available_dataset_IDs, (
+            f"Defined dataset {dataset} not specified "
             f"under dataVariables in dev_config. "
             f"Specified datasetIDs are {available_dataset_IDs}"
         )
-        return dataset_ID
+        return dataset
 
     def _harmonize_variables(self):
         """
@@ -162,26 +162,26 @@ class DataParser:
         :return: None
         """
         replacement_dict = self._create_replacement_dict(
-            self.dataset_ID, self.dev_config["dataParsers"]["dataVariables"]
+            self.dataset, self.dev_config["dataParsers"]["dataVariables"]
         )
         data_renamed = self.trips.rename(columns=replacement_dict)
         self.trips = data_renamed
         print("Finished harmonization of variables.")
 
-    def _create_replacement_dict(self, dataset_ID: str, dict_raw: dict) -> dict:
+    def _create_replacement_dict(self, dataset: str, dict_raw: dict) -> dict:
         """
         Creates the mapping dictionary from raw data variable names to VencoPy
         internal variable names as specified in dev_config.yaml
         for the specified data set.
 
-        :param dataset_ID: list of strings declaring the datasetIDs to be read
+        :param dataset: list of strings declaring the datasetIDs to be read
         :param dict_raw: Contains dictionary of the raw data
         :return: Dictionary with internal names as keys and raw data column
                  names as values.
         """
-        if dataset_ID not in dict_raw["datasetID"]:
-            raise ValueError(f"Data set {dataset_ID} not specified in" f"dev_config variable dictionary.")
-        list_index = dict_raw["datasetID"].index(dataset_ID)
+        if dataset not in dict_raw["dataset"]:
+            raise ValueError(f"Data set {dataset} not specified in" f"dev_config variable dictionary.")
+        list_index = dict_raw["dataset"].index(dataset)
         return {val[list_index]: key for (key, val) in dict_raw.items()}
 
     def _check_filter_dict(self):
@@ -439,26 +439,26 @@ class DataParser:
                 dev_config=self.dev_config,
                 user_config=self.user_config,
                 fileNameID="outputDataParser",
-                dataset_ID=self.dataset_ID,
+                dataset=self.dataset,
                 manualLabel="",
             )
             write_out(data=self.activities, path=root / folder / fileName)
 
 
 class IntermediateParsing(DataParser):
-    def __init__(self, config_dict: dict, dataset_ID: str, debug, load_encrypted=False):
+    def __init__(self, configs: dict, dataset: str, debug, load_encrypted=False):
         """
         Intermediate parsing class.
 
-        :param config_dict: VencoPy config dictionary consisting at least of
+        :param configs: VencoPy config dictionary consisting at least of
                            the config dictionaries.
-        :param dataset_ID: A string identifying the MiD data set.
+        :param dataset: A string identifying the MiD data set.
         :param load_encrypted: Boolean. If True, data is read from encrypted
                               file. For this, a possword has to be
                               specified in user_config['PW'].
         """
-        super().__init__(config_dict, dataset_ID=dataset_ID, load_encrypted=load_encrypted, debug=debug)
-        self.filters = self.dev_config["dataParsers"]["filters"][self.dataset_ID]
+        super().__init__(configs, dataset=dataset, load_encrypted=load_encrypted, debug=debug)
+        self.filters = self.dev_config["dataParsers"]["filters"][self.dataset]
         self.var_datatype_dict = {}
         self.columns = self.__compile_variable_list()
 
@@ -473,13 +473,13 @@ class IntermediateParsing(DataParser):
 
         :return: List of variables
         """
-        list_index = self.dev_config["dataParsers"]["dataVariables"]["datasetID"].index(self.dataset_ID)
+        list_index = self.dev_config["dataParsers"]["dataVariables"]["dataset"].index(self.dataset)
         variables = [
             val[list_index] if val[list_index] != "NA" else "NA"
             for _, val in self.dev_config["dataParsers"]["dataVariables"].items()
         ]
 
-        variables.remove(self.dataset_ID)
+        variables.remove(self.dataset)
         self.__remove_na(variables)
         return variables
 
@@ -511,7 +511,7 @@ class IntermediateParsing(DataParser):
     def _convert_types(self):
         """
         Convert raw column types to predefined python types as specified in
-        parseConfig['inputDTypes'][dataset_ID]. This is mainly done for
+        parseConfig['inputDTypes'][dataset]. This is mainly done for
         performance reasons. But also in order to avoid index values that are
         of type int to be cast to float. The function operates only on
         self.trips and writes back changes to self.trips
@@ -519,7 +519,7 @@ class IntermediateParsing(DataParser):
         :return: None
         """
         # Filter for dataset specific columns
-        conversion_dict = self.dev_config["dataParsers"]["inputDTypes"][self.dataset_ID]
+        conversion_dict = self.dev_config["dataParsers"]["inputDTypes"][self.dataset]
         keys = {iCol for iCol in conversion_dict.keys() if iCol in self.trips.columns}
         self.var_datatype_dict = {key: conversion_dict[key] for key in conversion_dict.keys() & keys}
         self.trips = self.trips.astype(self.var_datatype_dict)
@@ -579,7 +579,7 @@ class IntermediateParsing(DataParser):
         :return: None
         """
         self.trips.loc[:, col_name] = self.trips.loc[:, var_name].replace(
-            self.dev_config["dataParsers"]["Replacements"][self.dataset_ID][var_name]
+            self.dev_config["dataParsers"]["Replacements"][self.dataset][var_name]
         )
 
     def __compose_timestamp(
@@ -639,7 +639,7 @@ class IntermediateParsing(DataParser):
         Harmonises ID variables for all datasets.
         """
         self.trips["uniqueID"] = (
-            self.trips[str(self.dev_config["dataParsers"]["IDVariablesNames"][self.dataset_ID])]
+            self.trips[str(self.dev_config["dataParsers"]["IDVariablesNames"][self.dataset])]
         ).astype(int)
         print("Finished harmonization of ID variables.")
 
@@ -647,10 +647,10 @@ class IntermediateParsing(DataParser):
         if self.user_config["dataParsers"]["subsetVehicleSegment"]:
             self.activities = self.activities[
                 self.activities["vehicleSegmentStr"]
-                == self.user_config["dataParsers"]["vehicleSegment"][self.dataset_ID]
+                == self.user_config["dataParsers"]["vehicleSegment"][self.dataset]
             ]
             print(
-                f'The subset contains only vehicles of the class {(self.user_config["dataParsers"]["vehicleSegment"][self.dataset_ID])} for a total of {len(self.activities.uniqueID.unique())} individual vehicles.'
+                f'The subset contains only vehicles of the class {(self.user_config["dataParsers"]["vehicleSegment"][self.dataset])} for a total of {len(self.activities.uniqueID.unique())} individual vehicles.'
             )
 
     def _cleanup_dataset(self):

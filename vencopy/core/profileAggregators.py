@@ -16,10 +16,10 @@ from vencopy.utils.globalFunctions import create_file_name, write_out
 
 
 class ProfileAggregator:
-    def __init__(self, config_dict: dict, activities: pd.DataFrame, profiles: DiaryBuilder):
-        self.user_config = config_dict["user_config"]
-        self.dev_config = config_dict["dev_config"]
-        self.dataset_id = self.user_config["global"]["dataset"]
+    def __init__(self, configs: dict, activities: pd.DataFrame, profiles: DiaryBuilder):
+        self.user_config = configs["user_config"]
+        self.dev_config = configs["dev_config"]
+        self.dataset = self.user_config["global"]["dataset"]
         self.weighted = self.user_config["profileAggregators"]["weightFlowProfiles"]
         self.alpha = self.user_config["profileAggregators"]["alpha"]
         self.activities = activities
@@ -37,7 +37,7 @@ class ProfileAggregator:
         self.min_battery_level = profiles.min_battery_level
         self.aggregator = Aggregator(
             activities=self.activities,
-            dataset_id=self.dataset_id,
+            dataset=self.dataset,
             user_config=self.user_config,
             dev_config=self.dev_config,
             weighted=self.weighted,
@@ -63,9 +63,9 @@ class ProfileAggregator:
 
 class Aggregator:
     def __init__(
-        self, activities: pd.DataFrame, dataset_id: str, alpha: int, user_config: dict, dev_config: dict, weighted: bool
+        self, activities: pd.DataFrame, dataset: str, alpha: int, user_config: dict, dev_config: dict, weighted: bool
     ):
-        self.dataset_id = dataset_id
+        self.dataset = dataset
         self.alpha = alpha
         self.activities = activities
         self.weighted = weighted
@@ -167,7 +167,7 @@ class Aggregator:
                 user_config=self.user_config,
                 manualLabel=self.pname,
                 fileNameID="outputProfileAggregator",
-                dataset_id=self.dataset_id,
+                dataset=self.dataset,
             )
             write_out(data=self.activities, path=root / folder / fileName)
 

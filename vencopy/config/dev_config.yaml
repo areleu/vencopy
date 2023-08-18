@@ -13,7 +13,7 @@ global:
         gridOutput: ./output/gridModeler/
         flexOutput: ./output/flexEstimator/
         aggregatorOutput: ./output/profileAggregator/
-        post_processing_output: ./output/postProcessing/
+        post_processing_output: ./output/PostProcessor/
         evalOutput: ./output/evaluator/
         scripts: ./scripts/
         config: ./config/
@@ -45,7 +45,7 @@ global:
 
 dataParsers:
     dataVariables:
-        datasetID: ["MiD08", "MiD17", "KiD", "VF"]
+        dataset: ["MiD08", "MiD17", "KiD", "VF"]
         isMIVDriver: ["pkw_f", "W_VM_G", "NA", "NA"]
         hhID: ["hhid", "H_ID_Reg", "NA", "H_ID"]
         vehicleID: ["NA", "NA", "k00", "A_ID"] # Fahrzeug ID

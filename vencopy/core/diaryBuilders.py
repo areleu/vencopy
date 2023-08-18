@@ -18,12 +18,12 @@ from vencopy.utils.globalFunctions import create_file_name, write_out
 
 
 class DiaryBuilder:
-    def __init__(self, config_dict: dict, activities: pd.DataFrame, is_week_diary: bool = False):
-        self.dev_config = config_dict["dev_config"]
-        self.user_config = config_dict["user_config"]
-        self.dataset_id = config_dict["user_config"]["global"]["dataset"]
+    def __init__(self, configs: dict, activities: pd.DataFrame, is_week_diary: bool = False):
+        self.dev_config = configs["dev_config"]
+        self.user_config = configs["user_config"]
+        self.dataset = configs["user_config"]["global"]["dataset"]
         self.activities = activities
-        self.delta_time = config_dict["user_config"]["diaryBuilders"]["TimeDelta"]
+        self.delta_time = configs["user_config"]["diaryBuilders"]["TimeDelta"]
         self.is_week_diary = is_week_diary
         self.__update_activities()
         self.drain = None
@@ -32,7 +32,7 @@ class DiaryBuilder:
         self.max_battery_level = None
         self.min_battery_level = None
         self.distributor = TimeDiscretiser(
-            dataset_id=self.dataset_id,
+            dataset=self.dataset,
             dev_config=self.dev_config,
             user_config=self.user_config,
             activities=self.activities,
@@ -106,7 +106,7 @@ class TimeDiscretiser:
         self,
         activities: pd.DataFrame,
         dt: int,
-        dataset_id: str,
+        dataset: str,
         user_config: dict,
         dev_config: dict,
         is_week: bool = False,
@@ -136,7 +136,7 @@ class TimeDiscretiser:
             dt (pd.TimeDelta): _description_
         """
         self.activities = activities
-        self.dataset_id = dataset_id
+        self.dataset = dataset
         self.data_to_discretise = None
         self.user_config = user_config
         self.dev_config = dev_config
@@ -661,7 +661,7 @@ class TimeDiscretiser:
                 user_config=self.user_config,
                 manualLabel=self.column_to_discretise,
                 fileNameID="outputDiaryBuilder",
-                dataset_id=self.dataset_id,
+                dataset=self.dataset,
             )
             write_out(data=self.activities, path=root / folder / fileName)
 

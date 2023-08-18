@@ -12,23 +12,23 @@ from vencopy.core.dataParsers.parkInference import ParkInference
 
 
 class ParseKiD(IntermediateParsing):
-    def __init__(self, config_dict: dict, dataset_ID: str, debug, load_encrypted=False):
+    def __init__(self, configs: dict, dataset: str, debug, load_encrypted=False):
         """
         Inherited data class to differentiate between abstract interfaces such
         as vencopy internal variable namings and data set specific functions
         such as filters etc.
         """
-        super().__init__(config_dict=config_dict, dataset_ID=dataset_ID, load_encrypted=load_encrypted, debug=debug)
-        self.park_inference = ParkInference(config_dict=config_dict)
+        super().__init__(configs=configs, dataset=dataset, load_encrypted=load_encrypted, debug=debug)
+        self.park_inference = ParkInference(configs=configs)
 
     def _load_data(self):
         raw_data_path_trips = (
-            Path(self.user_config["global"]["pathAbsolute"][self.dataset_ID])
-            / self.dev_config["global"]["files"][self.dataset_ID]["tripsDataRaw"]
+            Path(self.user_config["global"]["pathAbsolute"][self.dataset])
+            / self.dev_config["global"]["files"][self.dataset]["tripsDataRaw"]
         )
         raw_data_path_vehicles = (
-            Path(self.user_config["global"]["pathAbsolute"][self.dataset_ID])
-            / self.dev_config["global"]["files"][self.dataset_ID]["vehiclesDataRaw"]
+            Path(self.user_config["global"]["pathAbsolute"][self.dataset])
+            / self.dev_config["global"]["files"][self.dataset]["vehiclesDataRaw"]
         )
         raw_data_trips = pd.read_stata(
             raw_data_path_trips,

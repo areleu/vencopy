@@ -15,10 +15,10 @@ from vencopy.utils.globalFunctions import create_file_name, write_out
 
 
 class FlexEstimator:
-    def __init__(self, configDict: dict, activities: pd.DataFrame):
-        self.datasetID = configDict["user_config"]["global"]["dataset"]
-        self.user_config = configDict["user_config"]
-        self.dev_config = configDict["dev_config"]
+    def __init__(self, configs: dict, activities: pd.DataFrame):
+        self.dataset = configs["user_config"]["global"]["dataset"]
+        self.user_config = configs["user_config"]
+        self.dev_config = configs["dev_config"]
         self.upperBatLev = (
             self.user_config["flexEstimators"]["Battery_capacity"] * self.user_config["flexEstimators"]["Maximum_SOC"]
         )
@@ -451,7 +451,7 @@ class FlexEstimator:
                 dev_config=self.dev_config,
                 manualLabel="",
                 fileNameID="outputFlexEstimator",
-                datasetID=self.datasetID,
+                dataset=self.dataset,
             )
             write_out(data=self.activities, path=root / folder / fileName)
 
@@ -484,7 +484,7 @@ class FlexEstimator:
         print("Technical flexibility estimation ended.")
         return self.activities
 
-    def estimateTechnicalFlexibilityIterating(self) -> pd.DataFrame:
+    def estimate_technical_flexibility_through_iteration(self) -> pd.DataFrame:
         """
         Main run function for the class WeekFlexEstimator. Calculates uncontrolled charging as well as technical
         boundary constraints for controlled charging and feeding electricity back into the grid on an indvidiual vehicle

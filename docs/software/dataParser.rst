@@ -10,7 +10,7 @@ DataParser Class
 .. image:: ../figures/IOdataParser.png
 	:width: 800
 	:align: center
-	
+
 DataParser Input
 ---------------------------------------------------
 **Config File (parseConfig.yaml):**
@@ -31,5 +31,5 @@ DataParser Output
 ---------------------------------------------------
 **Output Functions:**
 
-*  vpData = ParseMiD(configDict=configDict, datasetID=datasetID)
+*  vpData = ParseMiD(configs=configs, dataset=dataset)
 *  vpData.process()

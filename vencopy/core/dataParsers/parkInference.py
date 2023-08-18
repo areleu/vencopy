@@ -10,8 +10,8 @@ from vencopy.utils.globalFunctions import replace_vec
 
 
 class ParkInference:
-    def __init__(self, config_dict) -> None:
-        self.user_config = config_dict["user_config"]
+    def __init__(self, configs) -> None:
+        self.user_config = configs["user_config"]
         self.activities = None
         self.overnight_splitter = OvernightSplitter()
 

@@ -3,45 +3,47 @@ __maintainer__ = "Niklas Wulff"
 __contributors__ = "Fabia Miorelli"
 __email__ = "Niklas.Wulff@dlr.de"
 __birthdate__ = "23.10.2020"
-__status__ = "test"  # options are: dev, test, prod
+__status__ = "prod"  # options are: dev, test, prod
 __license__ = "BSD-3-Clause"
 
 
 import time
+
 from pathlib import Path
+
 from vencopy.core.dataParsers import parse_data
 from vencopy.core.diaryBuilders import DiaryBuilder
 from vencopy.core.gridModelers import GridModeler
 from vencopy.core.flexEstimators import FlexEstimator
 from vencopy.core.profileAggregators import ProfileAggregator
-from vencopy.core.postProcessors import PostProcessing
+from vencopy.core.postProcessors import PostProcessor
 from vencopy.utils.globalFunctions import load_configs, create_output_folders
 
 if __name__ == "__main__":
-    startTime = time.time()
+    start_time = time.time()
 
     base_path = Path(__file__).parent
-    config_dict = load_configs(base_path=base_path)
-    create_output_folders(configDict=config_dict)
+    configs = load_configs(base_path=base_path)
+    create_output_folders(configs=configs)
 
-    vpData = parse_data(config_dict=config_dict)
+    vpData = parse_data(configs=configs)
     vpData.process()
 
-    vpGrid = GridModeler(config_dict=config_dict, activities=vpData.activities)
+    vpGrid = GridModeler(configs=configs, activities=vpData.activities)
     vpGrid.assign_grid()
 
-    vpFlex = FlexEstimator(config_dict=config_dict, activities=vpGrid.activities)
-    vpFlex.estimateTechnicalFlexibilityIterating()
+    vpFlex = FlexEstimator(configs=configs, activities=vpGrid.activities)
+    vpFlex.estimate_technical_flexibility_through_iteration()
 
-    vpDiary = DiaryBuilder(config_dict=config_dict, activities=vpFlex.activities)
+    vpDiary = DiaryBuilder(configs=configs, activities=vpFlex.activities)
     vpDiary.create_diaries()
 
-    vpProfile = ProfileAggregator(config_dict=config_dict, activities=vpDiary.activities, profiles=vpDiary)
+    vpProfile = ProfileAggregator(configs=configs, activities=vpDiary.activities, profiles=vpDiary)
     vpProfile.aggregate_profiles()
 
-    vpPost = PostProcessing(config_dict=config_dict)
-    vpPost.week_to_annual(profiles=vpProfile)
-    vpPost.normalize()
+    vpPost = PostProcessor(configs=configs)
+    vpPost.create_annual_profiles(profiles=vpProfile)
+    vpPost.normalise()
 
-    elapsedTime = time.time() - startTime
-    print(f"Elapsed time: {elapsedTime}.")
+    elapsed_time = time.time() - start_time
+    print(f"Elapsed time: {elapsed_time}.")

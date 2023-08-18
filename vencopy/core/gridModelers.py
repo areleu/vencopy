@@ -15,10 +15,10 @@ from vencopy.utils.globalFunctions import create_file_name, write_out
 
 
 class GridModeler:
-    def __init__(self, config_dict: dict, activities):
-        self.user_config = config_dict["user_config"]
-        self.dev_config = config_dict["dev_config"]
-        self.datasetID = config_dict["user_config"]["global"]["dataset"]
+    def __init__(self, configs: dict, activities):
+        self.user_config = configs["user_config"]
+        self.dev_config = configs["dev_config"]
+        self.dataset = configs["user_config"]["global"]["dataset"]
         self.grid_model = self.user_config["gridModelers"]["gridModel"]
         self.activities = activities
         if self.user_config["gridModelers"]["forceLastTripHome"]:
@@ -27,7 +27,7 @@ class GridModeler:
         self.grid_availability_probability = self.user_config["gridModelers"]["gridAvailabilityDistribution"]
         self.charging_availability = None
 
-    def __assignGrid_via_purposes(self):
+    def __assign_grid_via_purposes(self):
         """
         Method to translate purpose profiles into hourly profiles of
         true/false giving the charging station
@@ -122,7 +122,7 @@ class GridModeler:
         reproduction of random numbers can be specified here.
         """
         if self.grid_model == "simple":
-            self.__assignGrid_via_purposes()
+            self.__assign_grid_via_purposes()
         elif self.grid_model == "probability":
             seed = seed
             self.__assign_grid_via_probabilities(setSeed=seed)
@@ -167,12 +167,12 @@ class GridModeler:
                 user_config=self.user_config,
                 manualLabel="",
                 fileNameID="outputGridModeler",
-                datasetID=self.datasetID,
+                dataset=self.dataset,
             )
             write_out(data=self.activities, path=root / folder / fileName)
 
     def __remove_activities_not_ending_home(self):
-        if self.datasetID in ["MiD17", "VF"]:
+        if self.dataset in ["MiD17", "VF"]:
             lastActsNotHome = self.activities.loc[
                 (self.activities["purposeStr"] != "HOME") & (self.activities["isLastActivity"]), :
             ].copy()

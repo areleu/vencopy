@@ -11,7 +11,7 @@ from vencopy.core.dataParsers.parkInference import ParkInference
 
 
 class ParseVF(IntermediateParsing):
-    def __init__(self, config_dict: dict, dataset_ID: str, debug, load_encrypted=False):
+    def __init__(self, configs: dict, dataset: str, debug, load_encrypted=False):
         """
         Class for parsing MiD data sets. The VencoPy configs globalConfig,
         parseConfig and localPathConfig have to be given on instantiation as
@@ -20,16 +20,16 @@ class ParseVF(IntermediateParsing):
         an encrypted ZIP-file. For this, a password has to be given in the
         parseConfig.
 
-        :param config_dict: VencoPy config dictionary consisting at least of the
+        :param configs: VencoPy config dictionary consisting at least of the
                            config dictionaries globalConfig, parseConfig and
                            localPathConfig.
-        :param dataset_ID: A string identifying the MiD data set.
+        :param dataset: A string identifying the MiD data set.
         :param load_encrypted: Boolean. If True, data is read from encrypted
                               file. For this, a possword has to be
                               specified in parseConfig['PW'].
         """
-        super().__init__(config_dict=config_dict, dataset_ID=dataset_ID, debug=debug, load_encrypted=load_encrypted)
-        self.park_inference = ParkInference(config_dict=config_dict)
+        super().__init__(configs=configs, dataset=dataset, debug=debug, load_encrypted=load_encrypted)
+        self.park_inference = ParkInference(configs=configs)
 
     def _load_data(self):
         """
@@ -37,12 +37,12 @@ class ParseVF(IntermediateParsing):
         raw_data_path_vehicles is an internal dataset from VF
         """
         raw_data_path_trips = (
-            Path(self.user_config["global"]["pathAbsolute"][self.dataset_ID])
-            / self.dev_config["global"]["files"][self.dataset_ID]["tripsDataRaw"]
+            Path(self.user_config["global"]["pathAbsolute"][self.dataset])
+            / self.dev_config["global"]["files"][self.dataset]["tripsDataRaw"]
         )
         raw_data_path_vehicles = (
-            Path(self.user_config["global"]["pathAbsolute"][self.dataset_ID])
-            / self.dev_config["global"]["files"][self.dataset_ID]["vehiclesDataRaw"]
+            Path(self.user_config["global"]["pathAbsolute"][self.dataset])
+            / self.dev_config["global"]["files"][self.dataset]["vehiclesDataRaw"]
         )
         raw_data_trips = pd.read_stata(
             raw_data_path_trips,
@@ -67,10 +67,10 @@ class ParseVF(IntermediateParsing):
         :return: None
         """
         replacement_dict = self._create_replacement_dict(
-            self.dataset_ID, self.dev_config["dataParsers"]["dataVariables"]
+            self.dataset, self.dev_config["dataParsers"]["dataVariables"]
         )
         data_renamed = self.trips.rename(columns=replacement_dict)
-        if self.dataset_ID == "MiD08":
+        if self.dataset == "MiD08":
             data_renamed["hhPersonID"] = (
                 data_renamed["hhID"].astype("string") + data_renamed["personID"].astype("string")
             ).astype("int")
