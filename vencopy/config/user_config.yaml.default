@@ -14,7 +14,7 @@ global:
   runLabel:
   write_output_to_disk:
       parse_output: False
-      gridOutput: False
+      grid_output: False
       flex_output: False
       diary_output: False
       aggregatorOutput: True
@@ -39,12 +39,12 @@ dataParsers:
 
 
 gridModelers:
-  minimumParkingTime: 900 # charging power is set to zero if parking time lower than <minimumParkingTime> in seconds
-  gridModel: "simple" # Options are "simple" and "probability"
+  minimum_parking_time: 900 # charging power is set to zero if parking time lower than <minimum_parking_time> in seconds
+  grid_model: "simple" # Options are "simple" and "probability"
   losses: True # Take into account charging station losses
-  forceLastTripHome: True # Require that all last trips end home
-  ratedPowerSimple: 11
-  chargingInfrastructureMappings: # Simple grid model: Explicit mapping given for each location aka parking purpose
+  force_last_trip_home: True # Require that all last trips end home
+  rated_power_simple: 11
+  charging_infrastructure_mappings: # Simple grid model: Explicit mapping given for each location aka parking purpose
       "DRIVING": False
       "HOME": True
       "WORK": True
@@ -57,7 +57,7 @@ gridModelers:
       "PEOPLE_MOBILITY": False
       "TRANSPORT": False
       "SERVICES": False
-  gridAvailabilityDistribution: # Grid model 3: Probabilities given for each location aka trip purpose and capacity
+  grid_availability_distribution: # Grid model 3: Probabilities given for each location aka trip purpose and capacity
       "DRIVING":
           0: 1
           #0.005: 75

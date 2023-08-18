@@ -14,7 +14,7 @@ GridModeler Input
 ---------------------------------------------------
 **Config File (gridConfig.yaml):**
 
-* chargingInfrastructureMappings (assigns True-False to the respective type of charging infrastucture)
+* charging_infrastructure_mappings (assigns True-False to the respective type of charging infrastucture)
 
 
 

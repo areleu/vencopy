@@ -17,12 +17,12 @@ class GridModeler:
         self.user_config = configs["user_config"]
         self.dev_config = configs["dev_config"]
         self.dataset = configs["user_config"]["global"]["dataset"]
-        self.grid_model = self.user_config["gridModelers"]["gridModel"]
+        self.grid_model = self.user_config["gridModelers"]["grid_model"]
         self.activities = activities
-        if self.user_config["gridModelers"]["forceLastTripHome"]:
+        if self.user_config["gridModelers"]["force_last_trip_home"]:
             self.__remove_activities_not_ending_home()
-        self.grid_availability_simple = self.user_config["gridModelers"]["chargingInfrastructureMappings"]
-        self.grid_availability_probability = self.user_config["gridModelers"]["gridAvailabilityDistribution"]
+        self.grid_availability_simple = self.user_config["gridModelers"]["charging_infrastructure_mappings"]
+        self.grid_availability_probability = self.user_config["gridModelers"]["grid_availability_distribution"]
         self.charging_availability = None
 
     def __assign_grid_via_purposes(self):
@@ -35,66 +35,66 @@ class GridModeler:
         """
         print("Starting with charge connection replacement of location purposes.")
         self.charging_availability = self.activities.purpose_string.replace(self.grid_availability_simple)
-        # self.charging_availability = (~(self.charging_availability != True))  # check condition if not, needed?
-        self.charging_availability = self.charging_availability * self.user_config["gridModelers"]["ratedPowerSimple"]
-        self.activities["ratedPower"] = self.charging_availability
+        self.charging_availability = self.charging_availability * self.user_config["gridModelers"]["rated_power_simple"]
+        self.activities["rated_power"] = self.charging_availability
         self.activities = self.__adjust_power_short_parking_time()
         print("Grid connection assignment complete.")
 
-    def __assign_grid_via_probabilities(self, setSeed: int):
+    def __assign_grid_via_probabilities(self, set_seed: int):
         """
-        :param setSeed: Seed for reproducing random number
+        :param set_seed: Seed for reproducing random number
         :return: Returns a dataFrame holding charging capacity for each trip
                  assigned with probability distribution
         """
-        activitiesNoHome = []
+        activities_no_home = []
         print("Starting with charge connection replacement of location purposes.")
         for purpose in self.activities.purpose_string.unique():
             if purpose == "HOME":
-                activitiesHome = self.__home_probability_distribution(setSeed=42)
+                activities_home = self.__home_probability_distribution(set_seed=42)
             else:
                 subset = self.activities.loc[self.activities.purpose_string == purpose].copy()
-                power = list((self.user_config["gridModelers"]["gridAvailabilityDistribution"][purpose]).keys())
-                probability = list(self.user_config["gridModelers"]["gridAvailabilityDistribution"][purpose].values())
-                urng = np.random.default_rng(setSeed)  # universal non-uniform random number
+                power = list((self.user_config["gridModelers"]["grid_availability_distribution"][purpose]).keys())
+                probability = list(self.user_config["gridModelers"]["grid_availability_distribution"][purpose].values())
+                urng = np.random.default_rng(set_seed)  # universal non-uniform random number
                 rng = DiscreteAliasUrn(probability, random_state=urng)
                 self.charging_availability = rng.rvs(len(subset))
                 self.charging_availability = [power[i] for i in self.charging_availability]
-                subset.loc[:, ("ratedPower")] = self.charging_availability
-                activitiesNoHome.append(subset)
-        activitiesNoHome = pd.concat(activitiesNoHome).reset_index(drop=True)
-        dataframes = [activitiesHome, activitiesNoHome]
+                subset.loc[:, ("rated_power")] = self.charging_availability
+                activities_no_home.append(subset)
+        activities_no_home = pd.concat(activities_no_home).reset_index(drop=True)
+        dataframes = [activities_home, activities_no_home]
         self.activities = pd.concat(dataframes).reset_index(drop=True)
         self.activities = self.__adjust_power_short_parking_time()
         print("Grid connection assignment complete.")
 
-    def __home_probability_distribution(self, setSeed: int) -> pd.DataFrame:
-        """Adds condition that charging at home in the morning has the same rated capacity as in the evening
+    def __home_probability_distribution(self, set_seed: int) -> pd.DataFrame:
+        """
+        Adds condition that charging at home in the morning has the same rated capacity as in the evening
         if first and/or last parking ar at home, instead of reiterating the home distribution (or separate home from
         the main function) it assign the home charging probability based on unique household IDs instead of
         dataset entries -> each HH always has same rated power
 
         Args:
-            setSeed (int): Optional argument for sampling of household rated powers.
+            set_seed (int): Optional argument for sampling of household rated powers.
 
         Returns:
             pd.DataFrame: Activity data set with sampled and harmonized home charging rated powers.
         """
 
         purpose = "HOME"
-        homeActivities = self.activities.loc[self.activities.purpose_string == purpose].copy()
-        households = homeActivities[["household_id"]].reset_index(drop=True)
+        home_activities = self.activities.loc[self.activities.purpose_string == purpose].copy()
+        households = home_activities[["household_id"]].reset_index(drop=True)
         households = households.drop_duplicates(subset="household_id").copy()  # 73850 unique HH
-        power = list((self.user_config["gridModelers"]["gridAvailabilityDistribution"][purpose]).keys())
-        probability = list(self.user_config["gridModelers"]["gridAvailabilityDistribution"][purpose].values())
-        urng = np.random.default_rng(setSeed)  # universal non-uniform random number
+        power = list((self.user_config["gridModelers"]["grid_availability_distribution"][purpose]).keys())
+        probability = list(self.user_config["gridModelers"]["grid_availability_distribution"][purpose].values())
+        urng = np.random.default_rng(set_seed)  # universal non-uniform random number
         rng = DiscreteAliasUrn(probability, random_state=urng)
         self.charging_availability = rng.rvs(len(households))
         self.charging_availability = [power[i] for i in self.charging_availability]
-        households.loc[:, ("ratedPower")] = self.charging_availability
+        households.loc[:, ("rated_power")] = self.charging_availability
         households.set_index("household_id", inplace=True)
-        homeActivities = homeActivities.join(households, on="household_id")
-        return homeActivities
+        home_activities = home_activities.join(households, on="household_id")
+        return home_activities
 
     def __adjust_power_short_parking_time(self) -> pd.DataFrame:
         """
@@ -106,10 +106,10 @@ class GridModeler:
                 (self.activities["park_id"].notna())
                 & (
                     (self.activities["time_delta"] / np.timedelta64(1, "s"))
-                    <= self.user_config["gridModelers"]["minimumParkingTime"]
+                    <= self.user_config["gridModelers"]["minimum_parking_time"]
                 )
             ),
-            "ratedPower",
+            "rated_power",
         ] = 0
         return self.activities
 
@@ -123,7 +123,7 @@ class GridModeler:
             self.__assign_grid_via_purposes()
         elif self.grid_model == "probability":
             seed = seed
-            self.__assign_grid_via_probabilities(setSeed=seed)
+            self.__assign_grid_via_probabilities(set_seed=seed)
         else:
             raise (
                 ValueError(
@@ -146,25 +146,25 @@ class GridModeler:
         :param losses [bool]: Should electric losses in the charging equipment be considered?
         """
         if self.user_config["gridModelers"]["losses"]:
-            self.activities["available_power"] = self.activities["ratedPower"] - (
-                self.activities["ratedPower"]
-                * self.activities["ratedPower"].apply(
+            self.activities["available_power"] = self.activities["rated_power"] - (
+                self.activities["rated_power"]
+                * self.activities["rated_power"].apply(
                     lambda x: self.user_config["gridModelers"]["loss_factor"][f"rated_power_{str(x)}"]
                 )
             )
         else:
-            self.activities["available_power"] = self.activities["ratedPower"]
+            self.activities["available_power"] = self.activities["rated_power"]
         return self.activities
 
     def __writeOutput(self):
-        if self.user_config["global"]["write_output_to_disk"]["gridOutput"]:
+        if self.user_config["global"]["write_output_to_disk"]["grid_output"]:
             root = Path(self.user_config["global"]["absolute_path"]["vencopy_root"])
-            folder = self.dev_config["global"]["relative_path"]["gridOutput"]
+            folder = self.dev_config["global"]["relative_path"]["grid_output"]
             file_name = create_file_name(
                 dev_config=self.dev_config,
                 user_config=self.user_config,
                 manual_label="",
-                file_name_id="outputGridModeler",
+                file_name_id="output_gridModeler",
                 dataset=self.dataset,
             )
             write_out(data=self.activities, path=root / folder / file_name)

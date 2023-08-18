@@ -11,7 +11,7 @@ global:
     relative_path:
         parse_output: ./output/dataParser/
         diary_output: ./output/diaryBuilder/
-        gridOutput: ./output/gridModeler/
+        grid_output: ./output/gridModeler/
         flex_output: ./output/flexEstimator/
         aggregatorOutput: ./output/profileAggregator/
         post_processing_output: ./output/PostProcessor/

@@ -74,7 +74,7 @@ class PostProcessor:
         self.drain_norm = self.__normalize_flows(self.input_profiles["drain"])
         self.uncontrolled_charge_norm = self.__normalize_flows(self.input_profiles["uncontrolled_charge"])
         self.charge_power_norm = self.__normalize_states(
-            profile=self.input_profiles["charge_power"], base=self.user_config["gridModelers"]["ratedPowerSimple"]
+            profile=self.input_profiles["charge_power"], base=self.user_config["gridModelers"]["rated_power_simple"]
         )
         self.soc_max = self.__normalize_states(
             profile=self.input_profiles["max_battery_level"],
@@ -85,7 +85,7 @@ class PostProcessor:
             base=self.user_config["flexEstimators"]["battery_capacity"],
         )
 
-        if self.user_config["gridModelers"]["gridModel"] != "simple":
+        if self.user_config["gridModelers"]["grid_model"] != "simple":
             warnings.warn(
                 f"You selected a grid model where normalization is not meaningful. For normalization, the"
                 f" rated power of {self.user_config['gridModelers']['chargePowerSimple']}kW was used."
