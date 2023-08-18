@@ -5,7 +5,7 @@ include *.md
 include LICENSE
 
 # Include setup.py
-include setup.py
+include *.toml
 
 # Include the data files
 include ./vencopy/core
