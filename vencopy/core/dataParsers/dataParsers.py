@@ -15,8 +15,8 @@ import numpy as np
 import pandas as pd
 
 
-from vencopy.utils.globalFunctions import createFileName, writeOut
-from vencopy.utils.globalFunctions import returnDictBottomKeys, returnDictBottomValues
+from vencopy.utils.globalFunctions import createFileName, write_out
+from vencopy.utils.globalFunctions import return_lowest_level_dict_keys, return_lowest_level_dict_values
 
 
 class DataParser:
@@ -191,7 +191,7 @@ class DataParser:
         :return: None
         """
         assert all(
-            isinstance(val, list) for val in returnDictBottomValues(baseDict=self.filters)
+            isinstance(val, list) for val in return_lowest_level_dict_values(dictionary=self.filters)
         ), "All values in filter dictionaries have to be lists, but are not"
 
     def _filter(self, filters: dict = None):
@@ -204,7 +204,7 @@ class DataParser:
 
         :return: None. The function operates on self.trips class-internally.
         """
-        print(f"Starting filtering, applying {len(returnDictBottomKeys(filters))} filters.")
+        print(f"Starting filtering, applying {len(return_lowest_level_dict_keys(filters))} filters.")
         # Future releases: as discussed before we could indeed work here with a plug and pray approach.
         #  we would need to introduce a filter manager and a folder structure where to look for filters.
         #  this is very similar code than the one from ioproc. If we want to go down this route we should
@@ -440,7 +440,7 @@ class DataParser:
                 datasetID=self.datasetID,
                 manualLabel="",
             )
-            writeOut(data=self.activities, path=root / folder / fileName)
+            write_out(data=self.activities, path=root / folder / fileName)
 
 
 class IntermediateParsing(DataParser):

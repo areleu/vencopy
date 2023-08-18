@@ -15,14 +15,14 @@ from vencopy.core.gridModelers import GridModeler
 from vencopy.core.flexEstimators import FlexEstimator
 from vencopy.core.profileAggregators import ProfileAggregator
 from vencopy.core.postProcessors import PostProcessing
-from vencopy.utils.globalFunctions import load_configs, createOutputFolders
+from vencopy.utils.globalFunctions import load_configs, create_output_folders
 
 if __name__ == "__main__":
     startTime = time.time()
 
-    basePath = Path(__file__).parent
-    configDict = load_configs(basePath=basePath)
-    createOutputFolders(configDict=configDict)
+    base_path = Path(__file__).parent
+    configDict = load_configs(base_path=base_path)
+    create_output_folders(configDict=configDict)
 
     vpData = parseData(configDict=configDict)
     vpData.process()

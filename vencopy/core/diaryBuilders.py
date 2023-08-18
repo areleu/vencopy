@@ -14,7 +14,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from typing import Optional
-from vencopy.utils.globalFunctions import createFileName, writeOut
+from vencopy.utils.globalFunctions import createFileName, write_out
 
 
 class DiaryBuilder:
@@ -668,7 +668,7 @@ class TimeDiscretiser:
                 fileNameID="outputDiaryBuilder",
                 datasetID=self.datasetID,
             )
-            writeOut(data=self.activities, path=root / folder / fileName)
+            write_out(data=self.activities, path=root / folder / fileName)
 
     def discretise(self, profile, profileName: str, method: str) -> pd.DataFrame:
         self.columnToDiscretise: Optional[str] = profileName

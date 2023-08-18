@@ -10,7 +10,7 @@ import pandas as pd
 import warnings
 
 from vencopy.core.profileAggregators import ProfileAggregator
-from vencopy.utils.globalFunctions import createFileName, writeOut
+from vencopy.utils.globalFunctions import createFileName, write_out
 
 
 class PostProcessing:
@@ -120,4 +120,4 @@ class PostProcessing:
             fileNameID=filename_id,
             datasetID=self.dataset_ID,
         )
-        writeOut(data=profile, path=root / folder / fileName)
+        write_out(data=profile, path=root / folder / fileName)

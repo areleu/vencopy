@@ -12,7 +12,7 @@ from pathlib import Path
 import pandas as pd
 
 from vencopy.core.diaryBuilders import DiaryBuilder
-from vencopy.utils.globalFunctions import createFileName, writeOut
+from vencopy.utils.globalFunctions import createFileName, write_out
 
 
 class ProfileAggregator:
@@ -169,7 +169,7 @@ class Aggregator:
                 fileNameID="outputProfileAggregator",
                 dataset_id=self.dataset_id,
             )
-            writeOut(data=self.activities, path=root / folder / fileName)
+            write_out(data=self.activities, path=root / folder / fileName)
 
     def perform_aggregation(self, profile: pd.DataFrame, pname: str, method: str) -> pd.DataFrame:
         self.profile = profile

@@ -11,7 +11,7 @@ from pathlib import Path
 from profilehooks import profile
 
 import pandas as pd
-from vencopy.utils.globalFunctions import createFileName, writeOut
+from vencopy.utils.globalFunctions import createFileName, write_out
 
 
 class FlexEstimator:
@@ -453,7 +453,7 @@ class FlexEstimator:
                 fileNameID="outputFlexEstimator",
                 datasetID=self.datasetID,
             )
-            writeOut(data=self.activities, path=root / folder / fileName)
+            write_out(data=self.activities, path=root / folder / fileName)
 
     def estimateTechnicalFlexibility_noBoundaryConstraints(self) -> pd.DataFrame:
         """

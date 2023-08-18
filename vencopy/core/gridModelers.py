@@ -11,7 +11,7 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 from scipy.stats.sampling import DiscreteAliasUrn
-from vencopy.utils.globalFunctions import createFileName, writeOut
+from vencopy.utils.globalFunctions import createFileName, write_out
 
 
 class GridModeler:
@@ -169,7 +169,7 @@ class GridModeler:
                 fileNameID="outputGridModeler",
                 datasetID=self.datasetID,
             )
-            writeOut(data=self.activities, path=root / folder / fileName)
+            write_out(data=self.activities, path=root / folder / fileName)
 
     def __remove_activities_not_ending_home(self):
         if self.datasetID in ["MiD17", "VF"]:
