@@ -10,39 +10,40 @@ from pathlib import Path
 from vencopy.core.dataParsers.dataParsers import IntermediateParsing
 from vencopy.core.dataParsers.parkInference import ParkInference
 
+
 class ParseKiD(IntermediateParsing):
-    def __init__(self, configDict: dict, datasetID: str, debug, load_encrypted=False):
+    def __init__(self, config_dict: dict, dataset_ID: str, debug, load_encrypted=False):
         """
         Inherited data class to differentiate between abstract interfaces such
         as vencopy internal variable namings and data set specific functions
         such as filters etc.
         """
-        super().__init__(configDict=configDict, datasetID=datasetID, load_encrypted=load_encrypted, debug=debug)
-        self.park_inference = ParkInference(configDict=configDict)
+        super().__init__(config_dict=config_dict, dataset_ID=dataset_ID, load_encrypted=load_encrypted, debug=debug)
+        self.park_inference = ParkInference(config_dict=config_dict)
 
     def _load_data(self):
-        rawDataPathTrips = (
-            Path(self.user_config["global"]["pathAbsolute"][self.datasetID])
-            / self.dev_config["global"]["files"][self.datasetID]["tripsDataRaw"]
+        raw_data_path_trips = (
+            Path(self.user_config["global"]["pathAbsolute"][self.dataset_ID])
+            / self.dev_config["global"]["files"][self.dataset_ID]["tripsDataRaw"]
         )
-        rawDataPathVehicles = (
-            Path(self.user_config["global"]["pathAbsolute"][self.datasetID])
-            / self.dev_config["global"]["files"][self.datasetID]["vehiclesDataRaw"]
+        raw_data_path_vehicles = (
+            Path(self.user_config["global"]["pathAbsolute"][self.dataset_ID])
+            / self.dev_config["global"]["files"][self.dataset_ID]["vehiclesDataRaw"]
         )
-        rawDataTrips = pd.read_stata(
-            rawDataPathTrips,
+        raw_data_trips = pd.read_stata(
+            raw_data_path_trips,
             convert_categoricals=False,
             convert_dates=False,
             preserve_dtypes=False,
         )
-        rawDataVehicles = pd.read_stata(
-            rawDataPathVehicles,
+        raw_data_vehicles = pd.read_stata(
+            raw_data_path_vehicles,
             convert_categoricals=False,
             convert_dates=False,
             preserve_dtypes=False,
         )
-        rawDataVehicles.set_index("k00", inplace=True)
-        raw_data = rawDataTrips.join(rawDataVehicles, on="k00")
+        raw_data_vehicles.set_index("k00", inplace=True)
+        raw_data = raw_data_trips.join(raw_data_vehicles, on="k00")
         self.raw_data = raw_data
         print(f"Finished loading {len(self.raw_data)} " f"rows of raw data of type .dta.")
 
@@ -57,7 +58,7 @@ class ParseKiD(IntermediateParsing):
         for i, x in enumerate(list(self.trips.tripWeight)):
             self.trips.at[i, "tripWeight"] = x.replace(",", ".")
 
-    def __add_string_columns(self, weekday=True, purpose=True, vehicleSegment=True):
+    def __add_string_columns(self, weekday=True, purpose=True, vehicle_segment=True):
         """
         Adds string columns for either weekday or purpose.
 
@@ -78,11 +79,11 @@ class ParseKiD(IntermediateParsing):
         self.trips["tripEndHour"] = pd.to_datetime(self.trips["tripEndClock"], format="%H:%M").dt.hour
         self.trips["tripEndMinute"] = pd.to_datetime(self.trips["tripEndClock"], format="%H:%M").dt.minute
         if weekday:
-            self._add_string_column_from_variable(colName="weekdayStr", varName="tripStartWeekday")
+            self._add_string_column_from_variable(col_name="weekdayStr", var_name="tripStartWeekday")
         if purpose:
-            self._add_string_column_from_variable(colName="purposeStr", varName="tripPurpose")
-        if vehicleSegment:
-            self._add_string_column_from_variable(colName="vehicleSegmentStr", varName="vehicleSegment")
+            self._add_string_column_from_variable(col_name="purposeStr", var_name="tripPurpose")
+        if vehicle_segment:
+            self._add_string_column_from_variable(col_name="vehicleSegmentStr", var_name="vehicle_segment")
 
     def __update_end_timestamp(self):
         """
@@ -93,9 +94,9 @@ class ParseKiD(IntermediateParsing):
         self.trips["tripEndNextDay"] = np.where(
             self.trips["timestampEnd"].dt.day > self.trips["timestampStart"].dt.day, 1, 0
         )
-        endsFollowingDay = self.trips["tripEndNextDay"] == 1
-        self.trips.loc[endsFollowingDay, "timestampEnd"] = self.trips.loc[
-            endsFollowingDay, "timestampEnd"
+        ends_following_day = self.trips["tripEndNextDay"] == 1
+        self.trips.loc[ends_following_day, "timestampEnd"] = self.trips.loc[
+            ends_following_day, "timestampEnd"
         ] + pd.offsets.Day(1)
 
     def __exclude_hours(self):
@@ -129,4 +130,3 @@ class ParseKiD(IntermediateParsing):
         self.write_output()
         print("Parsing KiD dataset completed.")
         return self.activities
-

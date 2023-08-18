@@ -9,8 +9,9 @@ import pandas as pd
 from vencopy.core.dataParsers.dataParsers import IntermediateParsing
 from vencopy.core.dataParsers.parkInference import ParkInference
 
+
 class ParseVF(IntermediateParsing):
-    def __init__(self, configDict: dict, datasetID: str, debug, load_encrypted=False):
+    def __init__(self, config_dict: dict, dataset_ID: str, debug, load_encrypted=False):
         """
         Class for parsing MiD data sets. The VencoPy configs globalConfig,
         parseConfig and localPathConfig have to be given on instantiation as
@@ -19,41 +20,41 @@ class ParseVF(IntermediateParsing):
         an encrypted ZIP-file. For this, a password has to be given in the
         parseConfig.
 
-        :param configDict: VencoPy config dictionary consisting at least of the
+        :param config_dict: VencoPy config dictionary consisting at least of the
                            config dictionaries globalConfig, parseConfig and
                            localPathConfig.
-        :param datasetID: A string identifying the MiD data set.
+        :param dataset_ID: A string identifying the MiD data set.
         :param load_encrypted: Boolean. If True, data is read from encrypted
                               file. For this, a possword has to be
                               specified in parseConfig['PW'].
         """
-        super().__init__(configDict=configDict, datasetID=datasetID, debug=debug, load_encrypted=load_encrypted)
-        self.park_inference = ParkInference(configDict=configDict)
+        super().__init__(config_dict=config_dict, dataset_ID=dataset_ID, debug=debug, load_encrypted=load_encrypted)
+        self.park_inference = ParkInference(config_dict=config_dict)
 
     def _load_data(self):
         """
         rawDataPathTrip, unlike for other MiD classes is taken from the MiD B1 dataset
-        rawDataPathVehicles is an internal dataset from VF
+        raw_data_path_vehicles is an internal dataset from VF
         """
-        rawDataPathTrips = (
-            Path(self.user_config["global"]["pathAbsolute"][self.datasetID])
-            / self.dev_config["global"]["files"][self.datasetID]["tripsDataRaw"]
+        raw_data_path_trips = (
+            Path(self.user_config["global"]["pathAbsolute"][self.dataset_ID])
+            / self.dev_config["global"]["files"][self.dataset_ID]["tripsDataRaw"]
         )
-        rawDataPathVehicles = (
-            Path(self.user_config["global"]["pathAbsolute"][self.datasetID])
-            / self.dev_config["global"]["files"][self.datasetID]["vehiclesDataRaw"]
+        raw_data_path_vehicles = (
+            Path(self.user_config["global"]["pathAbsolute"][self.dataset_ID])
+            / self.dev_config["global"]["files"][self.dataset_ID]["vehiclesDataRaw"]
         )
-        rawDataTrips = pd.read_stata(
-            rawDataPathTrips,
+        raw_data_trips = pd.read_stata(
+            raw_data_path_trips,
             convert_categoricals=False,
             convert_dates=False,
             preserve_dtypes=False,
         )
-        rawDataVehicles = pd.read_csv(rawDataPathVehicles, encoding="ISO-8859-1")
-        rawDataVehicles = rawDataVehicles.drop(columns=["Unnamed: 0"])
-        rawDataVehicles = rawDataVehicles.drop_duplicates(subset=["HP_ID"], keep="first")
-        rawDataVehicles.set_index("HP_ID", inplace=True)
-        raw_data = rawDataTrips.join(rawDataVehicles, on="HP_ID", rsuffix="VF")
+        raw_data_vehicles = pd.read_csv(raw_data_path_vehicles, encoding="ISO-8859-1")
+        raw_data_vehicles = raw_data_vehicles.drop(columns=["Unnamed: 0"])
+        raw_data_vehicles = raw_data_vehicles.drop_duplicates(subset=["HP_ID"], keep="first")
+        raw_data_vehicles.set_index("HP_ID", inplace=True)
+        raw_data = raw_data_trips.join(raw_data_vehicles, on="HP_ID", rsuffix="VF")
         self.raw_data = raw_data
         print(f"Finished loading {len(self.raw_data)} rows of raw data of type .dta.")
 
@@ -65,25 +66,27 @@ class ParseVF(IntermediateParsing):
 
         :return: None
         """
-        replacementDict = self._create_replacement_dict(self.datasetID, self.dev_config["dataParsers"]["dataVariables"])
-        dataRenamed = self.trips.rename(columns=replacementDict)
-        if self.datasetID == "MiD08":
-            dataRenamed["hhPersonID"] = (
-                dataRenamed["hhID"].astype("string") + dataRenamed["personID"].astype("string")
+        replacement_dict = self._create_replacement_dict(
+            self.dataset_ID, self.dev_config["dataParsers"]["dataVariables"]
+        )
+        data_renamed = self.trips.rename(columns=replacement_dict)
+        if self.dataset_ID == "MiD08":
+            data_renamed["hhPersonID"] = (
+                data_renamed["hhID"].astype("string") + data_renamed["personID"].astype("string")
             ).astype("int")
-        self.trips = dataRenamed
+        self.trips = data_renamed
         print("Finished harmonization of variables")
 
     def __pad_missing_car_segments(self):
-        # remove vehicleSegment nicht zuzuordnen
-        self.trips = self.trips[self.trips.vehicleSegment != "nicht zuzuordnen"]
+        # remove vehicle_segment nicht zuzuordnen
+        self.trips = self.trips[self.trips.vehicle_segment != "nicht zuzuordnen"]
         # pad missing car segments
-        # self.trips.vehicleSegment = self.trips.groupby('hhID').vehicleSegment.transform('first')
+        # self.trips.vehicle_segment = self.trips.groupby('hhID').vehicle_segment.transform('first')
         # self.trips.drivetrain = self.trips.groupby('hhID').drivetrain.transform('first')
         # self.trips.vehicleID = self.trips.groupby('hhID').vehicleID.transform('first')
         # remove remaining NaN
-        self.trips = self.trips.dropna(subset=["vehicleSegment"])
-        # self.trips = self.trips.dropna(subset=['vehicleSegment', 'drivetrain', 'vehicleID'])
+        self.trips = self.trips.dropna(subset=["vehicle_segment"])
+        # self.trips = self.trips.dropna(subset=['vehicle_segment', 'drivetrain', 'vehicleID'])
 
     def __exclude_hours(self):
         """
@@ -91,7 +94,7 @@ class ParseVF(IntermediateParsing):
         """
         self.trips = self.trips.dropna(subset=["tripStartClock", "tripEndClock"])
 
-    def __add_string_columns(self, weekday=True, purpose=True, vehicleSegment=True):
+    def __add_string_columns(self, weekday=True, purpose=True, vehicle_segment=True):
         """
         Adds string columns for either weekday or purpose.
 
@@ -105,9 +108,9 @@ class ParseVF(IntermediateParsing):
             self._add_string_column_from_variable(colName="weekdayStr", varName="tripStartWeekday")
         if purpose:
             self._add_string_column_from_variable(colName="purposeStr", varName="tripPurpose")
-        if vehicleSegment:
+        if vehicle_segment:
             self.trips = self.trips.replace("groß", "gross")
-            self._add_string_column_from_variable(colName="vehicleSegmentStr", varName="vehicleSegment")
+            self._add_string_column_from_variable(colName="vehicleSegmentStr", varName="vehicle_segment")
 
     def _drop_redundant_cols(self):
         # Clean-up of temporary redundant columns
@@ -151,4 +154,3 @@ class ParseVF(IntermediateParsing):
         self.write_output()
         print("Parsing VF dataset completed.")
         return self.activities
-

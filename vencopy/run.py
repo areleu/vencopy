@@ -9,7 +9,7 @@ __license__ = "BSD-3-Clause"
 
 import time
 from pathlib import Path
-from vencopy.core.dataParsers import parseData
+from vencopy.core.dataParsers import parse_data
 from vencopy.core.diaryBuilders import DiaryBuilder
 from vencopy.core.gridModelers import GridModeler
 from vencopy.core.flexEstimators import FlexEstimator
@@ -21,25 +21,25 @@ if __name__ == "__main__":
     startTime = time.time()
 
     base_path = Path(__file__).parent
-    configDict = load_configs(base_path=base_path)
-    create_output_folders(configDict=configDict)
+    config_dict = load_configs(base_path=base_path)
+    create_output_folders(configDict=config_dict)
 
-    vpData = parseData(configDict=configDict)
+    vpData = parse_data(config_dict=config_dict)
     vpData.process()
 
-    vpGrid = GridModeler(config_dict=configDict, activities=vpData.activities)
+    vpGrid = GridModeler(config_dict=config_dict, activities=vpData.activities)
     vpGrid.assign_grid()
 
-    vpFlex = FlexEstimator(configDict=configDict, activities=vpGrid.activities)
+    vpFlex = FlexEstimator(config_dict=config_dict, activities=vpGrid.activities)
     vpFlex.estimateTechnicalFlexibilityIterating()
 
-    vpDiary = DiaryBuilder(configDict=configDict, activities=vpFlex.activities)
+    vpDiary = DiaryBuilder(config_dict=config_dict, activities=vpFlex.activities)
     vpDiary.createDiaries()
 
-    vpProfile = ProfileAggregator(configDict=configDict, activities=vpDiary.activities, profiles=vpDiary)
+    vpProfile = ProfileAggregator(config_dict=config_dict, activities=vpDiary.activities, profiles=vpDiary)
     vpProfile.aggregate_profiles()
 
-    vpPost = PostProcessing(configDict=configDict)
+    vpPost = PostProcessing(config_dict=config_dict)
     vpPost.week_to_annual(profiles=vpProfile)
     vpPost.normalize()
 
