@@ -26,7 +26,7 @@ class FlexEstimator:
         self.is_trip = ~self.activities["trip_id"].isna()
         self.is_park = ~self.activities["park_id"].isna()
         self.is_first_activity = self.activities["is_first_activity"].fillna(0).astype(bool)
-        self.iis_last_activity = self.activities["is_last_activity"].fillna(0).astype(bool)
+        self.is_last_activity = self.activities["is_last_activity"].fillna(0).astype(bool)
 
         # UC = uncontrolled charging
         self.activities[
