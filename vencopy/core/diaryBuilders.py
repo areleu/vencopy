@@ -63,13 +63,13 @@ class DiaryBuilder:
         """
         Drops line when activity duration is zero, which causes inconsistencies in diaryBuilder (e.g. division by zero in number_bins calculation).
         """
-        startLength = len(self.activities)
+        start_length = len(self.activities)
         self.activities = self.activities.drop(
             self.activities[self.activities.activityDuration == pd.Timedelta(0)].index.to_list()
         )
-        endLength = len(self.activities)
+        end_length = len(self.activities)
         print(
-            f"{startLength - endLength} activities dropped from {startLength} total activities because activity length equals zero."
+            f"{start_length - end_length} activities dropped from {start_length} total activities because activity length equals zero."
         )
 
     def create_diaries(self):
@@ -290,10 +290,10 @@ class TimeDiscretiser:
         """
         Drops line when number_bins is zero, which cause division by zero in number_bins calculation.
         """
-        startLength = len(self.data_to_discretise)
+        start_length = len(self.data_to_discretise)
         self.data_to_discretise.drop(self.data_to_discretise[self.data_to_discretise.number_bins == 0].index)
-        endLength = len(self.data_to_discretise)
-        dropped_profiles = startLength - endLength
+        end_length = len(self.data_to_discretise)
+        dropped_profiles = start_length - end_length
         if dropped_profiles != 0:
             raise ValueError(f"{dropped_profiles} activities dropped because bin lenght equals zero.")
 
@@ -324,10 +324,10 @@ class TimeDiscretiser:
         function __allocate() in the same way as for value-per-bins. Operates
         directly on class attributes thus neither input nor return attributes.
         """
-        self.__delta_battery_level_driving(d=self.data_to_discretise, column=self.column_to_discretise)
-        self.__delta_battery_level_charging(d=self.data_to_discretise, column=self.column_to_discretise)
+        self.__delta_battery_level_driving(data=self.data_to_discretise, column=self.column_to_discretise)
+        self.__delta_battery_level_charging(data=self.data_to_discretise, column=self.column_to_discretise)
 
-    def __delta_battery_level_driving(self, d: pd.DataFrame, column: str):
+    def __delta_battery_level_driving(self, data: pd.DataFrame, column: str):
         """Calculates decreasing battery level values for driving activities for
         both cases, minimum and maximum battery level. The cases have to be
         differentiated because the max case runs chronologically from morning to
@@ -338,27 +338,27 @@ class TimeDiscretiser:
         the respective start battery levels (socStart), battery level increases
         (socAddPerBin) and number_bins for each activity respectively in a vectorized
         manner.
-        The function adds a column 'valPerBin' to d directly, thus it doesn't
+        The function adds a column 'valPerBin' to data directly, thus it doesn't
         return anything.
 
         Args:
-            d (pd.DataFrame): Activity data with activities in rows and at least
+            data (pd.DataFrame): Activity data with activities in rows and at least
             the columns column, 'drainPerBin', 'valPerBin', 'parkID' and
             'number_bins'.
             column (str): The column to descritize. Currently only
             maxBatteryLevelStart and minBatteryLevelStart are implemented.
         """
         if column == "maxBatteryLevelStart":
-            d["drainPerBin"] = (self.activities.drain / d.number_bins) * -1
-            d["valPerBin"] = d.loc[d["parkID"].isna(), :].apply(
+            data["drainPerBin"] = (self.activities.drain / data.number_bins) * -1
+            data["valPerBin"] = data.loc[data["parkID"].isna(), :].apply(
                 lambda x: self.__increase_level_per_bin(
                     socStart=x[column], socAddPerBin=x["drainPerBin"], number_bins=x["number_bins"]
                 ),
                 axis=1,
             )
         elif column == "minBatteryLevelEnd":
-            d["drainPerBin"] = self.activities.drain / d.number_bins
-            d["valPerBin"] = d.loc[d["parkID"].isna(), :].apply(
+            data["drainPerBin"] = self.activities.drain / data.number_bins
+            data["valPerBin"] = data.loc[data["parkID"].isna(), :].apply(
                 lambda x: self.__increase_level_per_bin(
                     socStart=x[column],
                     socAddPerBin=x["drainPerBin"],
@@ -367,52 +367,52 @@ class TimeDiscretiser:
                 axis=1,
             )
 
-    def __delta_battery_level_charging(self, d: pd.DataFrame, column: str):
+    def __delta_battery_level_charging(self, data: pd.DataFrame, column: str):
         """Calculates increasing battery level values for park / charging
         activities for both cases, minimum and maximum battery level. The cases
         have to be differentiated because the max case runs chronologically from
         morning to evening while the min case runs anti-chronologically from
         evening to morning. Thus, in the latter case, charge has to be
         subtracted from the battery level. Charging volumes per bin are
-        calculated from the 'availablePower' column in d.
+        calculated from the 'availablePower' column in data.
         The function __increase_level_per_bin() is applied to the whole data set with
         the respective start battery levels (socStart), battery level increases
         (socAddPerBin) and number_bins for each activity respectively in a vectorized
         manner. Then, battery capacity limitations are enforced applying the
         function __enforce_battery_limit().
-        The function adds a column 'valPerBin' to d directly, thus it doesn't
+        The function adds a column 'valPerBin' to data directly, thus it doesn't
         return anything.
 
         Args:
-            d (pd.DataFrame): DataFrame with activities in rows and at least
+            data (pd.DataFrame): DataFrame with activities in rows and at least
             the columns column, 'availablePower', 'tripID' and
             'number_bins'.
             column (str): The column to descritize. Currently only
             maxBatteryLevelStart and minBatteryLevelStart are implemented.
         """
         if column == "maxBatteryLevelStart":
-            d["chargePerBin"] = self.activities.availablePower * self.dt / 60
-            d.loc[d["tripID"].isna(), "valPerBin"] = d.loc[d["tripID"].isna(), :].apply(
+            data["chargePerBin"] = self.activities.availablePower * self.dt / 60
+            data.loc[data["tripID"].isna(), "valPerBin"] = data.loc[data["tripID"].isna(), :].apply(
                 lambda x: self.__increase_level_per_bin(
                     socStart=x[column], socAddPerBin=x["chargePerBin"], number_bins=x["number_bins"]
                 ),
                 axis=1,
             )
-            d.loc[d["tripID"].isna(), "valPerBin"] = d.loc[d["tripID"].isna(), "valPerBin"].apply(
+            data.loc[data["tripID"].isna(), "valPerBin"] = data.loc[data["tripID"].isna(), "valPerBin"].apply(
                 self.__enforce_battery_limit,
                 how="upper",
                 lim=self.user_config["flexEstimators"]["Battery_capacity"]
                 * self.user_config["flexEstimators"]["Maximum_SOC"],
             )
         elif column == "minBatteryLevelEnd":
-            d["chargePerBin"] = self.activities.availablePower * self.dt / 60 * -1
-            d.loc[d["tripID"].isna(), "valPerBin"] = d.loc[d["tripID"].isna(), :].apply(
+            data["chargePerBin"] = self.activities.availablePower * self.dt / 60 * -1
+            data.loc[data["tripID"].isna(), "valPerBin"] = data.loc[data["tripID"].isna(), :].apply(
                 lambda x: self.__increase_level_per_bin(
                     socStart=x[column], socAddPerBin=x["chargePerBin"], number_bins=x["number_bins"]
                 ),
                 axis=1,
             )
-            d.loc[d["tripID"].isna(), "valPerBin"] = d.loc[d["tripID"].isna(), "valPerBin"].apply(
+            data.loc[data["tripID"].isna(), "valPerBin"] = data.loc[data["tripID"].isna(), "valPerBin"].apply(
                 self.__enforce_battery_limit,
                 how="lower",
                 lim=self.user_config["flexEstimators"]["Battery_capacity"]
@@ -531,11 +531,11 @@ class TimeDiscretiser:
         )
         bins = pd.DataFrame({"binTimestamp": self.time_delta})
         bins.drop(bins.tail(1).index, inplace=True)  # remove last element, which is zero
-        self.binFromMidnightSeconds = bins["binTimestamp"].apply(lambda x: x.seconds)
-        self.binFromMidnightSeconds = self.binFromMidnightSeconds + (self.dt * 60)
+        self.bin_from_midnight_seconds = bins["binTimestamp"].apply(lambda x: x.seconds)
+        self.bin_from_midnight_seconds = self.bin_from_midnight_seconds + (self.dt * 60)
         self.data_to_discretise["firstBin"] = (
             self.data_to_discretise["startTimeFromMidnightSeconds"].apply(
-                lambda x: np.argmax(x < self.binFromMidnightSeconds)
+                lambda x: np.argmax(x < self.bin_from_midnight_seconds)
             )
         ).astype(int)
         if self.data_to_discretise["firstBin"].any() > self.number_time_slots:
@@ -584,32 +584,32 @@ class TimeDiscretiser:
         i.e. drops events with no length (timestampStartCorrected = timestampEndCorrected or activityDuration = 0),
         which cause division by zero in number_bins calculation.
         """
-        startLength = len(self.data_to_discretise)
-        noLengthActivitiesIDs = self.data_to_discretise[
+        start_length = len(self.data_to_discretise)
+        indeces_no_length_activities = self.data_to_discretise[
             self.data_to_discretise.activityDuration == pd.Timedelta(0)
         ].index.to_list()
-        self.IDsWithNoLengthActivities = self.data_to_discretise.loc[noLengthActivitiesIDs]["uniqueID"].unique()
-        self.data_to_discretise = self.data_to_discretise.drop(noLengthActivitiesIDs)
-        endLength = len(self.data_to_discretise)
-        dropped_activities = startLength - endLength
+        self.ids_with_no_length_activities = self.data_to_discretise.loc[indeces_no_length_activities]["uniqueID"].unique()
+        self.data_to_discretise = self.data_to_discretise.drop(indeces_no_length_activities)
+        end_length = len(self.data_to_discretise)
+        dropped_activities = start_length - end_length
         if dropped_activities != 0:
             raise ValueError(
-                f"{dropped_activities} zero-length activities dropped from {len(self.IDsWithNoLengthActivities)} IDs."
+                f"{dropped_activities} zero-length activities dropped from {len(self.ids_with_no_length_activities)} IDs."
             )
         self.__remove_activities_with_zero_value()
 
     def __remove_activities_with_zero_value(self):
-        startLength = len(self.data_to_discretise)
+        start_length = len(self.data_to_discretise)
         subsetNoLengthActivitiesIDsOnly = self.data_to_discretise.loc[
-            self.data_to_discretise.uniqueID.isin(self.IDsWithNoLengthActivities)
+            self.data_to_discretise.uniqueID.isin(self.ids_with_no_length_activities)
         ]
         subsetNoLengthActivitiesIDsOnly = subsetNoLengthActivitiesIDsOnly.set_index("uniqueID", drop=False)
         subsetNoLengthActivitiesIDsOnly.index.names = ["uniqueIDindex"]
         IDsWithSumZero = subsetNoLengthActivitiesIDsOnly.groupby(["uniqueID"])[self.column_to_discretise].sum()
         IDsToDrop = IDsWithSumZero[IDsWithSumZero == 0].index
         self.data_to_discretise = self.data_to_discretise.loc[~self.data_to_discretise.uniqueID.isin(IDsToDrop)]
-        endLength = len(self.data_to_discretise)
-        dropped_activities = startLength - endLength
+        end_length = len(self.data_to_discretise)
+        dropped_activities = start_length - end_length
         if dropped_activities != 0:
             raise ValueError(
                 f"Additional {dropped_activities} activities dropped as the sum of all {self.column_to_discretise} activities for the specific ID was zero."
