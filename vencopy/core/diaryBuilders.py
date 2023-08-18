@@ -18,29 +18,29 @@ from vencopy.utils.globalFunctions import createFileName, write_out
 
 
 class DiaryBuilder:
-    def __init__(self, configDict: dict, activities: pd.DataFrame, isWeekDiary: bool = False):
-        self.dev_config = configDict["dev_config"]
-        self.user_config = configDict["user_config"]
-        self.datasetID = configDict["user_config"]["global"]["dataset"]
+    def __init__(self, config_dict: dict, activities: pd.DataFrame, is_week_diary: bool = False):
+        self.dev_config = config_dict["dev_config"]
+        self.user_config = config_dict["user_config"]
+        self.dataset_id = config_dict["user_config"]["global"]["dataset"]
         self.activities = activities
-        self.deltaTime = configDict["user_config"]["diaryBuilders"]["TimeDelta"]
-        self.isWeekDiary = isWeekDiary
-        self.__updateActivities()
+        self.delta_time = config_dict["user_config"]["diaryBuilders"]["TimeDelta"]
+        self.is_week_diary = is_week_diary
+        self.__update_activities()
         self.drain = None
-        self.chargingPower = None
-        self.uncontrolledCharge = None
-        self.maxBatteryLevel = None
-        self.minBatteryLevel = None
+        self.charge_power = None
+        self.uncontrolled_charge = None
+        self.max_battery_level = None
+        self.min_battery_level = None
         self.distributor = TimeDiscretiser(
-            datasetID=self.datasetID,
+            dataset_id=self.dataset_id,
             dev_config=self.dev_config,
             user_config=self.user_config,
             activities=self.activities,
-            dt=self.deltaTime,
-            isWeek=isWeekDiary,
+            dt=self.delta_time,
+            isWeek=is_week_diary,
         )
 
-    def __updateActivities(self):
+    def __update_activities(self):
         """
         Updates timestamps and removes activities whose length equals zero to avoid inconsistencies in profiles
         which are separatly discretised (interdependence at single vehicle level of drain, charging power etc i.e.
@@ -53,8 +53,8 @@ class DiaryBuilder:
         """
         Rounds timestamps to predifined resolution.
         """
-        self.activities["timestampStartCorrected"] = self.activities["timestampStart"].dt.round(f"{self.deltaTime}min")
-        self.activities["timestampEndCorrected"] = self.activities["timestampEnd"].dt.round(f"{self.deltaTime}min")
+        self.activities["timestampStartCorrected"] = self.activities["timestampStart"].dt.round(f"{self.delta_time}min")
+        self.activities["timestampEndCorrected"] = self.activities["timestampEnd"].dt.round(f"{self.delta_time}min")
         self.activities["activityDuration"] = (
             self.activities["timestampEndCorrected"] - self.activities["timestampStartCorrected"]
         )
@@ -76,17 +76,17 @@ class DiaryBuilder:
     def createDiaries(self):
         start_time = time.time()
         self.drain = self.distributor.discretise(profile=self.drain, profileName="drain", method="distribute")
-        self.chargingPower = self.distributor.discretise(
-            profile=self.chargingPower, profileName="availablePower", method="select"
+        self.charge_power = self.distributor.discretise(
+            profile=self.charge_power, profileName="availablePower", method="select"
         )
-        self.uncontrolledCharge = self.distributor.discretise(
-            profile=self.uncontrolledCharge, profileName="uncontrolledCharge", method="dynamic"
+        self.uncontrolled_charge = self.distributor.discretise(
+            profile=self.uncontrolled_charge, profileName="uncontrolled_charge", method="dynamic"
         )
-        self.maxBatteryLevel = self.distributor.discretise(
-            profile=self.maxBatteryLevel, profileName="maxBatteryLevelStart", method="dynamic"
+        self.max_battery_level = self.distributor.discretise(
+            profile=self.max_battery_level, profileName="maxBatteryLevelStart", method="dynamic"
         )
-        self.minBatteryLevel = self.distributor.discretise(
-            profile=self.minBatteryLevel, profileName="minBatteryLevelEnd", method="dynamic"
+        self.min_battery_level = self.distributor.discretise(
+            profile=self.min_battery_level, profileName="minBatteryLevelEnd", method="dynamic"
         )
         needed_time = time.time() - start_time
         print(f"Needed time to discretise all columns: {needed_time}.")
@@ -107,7 +107,7 @@ class TimeDiscretiser:
         self,
         activities: pd.DataFrame,
         dt: int,
-        datasetID: str,
+        dataset_id: str,
         user_config: dict,
         dev_config: dict,
         isWeek: bool = False,
@@ -138,7 +138,7 @@ class TimeDiscretiser:
             dt (pd.TimeDelta): _description_
         """
         self.activities = activities
-        self.datasetID = datasetID
+        self.dataset_id = dataset_id
         self.dataToDiscretise = None
         self.user_config = user_config
         self.dev_config = dev_config
@@ -204,7 +204,7 @@ class TimeDiscretiser:
         ] + [self.columnToDiscretise]
         if self.isWeek:
             necessaryColumns = necessaryColumns + ["weekdayStr"]
-        if self.columnToDiscretise == "uncontrolledCharge":
+        if self.columnToDiscretise == "uncontrolled_charge":
             necessaryColumns = necessaryColumns + ["availablePower", "timestampEndUC"]
         self.dataToDiscretise = self.activities[necessaryColumns].copy()
         return self.dataToDiscretise
@@ -213,13 +213,13 @@ class TimeDiscretiser:
         """
         Depending on the columns to discretise correct some values.
         - drain profile: pads NaN with 0s
-        - uncontrolledCharge profile: instead of removing rows with tripID, assign 0 to rows with tripID
+        - uncontrolled_charge profile: instead of removing rows with tripID, assign 0 to rows with tripID
         - residualNeed profile: pads NaN with 0s
         """
         if self.columnToDiscretise == "drain":
             self.dataToDiscretise["drain"] = self.dataToDiscretise["drain"].fillna(0)
-        elif self.columnToDiscretise == "uncontrolledCharge":
-            self.dataToDiscretise["uncontrolledCharge"] = self.dataToDiscretise["uncontrolledCharge"].fillna(0)
+        elif self.columnToDiscretise == "uncontrolled_charge":
+            self.dataToDiscretise["uncontrolled_charge"] = self.dataToDiscretise["uncontrolled_charge"].fillna(0)
         elif self.columnToDiscretise == "residualNeed":
             self.dataToDiscretise["residualNeed"] = self.dataToDiscretise["residualNeed"].fillna(0)
         return self.dataToDiscretise
@@ -264,7 +264,7 @@ class TimeDiscretiser:
         elif self.method == "dynamic":
             if self.columnToDiscretise in ("maxBatteryLevelStart", "minBatteryLevelEnd"):
                 self.__valueNonlinearLevel()
-            elif self.columnToDiscretise == "uncontrolledCharge":
+            elif self.columnToDiscretise == "uncontrolled_charge":
                 self.__valueNonlinearCharge()
         else:
             raise (
@@ -479,7 +479,7 @@ class TimeDiscretiser:
         ).astype(int)
         self.dataToDiscretise["valPerBin"] = self.dataToDiscretise.loc[self.dataToDiscretise["tripID"].isna(), :].apply(
             lambda x: self.__chargeRatePerBin(
-                chargeRate=x["availablePower"], chargeVol=x["uncontrolledCharge"], nBins=x["nBins"]
+                chargeRate=x["availablePower"], chargeVol=x["uncontrolled_charge"], nBins=x["nBins"]
             ),
             axis=1,
         )
@@ -666,7 +666,7 @@ class TimeDiscretiser:
                 user_config=self.user_config,
                 manualLabel=self.columnToDiscretise,
                 fileNameID="outputDiaryBuilder",
-                datasetID=self.datasetID,
+                dataset_id=self.dataset_id,
             )
             write_out(data=self.activities, path=root / folder / fileName)
 
