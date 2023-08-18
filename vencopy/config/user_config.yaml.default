@@ -132,6 +132,6 @@ profileAggregators:
   alpha: 10 # Only used for state profile aggregation
 
 
-outputFormatters:
+postProcessor:
   start_weekday: 1 # 1=Monday
 
