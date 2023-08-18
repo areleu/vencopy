@@ -21,8 +21,8 @@ TripDiaryBuilder Input
 TripDiaryBuilder Output
 ---------------------------------------------------
 **Output Functions:**
- 
- * vpDiary = TripDiaryBuilder(configDict=configDict, ParseData=vpData, datasetID=datasetID, debug=True)
+
+ * vpDiary = TripDiaryBuilder(configs=configs, ParseData=vpData, dataset=dataset, debug=True)
 
 
 **Disk Files:**

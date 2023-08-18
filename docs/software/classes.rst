@@ -28,7 +28,7 @@ variables characterize the trip itself. The representation of time may vary betw
 surveys.
 Most travel surveys include motorised, non motorised as well as multi-modal trips.
 We only select trips that were carried out with a motorized individual vehicle as a driver.
-Similarly, trips with missing (e.g. missing tripID, missing start or end time etc.) or
+Similarly, trips with missing (e.g. missing trip_id, missing start or end time etc.) or
 invalid information (e.g. implausible trip distance) are filtered out. Filters can be easily
 adapted to other travel survey numeric codes via the config-file.
 By applying a set of filters, the initial database

@@ -1,9 +1,7 @@
-__version__ = "0.4.X"
-__maintainer__ = "Niklas Wulff"
-__contributors__ = "Fabia Miorelli"
-__email__ = "Niklas.Wulff@dlr.de"
+__version__ = "1.0.0"
+__maintainer__ = "Niklas Wulff, Fabia Miorelli"
 __birthdate__ = "01.07.2022"
-__status__ = "dev"  # options are: dev, test, prod
+__status__ = "test"  # options are: dev, test, prod
 __license__ = "BSD-3-Clause"
 
 
@@ -14,147 +12,135 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from typing import Optional
-from vencopy.utils.globalFunctions import createFileName, writeOut
+from vencopy.utils.globalFunctions import create_file_name, write_out
 
 
 class DiaryBuilder:
-    def __init__(self, configDict: dict, activities: pd.DataFrame, isWeekDiary: bool = False):
-        self.dev_config = configDict["dev_config"]
-        self.user_config = configDict["user_config"]
-        self.datasetID = configDict["user_config"]["global"]["dataset"]
+    def __init__(self, configs: dict, activities: pd.DataFrame, is_week_diary: bool = False):
+        self.dev_config = configs["dev_config"]
+        self.user_config = configs["user_config"]
+        self.dataset = configs["user_config"]["global"]["dataset"]
         self.activities = activities
-        self.deltaTime = configDict["user_config"]["diaryBuilders"]["TimeDelta"]
-        self.isWeekDiary = isWeekDiary
-        self.__updateActivities()
+        self.delta_time = configs["user_config"]["diaryBuilders"]["time_delta"]
+        self.is_week_diary = is_week_diary
+        self.__update_activities()
         self.drain = None
-        self.chargingPower = None
-        self.uncontrolledCharge = None
-        self.maxBatteryLevel = None
-        self.minBatteryLevel = None
+        self.charging_power = None
+        self.uncontrolled_charging = None
+        self.max_battery_level = None
+        self.min_battery_level = None
         self.distributor = TimeDiscretiser(
-            datasetID=self.datasetID,
+            dataset=self.dataset,
             dev_config=self.dev_config,
             user_config=self.user_config,
             activities=self.activities,
-            dt=self.deltaTime,
-            isWeek=isWeekDiary,
+            time_resolution=self.delta_time,
+            is_week=is_week_diary,
         )
 
-    def __updateActivities(self):
+    def __update_activities(self):
         """
         Updates timestamps and removes activities whose length equals zero to avoid inconsistencies in profiles
         which are separatly discretised (interdependence at single vehicle level of drain, charging power etc i.e.
         no charging available when driving).
         """
-        self.__correctTimestamp()
-        self.__removesZeroLengthActivities()
+        self.__correct_timestamps()
+        self.__removes_zero_length_activities()
 
-    def __correctTimestamp(self) -> pd.DataFrame:
+    def __correct_timestamps(self) -> pd.DataFrame:
         """
         Rounds timestamps to predifined resolution.
         """
-        self.activities["timestampStartCorrected"] = self.activities["timestampStart"].dt.round(f"{self.deltaTime}min")
-        self.activities["timestampEndCorrected"] = self.activities["timestampEnd"].dt.round(f"{self.deltaTime}min")
-        self.activities["activityDuration"] = (
-            self.activities["timestampEndCorrected"] - self.activities["timestampStartCorrected"]
+        self.activities["timestamp_start_corrected"] = self.activities["timestamp_start"].dt.round(f"{self.delta_time}min")
+        self.activities["timestamp_end_corrected"] = self.activities["timestamp_end"].dt.round(f"{self.delta_time}min")
+        self.activities["activity_duration"] = (
+            self.activities["timestamp_end_corrected"] - self.activities["timestamp_start_corrected"]
         )
-        return self.activities
 
-    def __removesZeroLengthActivities(self):
+    def __removes_zero_length_activities(self):
         """
-        Drops line when activity duration is zero, which causes inconsistencies in diaryBuilder (e.g. division by zero in nBins calculation).
+        Drops line when activity duration is zero, which causes inconsistencies in diaryBuilder (e.g. division by zero in number_bins calculation).
         """
-        startLength = len(self.activities)
+        start_length = len(self.activities)
         self.activities = self.activities.drop(
-            self.activities[self.activities.activityDuration == pd.Timedelta(0)].index.to_list()
+            self.activities[self.activities.activity_duration == pd.time_delta(0)].index.to_list()
         )
-        endLength = len(self.activities)
+        end_length = len(self.activities)
         print(
-            f"{startLength - endLength} activities dropped from {startLength} total activities because activity length equals zero."
+            f"{start_length - end_length} activities dropped from {start_length} total activities because activity length equals zero."
         )
 
-    def createDiaries(self):
+    def create_diaries(self):
         start_time = time.time()
-        self.drain = self.distributor.discretise(profile=self.drain, profileName="drain", method="distribute")
-        self.chargingPower = self.distributor.discretise(
-            profile=self.chargingPower, profileName="availablePower", method="select"
+        self.drain = self.distributor.discretise(profile=self.drain, profile_name="drain", method="distribute")
+        self.charging_power = self.distributor.discretise(
+            profile=self.charging_power, profile_name="available_power", method="select"
         )
-        self.uncontrolledCharge = self.distributor.discretise(
-            profile=self.uncontrolledCharge, profileName="uncontrolledCharge", method="dynamic"
+        self.uncontrolled_charging = self.distributor.discretise(
+            profile=self.uncontrolled_charging, profile_name="uncontrolled_charging", method="dynamic"
         )
-        self.maxBatteryLevel = self.distributor.discretise(
-            profile=self.maxBatteryLevel, profileName="maxBatteryLevelStart", method="dynamic"
+        self.max_battery_level = self.distributor.discretise(
+            profile=self.max_battery_level, profile_name="max_battery_level_start", method="dynamic"
         )
-        self.minBatteryLevel = self.distributor.discretise(
-            profile=self.minBatteryLevel, profileName="minBatteryLevelEnd", method="dynamic"
+        self.min_battery_level = self.distributor.discretise(
+            profile=self.min_battery_level, profile_name="min_battery_level_end", method="dynamic"
         )
         needed_time = time.time() - start_time
         print(f"Needed time to discretise all columns: {needed_time}.")
-
-    def uncontrolledCharging(self, maxBatLev: pd.DataFrame) -> pd.DataFrame:
-        uncCharge = maxBatLev.copy()
-        for cName, c in uncCharge.items():
-            if cName > 0:
-                tempCol = maxBatLev[cName] - maxBatLev[cName - 1]
-                uncCharge[cName] = tempCol.where(tempCol >= 0, other=0)
-            else:
-                uncCharge[cName] = 0
-        return uncCharge
 
 
 class TimeDiscretiser:
     def __init__(
         self,
         activities: pd.DataFrame,
-        dt: int,
-        datasetID: str,
+        time_resolution: int,
+        dataset: str,
         user_config: dict,
         dev_config: dict,
-        isWeek: bool = False,
+        is_week: bool = False,
     ):
         """
         Class for discretisation of activities to fixed temporal resolution
 
         Activities is a pandas Series with a unique ID in the index, ts is a pandas dataframe with two
-        columns: timestampStart and timestampEnd, dt is a pandas TimeDelta object
+        columns: timestamp_start and timestamp_end, time_resolution is a pandas time_delta object
         specifying the fixed resolution that the discretisation should output. Method
         specifies how the discretisation should be carried out. 'Distribute' assumes
         act provides a divisible variable (energy, distance etc.) and distributes this
         depending on the time share of the activity within the respective time interval.
         'Select' assumes an undivisible variable such as power is given and selects
         the values for the given timestamps. For now: If start or end timestamp of an
-        activity exactly hits the middle of a time interval (dt/2), the value is allocated
-        if its ending but not if its starting (value set to 0). For dt=30 min, a parking
+        activity exactly hits the middle of a time interval (time_resolution/2), the value is allocated
+        if its ending but not if its starting (value set to 0). For time_resolution=30 min, a parking
         activity ending at 9:15 with a charging availability of 11 kW, 11 kW will be assigned
         to the last slot (9:00-9:30) whereas if it had started at 7:45, the slot (7:30-8:00)
         is set to 0 kW.
         The quantum is the shortest possible time interval for the discretiser, hard
-        coded in the init and given as a pandas.TimeDelta. Thus if 1 minute is selected
+        coded in the init and given as a pandas.time_delta. Thus if 1 minute is selected
         discretisation down to resolutions of seconds are not possible.
 
         Args:
-            act (pd.dataFrame): _description_
-            column (str): String specifying the column of the activities data set that should be discretized
-            dt (pd.TimeDelta): _description_
+            activities (pd.dataFrame): _description_
+            time_resolution (pd.time_delta): _description_
         """
         self.activities = activities
-        self.datasetID = datasetID
-        self.dataToDiscretise = None
+        self.dataset = dataset
+        self.data_to_discretise = None
         self.user_config = user_config
         self.dev_config = dev_config
-        self.quantum = pd.Timedelta(value=1, unit="min")
-        self.dt = dt  # e.g. 15 min
-        self.isWeek = isWeek
-        self.nTimeSlots = int(self.__nSlotsPerInterval(interval=pd.Timedelta(value=self.dt, unit="min")))
-        if isWeek:
-            self.timeDelta = pd.timedelta_range(start="00:00:00", end="168:00:00", freq=f"{self.dt}T")
-            self.weekdays = self.activities["weekdayStr"].unique()
+        self.quantum = pd.time_delta(value=1, unit="min")
+        self.time_resolution = time_resolution  # e.g. 15 min
+        self.is_week = is_week
+        self.number_time_slots = int(self.__number_slots_per_interval(interval=pd.time_delta(value=self.time_resolution, unit="min")))
+        if is_week:
+            self.time_delta = pd.timedelta_range(start="00:00:00", end="168:00:00", freq=f"{self.time_resolution}T")
+            self.weekdays = self.activities["weekday_string"].unique()
         else:  # is Day
-            self.timeDelta = pd.timedelta_range(start="00:00:00", end="24:00:00", freq=f"{self.dt}T")
-        self.timeIndex = list(self.timeDelta)
-        self.discreteData = None
+            self.time_delta = pd.timedelta_range(start="00:00:00", end="24:00:00", freq=f"{self.time_resolution}T")
+        self.time_index = list(self.time_delta)
+        self.discrete_data = None
 
-    def __nSlotsPerInterval(self, interval: pd.Timedelta) -> int:
+    def __number_slots_per_interval(self, interval: pd.time_delta) -> int:
         """
         Check if interval is an integer multiple of quantum.
         The minimum resolution is 1 min, case for resolution below 1 min.
@@ -168,104 +154,101 @@ class TimeDiscretiser:
                 )
             )
         quot = interval.seconds / 3600 / 24
-        quotDay = pd.Timedelta(value=24, unit="h") / interval
+        quot_day = pd.time_delta(value=24, unit="h") / interval
         if (1 / quot) % int(1 / quot) == 0:  # or (quot % int(1) == 0):
-            return quotDay
+            return quot_day
         else:
             raise (
                 ValueError(
                     f"The specified resolution does not fit into a day."
-                    f"There cannot be {quotDay} finite intervals in a day"
+                    f"There cannot be {quot_day} finite intervals in a day"
                 )
             )
 
-    def __datasetCleanup(self):
-        self.__removeColumns()
-        self.__correctValues()
-        self.__correctTimestamp()
+    def __dataset_cleanup(self):
+        self.__remove_columns()
+        self.__correct_values()
+        self.__correct_timestamps()
 
-    def __removeColumns(self) -> pd.DataFrame:
+    def __remove_columns(self) -> pd.DataFrame:
         """
         Removes additional columns not used in the TimeDiscretiser class.
         Only keeps timestamp start and end, unique ID, and the column to discretise.
         """
-        necessaryColumns = [
-            "tripID",
-            "timestampStart",
-            "timestampEnd",
-            "uniqueID",
-            "parkID",
-            "isFirstActivity",
-            "isLastActivity",
-            "timedelta",
-            "actID",
-            "nextActID",
+        necessary_columns = [
+            "trip_id",
+            "timestamp_start",
+            "timestamp_end",
+            "unique_id",
+            "park_id",
+            "is_first_activity",
+            "is_last_activity",
+            "time_delta",
+            "activity_id",
+            "next_activity_id",
             "prevActID",
-        ] + [self.columnToDiscretise]
-        if self.isWeek:
-            necessaryColumns = necessaryColumns + ["weekdayStr"]
-        if self.columnToDiscretise == "uncontrolledCharge":
-            necessaryColumns = necessaryColumns + ["availablePower", "timestampEndUC"]
-        self.dataToDiscretise = self.activities[necessaryColumns].copy()
-        return self.dataToDiscretise
+        ] + [self.column_to_discretise]
+        if self.is_week:
+            necessary_columns = necessary_columns + ["weekday_string"]
+        if self.column_to_discretise == "uncontrolled_charging":
+            necessary_columns = necessary_columns + ["available_power", "timestamp_end_uncontrolled_charging"]
+        self.data_to_discretise = self.activities[necessary_columns].copy()
 
-    def __correctValues(self) -> pd.DataFrame:
+    def __correct_values(self) -> pd.DataFrame:
         """
         Depending on the columns to discretise correct some values.
         - drain profile: pads NaN with 0s
-        - uncontrolledCharge profile: instead of removing rows with tripID, assign 0 to rows with tripID
-        - residualNeed profile: pads NaN with 0s
+        - uncontrolled_charging profile: instead of removing rows with trip_id, assign 0 to rows with trip_id
+        - residual_need profile: pads NaN with 0s
         """
-        if self.columnToDiscretise == "drain":
-            self.dataToDiscretise["drain"] = self.dataToDiscretise["drain"].fillna(0)
-        elif self.columnToDiscretise == "uncontrolledCharge":
-            self.dataToDiscretise["uncontrolledCharge"] = self.dataToDiscretise["uncontrolledCharge"].fillna(0)
-        elif self.columnToDiscretise == "residualNeed":
-            self.dataToDiscretise["residualNeed"] = self.dataToDiscretise["residualNeed"].fillna(0)
-        return self.dataToDiscretise
+        if self.column_to_discretise == "drain":
+            self.data_to_discretise["drain"] = self.data_to_discretise["drain"].fillna(0)
+        elif self.column_to_discretise == "uncontrolled_charging":
+            self.data_to_discretise["uncontrolled_charging"] = self.data_to_discretise["uncontrolled_charging"].fillna(0)
+        elif self.column_to_discretise == "residual_need":
+            self.data_to_discretise["residual_need"] = self.data_to_discretise["residual_need"].fillna(0)
 
-    def __correctTimestamp(self) -> pd.DataFrame:
+    def __correct_timestamps(self) -> pd.DataFrame:
         """
         Rounds timestamps to predifined resolution.
         """
-        self.dataToDiscretise["timestampStartCorrected"] = self.dataToDiscretise["timestampStart"].dt.round(
-            f"{self.dt}min"
+        self.data_to_discretise["timestamp_start_corrected"] = self.data_to_discretise["timestamp_start"].dt.round(
+            f"{self.time_resolution}min"
         )
-        self.dataToDiscretise["timestampEndCorrected"] = self.dataToDiscretise["timestampEnd"].dt.round(f"{self.dt}min")
-        return self.dataToDiscretise
+        self.data_to_discretise["timestamp_end_corrected"] = self.data_to_discretise["timestamp_end"].dt.round(f"{self.time_resolution}min")
 
-    def __createDiscretisedStructureWeek(self):
+    def __create_discretised_structure_week(self):
         """
         Method for future release working with sampled weeks.
 
-        Create an empty dataframe with columns each representing one timedelta (e.g. one 15-min slot). Scope can
-        currently be either day (nCol = 24*60 / dt) or week - determined be self.isWeek (nCol= 7 * 24 * 60 / dt).
-        self.timeIndex is set on instantiation.
+        Create an empty dataframe with columns each representing one time_delta (e.g. one 15-min slot). Scope can
+        currently be either day (nCol = 24*60 / time_resolution) or week - determined be self.is_week (nCol= 7 * 24 * 60 / time_resolution).
+        self.time_index is set on instantiation.
         """
-        nHours = len(list(self.timeIndex)) - 1
-        hPerDay = int(nHours / len(self.weekdays))
-        hours = range(hPerDay)
-        self.discreteData = pd.DataFrame(
-            index=self.dataToDiscretise.uniqueID.unique(),
+        number_hours = len(list(self.time_index)) - 1
+        hours_per_day = int(number_hours / len(self.weekdays))
+        hours = range(hours_per_day)
+        self.discrete_data = pd.DataFrame(
+            index=self.data_to_discretise.unique_id.unique(),
             columns=pd.MultiIndex.from_product([self.weekdays, hours]),
         )
 
-    def __identifyBinShares(self):
+    def __identify_bin_shares(self):
         """
         Calculates value share to be assigned to bins and identifies the bins.
         Includes a wrapper for the 'distribute', 'select' and 'dynamic' method.
         """
-        self.__calculateNBins()
-        self.__identifyBins()
+        self.__calculate_number_bins()
+        self.__identify_bins()
         if self.method == "distribute":
-            self.__valueDistribute()
+            self.__value_distribute()
         elif self.method == "select":
-            self.__valueSelect()
+            self.__value_select()
         elif self.method == "dynamic":
-            if self.columnToDiscretise in ("maxBatteryLevelStart", "minBatteryLevelEnd"):
-                self.__valueNonlinearLevel()
-            elif self.columnToDiscretise == "uncontrolledCharge":
-                self.__valueNonlinearCharge()
+            if self.column_to_discretise in ("max_battery_level_start", "min_battery_level_end"):
+                self.__value_non_linear_level()
+            elif self.column_to_discretise == "uncontrolled_charging":
+                self.__value_non_linear_charge()
         else:
             raise (
                 ValueError(
@@ -273,55 +256,55 @@ class TimeDiscretiser:
                 )
             )
 
-    def __calculateNBins(self):
+    def __calculate_number_bins(self):
         """
         Updates the activity duration based on the rounded timstamps.
-        Calculates the multiple of dt of the activity duration and stores it to column nBins. E.g. a 2h-activity
-        with a dt of 15 mins would have a 8 in the column.
+        Calculates the multiple of time_resolution of the activity duration and stores it to column number_bins. E.g. a 2h-activity
+        with a time_resolution of 15 mins would have a 8 in the column.
         """
-        self.dataToDiscretise["activityDuration"] = (
-            self.dataToDiscretise["timestampEndCorrected"] - self.dataToDiscretise["timestampStartCorrected"]
+        self.data_to_discretise["activity_duration"] = (
+            self.data_to_discretise["timestamp_end_corrected"] - self.data_to_discretise["timestamp_start_corrected"]
         )
-        self.__removesZeroLengthActivities()
-        self.dataToDiscretise["nBins"] = self.dataToDiscretise["activityDuration"] / (
-            pd.Timedelta(value=self.dt, unit="min")
+        self.__removes_zero_length_activities()
+        self.data_to_discretise["number_bins"] = self.data_to_discretise["activity_duration"] / (
+            pd.time_delta(value=self.time_resolution, unit="min")
         )
-        if not self.dataToDiscretise["nBins"].apply(float.is_integer).all():
+        if not self.data_to_discretise["number_bins"].apply(float.is_integer).all():
             raise ValueError("Not all bin counts are integers.")
-        self.__dropNBinsLengthZero()
-        self.dataToDiscretise["nBins"] = self.dataToDiscretise["nBins"].astype(int)
+        self.__drop_if_number_bins_length_is_zero()
+        self.data_to_discretise["number_bins"] = self.data_to_discretise["number_bins"].astype(int)
 
-    def __dropNBinsLengthZero(self):
+    def __drop_if_number_bins_length_is_zero(self):
         """
-        Drops line when nBins is zero, which cause division by zero in nBins calculation.
+        Drops line when number_bins is zero, which cause division by zero in number_bins calculation.
         """
-        startLength = len(self.dataToDiscretise)
-        self.dataToDiscretise.drop(self.dataToDiscretise[self.dataToDiscretise.nBins == 0].index)
-        endLength = len(self.dataToDiscretise)
-        droppedProfiles = startLength - endLength
-        if droppedProfiles != 0:
-            raise ValueError(f"{droppedProfiles} activities dropped because bin lenght equals zero.")
+        start_length = len(self.data_to_discretise)
+        self.data_to_discretise.drop(self.data_to_discretise[self.data_to_discretise.number_bins == 0].index)
+        end_length = len(self.data_to_discretise)
+        dropped_profiles = start_length - end_length
+        if dropped_profiles != 0:
+            raise ValueError(f"{dropped_profiles} activities dropped because bin lenght equals zero.")
 
-    def __valueDistribute(self):
+    def __value_distribute(self):
         """
         Calculates the profile value for each bin for the 'distribute' method.
         """
-        if self.dataToDiscretise["nBins"].any() == 0:
+        if self.data_to_discretise["number_bins"].any() == 0:
             raise ArithmeticError(
                 "The total number of bins is zero for one activity, which caused a division by zero."
                 "This should not happen because events with length zero should have been dropped."
             )
-        self.dataToDiscretise["valPerBin"] = (
-            self.dataToDiscretise[self.columnToDiscretise] / self.dataToDiscretise["nBins"]
+        self.data_to_discretise["value_per_bin"] = (
+            self.data_to_discretise[self.column_to_discretise] / self.data_to_discretise["number_bins"]
         )
 
-    def __valueSelect(self):
+    def __value_select(self):
         """
         Calculates the profile value for each bin for the 'select' method.
         """
-        self.dataToDiscretise["valPerBin"] = self.dataToDiscretise[self.columnToDiscretise]
+        self.data_to_discretise["value_per_bin"] = self.data_to_discretise[self.column_to_discretise]
 
-    def __valueNonlinearLevel(self):
+    def __value_non_linear_level(self):
         """
         Calculates the bin values dynamically (e.g. for the SoC). It returns a
         non-linearly increasing list of values capped to upper and lower battery
@@ -329,128 +312,132 @@ class TimeDiscretiser:
         function __allocate() in the same way as for value-per-bins. Operates
         directly on class attributes thus neither input nor return attributes.
         """
-        self.__deltaBatteryLevelDriving(d=self.dataToDiscretise, valCol=self.columnToDiscretise)
-        self.__deltaBatteryLevelCharging(d=self.dataToDiscretise, valCol=self.columnToDiscretise)
+        self.__delta_battery_level_driving(data=self.data_to_discretise, column=self.column_to_discretise)
+        self.__delta_battery_level_charging(data=self.data_to_discretise, column=self.column_to_discretise)
 
-    def __deltaBatteryLevelDriving(self, d: pd.DataFrame, valCol: str):
-        """Calculates decreasing battery level values for driving activities for
+    def __delta_battery_level_driving(self, data: pd.DataFrame, column: str):
+        """
+        Calculates decreasing battery level values for driving activities for
         both cases, minimum and maximum battery level. The cases have to be
         differentiated because the max case runs chronologically from morning to
         evening while the min case runs anti-chronologically from end-of-day to
         beginning. Thus, in the latter case, drain has to be added to the
         battery level.
-        The function __increaseLevelPerBin() is applied to the whole data set with
-        the respective start battery levels (socStart), battery level increases
-        (socAddPerBin) and nBins for each activity respectively in a vectorized
+        The function __increase_level_per_bin() is applied to the whole data set with
+        the respective start battery levels (soc_start), battery level increases
+        (added_soc_per_bin) and number_bins for each activity respectively in a vectorized
         manner.
-        The function adds a column 'valPerBin' to d directly, thus it doesn't
+        The function adds a column 'value_per_bin' to data directly, thus it doesn't
         return anything.
 
         Args:
-            d (pd.DataFrame): Activity data with activities in rows and at least
-            the columns valCol, 'drainPerBin', 'valPerBin', 'parkID' and
-            'nBins'.
-            valCol (str): The column to descritize. Currently only
-            maxBatteryLevelStart and minBatteryLevelStart are implemented.
+            data (pd.DataFrame): Activity data with activities in rows and at least
+            the columns column, 'drain_per_bin', 'value_per_bin', 'park_id' and
+            'number_bins'.
+            column (str): The column to descritize. Currently only
+            max_battery_level_start and min_battery_level_start are implemented.
         """
-        if valCol == "maxBatteryLevelStart":
-            d["drainPerBin"] = (self.activities.drain / d.nBins) * -1
-            d["valPerBin"] = d.loc[d["parkID"].isna(), :].apply(
-                lambda x: self.__increaseLevelPerBin(
-                    socStart=x[valCol], socAddPerBin=x["drainPerBin"], nBins=x["nBins"]
+        if column == "max_battery_level_start":
+            data["drain_per_bin"] = (self.activities.drain / data.number_bins) * -1
+            data["value_per_bin"] = data.loc[data["park_id"].isna(), :].apply(
+                lambda x: self.__increase_level_per_bin(
+                    soc_start=x[column], added_soc_per_bin=x["drain_per_bin"], number_bins=x["number_bins"]
                 ),
                 axis=1,
             )
-        elif valCol == "minBatteryLevelEnd":
-            d["drainPerBin"] = self.activities.drain / d.nBins
-            d["valPerBin"] = d.loc[d["parkID"].isna(), :].apply(
-                lambda x: self.__increaseLevelPerBin(
-                    socStart=x[valCol],
-                    socAddPerBin=x["drainPerBin"],
-                    nBins=x["nBins"],
+        elif column == "min_battery_level_end":
+            data["drain_per_bin"] = self.activities.drain / data.number_bins
+            data["value_per_bin"] = data.loc[data["park_id"].isna(), :].apply(
+                lambda x: self.__increase_level_per_bin(
+                    soc_start=x[column],
+                    added_soc_per_bin=x["drain_per_bin"],
+                    number_bins=x["number_bins"],
                 ),
                 axis=1,
             )
 
-    def __deltaBatteryLevelCharging(self, d: pd.DataFrame, valCol: str):
-        """Calculates increasing battery level values for park / charging
+    def __delta_battery_level_charging(self, data: pd.DataFrame, column: str):
+        """
+        Calculates increasing battery level values for park / charging
         activities for both cases, minimum and maximum battery level. The cases
         have to be differentiated because the max case runs chronologically from
         morning to evening while the min case runs anti-chronologically from
         evening to morning. Thus, in the latter case, charge has to be
         subtracted from the battery level. Charging volumes per bin are
-        calculated from the 'availablePower' column in d.
-        The function __increaseLevelPerBin() is applied to the whole data set with
-        the respective start battery levels (socStart), battery level increases
-        (socAddPerBin) and nBins for each activity respectively in a vectorized
+        calculated from the 'available_power' column in data.
+        The function __increase_level_per_bin() is applied to the whole data set with
+        the respective start battery levels (soc_start), battery level increases
+        (added_soc_per_bin) and number_bins for each activity respectively in a vectorized
         manner. Then, battery capacity limitations are enforced applying the
-        function __enforceBatteryLimit().
-        The function adds a column 'valPerBin' to d directly, thus it doesn't
+        function __enforce_battery_limit().
+        The function adds a column 'value_per_bin' to data directly, thus it doesn't
         return anything.
 
         Args:
-            d (pd.DataFrame): DataFrame with activities in rows and at least
-            the columns valCol, 'availablePower', 'tripID' and
-            'nBins'.
-            valCol (str): The column to descritize. Currently only
-            maxBatteryLevelStart and minBatteryLevelStart are implemented.
+            data (pd.DataFrame): DataFrame with activities in rows and at least
+            the columns column, 'available_power', 'trip_id' and
+            'number_bins'.
+            column (str): The column to descritize. Currently only
+            max_battery_level_start and min_battery_level_start are implemented.
         """
-        if valCol == "maxBatteryLevelStart":
-            d["chargePerBin"] = self.activities.availablePower * self.dt / 60
-            d.loc[d["tripID"].isna(), "valPerBin"] = d.loc[d["tripID"].isna(), :].apply(
-                lambda x: self.__increaseLevelPerBin(
-                    socStart=x[valCol], socAddPerBin=x["chargePerBin"], nBins=x["nBins"]
+        if column == "max_battery_level_start":
+            data["charge_per_bin"] = self.activities.available_power * self.time_resolution / 60
+            data.loc[data["trip_id"].isna(), "value_per_bin"] = data.loc[data["trip_id"].isna(), :].apply(
+                lambda x: self.__increase_level_per_bin(
+                    soc_start=x[column], added_soc_per_bin=x["charge_per_bin"], number_bins=x["number_bins"]
                 ),
                 axis=1,
             )
-            d.loc[d["tripID"].isna(), "valPerBin"] = d.loc[d["tripID"].isna(), "valPerBin"].apply(
-                self.__enforceBatteryLimit,
+            data.loc[data["trip_id"].isna(), "value_per_bin"] = data.loc[data["trip_id"].isna(), "value_per_bin"].apply(
+                self.__enforce_battery_limit,
                 how="upper",
-                lim=self.user_config["flexEstimators"]["Battery_capacity"]
-                * self.user_config["flexEstimators"]["Maximum_SOC"],
+                lim=self.user_config["flexEstimators"]["battery_capacity"]
+                * self.user_config["flexEstimators"]["maximum_soc"],
             )
-        elif valCol == "minBatteryLevelEnd":
-            d["chargePerBin"] = self.activities.availablePower * self.dt / 60 * -1
-            d.loc[d["tripID"].isna(), "valPerBin"] = d.loc[d["tripID"].isna(), :].apply(
-                lambda x: self.__increaseLevelPerBin(
-                    socStart=x[valCol], socAddPerBin=x["chargePerBin"], nBins=x["nBins"]
+        elif column == "min_battery_level_end":
+            data["charge_per_bin"] = self.activities.available_power * self.time_resolution / 60 * -1
+            data.loc[data["trip_id"].isna(), "value_per_bin"] = data.loc[data["trip_id"].isna(), :].apply(
+                lambda x: self.__increase_level_per_bin(
+                    soc_start=x[column], added_soc_per_bin=x["charge_per_bin"], number_bins=x["number_bins"]
                 ),
                 axis=1,
             )
-            d.loc[d["tripID"].isna(), "valPerBin"] = d.loc[d["tripID"].isna(), "valPerBin"].apply(
-                self.__enforceBatteryLimit,
+            data.loc[data["trip_id"].isna(), "value_per_bin"] = data.loc[data["trip_id"].isna(), "value_per_bin"].apply(
+                self.__enforce_battery_limit,
                 how="lower",
-                lim=self.user_config["flexEstimators"]["Battery_capacity"]
-                * self.user_config["flexEstimators"]["Minimum_SOC"],
+                lim=self.user_config["flexEstimators"]["battery_capacity"]
+                * self.user_config["flexEstimators"]["minimum_soc"],
             )
 
-    def __increaseLevelPerBin(self, socStart: float, socAddPerBin: float, nBins: int) -> list:
-        """Returns a list of battery level values with length nBins starting
-        with socStart with added value of socAddPerBin.
+    def __increase_level_per_bin(self, soc_start: float, added_soc_per_bin: float, number_bins: int) -> list:
+        """
+        Returns a list of battery level values with length number_bins starting
+        with soc_start with added value of added_soc_per_bin.
 
         Args:
-            socStart (float): Starting SOC
-            socAddPerBin (float): Consecutive (constant) additions to the start
+            soc_start (float): Starting SOC
+            added_soc_per_bin (float): Consecutive (constant) additions to the start
             SOC
-            nBins (int): Number of discretized bins (one per timeslot)
+            number_bins (int): Number of discretized bins (one per timeslot)
 
         Returns:
-            list: List of nBins increasing battery level values
+            list: List of number_bins increasing battery level values
         """
-        tmp = socStart
+        tmp = soc_start
         lst = [tmp]
-        for _ in range(nBins - 1):
-            tmp += socAddPerBin
+        for _ in range(number_bins - 1):
+            tmp += added_soc_per_bin
             lst.append(tmp)
         return lst
 
-    def __enforceBatteryLimit(self, deltaBat: list, how: str, lim: float) -> list:
-        """Lower-level function that caps a list of values at lower or upper
+    def __enforce_battery_limit(self, delta_battery: list, how: str, lim: float) -> list:
+        """
+        Lower-level function that caps a list of values at lower or upper
         (determined by how) limits given by limit. Thus [0, 40, 60] with
         how=upper and lim=50 would return [0, 40, 50].
 
         Args:
-            deltaBat (list): List of float values of arbitrary length.
+            delta_battery (list): List of float values of arbitrary length.
             how (str): Must be either 'upper' or 'lower'.
             lim (float): Number of threshold to which to limit the values in the
             list.
@@ -459,230 +446,229 @@ class TimeDiscretiser:
             list: Returns a list of same length with values limited to lim.
         """
         if how == "lower":
-            return [max(i, lim) for i in deltaBat]
+            return [max(i, lim) for i in delta_battery]
         elif how == "upper":
-            return [min(i, lim) for i in deltaBat]
+            return [min(i, lim) for i in delta_battery]
 
-    def __valueNonlinearCharge(self):
-        self.__ucParking()
-        self.__ucDriving()
+    def __value_non_linear_charge(self):
+        self.__uncontrolled_charging_parking()
+        self.__uncontrolled_charging_driving()
 
-    def __ucParking(self):
-        self.dataToDiscretise["timestampEndUC"] = pd.to_datetime(self.dataToDiscretise["timestampEndUC"])
-        self.dataToDiscretise["timedeltaUC"] = (
-            self.dataToDiscretise["timestampEndUC"] - self.dataToDiscretise["timestampStart"]
+    def __uncontrolled_charging_parking(self):
+        self.data_to_discretise["timestamp_end_uncontrolled_charging"] = pd.to_datetime(self.data_to_discretise["timestamp_end_uncontrolled_charging"])
+        self.data_to_discretise["time_delta_uncontrolled_chaging"] = (
+            self.data_to_discretise["timestamp_end_uncontrolled_charging"] - self.data_to_discretise["timestamp_start"]
         )
-        self.dataToDiscretise["nFullBinsUC"] = (
-            self.dataToDiscretise.loc[self.dataToDiscretise["tripID"].isna(), "timedeltaUC"].dt.total_seconds()
+        self.data_to_discretise["number_full_bins_uncontrolled_charging"] = (
+            self.data_to_discretise.loc[self.data_to_discretise["trip_id"].isna(), "time_delta_uncontrolled_chaging"].dt.total_seconds()
             / 60
-            / self.dt
+            / self.time_resolution
         ).astype(int)
-        self.dataToDiscretise["valPerBin"] = self.dataToDiscretise.loc[self.dataToDiscretise["tripID"].isna(), :].apply(
-            lambda x: self.__chargeRatePerBin(
-                chargeRate=x["availablePower"], chargeVol=x["uncontrolledCharge"], nBins=x["nBins"]
+        self.data_to_discretise["value_per_bin"] = self.data_to_discretise.loc[self.data_to_discretise["trip_id"].isna(), :].apply(
+            lambda x: self.__charge_rate_per_bin(
+                charging_rate=x["available_power"], charged_volume=x["uncontrolled_charging"], number_bins=x["number_bins"]
             ),
             axis=1,
         )
 
-    def __ucDriving(self):
-        self.dataToDiscretise.loc[self.dataToDiscretise["parkID"].isna(), "valPerBin"] = 0
+    def __uncontrolled_charging_driving(self):
+        self.data_to_discretise.loc[self.data_to_discretise["park_id"].isna(), "value_per_bin"] = 0
 
-    def __chargeRatePerBin(self, chargeRate: float, chargeVol: float, nBins: int) -> list:
-        if chargeRate == 0:
-            return [0] * nBins
-        chargeRatesPerBin = [chargeRate] * nBins
-        volumesPerBin = [r * self.dt / 60 for r in chargeRatesPerBin]
-        cEnergy = np.cumsum(volumesPerBin)
-        idxsOvershoot = [idx for idx, en in enumerate(cEnergy) if en > chargeVol]
+    def __charge_rate_per_bin(self, charging_rate: float, charged_volume: float, number_bins: int) -> list:
+        if charging_rate == 0:
+            return [0] * number_bins
+        charging_rates_per_bin = [charging_rate] * number_bins
+        volumes_per_bin = [r * self.time_resolution / 60 for r in charging_rates_per_bin]
+        cEnergy = np.cumsum(volumes_per_bin)
+        indeces_overshoot = [idx for idx, en in enumerate(cEnergy) if en > charged_volume]
 
         # Incomplete bin treatment
-        if idxsOvershoot:
-            binOvershoot = idxsOvershoot.pop(0)
+        if indeces_overshoot:
+            bin_overshoot = indeces_overshoot.pop(0)
         # uncontrolled charging never completed during activity. This occurs when discretized activity is shorter than
-        # original due to discr. e.g. uniqueID == 10040082, parkID==5 starts at 16:10 and ends at 17:00, with dt=15 min
+        # original due to discr. e.g. unique_id == 10040082, park_id==5 starts at 16:10 and ends at 17:00, with time_resolution=15 min
         # it has 3 bins reducing the discretized duration to 45 minutes instead of 50 minutes.
-        elif cEnergy[0] < chargeVol:
-            return volumesPerBin
+        elif cEnergy[0] < charged_volume:
+            return volumes_per_bin
         else:  # uncontrolled charging completed in first bin
-            return [round(chargeVol, 3)]
+            return [round(charged_volume, 3)]
 
-        if binOvershoot == 0:
-            valLastCBin = round(chargeVol, 3)
+        if bin_overshoot == 0:
+            valLastCBin = round(charged_volume, 3)
         else:
-            valLastCBin = round((chargeVol - cEnergy[binOvershoot - 1]), 3)
+            valLastCBin = round((charged_volume - cEnergy[bin_overshoot - 1]), 3)
 
-        return volumesPerBin[:binOvershoot] + [valLastCBin] + [0] * (len(idxsOvershoot))
+        return volumes_per_bin[:bin_overshoot] + [valLastCBin] + [0] * (len(indeces_overshoot))
 
-    def __identifyBins(self):
+    def __identify_bins(self):
         """
         Wrapper which identifies the first and the last bin.
         """
-        self.__identifyFirstBin()
-        self.__identifyLastBin()
+        self.__identify_first_bin()
+        self.__identify_last_bin()
 
-    def __identifyFirstBin(self):
+    def __identify_first_bin(self):
         """
         Identifies every first bin for each activity (trip or parking).
         """
-        self.dataToDiscretise["timestampStartCorrected"] = self.dataToDiscretise["timestampStartCorrected"].apply(
+        self.data_to_discretise["timestamp_start_corrected"] = self.data_to_discretise["timestamp_start_corrected"].apply(
             lambda x: pd.to_datetime(str(x))
         )
-        dayStart = self.dataToDiscretise["timestampStartCorrected"].apply(
+        day_start = self.data_to_discretise["timestamp_start_corrected"].apply(
             lambda x: pd.Timestamp(year=x.year, month=x.month, day=x.day)
         )
-        self.dataToDiscretise["dailyTimeDeltaStart"] = self.dataToDiscretise["timestampStartCorrected"] - dayStart
-        self.dataToDiscretise["startTimeFromMidnightSeconds"] = self.dataToDiscretise["dailyTimeDeltaStart"].apply(
+        self.data_to_discretise["dailyTimeDeltaStart"] = self.data_to_discretise["timestamp_start_corrected"] - day_start
+        self.data_to_discretise["startTimeFromMidnightSeconds"] = self.data_to_discretise["dailyTimeDeltaStart"].apply(
             lambda x: x.seconds
         )
-        bins = pd.DataFrame({"binTimestamp": self.timeDelta})
+        bins = pd.DataFrame({"binTimestamp": self.time_delta})
         bins.drop(bins.tail(1).index, inplace=True)  # remove last element, which is zero
-        self.binFromMidnightSeconds = bins["binTimestamp"].apply(lambda x: x.seconds)
-        self.binFromMidnightSeconds = self.binFromMidnightSeconds + (self.dt * 60)
-        self.dataToDiscretise["firstBin"] = (
-            self.dataToDiscretise["startTimeFromMidnightSeconds"].apply(
-                lambda x: np.argmax(x < self.binFromMidnightSeconds)
+        self.bin_from_midnight_seconds = bins["binTimestamp"].apply(lambda x: x.seconds)
+        self.bin_from_midnight_seconds = self.bin_from_midnight_seconds + (self.time_resolution * 60)
+        self.data_to_discretise["first_bin"] = (
+            self.data_to_discretise["startTimeFromMidnightSeconds"].apply(
+                lambda x: np.argmax(x < self.bin_from_midnight_seconds)
             )
         ).astype(int)
-        if self.dataToDiscretise["firstBin"].any() > self.nTimeSlots:
+        if self.data_to_discretise["first_bin"].any() > self.number_time_slots:
             raise ArithmeticError("One of first bin values is bigger than total number of bins.")
-        if self.dataToDiscretise["firstBin"].unique().any() < 0:
+        if self.data_to_discretise["first_bin"].unique().any() < 0:
             raise ArithmeticError("One of first bin values is smaller than 0.")
-        if self.dataToDiscretise["firstBin"].isna().any():
+        if self.data_to_discretise["first_bin"].isna().any():
             raise ArithmeticError("One of first bin values is NaN.")
 
-    def __identifyLastBin(self):
+    def __identify_last_bin(self):
         """
         Identifies every last bin for each activity (trip or parking).
         """
-        dayEnd = self.dataToDiscretise["timestampEndCorrected"].apply(
+        day_end = self.data_to_discretise["timestamp_end_corrected"].apply(
             lambda x: pd.Timestamp(year=x.year, month=x.month, day=x.day)
         )
-        self.dataToDiscretise["dailyTimeDeltaEnd"] = self.dataToDiscretise["timestampEndCorrected"] - dayEnd
-        self.dataToDiscretise["lastBin"] = (
-            self.dataToDiscretise["firstBin"] + self.dataToDiscretise["nBins"] - 1
+        self.data_to_discretise["dailyTimeDeltaEnd"] = self.data_to_discretise["timestamp_end_corrected"] - day_end
+        self.data_to_discretise["last_bin"] = (
+            self.data_to_discretise["first_bin"] + self.data_to_discretise["number_bins"] - 1
         ).astype(int)
-        if self.dataToDiscretise["lastBin"].any() > self.nTimeSlots:
+        if self.data_to_discretise["last_bin"].any() > self.number_time_slots:
             raise ArithmeticError("One of first bin values is bigger than total number of bins.")
-        if self.dataToDiscretise["lastBin"].unique().any() < 0:
+        if self.data_to_discretise["last_bin"].unique().any() < 0:
             raise ArithmeticError("One of first bin values is smaller than 0.")
-        if self.dataToDiscretise["lastBin"].isna().any():
+        if self.data_to_discretise["last_bin"].isna().any():
             raise ArithmeticError("One of first bin values is NaN.")
 
-    def __allocateBinShares(self):  # sourcery skip: assign-if-exp
+    def __allocate_bin_shares(self):  # sourcery skip: assign-if-exp
         """
         Wrapper which identifies shared bins and allocates them to a discrestised structure.
         """
-        # self._overlappingActivities()
-        self.discreteData = self.__allocateWeek() if self.isWeek else self.__allocate()
-        self.__checkBinValues()
+        self.discrete_data = self.__allocate_week() if self.is_week else self.__allocate()
+        self.__check_bin_values()
 
-    def __checkBinValues(self):
+    def __check_bin_values(self):
         """
         Verifies that all bins get a value assigned, otherwise raise an error.
         """
-        if self.discreteData.isna().any().any():
+        if self.discrete_data.isna().any().any():
             raise ValueError("There are NaN in the dataset.")
 
-    def __removesZeroLengthActivities(self):
+    def __removes_zero_length_activities(self):
         """
         Implements a strategy for overlapping bins if time resolution high enough so that the event becomes negligible,
-        i.e. drops events with no length (timestampStartCorrected = timestampEndCorrected or activityDuration = 0),
-        which cause division by zero in nBins calculation.
+        i.e. drops events with no length (timestamp_start_corrected = timestamp_end_corrected or activity_duration = 0),
+        which cause division by zero in number_bins calculation.
         """
-        startLength = len(self.dataToDiscretise)
-        noLengthActivitiesIDs = self.dataToDiscretise[
-            self.dataToDiscretise.activityDuration == pd.Timedelta(0)
+        start_length = len(self.data_to_discretise)
+        indeces_no_length_activities = self.data_to_discretise[
+            self.data_to_discretise.activity_duration == pd.time_delta(0)
         ].index.to_list()
-        self.IDsWithNoLengthActivities = self.dataToDiscretise.loc[noLengthActivitiesIDs]["uniqueID"].unique()
-        self.dataToDiscretise = self.dataToDiscretise.drop(noLengthActivitiesIDs)
-        endLength = len(self.dataToDiscretise)
-        droppedActivities = startLength - endLength
-        if droppedActivities != 0:
+        self.ids_with_no_length_activities = self.data_to_discretise.loc[indeces_no_length_activities]["unique_id"].unique()
+        self.data_to_discretise = self.data_to_discretise.drop(indeces_no_length_activities)
+        end_length = len(self.data_to_discretise)
+        dropped_activities = start_length - end_length
+        if dropped_activities != 0:
             raise ValueError(
-                f"{droppedActivities} zero-length activities dropped from {len(self.IDsWithNoLengthActivities)} IDs."
+                f"{dropped_activities} zero-length activities dropped from {len(self.ids_with_no_length_activities)} IDs."
             )
-        self.__removeActivitiesWithZeroValue()
+        self.__remove_activities_with_zero_value()
 
-    def __removeActivitiesWithZeroValue(self):
-        startLength = len(self.dataToDiscretise)
-        subsetNoLengthActivitiesIDsOnly = self.dataToDiscretise.loc[
-            self.dataToDiscretise.uniqueID.isin(self.IDsWithNoLengthActivities)
+    def __remove_activities_with_zero_value(self):
+        start_length = len(self.data_to_discretise)
+        subset_no_length_activities_ids = self.data_to_discretise.loc[
+            self.data_to_discretise.unique_id.isin(self.ids_with_no_length_activities)
         ]
-        subsetNoLengthActivitiesIDsOnly = subsetNoLengthActivitiesIDsOnly.set_index("uniqueID", drop=False)
-        subsetNoLengthActivitiesIDsOnly.index.names = ["uniqueIDindex"]
-        IDsWithSumZero = subsetNoLengthActivitiesIDsOnly.groupby(["uniqueID"])[self.columnToDiscretise].sum()
-        IDsToDrop = IDsWithSumZero[IDsWithSumZero == 0].index
-        self.dataToDiscretise = self.dataToDiscretise.loc[~self.dataToDiscretise.uniqueID.isin(IDsToDrop)]
-        endLength = len(self.dataToDiscretise)
-        droppedActivities = startLength - endLength
-        if droppedActivities != 0:
+        subset_no_length_activities_ids = subset_no_length_activities_ids.set_index("unique_id", drop=False)
+        subset_no_length_activities_ids.index.names = ["uniqueIDindex"]
+        ids_with_sum_zero = subset_no_length_activities_ids.groupby(["unique_id"])[self.column_to_discretise].sum()
+        ids_to_drop = ids_with_sum_zero[ids_with_sum_zero == 0].index
+        self.data_to_discretise = self.data_to_discretise.loc[~self.data_to_discretise.unique_id.isin(ids_to_drop)]
+        end_length = len(self.data_to_discretise)
+        dropped_activities = start_length - end_length
+        if dropped_activities != 0:
             raise ValueError(
-                f"Additional {droppedActivities} activities dropped as the sum of all {self.columnToDiscretise} activities for the specific ID was zero."
+                f"Additional {dropped_activities} activities dropped as the sum of all {self.column_to_discretise} activities for the specific ID was zero."
             )
 
-    def __allocateWeek(self):
+    def __allocate_week(self):
         """
         Wrapper method for allocating respective values per bin to days within a week. Expects that the activities
-        are formatted in a way that uniqueID represents a unique week ID. The function then loops over the 7 weekdays
+        are formatted in a way that unique_id represents a unique week ID. The function then loops over the 7 weekdays
         and calls __allocate for each day a total of 7 times.
         """
         raise NotImplementedError("The method has not been implemneted yet.")
 
     def __allocate(self) -> pd.DataFrame:
         """
-        Loops over every activity (row) and allocates the respective value per bin (valPerBin) to each column
-        specified in the columns firstBin and lastBin.
+        Loops over every activity (row) and allocates the respective value per bin (value_per_bin) to each column
+        specified in the columns first_bin and last_bin.
         Args:
             weekday (str, optional): _description_. Defaults to None.
         Returns:
             pd.DataFrame: Discretized data set with temporal discretizations in the columns.
         """
-        trips = self.dataToDiscretise.copy()
-        trips = trips[["uniqueID", "firstBin", "lastBin", "valPerBin"]]
-        trips["uniqueID"] = trips["uniqueID"].astype(int)
-        return trips.groupby(by="uniqueID").apply(self.assignBins)
+        trips = self.data_to_discretise.copy()
+        trips = trips[["unique_id", "first_bin", "last_bin", "value_per_bin"]]
+        trips["unique_id"] = trips["unique_id"].astype(int)
+        return trips.groupby(by="unique_id").apply(self.assign_bins)
 
-    def assignBins(self, acts: pd.DataFrame) -> pd.Series:
+    def assign_bins(self, activities: pd.DataFrame) -> pd.Series:
         """
-        Assigns values for every uniqueID based on first and last bin.
+        Assigns values for every unique_id based on first and last bin.
         """
-        s = pd.Series(index=range(self.nTimeSlots), dtype=float)
-        for _, itrip in acts.iterrows():
-            start = itrip["firstBin"]
-            end = itrip["lastBin"]
-            value = itrip["valPerBin"]
-            if self.columnToDiscretise == "minBatteryLevelEnd":
+        s = pd.Series(index=range(self.number_time_slots), dtype=float)
+        for _, itrip in activities.iterrows():
+            start = itrip["first_bin"]
+            end = itrip["last_bin"]
+            value = itrip["value_per_bin"]
+            if self.column_to_discretise == "min_battery_level_end":
                 s.loc[start:end] = value[::-1]
             else:
                 s.loc[start:end] = value
         return s
 
     def __write_output(self):
-        if self.user_config["global"]["writeOutputToDisk"]["diaryOutput"]:
-            root = Path(self.user_config["global"]["pathAbsolute"]["vencopyRoot"])
-            folder = self.dev_config["global"]["pathRelative"]["diaryOutput"]
-            fileName = createFileName(
+        if self.user_config["global"]["write_output_to_disk"]["diary_output"]:
+            root = Path(self.user_config["global"]["absolute_path"]["vencopy_root"])
+            folder = self.dev_config["global"]["relative_path"]["diary_output"]
+            file_name = create_file_name(
                 dev_config=self.dev_config,
                 user_config=self.user_config,
-                manualLabel=self.columnToDiscretise,
-                fileNameID="outputDiaryBuilder",
-                datasetID=self.datasetID,
+                manual_label=self.column_to_discretise,
+                file_name_id="output_diaryBuilder",
+                dataset=self.dataset,
             )
-            writeOut(data=self.activities, path=root / folder / fileName)
+            write_out(data=self.activities, path=root / folder / file_name)
 
-    def discretise(self, profile, profileName: str, method: str) -> pd.DataFrame:
-        self.columnToDiscretise: Optional[str] = profileName
-        self.dataToDiscretise = profile
+    def discretise(self, profile, profile_name: str, method: str) -> pd.DataFrame:
+        self.column_to_discretise: Optional[str] = profile_name
+        self.data_to_discretise = profile
         self.method = method
-        print(f"Starting to discretise {self.columnToDiscretise}.")
-        startTimeDiaryBuilder = time.time()
-        self.__datasetCleanup()
-        self.__identifyBinShares()
-        self.__allocateBinShares()
-        if self.user_config["global"]["writeOutputToDisk"]["diaryOutput"]:
+        print(f"Starting to discretise {self.column_to_discretise}.")
+        start_time_diaryBuilder = time.time()
+        self.__dataset_cleanup()
+        self.__identify_bin_shares()
+        self.__allocate_bin_shares()
+        if self.user_config["global"]["write_output_to_disk"]["diary_output"]:
             self.__write_output()
-        print(f"Discretisation finished for {self.columnToDiscretise}.")
-        elapsedTimeDiaryBuilder = time.time() - startTimeDiaryBuilder
-        print(f"Needed time to discretise {self.columnToDiscretise}: {elapsedTimeDiaryBuilder}.")
-        self.columnToDiscretise = None
-        return self.discreteData
+        print(f"Discretisation finished for {self.column_to_discretise}.")
+        elapsed_time_diaryBuilder = time.time() - start_time_diaryBuilder
+        print(f"Needed time to discretise {self.column_to_discretise}: {elapsed_time_diaryBuilder}.")
+        self.column_to_discretise = None
+        return self.discrete_data

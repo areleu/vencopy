@@ -1,49 +1,50 @@
 #-*- coding:utf-8 -*-
-
-# __version__ = '0.1.X'
-# __birthdate__ = '15.08.2023'
-# __status__ = 'dev'  # options are: dev, test, prod
+# __version__ = "1.0.0"
+# __maintainer__ = "Niklas Wulff, Fabia Miorelli"
+# __birthdate__ = "15.08.2023"
+# __status__ = "test"  # options are: dev, test, prod
+# __license__ = "BSD-3-Clause"
 
 # This config holds specifications for a venco.py run that can be configured by the user.
 
 global:
   dataset: MiD17 # options are MiD08, MiD17, VF, KiD
   debug: True
-  nDebugLines: 5000
-  runLabel:
-  writeOutputToDisk:
-      parseOutput: False
-      gridOutput: False
-      flexOutput: False
-      diaryOutput: False
-      aggregatorOutput: True
-      processorOutput:
+  number_lines_debug: 5000
+  run_label:
+  write_output_to_disk:
+      parse_output: False
+      grid_output: False
+      flex_output: False
+      diary_output: False
+      aggregator_output: True
+      processor_output:
         absolute_annual_profiles: True
         normalised_annual_profiles: True
 
-  pathAbsolute:
+  absolute_path:
       MiD08: PATH_TO_DATA_FOLDER
       MiD17: PATH_TO_DATA_FOLDER  # e.g. C:/MiD/proprietary/B2/STATA
       KiD: PATH_TO_DATA_FOLDER
-      vencopyRoot: [USER FOLDER ROOT]
+      vencopy_root: [USER FOLDER ROOT]
 
 
 dataParsers:
-  encryptionPW: "PW"
-  splitOvernightTrips: True
-  subsetVehicleSegment: True
-  vehicleSegment:
+  encryption_password: "PW"
+  split_overnight_trips: True
+  subset_vehicle_segment: True
+  vehicle_segment:
       VF: "L" # options: "S" (65743), "M" (37999), "L" (13359)
       KiD: "Car" # options: "Light motorised vehicle", "Car", "Van", "Truck", "Tractor unit", "Coach", "Other tractor unit", "Agriculture and forestry tractor unit", "Other"
 
 
 gridModelers:
-  minimumParkingTime: 900 # charging power is set to zero if parking time lower than <minimumParkingTime> in seconds
-  gridModel: "simple" # Options are "simple" and "probability"
+  minimum_parking_time: 900 # charging power is set to zero if parking time lower than <minimum_parking_time> in seconds
+  grid_model: "simple" # Options are "simple" and "probability"
   losses: True # Take into account charging station losses
-  forceLastTripHome: True # Require that all last trips end home
-  ratedPowerSimple: 11
-  chargingInfrastructureMappings: # Simple grid model: Explicit mapping given for each location aka parking purpose
+  force_last_trip_home: True # Require that all last trips end home
+  rated_power_simple: 11
+  charging_infrastructure_mappings: # Simple grid model: Explicit mapping given for each location aka parking purpose
       "DRIVING": False
       "HOME": True
       "WORK": True
@@ -56,7 +57,7 @@ gridModelers:
       "PEOPLE_MOBILITY": False
       "TRANSPORT": False
       "SERVICES": False
-  gridAvailabilityDistribution: # Grid model 3: Probabilities given for each location aka trip purpose and capacity
+  grid_availability_distribution: # Grid model 3: Probabilities given for each location aka trip purpose and capacity
       "DRIVING":
           0: 1
           #0.005: 75
@@ -110,27 +111,27 @@ gridModelers:
 
 
 flexEstimators:
-  filterFuelNeed: True # Should activity chains that require fuel for trip distance satisfaction be filtered out?
-  Battery_capacity: 50 # in kWh, input assumption for battery capacity
-  Electric_consumption: 18.0 # in kWh/100km, input assumption for specific electric consumption
-  Fuel_consumption: 1.0 # in l/100km, input assumption for specific fuel consumption for auxiliary fuel
-  Start_SOC: 0.5 # State-of-charge between 0 and 1 at beginning of activity chain
-  Maximum_SOC: 0.97 # in %
-  Minimum_SOC: 0.03 # in %
-  maxIterations: 10  # Technical parameter --> not to user config
+  filter_fuel_need: True # Should activity chains that require fuel for trip distance satisfaction be filtered out?
+  battery_capacity: 50 # in kWh, input assumption for battery capacity
+  electric_consumption: 18.0 # in kWh/100km, input assumption for specific electric consumption
+  fuel_consumption: 1.0 # in l/100km, input assumption for specific fuel consumption for auxiliary fuel
+  start_soc: 0.5 # State-of-charge between 0 and 1 at beginning of activity chain
+  maximum_soc: 0.97 # in %
+  minimum_soc: 0.03 # in %
+  max_iterations: 10  # Technical parameter --> not to user config
   epsilon_battery_level: 0.0001  # Iterations stop once the difference between start and end battery level have decreased to this share of fleet battery level
 
 
 diaryBuilders:
-  TimeDelta: 15
-  isWeekDiary: False # Determine if the activity data set comprises weekly activity chains (synthesized by WeekDiaryBuilder)
+  time_delta: 15
+  is_week_diary: False # Determine if the activity data set comprises weekly activity chains (synthesized by WeekDiaryBuilder)
 
 
 profileAggregators:
-  weightFlowProfiles: False # Currently only used for flow profile aggregation
+  weight_flow_profiles: False # Currently only used for flow profile aggregation
   alpha: 10 # Only used for state profile aggregation
 
 
 outputFormatters:
-  startWeekday: 1 # 1=Monday
+  start_weekday: 1 # 1=Monday
 

@@ -12,8 +12,8 @@ from setuptools import setup, find_packages
 def walkDataFiles(directory):
     paths = []
     for (path, directories, filenames) in os.walk(directory):
-        for filename in filenames:
-            paths.append(os.path.join('..', path, filename))
+        for file_name in filenames:
+            paths.append(os.path.join('..', path, file_name))
     return paths
 
 
