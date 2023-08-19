@@ -48,7 +48,7 @@ class ParseMiD(IntermediateParsing):
         :return: None
         """
         replacement_dict = self._create_replacement_dict(
-            self.dataset, self.dev_config["dataParsers"]["data_variables"]
+            self.dataset, self.dev_config["dataparsers"]["data_variables"]
         )
         activities_renamed = self.trips.rename(columns=replacement_dict)
         if self.dataset == "MiD08":

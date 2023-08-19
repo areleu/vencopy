@@ -17,12 +17,12 @@ class GridModeler:
         self.user_config = configs["user_config"]
         self.dev_config = configs["dev_config"]
         self.dataset = configs["user_config"]["global"]["dataset"]
-        self.grid_model = self.user_config["gridModelers"]["grid_model"]
+        self.grid_model = self.user_config["gridmodelers"]["grid_model"]
         self.activities = activities
-        if self.user_config["gridModelers"]["force_last_trip_home"]:
+        if self.user_config["gridmodelers"]["force_last_trip_home"]:
             self.__remove_activities_not_ending_home()
-        self.grid_availability_simple = self.user_config["gridModelers"]["charging_infrastructure_mappings"]
-        self.grid_availability_probability = self.user_config["gridModelers"]["grid_availability_distribution"]
+        self.grid_availability_simple = self.user_config["gridmodelers"]["charging_infrastructure_mappings"]
+        self.grid_availability_probability = self.user_config["gridmodelers"]["grid_availability_distribution"]
         self.charging_availability = None
 
     def __assign_grid_via_purposes(self):
@@ -35,7 +35,7 @@ class GridModeler:
         """
         print("Starting with charge connection replacement of location purposes.")
         self.charging_availability = self.activities.purpose_string.replace(self.grid_availability_simple)
-        self.charging_availability = self.charging_availability * self.user_config["gridModelers"]["rated_power_simple"]
+        self.charging_availability = self.charging_availability * self.user_config["gridmodelers"]["rated_power_simple"]
         self.activities["rated_power"] = self.charging_availability
         self.activities = self.__adjust_power_short_parking_time()
         print("Grid connection assignment complete.")
@@ -53,8 +53,8 @@ class GridModeler:
                 activities_home = self.__home_probability_distribution(set_seed=42)
             else:
                 subset = self.activities.loc[self.activities.purpose_string == purpose].copy()
-                power = list((self.user_config["gridModelers"]["grid_availability_distribution"][purpose]).keys())
-                probability = list(self.user_config["gridModelers"]["grid_availability_distribution"][purpose].values())
+                power = list((self.user_config["gridmodelers"]["grid_availability_distribution"][purpose]).keys())
+                probability = list(self.user_config["gridmodelers"]["grid_availability_distribution"][purpose].values())
                 urng = np.random.default_rng(set_seed)  # universal non-uniform random number
                 rng = DiscreteAliasUrn(probability, random_state=urng)
                 self.charging_availability = rng.rvs(len(subset))
@@ -85,8 +85,8 @@ class GridModeler:
         home_activities = self.activities.loc[self.activities.purpose_string == purpose].copy()
         households = home_activities[["household_id"]].reset_index(drop=True)
         households = households.drop_duplicates(subset="household_id").copy()  # 73850 unique HH
-        power = list((self.user_config["gridModelers"]["grid_availability_distribution"][purpose]).keys())
-        probability = list(self.user_config["gridModelers"]["grid_availability_distribution"][purpose].values())
+        power = list((self.user_config["gridmodelers"]["grid_availability_distribution"][purpose]).keys())
+        probability = list(self.user_config["gridmodelers"]["grid_availability_distribution"][purpose].values())
         urng = np.random.default_rng(set_seed)  # universal non-uniform random number
         rng = DiscreteAliasUrn(probability, random_state=urng)
         self.charging_availability = rng.rvs(len(households))
@@ -106,7 +106,7 @@ class GridModeler:
                 (self.activities["park_id"].notna())
                 & (
                     (self.activities["time_delta"] / np.timedelta64(1, "s"))
-                    <= self.user_config["gridModelers"]["minimum_parking_time"]
+                    <= self.user_config["gridmodelers"]["minimum_parking_time"]
                 )
             ),
             "rated_power",
@@ -145,11 +145,11 @@ class GridModeler:
         :param activities [bool]: Should electric losses in the charging equipment be considered?
         :param losses [bool]: Should electric losses in the charging equipment be considered?
         """
-        if self.user_config["gridModelers"]["losses"]:
+        if self.user_config["gridmodelers"]["losses"]:
             self.activities["available_power"] = self.activities["rated_power"] - (
                 self.activities["rated_power"]
                 * self.activities["rated_power"].apply(
-                    lambda x: self.user_config["gridModelers"]["loss_factor"][f"rated_power_{str(x)}"]
+                    lambda x: self.user_config["gridmodelers"]["loss_factor"][f"rated_power_{str(x)}"]
                 )
             )
         else:

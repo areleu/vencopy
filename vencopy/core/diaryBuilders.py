@@ -21,7 +21,7 @@ class DiaryBuilder:
         self.user_config = configs["user_config"]
         self.dataset = configs["user_config"]["global"]["dataset"]
         self.activities = activities
-        self.time_resolution = configs["user_config"]["diaryBuilders"]["time_resolution"]
+        self.time_resolution = configs["user_config"]["diarybuilders"]["time_resolution"]
         self.is_week_diary = is_week_diary
         self.__update_activities()
         self.drain = None
@@ -391,8 +391,8 @@ class TimeDiscretiser:
             data.loc[data["trip_id"].isna(), "value_per_bin"] = data.loc[data["trip_id"].isna(), "value_per_bin"].apply(
                 self.__enforce_battery_limit,
                 how="upper",
-                lim=self.user_config["flexEstimators"]["battery_capacity"]
-                * self.user_config["flexEstimators"]["maximum_soc"],
+                lim=self.user_config["flexestimators"]["battery_capacity"]
+                * self.user_config["flexestimators"]["maximum_soc"],
             )
         elif column == "min_battery_level_end":
             data["charge_per_bin"] = self.activities.available_power * self.time_resolution / 60 * -1
@@ -405,8 +405,8 @@ class TimeDiscretiser:
             data.loc[data["trip_id"].isna(), "value_per_bin"] = data.loc[data["trip_id"].isna(), "value_per_bin"].apply(
                 self.__enforce_battery_limit,
                 how="lower",
-                lim=self.user_config["flexEstimators"]["battery_capacity"]
-                * self.user_config["flexEstimators"]["minimum_soc"],
+                lim=self.user_config["flexestimators"]["battery_capacity"]
+                * self.user_config["flexestimators"]["minimum_soc"],
             )
 
     def __increase_level_per_bin(self, soc_start: float, added_soc_per_bin: float, number_bins: int) -> list:

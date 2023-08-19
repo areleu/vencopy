@@ -21,7 +21,7 @@ This part of the documentation holds the function definitions of venco.py from t
 .. automodule:: vencopy.run
     :members:
 
-.. automodule:: vencopy.classes.dataParsers
+.. automodule:: vencopy.classes.dataparsers
     :members:
     :undoc-members:
     :show-inheritance:
@@ -31,12 +31,12 @@ This part of the documentation holds the function definitions of venco.py from t
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: vencopy.classes.gridModelers
+.. automodule:: vencopy.classes.gridmodelers
     :members:
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: vencopy.classes.flexEstimators
+.. automodule:: vencopy.classes.flexestimators
     :members:
     :undoc-members:
     :show-inheritance:

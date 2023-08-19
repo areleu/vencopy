@@ -21,7 +21,7 @@ A provisional development timeline is provided below.
     +----------------+----------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------+
     |Q3 2021         |0.1.X - Beta release  |Interface to German MiD dataset, trip diary building, grid modeling, structure overhaul, config separation                                               |
     +----------------+----------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------+
-    |Q1 2022         |0.2.X                 |Grid modeling refinements, potentially easier config handling, potentially DataClasses for flexibilityEstimation, potentially inheritance in dataParsers |
+    |Q1 2022         |0.2.X                 |Grid modeling refinements, potentially easier config handling, potentially DataClasses for flexibilityEstimation, potentially inheritance in dataparsers |
     +----------------+----------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------+
     |Q2 2022         |0.3.X                 |Interface to German KiD dataset, code improvements, data validation capabilities in evaluator, performance improvements of trip diary builder            |
     +----------------+----------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------+

@@ -18,8 +18,8 @@ class ProfileAggregator:
         self.user_config = configs["user_config"]
         self.dev_config = configs["dev_config"]
         self.dataset = self.user_config["global"]["dataset"]
-        self.weighted = self.user_config["profileAggregators"]["weight_flow_profiles"]
-        self.alpha = self.user_config["profileAggregators"]["alpha"]
+        self.weighted = self.user_config["profileaggregators"]["weight_flow_profiles"]
+        self.alpha = self.user_config["profileaggregators"]["alpha"]
         self.activities = activities
         self.profiles = profiles
         self.weights = (

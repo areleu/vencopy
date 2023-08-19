@@ -14,7 +14,7 @@ global:
         grid_output: ./output/gridModeler/
         flex_output: ./output/flexEstimator/
         aggregator_output: ./output/profileAggregator/
-        processor_output: ./output/postProcessor/
+        processor_output: ./output/postprocessor/
         config: ./config/
     files:
         MiD17:
@@ -42,7 +42,7 @@ global:
         output_postProcessor_annual: vencopy_output_postProcessor_annual
         output_postProcessor_normalised: vencopy_output_postProcessor_normalized
 
-dataParsers:
+dataparsers:
     data_variables:
         dataset: ["MiD08", "MiD17", "KiD", "VF"]
         is_driver: ["pkw_f", "W_VM_G", "NA", "NA"]

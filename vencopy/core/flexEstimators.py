@@ -17,10 +17,10 @@ class FlexEstimator:
         self.user_config = configs["user_config"]
         self.dev_config = configs["dev_config"]
         self.upper_battery_level = (
-            self.user_config["flexEstimators"]["battery_capacity"] * self.user_config["flexEstimators"]["maximum_soc"]
+            self.user_config["flexestimators"]["battery_capacity"] * self.user_config["flexestimators"]["maximum_soc"]
         )
         self.lower_battery_level = (
-            self.user_config["flexEstimators"]["battery_capacity"] * self.user_config["flexEstimators"]["minimum_soc"]
+            self.user_config["flexestimators"]["battery_capacity"] * self.user_config["flexestimators"]["minimum_soc"]
         )
         self.activities = activities.copy()
         self.is_trip = ~self.activities["trip_id"].isna()
@@ -51,7 +51,7 @@ class FlexEstimator:
 
     def _drain(self):
         self.activities["drain"] = (
-            self.activities["trip_distance"] * self.user_config["flexEstimators"]["electric_consumption"] / 100
+            self.activities["trip_distance"] * self.user_config["flexestimators"]["electric_consumption"] / 100
         )
 
     def _max_charge_volume_per_parking_activity(self):
@@ -412,8 +412,8 @@ class FlexEstimator:
     def _auxiliary_fuel_need(self):
         self.activities["auxiliary_fuel_need"] = (
             self.activities["residual_need"]
-            * self.user_config["flexEstimators"]["fuel_consumption"]
-            / self.user_config["flexEstimators"]["electric_consumption"]
+            * self.user_config["flexestimators"]["fuel_consumption"]
+            / self.user_config["flexestimators"]["electric_consumption"]
         )
 
     def _filter_residual_need(self, activities: pd.DataFrame, index_columns: list) -> pd.DataFrame:
@@ -467,11 +467,11 @@ class FlexEstimator:
         """
         self._drain()
         self._max_charge_volume_per_parking_activity()
-        self.__battery_level_max(start_level=self.upper_battery_level * self.user_config["flexEstimators"]["start_soc"])
+        self.__battery_level_max(start_level=self.upper_battery_level * self.user_config["flexestimators"]["start_soc"])
         self._uncontrolled_charging()
         self.__battery_level_min()
         self._auxiliary_fuel_need()
-        if self.user_config["flexEstimators"]["filter_fuel_need"]:
+        if self.user_config["flexestimators"]["filter_fuel_need"]:
             self.activities = self._filter_residual_need(activities=self.activities, index_columns=["unique_id"])
         if self.user_config["global"]["write_output_to_disk"]["flex_output"]:
             self.__write_output()
@@ -491,13 +491,13 @@ class FlexEstimator:
         self._drain()
         self._max_charge_volume_per_parking_activity()
         self.__iterative_battery_level_calculation(
-            max_iteration=self.user_config["flexEstimators"]["max_iterations"],
-            epsilon=self.user_config["flexEstimators"]["epsilon_battery_level"],
-            battery_capacity=self.user_config["flexEstimators"]["battery_capacity"],
+            max_iteration=self.user_config["flexestimators"]["max_iterations"],
+            epsilon=self.user_config["flexestimators"]["epsilon_battery_level"],
+            battery_capacity=self.user_config["flexestimators"]["battery_capacity"],
             number_vehicles=len(self.activities["unique_id"].unique()),
         )
         self._auxiliary_fuel_need()
-        if self.user_config["flexEstimators"]["filter_fuel_need"]:
+        if self.user_config["flexestimators"]["filter_fuel_need"]:
             self.activities = self._filter_residual_need(activities=self.activities, index_columns=["unique_id"])
         if self.user_config["global"]["write_output_to_disk"]["flex_output"]:
             self.__write_output()
@@ -516,7 +516,7 @@ class FlexEstimator:
             battery_capacity (float): Average nominal battery capacity per vehicle in kWh.
             number_vehicles (int): Number of vehicles in the empiric mobility pattern data set.
         """
-        max_battery_level_end = self.upper_battery_level * self.user_config["flexEstimators"]["start_soc"]
+        max_battery_level_end = self.upper_battery_level * self.user_config["flexestimators"]["start_soc"]
         min_battery_level_start = self.lower_battery_level
         absolute_epsilon = int(self.__absolute_epsilon(epsilon=epsilon, battery_capacity=battery_capacity, number_vehicles=number_vehicles))
 

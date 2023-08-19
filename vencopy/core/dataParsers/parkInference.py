@@ -31,7 +31,7 @@ class ParkInference:
         day?
         """
         self.trips = trips
-        split_overnight_trips = self.user_config["dataParsers"]["split_overnight_trips"]
+        split_overnight_trips = self.user_config["dataparsers"]["split_overnight_trips"]
         self.__copy_rows()
         self.__add_util_attributes()
         self.__add_park_act_after_last_trip()

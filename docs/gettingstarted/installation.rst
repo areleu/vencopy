@@ -50,7 +50,7 @@ will look like this:
     │   ├── flexEstimator
     │   ├── diaryBuilder
     │   ├── profileAggregator
-    │   └── postProcessor
+    │   └── postprocessor
     ├── tutorials
     │   └── ..
     └── run.py

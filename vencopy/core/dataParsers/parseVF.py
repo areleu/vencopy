@@ -63,13 +63,13 @@ class ParseVF(IntermediateParsing):
     def __harmonize_variables(self):
         """
         Harmonizes the input data variables to match internal venco.py names given as specified in the mapping in
-        self.dev_config["dataParsers"]['data_variables']. Mappings for MiD08 and MiD17 are given. Since the MiD08 does not provide a
+        self.dev_config["dataparsers"]['data_variables']. Mappings for MiD08 and MiD17 are given. Since the MiD08 does not provide a
         combined household and person unique identifier, it is synthesized of the both IDs.
 
         :return: None
         """
         replacement_dict = self._create_replacement_dict(
-            self.dataset, self.dev_config["dataParsers"]["data_variables"]
+            self.dataset, self.dev_config["dataparsers"]["data_variables"]
         )
         data_renamed = self.trips.rename(columns=replacement_dict)
         if self.dataset == "MiD08":

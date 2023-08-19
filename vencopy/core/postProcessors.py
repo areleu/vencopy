@@ -23,7 +23,7 @@ class PostProcessor:
         self.user_config = configs["user_config"]
         self.dev_config = configs["dev_config"]
         self.dataset = self.user_config["global"]["dataset"]
-        self.time_resolution = self.user_config["diaryBuilders"]["time_resolution"]
+        self.time_resolution = self.user_config["diarybuilders"]["time_resolution"]
         self.time_delta = pd.timedelta_range(start="00:00:00", end="24:00:00", freq=f"{self.time_resolution}T")
         self.time_index = list(self.time_delta)
 
@@ -46,7 +46,7 @@ class PostProcessor:
         self.input_profiles[name] = profile
 
     def __week_to_annual_profile(self, profile: pd.Series) -> pd.Series:
-        start_weekday = self.user_config["postProcessor"]["start_weekday"]  # (1: Monday, 7: Sunday)
+        start_weekday = self.user_config["postprocessor"]["start_weekday"]  # (1: Monday, 7: Sunday)
         n_timeslots_per_day = len(list(self.time_index))
         # Shift input profiles to the right weekday and start with first bin of chosen weekday
         annual = profile.iloc[((start_weekday - 1) * (n_timeslots_per_day - 1)) :]
@@ -75,21 +75,21 @@ class PostProcessor:
         self.drain_norm = self.__normalize_flows(self.input_profiles["drain"])
         self.uncontrolled_charge_norm = self.__normalize_flows(self.input_profiles["uncontrolled_charge"])
         self.charge_power_norm = self.__normalize_states(
-            profile=self.input_profiles["charge_power"], base=self.user_config["gridModelers"]["rated_power_simple"]
+            profile=self.input_profiles["charge_power"], base=self.user_config["gridmodelers"]["rated_power_simple"]
         )
         self.soc_max = self.__normalize_states(
             profile=self.input_profiles["max_battery_level"],
-            base=self.user_config["flexEstimators"]["battery_capacity"],
+            base=self.user_config["flexestimators"]["battery_capacity"],
         )
         self.soc_min = self.__normalize_states(
             profile=self.input_profiles["min_battery_level"],
-            base=self.user_config["flexEstimators"]["battery_capacity"],
+            base=self.user_config["flexestimators"]["battery_capacity"],
         )
 
-        if self.user_config["gridModelers"]["grid_model"] != "simple":
+        if self.user_config["gridmodelers"]["grid_model"] != "simple":
             warnings.warn(
                 f"You selected a grid model where normalization is not meaningful. For normalization, the"
-                f" rated power of {self.user_config['gridModelers']['rated_power_simple']}kW was used."
+                f" rated power of {self.user_config['gridmodelers']['rated_power_simple']}kW was used."
             )
 
         if self.user_config["global"]["write_output_to_disk"]["processor_output"]["normalised_annual_profiles"]:

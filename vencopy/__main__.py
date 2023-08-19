@@ -62,7 +62,7 @@ def setup_folders(src: pathlib.Path, trg: pathlib.Path, tutorials: bool):
     os.mkdir(trg / "output" / "gridModeler")
     os.mkdir(trg / "output" / "flexEstimator")
     os.mkdir(trg / "output" / "profileAggregator")
-    os.mkdir(trg / "output" / "postProcessor")
+    os.mkdir(trg / "output" / "postprocessor")
     os.mkdir(trg / "utils")
     shutil.copy(src=src / "run.py", dst=trg)
     shutil.copytree(src=src / "config", dst=trg / "config")

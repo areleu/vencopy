@@ -114,7 +114,7 @@ class DataParser:
                 self.raw_data = pd.read_stata(
                     myzip.open(
                         path_zip_data,
-                        pwd=bytes(self.user_config["dataParsers"]["encryption_password"], encoding="utf-8"),
+                        pwd=bytes(self.user_config["dataparsers"]["encryption_password"], encoding="utf-8"),
                     ),
                     convert_categoricals=False,
                     convert_dates=False,
@@ -124,7 +124,7 @@ class DataParser:
                 self.raw_data = pd.read_csv(
                     myzip.open(
                         path_zip_data,
-                        pwd=bytes(self.user_config["dataParsers"]["encryption_password"], encoding="utf-8"),
+                        pwd=bytes(self.user_config["dataparsers"]["encryption_password"], encoding="utf-8"),
                     ),
                     sep=";",
                     decimal=",",
@@ -142,7 +142,7 @@ class DataParser:
                             keys 'relative_path' and 'absolute_path'
         :return: Returns a string value of a mobility data
         """
-        available_dataset_IDs = self.dev_config["dataParsers"]["data_variables"]["dataset"]
+        available_dataset_IDs = self.dev_config["dataparsers"]["data_variables"]["dataset"]
         assert dataset in available_dataset_IDs, (
             f"Defined dataset {dataset} not specified "
             f"under data_variables in dev_config. "
@@ -160,7 +160,7 @@ class DataParser:
         :return: None
         """
         replacement_dict = self._create_replacement_dict(
-            self.dataset, self.dev_config["dataParsers"]["data_variables"]
+            self.dataset, self.dev_config["dataparsers"]["data_variables"]
         )
         data_renamed = self.trips.rename(columns=replacement_dict)
         self.trips = data_renamed
@@ -345,8 +345,8 @@ class DataParser:
         """
         self.trips["averageSpeed"] = self.trips["trip_distance"] / (self.trips["travel_time"] / 60)
 
-        return (self.trips["averageSpeed"] > self.dev_config["dataParsers"]["filters"]["lower_speed_threshold"]) & (
-            self.trips["averageSpeed"] <= self.dev_config["dataParsers"]["filters"]["higher_speed_threshold"]
+        return (self.trips["averageSpeed"] > self.dev_config["dataparsers"]["filters"]["lower_speed_threshold"]) & (
+            self.trips["averageSpeed"] <= self.dev_config["dataparsers"]["filters"]["higher_speed_threshold"]
         )
 
     def _filter_inconsistent_travel_times(self) -> pd.Series:
@@ -460,7 +460,7 @@ class IntermediateParsing(DataParser):
                               specified in user_config['PW'].
         """
         super().__init__(configs, dataset=dataset, load_encrypted=load_encrypted, debug=debug)
-        self.filters = self.dev_config["dataParsers"]["filters"][self.dataset]
+        self.filters = self.dev_config["dataparsers"]["filters"][self.dataset]
         self.var_datatype_dict = {}
         self.columns = self.__compile_variable_list()
 
@@ -475,10 +475,10 @@ class IntermediateParsing(DataParser):
 
         :return: List of variables
         """
-        list_index = self.dev_config["dataParsers"]["data_variables"]["dataset"].index(self.dataset)
+        list_index = self.dev_config["dataparsers"]["data_variables"]["dataset"].index(self.dataset)
         variables = [
             val[list_index] if val[list_index] != "NA" else "NA"
-            for _, val in self.dev_config["dataParsers"]["data_variables"].items()
+            for _, val in self.dev_config["dataparsers"]["data_variables"].items()
         ]
 
         variables.remove(self.dataset)
@@ -521,7 +521,7 @@ class IntermediateParsing(DataParser):
         :return: None
         """
         # Filter for dataset specific columns
-        conversion_dict = self.dev_config["dataParsers"]["input_data_types"][self.dataset]
+        conversion_dict = self.dev_config["dataparsers"]["input_data_types"][self.dataset]
         keys = {i_column for i_column in conversion_dict.keys() if i_column in self.trips.columns}
         self.var_datatype_dict = {key: conversion_dict[key] for key in conversion_dict.keys() & keys}
         self.trips = self.trips.astype(self.var_datatype_dict)
@@ -579,11 +579,11 @@ class IntermediateParsing(DataParser):
         :param col_name: Name of the column in self.trips where the explicit
                         string info is stored
         :param var_name: Name of the venco.py internal variable given in
-                        dev_config/dataParsers['data_variables']
+                        dev_config/dataparsers['data_variables']
         :return: None
         """
         self.trips.loc[:, col_name] = self.trips.loc[:, var_name].replace(
-            self.dev_config["dataParsers"]["replacements"][self.dataset][var_name]
+            self.dev_config["dataparsers"]["replacements"][self.dataset][var_name]
         )
 
     def __compose_timestamp(
@@ -643,18 +643,18 @@ class IntermediateParsing(DataParser):
         Harmonises ID variables for all datasets.
         """
         self.trips["unique_id"] = (
-            self.trips[str(self.dev_config["dataParsers"]["id_variables_names"][self.dataset])]
+            self.trips[str(self.dev_config["dataparsers"]["id_variables_names"][self.dataset])]
         ).astype(int)
         print("Finished harmonization of ID variables.")
 
     def _subset_vehicle_segment(self):
-        if self.user_config["dataParsers"]["subset_vehicle_segment"]:
+        if self.user_config["dataparsers"]["subset_vehicle_segment"]:
             self.activities = self.activities[
                 self.activities["vehicle_segment_string"]
-                == self.user_config["dataParsers"]["vehicle_segment"][self.dataset]
+                == self.user_config["dataparsers"]["vehicle_segment"][self.dataset]
             ]
             print(
-                f'The subset contains only vehicles of the class {(self.user_config["dataParsers"]["vehicle_segment"][self.dataset])} for a total of {len(self.activities.unique_id.unique())} individual vehicles.'
+                f'The subset contains only vehicles of the class {(self.user_config["dataparsers"]["vehicle_segment"][self.dataset])} for a total of {len(self.activities.unique_id.unique())} individual vehicles.'
             )
 
     def _cleanup_dataset(self):
