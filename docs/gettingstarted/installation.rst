@@ -42,18 +42,15 @@ will look like this:
 
     FOLDERNAME
     ├── config
-    │   ├── evaluatorConfig.yaml
-    │   ├── flexConfig.yaml
-    │   ├── globalConfig.yaml
-    │   ├── gridConfig.yaml
-    │   ├── localPathConfig.yaml
-    │   └── parseConfig.yaml
+    │   ├── dev_config.yaml
+    │   └── user_config.yaml
     ├── output
-    │   ├── tripConfig.yamldataParser
-    │   ├── evaluator
-    │   ├── flexEstimator
+    │   ├── dataParser
     │   ├── gridModeler
-    │   └── tripDiaryBuilder
+    │   ├── flexEstimator
+    │   ├── diaryBuilder
+    │   ├── profileAggregator
+    │   └── postProcessor
     ├── tutorials
     │   └── ..
     └── run.py
@@ -87,7 +84,7 @@ This part of the documentation holds a step-by-step installation guide for venco
     enter the following command::
 
         conda env create -f requirements.yml
-        conda activate VencoPy_env
+        conda activate vencopy
 
 3.  Configure your config files if you want to use absolute links. This is only needed if you want to reference your own
     local data or want to post-process venco.py results and write them to a model input folder somewhere on your drive.
