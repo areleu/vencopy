@@ -1,8 +1,8 @@
 from typing import Union
 
-from vencopy.core.dataParsers.parseMiD import ParseMiD
-from vencopy.core.dataParsers.parseKiD import ParseKiD
-from vencopy.core.dataParsers.parseVF import ParseVF
+from vencopy.core.dataparsers.parseMiD import ParseMiD
+from vencopy.core.dataparsers.parseKiD import ParseKiD
+from vencopy.core.dataparsers.parseVF import ParseVF
 
 
 def parse_data(configs: dict) -> Union[ParseMiD, ParseKiD, ParseVF]:

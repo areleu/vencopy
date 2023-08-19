@@ -135,6 +135,7 @@ def merge_variables(data: pd.DataFrame, dataset: pd.DataFrame, variables: list) 
     mergedData.reset_index(inplace=True)
     return mergedData
 
+
 def write_out(data: pd.DataFrame, path: Path):
     data.to_csv(path)
     print(f"Dataset written to {path}.")

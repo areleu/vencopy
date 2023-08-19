@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from typing import Optional
-from vencopy.utils.globalFunctions import create_file_name, write_out
+from vencopy.utils.utils import create_file_name, write_out
 
 
 class DiaryBuilder:
