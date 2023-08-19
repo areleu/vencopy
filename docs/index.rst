@@ -1,14 +1,14 @@
-.. VencoPy documentation master file, created by
+.. venco.py documentation master file, created by
    sphinx-quickstart on Tue Feb  4 09:27:27 2020.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
 
 
-Welcome to VencoPy's documentation!
+Welcome to venco.py's documentation!
 ===================================
 
-.. image:: https://img.shields.io/pypi/v/vencopy   
+.. image:: https://img.shields.io/pypi/v/vencopy
    :alt: PyPI
 
 .. image:: https://img.shields.io/pypi/pyversions/vencopy
@@ -26,17 +26,17 @@ Welcome to VencoPy's documentation!
     :alt: Chat on Gitter
 
 A data processing tool offering hourly demand and flexibility profiles for future electric vehicle fleets in an aggregated manner.
-VencoPy is developed at the `Department of Energy Systems Analysis <https://www.dlr.de/ve/en/desktopdefault.aspx/tabid-15971/25909_read-66550/>`_ at the `German Aerospace Center (DLR) <https://www.dlr.de/EN/Home/home_node.html>`_.
-In a nutshell, with VencoPy you can:
+venco.py is developed at the `Department of Energy Systems Analysis <https://www.dlr.de/ve/en/desktopdefault.aspx/tabid-15971/25909_read-66550/>`_ at the `German Aerospace Center (DLR) <https://www.dlr.de/EN/Home/home_node.html>`_.
+In a nutshell, with venco.py you can:
 - :ref:`simulate different charging strategies (uncontrolled, controlled charging , V2G) for EV fleets <flexEstimator>`
 - :ref:`model different grid infrastructure options (home charging, work charging, ..) <gridModeler>`
 - analyse charging behaviour based on socio-economic data and trip purpose
 
 
 
-Useful Information about VencoPy
+Useful Information about venco.py
 ------------------
-- :ref:`Find a general description of VencoPy and its capabilities here <gettingstarted/intro>`
+- :ref:`Find a general description of venco.py and its capabilities here <gettingstarted/intro>`
 - :ref:`Find the different installation instructions here <gettingstarted/installation>`
 - :ref:`Find some frequently asked questions here <faq>`
 - :ref:`Find information on planned future features <contribution/releaseTimeline>`
@@ -69,9 +69,9 @@ Links
 
 .. toctree::
    :caption: Software
-   :hidden: 
+   :hidden:
    :maxdepth: 1
-   
+
    software/architecture
    software/classes
    software/functions

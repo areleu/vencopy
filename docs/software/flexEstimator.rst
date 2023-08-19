@@ -1,4 +1,4 @@
-.. VencoPy documentation source file, created for sphinx
+.. venco.py documentation source file, created for sphinx
 
 .. _flexEstimator:
 
@@ -17,7 +17,7 @@ FlexEstimator Input
 
 * inputDataScalars (technical assumption related to the vehicles, e.g. battery size, specfic consumption,..)
 
-**VencoPy Classes:**
+**venco.py Classes:**
 
 * DataParser class output
 
@@ -48,10 +48,10 @@ Output Profiles
 ---------------------------------------------------
 
 Below are the specifications of the output modules. This is important, because the output produced holds only
-numbers without any units. These specifications describes how these values can be interpreted when VencoPy is configured
+numbers without any units. These specifications describes how these values can be interpreted when venco.py is configured
 correctly. Different steps of filtering, aggregation, correction and normalization are performed for the six profiles.
 Thus, it is important to understand what the numbers in the output files refer to.
-VencoPy outputs a total of 6 profiles, 4 flow profiles (demand profiles) and 2 state profiles (energy levels).
+venco.py outputs a total of 6 profiles, 4 flow profiles (demand profiles) and 2 state profiles (energy levels).
 
 *************
 Flow Profiles
@@ -64,14 +64,14 @@ General description
 *************************
 This profile represents the hourly maximum charging capacity of the electric vehicle fleet. Charging can never be
 higher than this profile but may be lower since not all charging stations run on full capacity or it is attractive for
-balancing renewable feed-in to not charge at full capacity. Currently, only one charging capacity per run of VencoPy can
+balancing renewable feed-in to not charge at full capacity. Currently, only one charging capacity per run of venco.py can
 be taken into account.
 
 **Units:** Profiles are in percentage (between 0 and 1), defined as share of number of vehicles of the overall vehicle fleet.
 
 Calculation steps
 *************************
-1. The profile is calculated based on each plug profile which is a basic input into VencoPy. The input profile is made
+1. The profile is calculated based on each plug profile which is a basic input into venco.py. The input profile is made
 up of boolean values describing if the respective vehicle is connected to the grid (1, Yes, True) or not (0, No, False).
 This hourly boolean profiles are multiplied with the charging capacity e.g. 3.7 kW for a simple home charger.
 
@@ -147,7 +147,7 @@ is subtracted to result in the purely electric consumption.
 Calculation steps
 *************************
 
-1. The profile is calculated based on each drive profile which is a basic input into VencoPy. The individual drive
+1. The profile is calculated based on each drive profile which is a basic input into venco.py. The individual drive
 profiles are scaled with the electric consumption given in the technical vehicle characteristics. If the battery
 capacity doesn't suffice for the trip distance, additional fuel demand is subtracted to only account for electricity
 consumption.
@@ -233,7 +233,7 @@ security margin of an average vehicle.
 Filtering Functionalities in FlexEstimator
 ---------------------------------------------------
 
-In the following, filtering procedures in VencoPy for individual profiles are documented. Filtering occurs after
+In the following, filtering procedures in venco.py for individual profiles are documented. Filtering occurs after
 the completion of the main calculation steps using selectors. These are calculated based only on the four flow-related
 profiles (consumption, plugPower, uncontrolled_charging and auxilliaryFuelConsumption) in `calcProfileSelectors()` and
 applied to both flow-profiles and state-profiles.

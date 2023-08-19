@@ -1,7 +1,7 @@
-..  VencoPy releaseTimeline file created on August 13, 2021
+..  venco.py releaseTimeline file created on August 13, 2021
     by Fabia Miorelli
     Licensed under CC BY 4.0: https://creativecommons.org/licenses/by/4.0/deed.en
-    
+
 .. _releaseTimeline:
 
 Release Timeline
@@ -11,13 +11,13 @@ Release Timeline
 A provisional development timeline is provided below.
 
 
-.. table:: Historic and future release timeline of VencoPy
+.. table:: Historic and future release timeline of venco.py
     :widths: 25, 25, 50
 
     +----------------+----------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------+
     |Planned quarter |Release version       |Planned features                                                                                                                                         |
     +----------------+----------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------+
-    |Q4 2020         |0.0.X - Alpha release |Core function of VencoPy flexibility estimation                                                                                                          |
+    |Q4 2020         |0.0.X - Alpha release |Core function of venco.py flexibility estimation                                                                                                          |
     +----------------+----------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------+
     |Q3 2021         |0.1.X - Beta release  |Interface to MiD (parser), trip diary building, grid modeling, structure overhaul, config separation                                                     |
     +----------------+----------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------+

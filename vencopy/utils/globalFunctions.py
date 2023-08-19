@@ -101,7 +101,7 @@ def create_file_name(
     dev_config: dict, user_config: dict, file_name_id: str, dataset: str, manual_label: str = "", suffix: str = "csv"
 ) -> str:
     """
-    Generic method used for fileString compilation throughout the VencoPy framework. This method does not write any
+    Generic method used for fileString compilation throughout the venco.py framework. This method does not write any
     files but just creates the file name including the filetype suffix.
 
     :param user_config: user config file for paths
@@ -118,7 +118,7 @@ def create_file_name(
 
 def merge_variables(data: pd.DataFrame, dataset: pd.DataFrame, variables: list) -> pd.DataFrame:
     """
-    Global VencoPy function to merge MiD variables to trip distance, purpose or grid connection data.
+    Global venco.py function to merge MiD variables to trip distance, purpose or grid connection data.
 
     :param data: trip diary data as given by tripDiaryBuilder and gridModeler
     :param dataset: Survey data that holds specific variables for merge

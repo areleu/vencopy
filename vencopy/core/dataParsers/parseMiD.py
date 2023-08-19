@@ -14,14 +14,14 @@ from vencopy.core.dataParsers.parkInference import ParkInference
 class ParseMiD(IntermediateParsing):
     def __init__(self, configs: dict, dataset: str, load_encrypted=False, debug=False):
         """
-        Class for parsing MiD data sets. The VencoPy configs globalConfig,
+        Class for parsing MiD data sets. The venco.py configs globalConfig,
         parseConfig and localPathConfig have to be given on instantiation as
         well as the data set ID, e.g. 'MiD2017' that is used as key in the
         config lookups. Also, an option can be specified to load the file from
         an encrypted ZIP-file. For this, a password has to be given in the
         parseConfig.
 
-        :param configs: VencoPy config dictionary consisting at least of the
+        :param configs: venco.py config dictionary consisting at least of the
                            config dictionaries globalConfig, parseConfig and
                            localPathConfig.
         :param dataset: A string identifying the MiD data set.
@@ -39,7 +39,7 @@ class ParseMiD(IntermediateParsing):
 
     def __harmonize_variables(self):
         """
-        Harmonizes the input data variables to match internal VencoPy names
+        Harmonizes the input data variables to match internal venco.py names
         given as specified in the mapping in parseConfig['data_variables'].
         So far mappings for MiD08 and MiD17 are given. Since the MiD08 does
         not provide a combined household and person unique identifier, it is

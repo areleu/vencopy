@@ -29,7 +29,7 @@ class DataParser:
         within the ZIP-file have to be supplied in the globalConfig and a
         password has to be supplied in the parseConfig.
         Columns relevant for the EV simulation are selected from the entirety
-        of the data and renamed to VencoPy internal variable names given in
+        of the data and renamed to venco.py internal variable names given in
         the dictionary parseConfig['data_variables'] for the respective survey
         data set. Manually configured exclude, include, greater_than and
         smaller_than filters are applied as they are specified in parseConfig.
@@ -100,7 +100,7 @@ class DataParser:
     def _load_encrypted_data(self, zip_path, path_zip_data):
         """
         Since the MiD data sets are only accessible by an extensive data
-        security contract, VencoPy provides the possibility to access
+        security contract, venco.py provides the possibility to access
         encrypted zip files. An encryption password has to be given in
         user_config.yaml in order to access the encrypted file. Loaded data
         is stored in self.raw_data
@@ -153,7 +153,7 @@ class DataParser:
 
     def _harmonize_variables(self):
         """
-        Harmonizes the input data variables to match internal VencoPy names
+        Harmonizes the input data variables to match internal venco.py names
         given as specified in the mapping in dev_config['data_variables'].
         Since the MiD08 does not provide a combined household and person
         unique identifier, it is synthesized of the both IDs.
@@ -169,7 +169,7 @@ class DataParser:
 
     def _create_replacement_dict(self, dataset: str, dict_raw: dict) -> dict:
         """
-        Creates the mapping dictionary from raw data variable names to VencoPy
+        Creates the mapping dictionary from raw data variable names to venco.py
         internal variable names as specified in dev_config.yaml
         for the specified data set.
 
@@ -453,7 +453,7 @@ class IntermediateParsing(DataParser):
         """
         Intermediate parsing class.
 
-        :param configs: VencoPy config dictionary consisting at least of
+        :param configs: venco.py config dictionary consisting at least of
                            the config dictionaries.
         :param dataset: A string identifying the MiD data set.
         :param load_encrypted: Boolean. If True, data is read from encrypted
@@ -579,7 +579,7 @@ class IntermediateParsing(DataParser):
 
         :param col_name: Name of the column in self.trips where the explicit
                         string info is stored
-        :param var_name: Name of the VencoPy internal variable given in
+        :param var_name: Name of the venco.py internal variable given in
                         dev_config/dataParsers['data_variables']
         :return: None
         """

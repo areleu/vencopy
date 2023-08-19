@@ -1,4 +1,4 @@
-.. VencoPy documentation source file, created for sphinx
+.. venco.py documentation source file, created for sphinx
 
 .. _dataParser:
 

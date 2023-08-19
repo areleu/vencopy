@@ -1,14 +1,14 @@
 ..  VencoPy publications file created on June 15, 2021
     by Fabia Miorelli
     Licensed under CC BY 4.0: https://creativecommons.org/licenses/by/4.0/deed.en
-    
+
 .. _publications:
 
 Publications
 ===================================
 
 
-An overview of the main publications using and applying VencoPy as main tool is available below:
+An overview of the main publications using and applying venco.py as main tool is available below:
 
 
 - Wulff et al. (2021), *Vehicle Energy Consumption in Python (VencoPy): Presenting and Demonstrating an Open Source Tool to Calculate Electric Vehicle Charging Flexibility*. Energies, MDPI. 2021; 14(14):4349. https://doi.org/10.3390/en14144349 .

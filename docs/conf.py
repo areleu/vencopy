@@ -20,8 +20,8 @@ sys.path.append(os.path.abspath('../classes'))
 
 # -- Project information -----------------------------------------------------
 
-project = 'VencoPy'
-copyright = '2020-2021, German Aerospace Center (DLR)'
+project = 'vencopy'
+copyright = '2020-2023, German Aerospace Center (DLR)'
 author = 'German Aerospace Center (DLR)'
 # contributors = 'Fabia Miorelli, Benjamin Fuchs'
 
@@ -41,7 +41,7 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.autosectionlabel',
               'rst2pdf.pdfbuilder']
 
-pdf_documents = [('index', 'vencopy', 'vencopypdf', 'Fabia'),] 
+pdf_documents = [('index', 'vencopy', 'vencopypdf', 'Fabia'),]
 
 source_suffix = {
     '.rst': 'restructuredtext',

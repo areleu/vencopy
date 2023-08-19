@@ -1,4 +1,4 @@
-.. VencoPy getting started documentation file, created on February 11, 2020
+.. venco.py getting started documentation file, created on February 11, 2020
     by Niklas Wulff
     Licensed under CC BY 4.0: https://creativecommons.org/licenses/by/4.0/deed.en
 
@@ -11,7 +11,7 @@ Tutorials overview
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-To get started with VencoPy a set of tutorials are provided for the user to learn about the different classes and how each of them can be customised.
+To get started with venco.py a set of tutorials are provided for the user to learn about the different classes and how each of them can be customised.
 The tutorials are iPythonNotebooks to be opened with Jupyter Lab and can be found in the gitlab repository.
 
 - Tutorial 1: Showcasing run.py
@@ -23,7 +23,7 @@ The tutorials are iPythonNotebooks to be opened with Jupyter Lab and can be foun
 
 Tutorials setup
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-To start carrying out the tutorials, jupyterlab should be installed in the environment. 
+To start carrying out the tutorials, jupyterlab should be installed in the environment.
 If you cloned the repository doing 'pip install vencopy', the jupyterlab package will automatically be installed in your environment and you thus only need to activate your vencopy environment via the Anaconda Powershell Prompt ('conda activate <your environment name>').
 If you want to run the tutorial in an environment, which already exists, you can first activate your desired environment ('conda activate <your environment name>') and then install the jupyterlab package ('conda install jupyterlab').
 You might need to add the ipykernel to the environment to be able to run the jupyter notebooks with the tutorials. To do this type 'python -m ipykernel install --user --name=<your environment name>'.

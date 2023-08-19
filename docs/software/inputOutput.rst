@@ -1,4 +1,4 @@
-.. VencoPy documentation source file, created for sphinx
+.. venco.py documentation source file, created for sphinx
 
 .. _inputOutput:
 
@@ -6,7 +6,7 @@
 Input-Output
 ===================================
 
-In the VencoPy inputs and outputs, we can differentiate between configuration files, disk files and classes outputs.
+In the venco.py inputs and outputs, we can differentiate between configuration files, disk files and classes outputs.
 Moreover, we can distinguish between the overall framework IO and the classes IO.
 
 

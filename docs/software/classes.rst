@@ -1,18 +1,18 @@
-..  VencoPy introdcution file created on October 20, 2021
+..  venco.py introdcution file created on October 20, 2021
     by Niklas Wulff
     Licensed under CC BY 4.0: https://creativecommons.org/licenses/by/4.0/deed.en
 
 .. _classes:
 
-VencoPy Classes
+venco.py Classes
 ===================================
 
-Below is a brief explanation of the four main VencoPy classes. For a more detailed explanation about the internal workings and the specific outputs of each function, you can click on the hyperlink on the function name.
+Below is a brief explanation of the four main venco.py classes. For a more detailed explanation about the internal workings and the specific outputs of each function, you can click on the hyperlink on the function name.
 
 Interface to the dataset: :ref:`dataParser`
 ---------------------------------------------------
 
-The first step in the VencoPy framework for being able to estimate EV energy
+The first step in the venco.py framework for being able to estimate EV energy
 consumption implies accessing a travel survey data set, such as the MiD. This is
 carried out through a parsing interface to the original database. In the parsing interface
 to the data set, three main operations are carried out: the read-in of the travel survey trip
@@ -22,7 +22,7 @@ second step.
 In order to have consistent entry data for all variables and for different data sets,
 all database entries are harmonised, which includes generating unified data types and
 consistent variable naming. The naming convention for the variables and their respective
-input type can be specified in the VencoPy-config file. Of the 22 variables, four variables are used for indexing, 11 variables
+input type can be specified in the venco.py-config file. Of the 22 variables, four variables are used for indexing, 11 variables
 characterize the trip time within the year, two variables are used for filtering and five
 variables characterize the trip itself. The representation of time may vary between travel
 surveys.
@@ -39,7 +39,7 @@ the parsing of raw travel survey data sets is a harmonization step.
 
 Daily travel diary composition: :ref:`tripDiaryBuilder`
 ---------------------------------------------------
-In the second VencoPy class, the tripDiaryBuilder, individual trips at the
+In the second venco.py class, the tripDiaryBuilder, individual trips at the
 survey day are consolidated into person-specific travel diaries comprising multiple trips
 (carried out by car).
 The daily travel diary composition consists of three main steps: Reformatting
@@ -57,7 +57,7 @@ the charging availability between two trips. Trip purposes included in surveys m
 comprise trips carried out for work or education reasons, trips returning to home, trips
 to shopping facilities and other leisure activities. Currently, trips whose purpose is not
 specified are allocated to trips returning to the own household.
-At the end of the second VencoPy component TripDiaryBuilder, two intermediary
+At the end of the second venco.py component TripDiaryBuilder, two intermediary
 data sets are available either directly from the class within Python or from the hard-drive
 as .csv files. The first one comprises mileage travel diaries d(v, t) and the second one
 comprises parking place types derived from trip purposes parkingType(v, t).
@@ -70,7 +70,7 @@ model, which assumes the availability of charging stations when vehicles are par
 Since the analytical focus of the framework lies on a regional level (NUTS1-NUTS0), the
 infrastructure model is kept simple in the current version.
 Charging availability is allocated based on a binary TRUE/FALSE mapping to
-a respective trip purpose in the VencoPy-config. Thus, different scenarios describing
+a respective trip purpose in the venco.py-config. Thus, different scenarios describing
 different charging availabilities, e.g. at home or at home and at work etc. can be distinguished, but neither a regional differentiation nor a charging availability probability or
 distribution are assumed.
 At the end of the application of the GridModeler, a given parking purpose diary

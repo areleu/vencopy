@@ -1,4 +1,4 @@
-.. VencoPy documentation source file, created for sphinx
+.. venco.py documentation source file, created for sphinx
 
 .. _tripDiaryBuilder:
 
@@ -14,7 +14,7 @@ TripDiaryBuilder Input
 ---------------------------------------------------
 **Config File (tripConfig.yaml):** currently empty.
 
-**VencoPy Classes:**
+**venco.py Classes:**
 
  * DataParser class output
 

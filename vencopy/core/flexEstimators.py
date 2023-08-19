@@ -44,7 +44,7 @@ class FlexEstimator:
                 "min_residual_need",
                 "max_overshoot",
                 "min_undershoot",
-                "auxiliary_fuel_need",
+                "auxiliary_fuel_need"
             ]
         ] = None
         self.activities_without_residual = None
