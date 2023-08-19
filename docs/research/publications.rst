@@ -4,7 +4,7 @@
 
 .. _publications:
 
-Publications
+Journal Publications
 ===================================
 
 

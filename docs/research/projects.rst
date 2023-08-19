@@ -1,8 +1,8 @@
-..  venco.py publications file created on June 15, 2021
+..  venco.py research file created on June 15, 2021
     by Fabia Miorelli
     Licensed under CC BY 4.0: https://creativecommons.org/licenses/by/4.0/deed.en
 
-    .. _research:
+.. _research:
 
     Research Application Context
     ===================================
