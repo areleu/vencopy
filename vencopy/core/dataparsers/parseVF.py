@@ -114,8 +114,10 @@ class ParseVF(IntermediateParsing):
             self.trips = self.trips.replace("groß", "gross")
             self._add_string_column_from_variable(colName="vehicle_segment_string", varName="vehicle_segment")
 
-    def _drop_redundant_cols(self):
-        # Clean-up of temporary redundant columns
+    def _drop_redundant_columns(self):
+        """
+        Removes temporary redundant columns.
+        """
         self.trips.drop(
             columns=[
                 "trip_start_clock",

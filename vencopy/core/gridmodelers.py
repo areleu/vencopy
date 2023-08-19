@@ -27,9 +27,8 @@ class GridModeler:
 
     def __assign_grid_via_purposes(self):
         """
-        Method to translate purpose profiles into hourly profiles of
-        true/false giving the charging station
-        availability for each individual vehicle.
+        Assigns the grid connection power using the trip purposes though a true/false mapping in the user_config.yaml
+        to represent the charging station availability for each individual vehicle.
 
         :return: None
         """
@@ -37,14 +36,15 @@ class GridModeler:
         self.charging_availability = self.activities.purpose_string.replace(self.grid_availability_simple)
         self.charging_availability = self.charging_availability * self.user_config["gridmodelers"]["rated_power_simple"]
         self.activities["rated_power"] = self.charging_availability
-        self.activities = self.__adjust_power_short_parking_time()
+        self.__adjust_power_short_parking_time()
         print("Grid connection assignment complete.")
 
     def __assign_grid_via_probabilities(self, set_seed: int):
         """
+        Assigns the grid usig probability distributions defined in user_config.yaml.
+
         :param set_seed: Seed for reproducing random number
-        :return: Returns a dataFrame holding charging capacity for each trip
-                 assigned with probability distribution
+        :return: None
         """
         activities_no_home = []
         print("Starting with charge connection replacement of location purposes.")
@@ -64,7 +64,7 @@ class GridModeler:
         activities_no_home = pd.concat(activities_no_home).reset_index(drop=True)
         dataframes = [activities_home, activities_no_home]
         self.activities = pd.concat(dataframes).reset_index(drop=True)
-        self.activities = self.__adjust_power_short_parking_time()
+        self.__adjust_power_short_parking_time()
         print("Grid connection assignment complete.")
 
     def __home_probability_distribution(self, set_seed: int) -> pd.DataFrame:
@@ -80,7 +80,6 @@ class GridModeler:
         Returns:
             pd.DataFrame: Activity data set with sampled and harmonized home charging rated powers.
         """
-
         purpose = "HOME"
         home_activities = self.activities.loc[self.activities.purpose_string == purpose].copy()
         households = home_activities[["household_id"]].reset_index(drop=True)
@@ -111,29 +110,6 @@ class GridModeler:
             ),
             "rated_power",
         ] = 0
-        return self.activities
-
-    def assign_grid(self, seed: int = 42) -> pd.DataFrame:
-        """
-        Wrapper function for grid assignment. The number of iterations for
-        assignGridViaProbabilities() and seed for
-        reproduction of random numbers can be specified here.
-        """
-        if self.grid_model == "simple":
-            self.__assign_grid_via_purposes()
-        elif self.grid_model == "probability":
-            seed = seed
-            self.__assign_grid_via_probabilities(set_seed=seed)
-        else:
-            raise (
-                ValueError(
-                    f"Specified grid modeling option {self.grid_model} is not implemented. Please choose"
-                    f'"simple" or "probability"'
-                )
-            )
-        self.__add_grid_losses()
-        self.__writeOutput()
-        return self.activities
 
     def __add_grid_losses(self) -> pd.DataFrame:
         """
@@ -154,7 +130,6 @@ class GridModeler:
             )
         else:
             self.activities["available_power"] = self.activities["rated_power"]
-        return self.activities
 
     def __writeOutput(self):
         if self.user_config["global"]["write_output_to_disk"]["grid_output"]:
@@ -176,3 +151,24 @@ class GridModeler:
             ].copy()
             id_to_remove = lastActsNotHome["unique_id"].unique()
             self.activities = self.activities.loc[~self.activities["unique_id"].isin(id_to_remove), :].copy()
+
+    def assign_grid(self, seed: int = 42) -> pd.DataFrame:
+        """
+        Wrapper function for grid assignment. The number of iterations for
+        assignGridViaProbabilities() and seed for
+        reproduction of random numbers can be specified here.
+        """
+        if self.grid_model == "simple":
+            self.__assign_grid_via_purposes()
+        elif self.grid_model == "probability":
+            seed = seed
+            self.__assign_grid_via_probabilities(set_seed=seed)
+        else:
+            raise (
+                ValueError(
+                    f"Specified grid modeling option {self.grid_model} is not implemented. Please choose"
+                    f'"simple" or "probability".'
+                )
+            )
+        self.__add_grid_losses()
+        self.__writeOutput()

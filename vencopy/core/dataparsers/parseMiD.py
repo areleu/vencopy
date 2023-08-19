@@ -73,8 +73,10 @@ class ParseMiD(IntermediateParsing):
         if purpose:
             self._add_string_column_from_variable(col_name="purpose_string", var_name="trip_purpose")
 
-    def _drop_redundant_cols(self):
-        # Clean-up of temporary redundant columns
+    def _drop_redundant_columns(self):
+        """
+        Removes temporary redundant columns.
+        """
         self.trips.drop(
             columns=[
                 "is_driver",

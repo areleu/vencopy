@@ -33,6 +33,11 @@ class ProfileAggregator:
         self.uncontrolled_charging = profiles.uncontrolled_charging
         self.max_battery_level = profiles.max_battery_level
         self.min_battery_level = profiles.min_battery_level
+        self.drain_weekly = None
+        self.charging_power_weekly = None
+        self.uncontrolled_charging_weekly = None
+        self.max_battery_level_weekly = None
+        self.min_battery_level_weekly = None
         self.aggregator = Aggregator(
             activities=self.activities,
             dataset=self.dataset,
@@ -44,10 +49,10 @@ class ProfileAggregator:
 
     def aggregate_profiles(self):
         self.drain_weekly = self.aggregator.perform_aggregation(profile=self.drain, profile_name="drain", method="flow")
-        self.charge_power_weekly = self.aggregator.perform_aggregation(
+        self.charging_power_weekly = self.aggregator.perform_aggregation(
             profile=self.charging_power, profile_name="charge_power", method="flow"
         )
-        self.uncontrolled_charge_weekly = self.aggregator.perform_aggregation(
+        self.uncontrolled_charging_weekly = self.aggregator.perform_aggregation(
             profile=self.uncontrolled_charging, profile_name="uncontrolled_charge", method="flow"
         )
         self.max_battery_level_weekly = self.aggregator.perform_aggregation(

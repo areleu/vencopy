@@ -10,7 +10,6 @@ from pathlib import Path
 import time
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 from typing import Optional
 from vencopy.utils.utils import create_file_name, write_out
 
@@ -186,7 +185,7 @@ class TimeDiscretiser:
             "time_delta",
             "activity_id",
             "next_activity_id",
-            "prevActID",
+            "previous_activity_id",
         ] + [self.column_to_discretise]
         if self.is_week:
             necessary_columns = necessary_columns + ["weekday_string"]

@@ -36,11 +36,11 @@ class PostProcessor:
         self.input_profiles = {}
         self.annual_profiles = {}
 
-        self.drain_norm = None
-        self.charge_power_norm = None
-        self.uncontrolled_charge_norm = None
-        self.max_battery_level_norm = None
-        self.min_battery_level_norm = None
+        self.drain_normalised = None
+        self.charging_power_normalised = None
+        self.uncontrolled_charging_normalised = None
+        self.max_battery_level_normalised = None
+        self.min_battery_level_normalised = None
 
     def __store_input(self, name: str, profile: pd.Series):
         self.input_profiles[name] = profile
@@ -56,41 +56,41 @@ class PostProcessor:
     def create_annual_profiles(self, profiles: ProfileAggregator):
         profiles = (
             profiles.drain_weekly,
-            profiles.uncontrolled_charge_weekly,
-            profiles.charge_power_weekly,
+            profiles.uncontrolled_charging_weekly,
+            profiles.charging_power_weekly,
             profiles.max_battery_level_weekly,
             profiles.min_battery_level_weekly,
         )
-        profile_names = ("drain", "uncontrolled_charge", "charge_power", "max_battery_level", "min_battery_level")
+        profile_names = ("drain", "uncontrolled_charging", "charging_power", "max_battery_level", "min_battery_level")
         for profile_name, profile in zip(profile_names, profiles):
             self.__store_input(name=profile_name, profile=profile)
             self.annual_profiles[profile_name] = self.__week_to_annual_profile(profile=profile)
             if self.user_config["global"]["write_output_to_disk"]["processor_output"]["absolute_annual_profiles"]:
                 self.__write_output(
-                    profile_name=profile_name, profile=self.annual_profiles[profile_name], filename_id="output_postProcessor_annual"
+                    profile_name=profile_name, profile=self.annual_profiles[profile_name], filename_id="output_postprocessor_annual"
                 )
         print("Run finished.")
 
     def normalise(self):
-        self.drain_norm = self.__normalize_flows(self.input_profiles["drain"])
-        self.uncontrolled_charge_norm = self.__normalize_flows(self.input_profiles["uncontrolled_charge"])
-        self.charge_power_norm = self.__normalize_states(
-            profile=self.input_profiles["charge_power"], base=self.user_config["gridmodelers"]["rated_power_simple"]
+        self.drain_normalised = self.__normalize_flows(self.input_profiles["drain"])
+        self.uncontrolled_charging_normalised = self.__normalize_flows(self.input_profiles["uncontrolled_charging"])
+        self.charging_power_normalised = self.__normalize_states(
+            profile=self.input_profiles["charging_power"], base=self.user_config["gridmodelers"]["rated_power_simple"]
         )
-        self.soc_max = self.__normalize_states(
+        self.max_battery_level_normalised = self.__normalize_states(
             profile=self.input_profiles["max_battery_level"],
             base=self.user_config["flexestimators"]["battery_capacity"],
         )
-        self.soc_min = self.__normalize_states(
+        self.min_battery_level_normalised = self.__normalize_states(
             profile=self.input_profiles["min_battery_level"],
             base=self.user_config["flexestimators"]["battery_capacity"],
         )
 
         if self.user_config["gridmodelers"]["grid_model"] != "simple":
-            warnings.warn(
+            raise(TypeError(
                 f"You selected a grid model where normalization is not meaningful. For normalization, the"
                 f" rated power of {self.user_config['gridmodelers']['rated_power_simple']}kW was used."
-            )
+            ))
 
         if self.user_config["global"]["write_output_to_disk"]["processor_output"]["normalised_annual_profiles"]:
             self.__write_out_profiles(filename_id="output_postProcessor_normalised")
@@ -102,13 +102,13 @@ class PostProcessor:
         return profile / base
 
     def __write_out_profiles(self, filename_id: str):
-        self.__write_output(profile_name="drain", profile=self.drain_norm, filename_id=filename_id)
+        self.__write_output(profile_name="drain", profile=self.drain_normalised, filename_id=filename_id)
         self.__write_output(
-            profile_name="uncontrolled_charge", profile=self.uncontrolled_charge_norm, filename_id=filename_id
+            profile_name="uncontrolled_charge", profile=self.uncontrolled_charging_normalised, filename_id=filename_id
         )
-        self.__write_output(profile_name="charge_power", profile=self.charge_power_norm, filename_id=filename_id)
-        self.__write_output(profile_name="max_battery_level", profile=self.soc_max, filename_id=filename_id)
-        self.__write_output(profile_name="min_battery_level", profile=self.soc_min, filename_id=filename_id)
+        self.__write_output(profile_name="charge_power", profile=self.charging_power_normalised, filename_id=filename_id)
+        self.__write_output(profile_name="max_battery_level", profile=self.max_battery_level_normalised, filename_id=filename_id)
+        self.__write_output(profile_name="min_battery_level", profile=self.min_battery_level_normalised, filename_id=filename_id)
 
     def __write_output(self, profile_name: str, profile: pd.Series, filename_id: str):
         root = Path(self.user_config["global"]["absolute_path"]["vencopy_root"])

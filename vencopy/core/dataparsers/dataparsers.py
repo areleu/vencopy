@@ -493,11 +493,11 @@ class IntermediateParsing(DataParser):
         :param variables: List of variables of the mobility dataset
         :return: Returns a list with non NA values
         """
-        ivars = [iVar.upper() for iVar in variables]
+        ivars = [i_variable.upper() for i_variable in variables]
         counter = 0
-        for idx, iVar in enumerate(ivars):
-            if iVar == "NA":
-                del variables[idx - counter]
+        for indeces, i_variable in enumerate(ivars):
+            if i_variable == "NA":
+                del variables[indeces - counter]
                 counter += 1
 
     def _select_columns(self):
