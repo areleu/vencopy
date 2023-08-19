@@ -9,8 +9,8 @@ from pathlib import Path
 import pandas as pd
 import warnings
 
-from vencopy.core.profileAggregators import ProfileAggregator
-from vencopy.utils.globalFunctions import create_file_name, write_out
+from vencopy.core.profileaggregators import ProfileAggregator
+from vencopy.utils.utils import create_file_name, write_out
 
 
 class PostProcessor:

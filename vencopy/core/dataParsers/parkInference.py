@@ -7,7 +7,7 @@ __license__ = "BSD-3-Clause"
 
 import pandas as pd
 
-from vencopy.utils.globalFunctions import replace_vec
+from vencopy.utils.utils import replace_vec
 
 
 class ParkInference:
