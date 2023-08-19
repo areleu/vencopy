@@ -69,7 +69,8 @@ class PostProcessor:
                 self.__write_output(
                     profile_name=profile_name, profile=self.annual_profiles[profile_name], filename_id="output_postprocessor_annual"
                 )
-        print("Run finished.")
+                print("Run finished.")
+
 
     def normalise(self):
         self.drain_normalised = self.__normalize_flows(self.input_profiles["drain"])
@@ -94,6 +95,7 @@ class PostProcessor:
 
         if self.user_config["global"]["write_output_to_disk"]["processor_output"]["normalised_annual_profiles"]:
             self.__write_out_profiles(filename_id="output_postprocessor_normalised")
+        print("Run finished.")
 
     def __normalize_flows(self, profile: pd.Series) -> pd.Series:
         return profile / profile.sum()
