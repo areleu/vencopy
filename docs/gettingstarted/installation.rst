@@ -45,11 +45,11 @@ will look like this:
     │   ├── dev_config.yaml
     │   └── user_config.yaml
     ├── output
-    │   ├── dataParser
-    │   ├── gridModeler
-    │   ├── flexEstimator
-    │   ├── diaryBuilder
-    │   ├── profileAggregator
+    │   ├── dataparser
+    │   ├── gridmodeler
+    │   ├── flexestimator
+    │   ├── diarybuilder
+    │   ├── profileaggregator
     │   └── postprocessor
     ├── tutorials
     │   └── ..
@@ -62,13 +62,10 @@ To run venco.py in full mode, you will need the data set Mobilität in Deutschla
 can request it here from the clearingboard transport: https://daten.clearingstelle-verkehr.de/order-form.html Currently,
 venco.py is only tested with the B2 data set.
 
-In your localPathConfig.yaml, please enter the path to your local MiD STATA folder, it will end on .../B2/STATA/. Now
+In your user_config.yaml, please enter the path to your local MiD STATA folder, it will end on .../B2/STATA/. Now
 open your user folder in an IDE, configure your interpreter (environment) or type::
 
 	python run.py
-
-
-and enjoy the tool!
 
 
 Installation for developers
@@ -78,7 +75,7 @@ This part of the documentation holds a step-by-step installation guide for venco
 
 1.  Navigate to a folder to which you want to clone venco.py. Clone the repository to your local machine using ::
 
-        git clone https://gitlab.com/dlr-ve/vencopy.git
+        git clone https://gitlab.com/dlr-ve/vencopy/vencopy.git
 
 2.  Set-up your environment. For this, open a conda console, navigate to the folder of your venco.py repo and
     enter the following command::
@@ -95,5 +92,5 @@ This part of the documentation holds a step-by-step installation guide for venco
 
         python run.py
 
-5.  Have fun calculating electric vehicle flexibility!
+5.  Have fun calculating electric vehicles flexibility!
 
