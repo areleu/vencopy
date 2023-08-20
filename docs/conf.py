@@ -23,10 +23,9 @@ sys.path.append(os.path.abspath('../classes'))
 project = 'vencopy'
 copyright = '2020-2023, German Aerospace Center (DLR)'
 author = 'German Aerospace Center (DLR)'
-# contributors = 'Fabia Miorelli, Benjamin Fuchs'
 
 # The full version, including alpha/beta/rc tags
-release = 'September 2021'
+release = 'September 2023'
 
 highlight_language = 'python3'
 
@@ -41,7 +40,7 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.autosectionlabel',
               'rst2pdf.pdfbuilder']
 
-pdf_documents = [('index', 'vencopy', 'vencopypdf', 'Fabia'),]
+pdf_documents = [('index', 'vencopy', 'vencopypdf'),]
 
 source_suffix = {
     '.rst': 'restructuredtext',

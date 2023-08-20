@@ -28,9 +28,9 @@ Welcome to venco.py's documentation!
 A data processing tool offering hourly demand and flexibility profiles for future electric vehicle fleets in an aggregated manner.
 venco.py is developed at the `Department of Energy Systems Analysis <https://www.dlr.de/ve/en/desktopdefault.aspx/tabid-15971/25909_read-66550/>`_ at the `German Aerospace Center (DLR) <https://www.dlr.de/EN/Home/home_node.html>`_.
 In a nutshell, with venco.py you can:
-- :ref:`simulate different charging strategies (uncontrolled, controlled charging , V2G) for EV fleets <flexEstimator>`
-- :ref:`model different grid infrastructure options (home charging, work charging, ..) <gridModeler>`
-- analyse charging behaviour based on socio-economic data and trip purpose
+- :ref:`simulate different charging strategies (uncontrolled, controlled charging , V2G) for EV fleets <flexestimator>`
+- :ref:`model different grid infrastructure options (home charging, work charging, ..) <gridmodeler>`
+- :ref:`analyse charging behaviour based on socio-economic data and trip purpose <dataparser>`
 
 
 
@@ -39,8 +39,8 @@ Useful Information about venco.py
 - :ref:`Find a general description of venco.py and its capabilities here <gettingstarted/intro>`
 - :ref:`Find the different installation instructions here <gettingstarted/installation>`
 - :ref:`Find some frequently asked questions here <faq>`
-- :ref:`Find information on planned future features <contribution/releaseTimeline>`
-- :ref:`Find information on how to contribute <contribution/howToContribute>`
+- :ref:`Find information on planned future features <contribution/releasetimeline>`
+- :ref:`Find information on how to contribute <contribution/howtocontribute>`
 
 
 
@@ -75,7 +75,7 @@ Links
    software/architecture
    software/classes
    software/functions
-   software/inputOutput
+   software/inputoutput
    software/codestyle
 
 .. toctree::
@@ -91,5 +91,5 @@ Links
    :hidden:
    :maxdepth: 1
 
-   contribution/releaseTimeline
-   contribution/howToContribute
+   contribution/releasetimeline
+   contribution/howtocontribute

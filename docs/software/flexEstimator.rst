@@ -1,6 +1,6 @@
 .. venco.py documentation source file, created for sphinx
 
-.. _flexEstimator:
+.. _flexestimator:
 
 
 FlexEstimator Class

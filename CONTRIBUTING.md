@@ -2,7 +2,7 @@
 
 - Author: Niklas Wulff
 - Contact: niklas.wulff@dlr.de
-- Version: 0.0.8 (pre-release)
+- Version: 1.0.0
 
 # Contributing to venco.py
 

@@ -9,7 +9,7 @@ venco.py Classes
 
 Below is a brief explanation of the four main venco.py classes. For a more detailed explanation about the internal workings and the specific outputs of each function, you can click on the hyperlink on the function name.
 
-Interface to the dataset: :ref:`dataParser`
+Interface to the dataset: :ref:`dataparser`
 ---------------------------------------------------
 
 The first step in the venco.py framework for being able to estimate EV energy
@@ -36,10 +36,45 @@ is subset to only contain valid entries representing motorised trips. The last o
 the parsing of raw travel survey data sets is a harmonization step.
 
 
-
-Daily travel diary composition: :ref:`tripDiaryBuilder`
+Charging infrastructure allocation: :ref:`gridmodeler`
 ---------------------------------------------------
-In the second venco.py class, the tripDiaryBuilder, individual trips at the
+The charging infrastructure allocation makes use of a basic charging infrastructure
+model, which assumes the availability of charging stations when vehicles are parked.
+Since the analytical focus of the framework lies on a regional level (NUTS1-NUTS0), the
+infrastructure model is kept simple in the current version.
+Charging availability is allocated based on a binary TRUE/FALSE mapping to
+a respective trip purpose in the venco.py-config. Thus, different scenarios describing
+different charging availabilities, e.g. at home or at home and at work etc. can be distinguished, but neither a regional differentiation nor a charging availability probability or
+distribution are assumed.
+At the end of the application of the GridModeler, a given parking purpose diary
+parkingType(v, t) is transferred into a binary grid connection diary connectgrid (v, t) with
+the same format but consisting only of TRUE/FALSE values.
+
+
+Flexibility estimation: :ref:`flexestimator`
+---------------------------------------------------
+There are three integral inputs to the estimation:
+1. a profile describing hourly distances for each vehicle
+2. a boolean set of profiles describing if a vehicle is connected to the grid at a given
+hour
+3. techno-economic input assumptions
+After some filtering and iteration steps, this yields the minimum and maximum battery constraints.
+After these steps, six profiles are provided to the user: a battery drain profile (the electricity that flows out of the
+vehicle battery each hour for driving), a charging capacity profile (the maximum electricity available
+for charging in each hour), a minimum and a maximum SoC (upper and lower limits for the battery SoC), an
+uncontrolled charging profile (the electricity flow from grid to vehicle when no control is exerted) and a
+fuel consumption profile.
+
+The first four profiles can be used as constraints for other models to determine
+optimal charging strategies, the fifth profile simulates a case, where charging is not
+controlled an EVs charge as soon as a charging possibility is available. Lastly, the
+sixth profile quantifies the demand for additional fuel for trips that cannot be only by
+electricity.
+
+
+Daily travel diary composition: :ref:`diarybuilder`
+---------------------------------------------------
+In the diaryBuilder, individual trips at the
 survey day are consolidated into person-specific travel diaries comprising multiple trips
 (carried out by car).
 The daily travel diary composition consists of three main steps: Reformatting
@@ -63,40 +98,11 @@ as .csv files. The first one comprises mileage travel diaries d(v, t) and the se
 comprises parking place types derived from trip purposes parkingType(v, t).
 
 
-Charging infrastructure allocation: :ref:`gridModeler`
+Aggregation to fleet level: :ref:`profileaggregator`
 ---------------------------------------------------
-The charging infrastructure allocation makes use of a basic charging infrastructure
-model, which assumes the availability of charging stations when vehicles are parked.
-Since the analytical focus of the framework lies on a regional level (NUTS1-NUTS0), the
-infrastructure model is kept simple in the current version.
-Charging availability is allocated based on a binary TRUE/FALSE mapping to
-a respective trip purpose in the venco.py-config. Thus, different scenarios describing
-different charging availabilities, e.g. at home or at home and at work etc. can be distinguished, but neither a regional differentiation nor a charging availability probability or
-distribution are assumed.
-At the end of the application of the GridModeler, a given parking purpose diary
-parkingType(v, t) is transferred into a binary grid connection diary connectgrid (v, t) with
-the same format but consisting only of TRUE/FALSE values.
+In the profileAggregator, ...
 
 
-Flexibility estimation: :ref:`flexEstimator`
+Output postprocessing: :ref:`postprocessor`
 ---------------------------------------------------
-There are three integral inputs to the estimation:
-1. a profile describing hourly distances for each vehicle
-2. a boolean set of profiles describing if a vehicle is connected to the grid at a given
-hour
-3. techno-economic input assumptions
-After some filtering and iteration steps, this yields the minimum and maximum battery constraints.
-After these steps, six profiles are provided to the user: a battery drain profile (the electricity that flows out of the
-vehicle battery each hour for driving), a charging capacity profile (the maximum electricity available
-for charging in each hour), a minimum and a maximum SoC (upper and lower limits for the battery SoC), an
-uncontrolled charging profile (the electricity flow from grid to vehicle when no control is exerted) and a
-fuel consumption profile.
-
-The first four profiles can be used as constraints for other models to determine
-optimal charging strategies, the fifth profile simulates a case, where charging is not
-controlled an EVs charge as soon as a charging possibility is available. Lastly, the
-sixth profile quantifies the demand for additional fuel for trips that cannot be only by
-electricity.
-
-
-
+In the PostProcessor, ...

@@ -1,6 +1,6 @@
 .. venco.py documentation source file, created for sphinx
 
-.. _tripDiaryBuilder:
+.. _diarybuilder:
 
 
 TripDiaryBuilder Class
