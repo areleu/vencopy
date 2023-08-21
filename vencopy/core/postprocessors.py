@@ -82,7 +82,6 @@ class PostProcessor:
     def create_annual_profiles(self):
         if self.user_config["profileaggregators"]['aggregation_timespan'] == "daily":
             print('The annual profiles cannot be generated as the aggregation was performed over a single day.')
-            print('Run finished.')
         else:
             profiles = (self.drain, self.uncontrolled_charging, self.charging_power, self.max_battery_level, self.min_battery_level)
             profile_names = ("drain", "uncontrolled_charging", "charging_power", "max_battery_level", "min_battery_level")
