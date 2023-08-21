@@ -39,8 +39,8 @@ if __name__ == "__main__":
     vpProfile = ProfileAggregator(configs=configs, activities=vpDiary.activities, profiles=vpDiary)
     vpProfile.aggregate_profiles()
 
-    vpPost = PostProcessor(configs=configs)
-    vpPost.create_annual_profiles(profiles=vpProfile)
+    vpPost = PostProcessor(configs=configs, profiles=vpProfile)
+    vpPost.create_annual_profiles()
     vpPost.normalise()
 
     elapsed_time = time.time() - start_time

@@ -28,7 +28,6 @@ class FlexEstimator:
         self.is_first_activity = self.activities["is_first_activity"].fillna(0).astype(bool)
         self.is_last_activity = self.activities["is_last_activity"].fillna(0).astype(bool)
 
-        # UC = uncontrolled charging
         self.activities[
             [
                 "max_battery_level_start",

@@ -75,7 +75,47 @@ class Aggregator:
         self.user_config = user_config
         self.dev_config = dev_config
 
-    def __basic_aggregation(self, by_column: str = "trip_start_weekday") -> pd.Series:
+    def __basic_aggregation(self) -> pd.Series:
+        if self.user_config["profileaggregators"]['aggregation_timespan'] == "daily":
+            self._aggregate_daily()
+        elif self.user_config['profileaggregators']['aggregation_timespan'] == "weekly":
+            self._aggregate_weekly()
+            self.__compose_week_profile()
+        else:
+            NotImplementedError("The aggregation timespan can either be daily or weekly.")
+
+    def _aggregate_daily(self):
+        self.daily_profile = pd.DataFrame(columns=self.profile.columns, index=range(1, 2))
+        cols = ["unique_id", "trip_weight"]
+        self.activities_subset = (
+            self.activities[cols].copy().drop_duplicates(subset=["unique_id"]).reset_index(drop=True)
+        )
+        self.activities_weekday = pd.merge(self.profile, self.activities_subset, on="unique_id", how="inner")
+        self.activities_weekday = self.activities_weekday.set_index("unique_id")
+        # Aggregate across all days, independently of day of the week
+        if self.method == "flow":
+            if self.weighted:
+                # weekday_subset = weekday_subset.drop("trip_start_weekday", axis=1)
+                # aggregate activities_weekday to one profile by multiplying by weights
+                weight_sum = sum(self.activities_weekday.trip_weight)
+                daily_subset_weight = self.activities_weekday.apply(lambda x: x * self.activities_weekday.trip_weight.values)
+                daily_subset_weight = daily_subset_weight.drop("trip_weight", axis=1)
+                daily_subset_weight_agg = daily_subset_weight.sum() / weight_sum
+                self.daily_profile = daily_subset_weight_agg
+            else:
+                daily_subset = self.activities_weekday.drop(columns=["trip_weight"], axis=1).reset_index(drop=True)
+                self.daily_profile_agg = daily_subset.mean(axis=0)
+        elif self.method == "state":
+            daily_subset = self.activities_weekday.drop(columns=["trip_weight"]).reset_index(drop=True)
+            daily_subset = daily_subset.convert_dtypes()
+            if self.profile_name == "max_battery_level":
+                self.daily_profile = daily_subset.quantile(1 - (self.alpha / 100))
+            elif self.profile_name == "min_battery_level":
+                self.daily_profile = daily_subset.quantile(self.alpha / 100)
+            else:
+                raise NotImplementedError(f"An unknown profile {self.profile_name} was selected.")
+
+    def _aggregate_weekly(self, by_column: str = "trip_start_weekday"):
         self.weekday_profiles = pd.DataFrame(columns=self.profile.columns, index=range(1, 8))
         cols = ["unique_id", "trip_weight"] + [by_column]
         self.activities_subset = (
@@ -137,7 +177,7 @@ class Aggregator:
                 raise NotImplementedError(f"An unknown profile {self.profile_name} was selected.")
 
     def __compose_week_profile(self):
-        # input is self.weekday_profiles
+        # input is self.weekday_profiles. Method only works if aggregation is weekly
         # check if any day of the week is not filled, copy line above in that case
         if self.weekday_profiles.isna().any(axis=1).any():
             index_empty_rows = self.weekday_profiles[self.weekday_profiles.isna().any(axis=1)].index - 1
@@ -181,7 +221,6 @@ class Aggregator:
         print(f"Starting to aggregate {self.profile_name} to fleet level based on day of the week.")
         start_time_agg = time.time()
         self.__basic_aggregation()
-        self.__compose_week_profile()
         if self.user_config["global"]["write_output_to_disk"]["aggregator_output"]:
             self.__write_output()
         print(f"Aggregation finished for {self.profile_name}.")
@@ -190,4 +229,4 @@ class Aggregator:
         self.profile = None
         self.profile_name = None
         self.method = None
-        return self.weekly_profile
+        # return self.weekly_profile
