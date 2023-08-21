@@ -81,7 +81,7 @@ class PostProcessor:
 
     def create_annual_profiles(self):
         if self.user_config["profileaggregators"]['aggregation_timespan'] == "daily":
-            print('The annual profiles cannot be generated and normalised as the aggregation was performed over a single day.')
+            print('The annual profiles cannot be generated as the aggregation was performed over a single day.')
             print('Run finished.')
         else:
             profiles = (self.drain, self.uncontrolled_charging, self.charging_power, self.max_battery_level, self.min_battery_level)
@@ -96,26 +96,28 @@ class PostProcessor:
                     print("Run finished.")
 
     def normalise(self):
-        self.drain_normalised = self.__normalize_flows(self.input_profiles["drain"])
-        self.uncontrolled_charging_normalised = self.__normalize_flows(self.input_profiles["uncontrolled_charging"])
-        self.charging_power_normalised = self.__normalize_states(
-            profile=self.input_profiles["charging_power"], base=self.user_config["gridmodelers"]["rated_power_simple"]
-        )
-        self.max_battery_level_normalised = self.__normalize_states(
-            profile=self.input_profiles["max_battery_level"],
-            base=self.user_config["flexestimators"]["battery_capacity"],
-        )
-        self.min_battery_level_normalised = self.__normalize_states(
-            profile=self.input_profiles["min_battery_level"],
-            base=self.user_config["flexestimators"]["battery_capacity"],
-        )
-
-        if self.user_config["gridmodelers"]["grid_model"] != "simple":
-            raise(TypeError(
-                f"You selected a grid model where normalization is not meaningful. For normalization, the"
-                f" rated power of {self.user_config['gridmodelers']['rated_power_simple']}kW was used."
-            ))
-
-        if self.user_config["global"]["write_output_to_disk"]["processor_output"]["normalised_annual_profiles"]:
-            self.__write_out_profiles(filename_id="output_postprocessor_normalised")
-        print("Run finished.")
+        if self.user_config["profileaggregators"]['aggregation_timespan'] == "daily":
+            print('The annual profiles cannot be normalised as the aggregation was performed over a single day.')
+            print('Run finished.')
+        else:
+            self.drain_normalised = self.__normalize_flows(self.input_profiles["drain"])
+            self.uncontrolled_charging_normalised = self.__normalize_flows(self.input_profiles["uncontrolled_charging"])
+            self.charging_power_normalised = self.__normalize_states(
+                profile=self.input_profiles["charging_power"], base=self.user_config["gridmodelers"]["rated_power_simple"]
+            )
+            self.max_battery_level_normalised = self.__normalize_states(
+                profile=self.input_profiles["max_battery_level"],
+                base=self.user_config["flexestimators"]["battery_capacity"],
+            )
+            self.min_battery_level_normalised = self.__normalize_states(
+                profile=self.input_profiles["min_battery_level"],
+                base=self.user_config["flexestimators"]["battery_capacity"],
+            )
+            if self.user_config["gridmodelers"]["grid_model"] != "simple":
+                raise(TypeError(
+                    f"You selected a grid model where normalization is not meaningful. For normalization, the"
+                    f" rated power of {self.user_config['gridmodelers']['rated_power_simple']}kW was used."
+                ))
+            if self.user_config["global"]["write_output_to_disk"]["processor_output"]["normalised_annual_profiles"]:
+                self.__write_out_profiles(filename_id="output_postprocessor_normalised")
+            print("Run finished.")
