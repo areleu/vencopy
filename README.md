@@ -4,7 +4,9 @@
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/vencopy)
 ![Documentation Status](https://readthedocs.org/projects/vencopy/badge/?version=latest)
 ![PyPI - License](https://img.shields.io/pypi/l/vencopy)
-[![Gitter](https://badges.gitter.im/vencopy/community.svg)](https://gitter.im/vencopy/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
+![Gitter](https://img.shields.io/badge/chat-on%20Gitter-blue?color=%23009d94&link=https%3A%2F%2Fapp.gitter.im%2F%23%2Froom%2F%23vencopy_community%3Agitter.im)
+
+#[![Gitter](https://badges.gitter.im/vencopy/community.svg)](https://gitter.im/vencopy/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 - Authors: Niklas Wulff, Fabia Miorelli
 - Contact: niklas.wulff@dlr.de
