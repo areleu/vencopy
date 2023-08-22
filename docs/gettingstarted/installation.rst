@@ -46,6 +46,10 @@ will look like this:
     │   └── user_config.yaml
     ├── output
     │   ├── dataparser
+    │   │   ├── dataparsers
+    │   │   ├── parkinference
+    │   │   ├── parseMiD
+    │   │   └── parseKiD
     │   ├── gridmodeler
     │   ├── flexestimator
     │   ├── diarybuilder

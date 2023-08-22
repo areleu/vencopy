@@ -229,4 +229,4 @@ class Aggregator:
         self.profile = None
         self.profile_name = None
         self.method = None
-        # return self.weekly_profile
+        return self.weekly_profile
