@@ -22,7 +22,7 @@ make.bat
 *.py.orig
 
 # Output folders and checkpoint files such as pickle and HDF5 files
-/vencopy/output/*
+/output/*
 /vencopy/snippets
 *.p
 *.h5f
