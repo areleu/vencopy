@@ -3,14 +3,10 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - click
-  - jupyterlab
-  - matplotlib
-  - openpyxl
+  - python=3.11
   - pandas
-  - python=3.9
-  - pyyaml
-  - seaborn
+  - yaml
+  - matplotlib
   - sphinx
   - sphinx_rtd_theme
-  - yaml
+

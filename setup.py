@@ -22,7 +22,7 @@ dataFilePaths.extend(walkDataFiles('./vencopy/tutorials'))
 long_description = (pathlib.Path(__file__).parent.resolve() / 'README.md').read_text(encoding='utf-8')
 setup(
     name='vencopy',
-    version='0.1.5',
+    version='1.0.0',
     description='Vehicle Energy Consumption in Python: A tool to simulate load flexibility of electric vehicle fleets.',
     long_description=long_description,
     long_description_content_type='text/markdown',
@@ -32,7 +32,7 @@ setup(
     license='BSD 3-clause',
     packages=['vencopy', 'vencopy.core', 'vencopy.utils'],
     package_data={'': dataFilePaths},
-    install_requires=['pandas >= 1.1.1, <= 1.2.5',
+    install_requires=['pandas',
                       'ruamel.yaml',
                       'seaborn',
                       'openpyxl',
