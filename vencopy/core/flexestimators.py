@@ -477,8 +477,8 @@ class FlexEstimator:
         min_delta = self.__get_delta(start_column="min_battery_level_start", end_column="min_battery_level_end")
 
         print(
-            f"Finished iteration {1} / {max_iteration}. Delta max battery level is {int(max_delta)} / {absolute_epsilon} "
-            f"and delta min battery is {int(min_delta)} / {absolute_epsilon}."
+            f"Finished iteration {1} / {max_iteration}. Delta max battery level is {int(max_delta)}, delta min "
+            f"battery level is {int(min_delta)} and threshold epsilon is {absolute_epsilon}."
         )
 
         for i in range(1, max_iteration + 1):
@@ -495,14 +495,14 @@ class FlexEstimator:
                 min_delta = self.__get_delta(start_column="min_battery_level_start", end_column="min_battery_level_end")
 
             print(
-                f"Finished iteration {i} / {max_iteration}. Delta max battery level is {int(max_delta)} / {absolute_epsilon} "
-                f"and delta min battery is {int(min_delta)} / {absolute_epsilon}."
+                f"Finished iteration {i} / {max_iteration}. Delta max battery level is {int(max_delta)}, delta min "
+                f"battery level is {int(min_delta)} and threshold epsilon is {absolute_epsilon}."
             )
 
     def __absolute_epsilon(self, epsilon: float, battery_capacity: float, number_vehicles: int) -> float:
         """
-        Calculates the absolute threshold of battery level deviatiation used for interrupting the battery level
-        calculation iterations.
+        Calculates the absolute threshold of battery level deviatiation (delta in kWh for the whole fleet)
+        used for interrupting the battery level calculation iterations.
 
         Args:
             epsilon (float): Share of total aggregated battery fleet capacity (e.g. 0.01 for 1% would relate to a threshold of 100 Wh per car for a 10 kWh battery capacity.)
@@ -558,7 +558,7 @@ class FlexEstimator:
         self.__iterative_battery_level_calculation(
             max_iteration=self.user_config["flexestimators"]["max_iterations"],
             epsilon=self.user_config["flexestimators"]["epsilon_battery_level"],
-            battery_capacity=self.user_config["flexestimators"]["battery_capacity"],
+            battery_capacity=self.upper_battery_level,
             number_vehicles=len(self.activities["unique_id"].unique()),
         )
         self._auxiliary_fuel_need()
