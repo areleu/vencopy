@@ -99,9 +99,6 @@ class ParseMiD(IntermediateParsing):
     def process(self) -> pd.DataFrame:
         """
         Wrapper function for harmonising and filtering the trips dataset as well as adding parking rows.
-
-        :param split_overnight_trips: Should trips that end on the consecutive day (not the survey day) be split in such
-        a way that the estimated trip distance the next day is appended in the morning hours of the survey day?
         """
         self._select_columns()
         self.__harmonize_variables()
