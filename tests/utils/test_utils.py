@@ -10,7 +10,6 @@ import os
 
 from unittest.mock import mock_open, patch
 import pandas as pd
-from datetime import datetime
 from pathlib import Path
 
 from vencopy.utils.utils import load_configs, return_lowest_level_dict_keys, return_lowest_level_dict_values, replace_vec, create_output_folders, create_file_name, merge_variables, write_out
