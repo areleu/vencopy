@@ -125,7 +125,6 @@ def merge_variables(data: pd.DataFrame, dataset: pd.DataFrame, variables: list) 
     :param variables: Name of variables that will be merged
     :return: The merged data
     """
-
     variableDataUnique = dataset.loc[~dataset["genericID"].duplicated(), :]
     variables.append("genericID")
     variableDataMerge = variableDataUnique.loc[:, variables].set_index("genericID")
