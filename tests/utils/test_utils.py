@@ -16,40 +16,57 @@ from vencopy.utils.utils import load_configs, return_lowest_level_dict_keys, ret
 
 
 # TESTS load_config
-#@pytest.fixture
-# TODO: write function which temporary creates configs for tests
-# def sample_config_data():
-#     base_path = "tests" / "test_config"
-#     base_path.mkdir()
-#     config_path = "tests" / "config"
-#     config_path.mkdir()
-
-#     user_config_data = {"user_key": "user_value"}
-#     dev_config_data = {"dev_key": "dev_value"}
-
-#     with open(config_path / "user_config.yaml", "w") as user_file:
-#         yaml.dump(user_config_data, user_file, default_flow_style=False)
-
-#     with open(config_path / "dev_config.yaml", "w") as dev_file:
-#         yaml.dump(dev_config_data, dev_file, default_flow_style=False)
+# Define a fixture to provide a temporary directory for testing
+@pytest.fixture
+def temp_dir(tmp_path):
+    return tmp_path / "temp_config_dir"
 
 
-def test_load_configs():
-    base_path = os.getcwd() + "/tests/data"
-    expected_result = {
-        "user_config": {"user_key": {"user_key_next_level": "user_value"}},
-        "dev_config": {"dev_key": {"dev_key_next_level": "dev_value"}},
-    }
+def test_load_configs_with_valid_files(temp_dir):
+    # Create a temporary directory and config files for testing
+    temp_dir.mkdir()
+    user_config_path = temp_dir / "config" / "user_config.yaml"
+    dev_config_path = temp_dir / "config" / "dev_config.yaml"
 
-    # with patch("builtins.open", mock_open()) as mock_file:
-    result = load_configs(base_path)
+    user_config_data = {"user_key": "user_value"}
+    dev_config_data = {"dev_key": "dev_value"}
 
-    assert result == expected_result
+    # Write YAML data to the temporary config files
+    with open(user_config_path, "w") as user_file:
+        yaml.dump(user_config_data, user_file, default_flow_style=False)
+    with open(dev_config_path, "w") as dev_file:
+        yaml.dump(dev_config_data, dev_file, default_flow_style=False)
 
-    # assert mock_file.call_args_list == [
-    #     (("test_config/config/user_config.yaml",),),
-    #     (("test_config/config/dev_config.yaml",),),
-    # ]
+    # Load the configurations using the load_configs function
+    configs = load_configs(temp_dir)
+
+    # Check if the loaded configurations match the expected data
+    assert "user_config" in configs
+    assert "dev_config" in configs
+    assert configs["user_config"] == user_config_data
+    assert configs["dev_config"] == dev_config_data
+
+
+def test_load_configs_with_missing_files(temp_dir):
+    # Create a temporary directory without config files for testing
+    temp_dir.mkdir()
+    configs = load_configs(temp_dir)
+    assert configs == {}
+
+
+# def test_load_configs():
+#     base_path = os.getcwd() + "/tests/data"
+#     expected_result = {
+#         "user_config": {"user_key": {"user_key_next_level": "user_value"}},
+#         "dev_config": {"dev_key": {"dev_key_next_level": "dev_value"}},
+#     }
+#     # with patch("builtins.open", mock_open()) as mock_file:
+#     result = load_configs(base_path)
+#     assert result == expected_result
+#     # assert mock_file.call_args_list == [
+#     #     (("test_config/config/user_config.yaml",),),
+#     #     (("test_config/config/dev_config.yaml",),),
+#     # ]
 
 
 # TESTS return_lowest_level_dict_keys
@@ -166,7 +183,7 @@ def test_replace_vec():
     expected_result = pd.to_datetime(["2021-01-01 12:30:45", "2022-02-02 13:45:00"])
     assert all(result == expected_result)
 
-""" 
+
 # TESTS create_output_folders
 @pytest.fixture
 def sample_configs(tmp_path):
@@ -185,7 +202,7 @@ def sample_configs(tmp_path):
 
     return configs
 
-
+"""
 def test_create_output_folders(sample_configs):
     with patch("os.path.exists", return_value=False), \
          patch("os.mkdir"):
@@ -207,7 +224,7 @@ def test_create_output_folders(sample_configs):
     for sub_dir in sub_dirs:
         assert os.path.exists(Path(sample_configs["user_config"]["global"]["absolute_path"]["vencopy_root"]) / main_dir / sub_dir)
 
-
+ 
 # TESTS create_file_name
 def test_create_file_name():
     dev_config = {

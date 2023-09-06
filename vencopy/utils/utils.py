@@ -11,9 +11,10 @@ import os
 
 
 def load_configs(base_path: Path) -> dict:
-    # pathLib syntax for windows, max, linux compatibility, see https://realpython.com/python-pathlib/ for an intro
     """
     Generic function to load and open yaml config files.
+    pathLib syntax for windows, max, linux compatibility,
+    see https://realpython.com/python-pathlib/ for an introduction.
 
     :param config_names: Tuple containing names of config files to be loaded
     :return: Dictionary with opened yaml config files
