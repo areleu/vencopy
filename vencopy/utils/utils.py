@@ -68,14 +68,15 @@ def return_lowest_level_dict_values(dictionary: dict, lst: list = None) -> list:
     return lst
 
 
-def replace_vec(series, year=None, month=None, day=None, hour=None, minute=None) -> pd.Series:
+def replace_vec(series, year=None, month=None, day=None, hour=None, minute=None, second=None) -> pd.Series:
     return pd.to_datetime(
         {
-            "year": series.dt.year if year is None else year,
-            "month": series.dt.month if month is None else month,
-            "day": series.dt.day if day is None else day,
-            "hour": series.dt.hour if hour is None else hour,
-            "minute": series.dt.minute if minute is None else minute,
+            "year": series.dt.year if year is None else [year for i in range(len(series))],
+            "month": series.dt.month if month is None else [month for i in range(len(series))],
+            "day": series.dt.day if day is None else [day for i in range(len(series))],
+            "hour": series.dt.hour if hour is None else [hour for i in range(len(series))],
+            "minute": series.dt.minute if minute is None else [minute for i in range(len(series))],
+            "second": series.dt.second if second is None else [second for i in range(len(series))],
         }
     )
 
