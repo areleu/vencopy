@@ -21,33 +21,54 @@ This part of the documentation holds the function definitions of venco.py from t
 .. automodule:: vencopy.run
     :members:
 
-.. automodule:: vencopy.classes.dataparsers
+.. automodule:: vencopy.core.dataparsers.dataparsers
     :members:
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: vencopy.classes.tripDiaryBuilders
+.. automodule:: vencopy.core.dataparsers.parkinference
     :members:
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: vencopy.classes.gridmodelers
+.. automodule:: vencopy.core.dataparsers.parseMiD
     :members:
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: vencopy.classes.flexestimators
+.. automodule:: vencopy.core.dataparsers.parseKiD
     :members:
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: vencopy.scripts.globalFunctions
+.. automodule:: vencopy.core.diarybuilders
     :members:
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: vencopy.scripts.libLogging
+.. automodule:: vencopy.core.gridmodelers
     :members:
     :undoc-members:
     :show-inheritance:
+
+.. automodule:: vencopy.core.flexestimators
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: vencopy.core.profileaggregators
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: vencopy.core.postprocessors
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: vencopy.utils.utils
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 

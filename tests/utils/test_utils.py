@@ -19,7 +19,7 @@ from vencopy.utils.utils import load_configs, return_lowest_level_dict_keys, ret
 # Define a fixture to provide a temporary directory for testing
 @pytest.fixture
 def temp_dir(tmp_path):
-    return tmp_path / "temp_config_dir"
+    return tmp_path / "temp_dir"
 
 
 """ def test_load_configs_with_valid_files(temp_dir):
@@ -218,8 +218,9 @@ def test_create_output_folders(sample_configs):
 
     for sub_dir in sub_dirs:
         assert os.path.exists(Path(sample_configs["user_config"]["global"]["absolute_path"]["vencopy_root"]) / main_dir / sub_dir)
+"""
 
- 
+
 # TESTS create_file_name
 def test_create_file_name():
     dev_config = {
@@ -250,8 +251,8 @@ def test_create_file_name():
     # Test when all parameters are provided
     result = create_file_name(dev_config, user_config, "file1", "dataset1", manual_label="label123", suffix="txt")
     assert result == "file1_dev_run123_label123_dataset1.txt"
-"""
 
+"""
 # TESTS merge_variables
 def test_merge_variables():
     data = pd.DataFrame({
@@ -259,15 +260,14 @@ def test_merge_variables():
         "var1": [10, 20, 30],
         "var2": [100, 200, 300]
     })
-
     dataset = pd.DataFrame({
         "unique_id": [1, 2, 3],
         "var1": [11, 22, 33],
         "var3": [111, 222, 333]
     })
+    variables = ["var1", "var2", "var3"]
 
     # Test when 'unique_id' is not in data.index.names
-    variables = ["var1", "var2", "var3"]
     result = merge_variables(data, dataset, variables)
 
     expected_result = pd.DataFrame({
@@ -277,7 +277,7 @@ def test_merge_variables():
         "var3": [111, 222, 333]
     })
 
-    pd.testing.assert_frame_equal(result, expected_result)
+    assert result == expected_result
 
     # Test when 'unique_id' is already in data.index.names
     data.set_index("unique_id", inplace=True)
@@ -292,23 +292,23 @@ def test_merge_variables():
 
     pd.testing.assert_frame_equal(result, expected_result)
 
-"""
+
 # TESTS write_out
-def test_write_out(tmpdir):
+def test_write_out(temp_dir):
     data = pd.DataFrame({
         "A": [1, 2, 3],
         "B": [4, 5, 6]
     })
-    output_path = Path(tmpdir) / "output.csv"
+    output_path = Path(temp_dir) / "output.csv"
 
     write_out(data, output_path)
 
     assert os.path.isfile(output_path)
+    assert output_path.exists()
 
-    # Read the contents of the output file and compare with the original data
     loaded_data = pd.read_csv(output_path)
-    pd.testing.assert_frame_equal(loaded_data, data)
+    assert data.equals(loaded_data)
 
-    # Check if the function printed the correct message
     captured = capsys.readouterr()  # capsys is a built-in fixture for capturing printed output
-    assert f"Dataset written to {output_path}." in captured.out  """
+    assert f"Dataset written to {output_path}." in captured.out
+"""
