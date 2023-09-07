@@ -126,11 +126,11 @@ def merge_variables(data: pd.DataFrame, dataset: pd.DataFrame, variables: list) 
     :return: The merged data
     """
 
-    variableDataUnique = dataset.loc[~dataset["genericID"].duplicated(), :]
-    variables.append("genericID")
-    variableDataMerge = variableDataUnique.loc[:, variables].set_index("genericID")
-    if "genericID" not in data.index.names:
-        data.set_index("genericID", inplace=True, drop=True)
+    variableDataUnique = dataset.loc[~dataset["unique_id"].duplicated(), :]
+    variables.append("unique_id")
+    variableDataMerge = variableDataUnique.loc[:, variables].set_index("unique_id")
+    if "unique_id" not in data.index.names:
+        data.set_index("unique_id", inplace=True, drop=True)
     mergedData = pd.concat([variableDataMerge, data], axis=1, join="inner")
     mergedData.reset_index(inplace=True)
     return mergedData
