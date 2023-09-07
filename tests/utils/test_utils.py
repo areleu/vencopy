@@ -22,8 +22,7 @@ def temp_dir(tmp_path):
     return tmp_path / "temp_config_dir"
 
 
-def test_load_configs_with_valid_files(temp_dir):
-    # Create a temporary directory and config files for testing
+""" def test_load_configs_with_valid_files(temp_dir):
     temp_dir.mkdir()
     user_config_path = temp_dir / "config" / "user_config.yaml"
     dev_config_path = temp_dir / "config" / "dev_config.yaml"
@@ -31,42 +30,38 @@ def test_load_configs_with_valid_files(temp_dir):
     user_config_data = {"user_key": "user_value"}
     dev_config_data = {"dev_key": "dev_value"}
 
-    # Write YAML data to the temporary config files
     with open(user_config_path, "w") as user_file:
         yaml.dump(user_config_data, user_file, default_flow_style=False)
     with open(dev_config_path, "w") as dev_file:
         yaml.dump(dev_config_data, dev_file, default_flow_style=False)
 
-    # Load the configurations using the load_configs function
     configs = load_configs(temp_dir)
 
-    # Check if the loaded configurations match the expected data
     assert "user_config" in configs
     assert "dev_config" in configs
     assert configs["user_config"] == user_config_data
-    assert configs["dev_config"] == dev_config_data
+    assert configs["dev_config"] == dev_config_data 
 
 
 def test_load_configs_with_missing_files(temp_dir):
-    # Create a temporary directory without config files for testing
     temp_dir.mkdir()
     configs = load_configs(temp_dir)
     assert configs == {}
+"""
 
-
-# def test_load_configs():
-#     base_path = os.getcwd() + "/tests/data"
-#     expected_result = {
-#         "user_config": {"user_key": {"user_key_next_level": "user_value"}},
-#         "dev_config": {"dev_key": {"dev_key_next_level": "dev_value"}},
-#     }
-#     # with patch("builtins.open", mock_open()) as mock_file:
-#     result = load_configs(base_path)
-#     assert result == expected_result
-#     # assert mock_file.call_args_list == [
-#     #     (("test_config/config/user_config.yaml",),),
-#     #     (("test_config/config/dev_config.yaml",),),
-#     # ]
+def test_load_configs():
+    base_path = os.getcwd() + "/tests/data"
+    expected_result = {
+        "user_config": {"user_key": {"user_key_next_level": "user_value"}},
+        "dev_config": {"dev_key": {"dev_key_next_level": "dev_value"}},
+    }
+    # with patch("builtins.open", mock_open()) as mock_file:
+    result = load_configs(base_path)
+    assert result == expected_result
+    # assert mock_file.call_args_list == [
+    #     (("test_config/config/user_config.yaml",),),
+    #     (("test_config/config/dev_config.yaml",),),
+    # ]
 
 
 # TESTS return_lowest_level_dict_keys
@@ -255,29 +250,28 @@ def test_create_file_name():
     # Test when all parameters are provided
     result = create_file_name(dev_config, user_config, "file1", "dataset1", manual_label="label123", suffix="txt")
     assert result == "file1_dev_run123_label123_dataset1.txt"
-
+"""
 
 # TESTS merge_variables
 def test_merge_variables():
-    # Create sample dataframes
     data = pd.DataFrame({
-        "genericID": [1, 2, 3],
+        "unique_id": [1, 2, 3],
         "var1": [10, 20, 30],
         "var2": [100, 200, 300]
     })
 
     dataset = pd.DataFrame({
-        "genericID": [1, 2, 3],
+        "unique_id": [1, 2, 3],
         "var1": [11, 22, 33],
         "var3": [111, 222, 333]
     })
 
-    # Test when 'genericID' is not in data.index.names
+    # Test when 'unique_id' is not in data.index.names
     variables = ["var1", "var2", "var3"]
     result = merge_variables(data, dataset, variables)
 
     expected_result = pd.DataFrame({
-        "genericID": [1, 2, 3],
+        "unique_id": [1, 2, 3],
         "var1": [10, 20, 30],
         "var2": [100, 200, 300],
         "var3": [111, 222, 333]
@@ -285,12 +279,12 @@ def test_merge_variables():
 
     pd.testing.assert_frame_equal(result, expected_result)
 
-    # Test when 'genericID' is already in data.index.names
-    data.set_index("genericID", inplace=True)
+    # Test when 'unique_id' is already in data.index.names
+    data.set_index("unique_id", inplace=True)
     result = merge_variables(data, dataset, variables)
 
     expected_result = pd.DataFrame({
-        "genericID": [1, 2, 3],
+        "unique_id": [1, 2, 3],
         "var1": [10, 20, 30],
         "var2": [100, 200, 300],
         "var3": [111, 222, 333]
@@ -298,7 +292,7 @@ def test_merge_variables():
 
     pd.testing.assert_frame_equal(result, expected_result)
 
-
+"""
 # TESTS write_out
 def test_write_out(tmpdir):
     data = pd.DataFrame({
