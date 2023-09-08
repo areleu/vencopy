@@ -49,6 +49,7 @@ def test_load_configs_with_missing_files(temp_dir):
     assert configs == {}
 """
 
+
 def test_load_configs():
     base_path = os.getcwd() + "/tests/data"
     expected_result = {

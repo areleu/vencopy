@@ -58,7 +58,7 @@ Organizational information
 
    * - Requirement
      - Context
-   * - Software Engineering Team (SET)
+   * - Software Engineering Team
      - Niklas Wulff, Fabia Miorelli, Benjamin Fuchs
    * - Stakeholders
      - Hans Christian Gils, Department of Energy Systems Analysis at Institute of Networked Energy Systems, DLR

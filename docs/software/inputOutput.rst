@@ -20,7 +20,7 @@ General Framework Input-Output
 
 **Outputs:**
 
- * Refer to the outputs of the :ref:`flexEstimator` class for more details
+ * Refer to the outputs of the :ref:`flexestimator` class for more details
 
 
 
@@ -28,7 +28,7 @@ General Framework Input-Output
 Classes Input-Output
 ---------------------------------------------------
 
- * :ref:`dataParser`
- * :ref:`tripDiaryBuilder`
- * :ref:`gridModeler`
- * :ref:`flexEstimator`
+ * :ref:`dataparser`
+ * :ref:`diarybuilder`
+ * :ref:`gridmodeler`
+ * :ref:`flexestimator`

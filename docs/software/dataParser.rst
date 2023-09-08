@@ -31,5 +31,5 @@ DataParser Output
 ---------------------------------------------------
 **Output Functions:**
 
-*  vpData = ParseMiD(configs=configs, dataset=dataset)
+*  vpData = parsedata(configs=configs, dataset=dataset)
 *  vpData.process()

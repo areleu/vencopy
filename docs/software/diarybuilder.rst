@@ -22,7 +22,7 @@ TripDiaryBuilder Output
 ---------------------------------------------------
 **Output Functions:**
 
- * vpDiary = TripDiaryBuilder(configs=configs, ParseData=vpData, dataset=dataset, debug=True)
+ * vpDiary = DiaryBuilder(configs=configs, ParseData=vpData, dataset=dataset, debug=True)
 
 
 **Disk Files:**
