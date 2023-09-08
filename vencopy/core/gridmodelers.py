@@ -9,7 +9,7 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 from scipy.stats.sampling import DiscreteAliasUrn
-from vencopy.utils.utils import create_file_name, write_out
+from ..utils.utils import create_file_name, write_out
 
 
 class GridModeler:

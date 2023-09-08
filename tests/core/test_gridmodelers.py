@@ -10,7 +10,7 @@ import pytest
 import pandas as pd
 from pathlib import Path
 
-from vencopy.core.gridmodelers import GridModeler
+from ...vencopy.core.gridmodelers import GridModeler
 
 
 # TESTS GridModeler class instantiation

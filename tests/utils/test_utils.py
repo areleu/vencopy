@@ -12,7 +12,7 @@ from unittest.mock import mock_open, patch
 import pandas as pd
 from pathlib import Path
 
-from vencopy.utils.utils import load_configs, return_lowest_level_dict_keys, return_lowest_level_dict_values, replace_vec, create_output_folders, create_file_name, merge_variables, write_out
+from ...vencopy.utils.utils import load_configs, return_lowest_level_dict_keys, return_lowest_level_dict_values, replace_vec, create_output_folders, create_file_name, merge_variables, write_out
 
 
 # TESTS load_config
@@ -40,7 +40,7 @@ def temp_dir(tmp_path):
     assert "user_config" in configs
     assert "dev_config" in configs
     assert configs["user_config"] == user_config_data
-    assert configs["dev_config"] == dev_config_data 
+    assert configs["dev_config"] == dev_config_data
 
 
 def test_load_configs_with_missing_files(temp_dir):
