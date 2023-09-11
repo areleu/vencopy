@@ -72,7 +72,7 @@ Links
    :maxdepth: 1
 
    software/architecture
-   software/classes
+   software/core
    software/functions
    software/inputoutput
    software/codestyle
