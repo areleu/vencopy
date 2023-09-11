@@ -19,7 +19,7 @@ minor and fix (X.Y.Z) changes versioning system via git-labels. You can use
 venco.py as a user or contribute to the codebase and documentation as
 developer. Depending on that choice the installation and setup differs.
 
-.. image:: ../figures/ApplicationContext.drawio.png
+.. image:: ../figures/applicationcontext.drawio.png
 	:width: 600
 	:align: center
 

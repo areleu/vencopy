@@ -7,8 +7,8 @@ __license__ = "BSD-3-Clause"
 
 import pandas as pd
 
-from vencopy.core.dataparsers.dataparsers import IntermediateParsing
-from vencopy.core.dataparsers.parkinference import ParkInference
+from ...core.dataparsers.dataparsers import IntermediateParsing
+from ...core.dataparsers.parkinference import ParkInference
 
 
 class ParseMiD(IntermediateParsing):

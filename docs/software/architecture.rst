@@ -1,5 +1,4 @@
 ..  venco.py introdcution file created on September 15, 2020
-    by Niklas Wulff
     Licensed under CC BY 4.0: https://creativecommons.org/licenses/by/4.0/deed.en
 
 .. _architecture:

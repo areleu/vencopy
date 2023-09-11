@@ -6,42 +6,46 @@
 FlexEstimator Class
 ===================================
 
-.. image:: ../figures/IOflexEstimator.png
+.. image:: ../figures/IOflexestimator.png
 	:width: 800
 	:align: center
 
 
 FlexEstimator Input
 ---------------------------------------------------
-**Config File (flexConfig.yaml):**
+**Config File (user_config.yaml):**
 
-* inputDataScalars (technical assumption related to the vehicles, e.g. battery size, specfic consumption,..)
+* filter_fuel_need: bool - Should activity chains that require fuel for trip distance satisfaction be filtered out?
+* battery_capacity: <value> - Capacity in kWh of the vehicle battery 
+* electric_consumption: <value> - Electric consumption in kWh/100km, input assumption for specific electric consumption
+* fuel_consumption: <value> - Fuel consumption in l/100km, input assumption for specific fuel consumption for auxiliary fuel
+* start_soc: <0-1> - State-of-Charge between 0 and 1 at beginning of activity chain
+* maximum_soc: <0-1> - Percentage of maximum available battery capacity
+* minimum_soc: <0-1> - Percentage of minimum available battery capacity
+* max_iterations: <value>  - Technical parameter
+* epsilon_battery_level: <value>  - Iterations stop once the difference between start and end battery level have decreased to this share of fleet battery level
+
+
 
 **venco.py Classes:**
 
-* DataParser class output
+* GridModeler class output
 
 
 FlexEstimator Output
 ---------------------------------------------------
 **Output Functions:**
 
-* vpFlex = FlexEstimator(configs=configs, dataset=dataset, ParseData=vpData)
-* vpFlex.baseProfileCalculation()
-* vpFlex.filter()
-* vpFlex.aggregate()
-* vpFlex.correct()
-* vpFlex.normalise()
-* vpFlex.writeOut()
+* vpFlex = FlexEstimator(configs=configs, activities=vpGrid.activities)
+* vpFlex.estimate_technical_flexibility_through_iteration()
 
 **Disk Files:**
 
-* Profile for connection capacity of the fleet `plugProfile`
-* Profile for uncontrolled charging `chargeProfileUncontrolled`
-* Profile for electric demand `electricPowerProfile`
-* Profile for additional fuel consumption `driveProfileFuelAux`
-* Minimum state-of-charge (SoC) battery profile `socMin`
-* Maximum state-of-charge (SoC) battery profile `socMax`
+* Profile for connection capacity of the fleet `charging_power`
+* Profile for uncontrolled charging `uncontrolled_charging`
+* Profile for electric demand `drain`
+* Minimum state-of-charge (SoC) battery profile `soc_min`
+* Maximum state-of-charge (SoC) battery profile `soc_max`
 
 
 Output Profiles
@@ -56,7 +60,7 @@ venco.py outputs a total of 6 profiles, 4 flow profiles (demand profiles) and 2 
 Flow Profiles
 *************
 
-Profile for connection capacity of the fleet `plugProfile`
+Profile for connection capacity of the fleet `charging_power`
 ############################################################
 
 General description
@@ -88,7 +92,7 @@ This profile may later be scaled by the number of vehicles in an EV fleet and th
 average maximum hourly recharge capacity of the EV fleet.
 
 
-Profile for uncontrolled charging `chargeProfileUncontrolled`
+Profile for uncontrolled charging `uncontrolled_charging`
 #################################################################
 
 General description
@@ -124,7 +128,7 @@ Function: `correctProfiles()` in the library `libProfileCalculation.py`.
 This profile may later be scaled by the number of vehicles in an EV fleet to calculate the fleet uncontrolled charging electric flow.
 
 
-Profile for electric demand `electricPowerProfile`
+Profile for electric demand `drain`
 #################################################################
 
 General description
@@ -159,43 +163,6 @@ Function: `correctProfiles()` in the library `libProfileCalculation.py`.
 
 This profile may later be scaled by the number of vehicles in an EV fleet to calculate the average electric flow leaving the EV fleet battery.
 
-
-
-Profile for additional fuel consumption `driveProfileFuelAux`
-#################################################################
-
-General description
-*************************
-
-This profile gives hourly values for fuel consumption in case a trip and plug profile cannot be supplied only from the vehicle battery. This profile
-is given in units of l of the specified fuel.
-
-**Units:** Profiles are in l fuel per hour for the representative average vehicle.
-
-
-Calculation steps
-*************************
-
-1. The profile is calculated based on the drive profile (basic input), the uncontrolled charging profile, the maximum
-SOC profile and vehicle specifications. It describes fuel consumption for the most optimistic case of uncontrolled charging and a fully charged
-battery at the beginning of the day. It is equal to the electric consumption for driving minus the electric flow from the battery minus uncontrolled
-charging. Since all of these profiles are in units of kW, the resulting energy needs are then transferred from kWh to l of fuel.
-
-We're left with 18000 hourly profiles in l. Functions: `calcDriveProfilesFuelAux()` in the library `libProfileCalculation.py`.
-
-2. The profiles are filtered according to a specified selector. If 1000 profiles don't fulfill the selection criteria,
-we're left with 17000 profiles still in hourly values of l fuel. Function: `filterConsProfiles()` in the library `libProfileCalculation.py`.
-
-3. The filtered individual profiles are then aggregated by a simple averaging of each hourly value to calculate the
-average fuel consumption for one model vehicle for the complete EV fleet. We're left with one profile in hourly values of l fuel. Function:
-`aggregate_profilesMean()` in the library `libProfileCalculation.py`.
-
-
-4. The aggregated profile is then corrected according to more realistic specific fuel consumption measurements.
-Function: `correctProfiles()` in the library `libProfileCalculation.py`.
-
-This profile may later be scaled by the number of vehicles in an EV fleet to calculate the average fuel consumption needed by the hybrid electric
-vehicle fleet.
 
 
 **************

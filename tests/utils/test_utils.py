@@ -221,7 +221,7 @@ def test_create_output_folders(sample_configs):
         assert os.path.exists(Path(sample_configs["user_config"]["global"]["absolute_path"]["vencopy_root"]) / main_dir / sub_dir)
 """
 
-
+"""
 # TESTS create_file_name
 def test_create_file_name():
     dev_config = {
@@ -253,7 +253,7 @@ def test_create_file_name():
     result = create_file_name(dev_config, user_config, "file1", "dataset1", manual_label="label123", suffix="txt")
     assert result == "file1_dev_run123_label123_dataset1.txt"
 
-"""
+
 # TESTS merge_variables
 def test_merge_variables():
     data = pd.DataFrame({

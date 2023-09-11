@@ -32,3 +32,5 @@ Classes Input-Output
  * :ref:`diarybuilder`
  * :ref:`gridmodeler`
  * :ref:`flexestimator`
+ * :ref:`profileaggregator`
+ * :ref:`postprocessor`

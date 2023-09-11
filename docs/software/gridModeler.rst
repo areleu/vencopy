@@ -6,15 +6,21 @@
 GridModeler Class
 ===================================
 
-.. image:: ../figures/IOgridModeler.png
+.. image:: ../figures/IOgridmodeler.png
 	:width: 800
 	:align: center
 
 GridModeler Input
 ---------------------------------------------------
-**Config File (gridConfig.yaml):**
+**Config File (user_config.yaml):**
 
-* charging_infrastructure_mappings (assigns True-False to the respective type of charging infrastucture)
+* minimum_parking_time: <seconds> - Charging power is set to zero if parking time lower than <minimum_parking_time> in seconds
+* grid_model: "simple" - Options are "simple" and "probability"
+* losses: True - Take into account charging station losses
+* force_last_trip_home: True - Require that all last trips end home
+* rated_power_simple: <kW> - Nominal rated power to be used with simple grid model
+* charging_infrastructure_mappings - True-False to the respective type of charging infrastucture
+* grid_availability_distribution - Assing probability distribution for each parking purpose
 
 
 
@@ -22,14 +28,12 @@ GridModeler Output
 ---------------------------------------------------
 **Output Functions:**
 
-* vpGrid = GridModeler(configs=configs, dataset=dataset)
-* vpGrid.assignSimpleGridViaPurposes()
-* vpGrid.writeOutGridAvailability()
+* vpGrid = GridModeler(configs=configs, activities=vpData.activities)
+* vpGrid.assign_grid()
 
 **Disk File:**
 
-* Hourly boolean dataset with plugging time fo all vehicles (.csv)
-
+* Activity dataset including rated and available charging power for all vehicles (.csv)
 
 
 
@@ -82,10 +86,3 @@ There are currently two ways for grid assignment in venco.py.
 	We assume that for home charging, the vehicle is connected to the same charging column capacity of 1st hour whenever it is returned home during the whole day.
 
 
-Transaction Start Hour
-------------------------------------
-A boolean dataframe is created from plug profiles to identify the transaction start hour. This profile is further helpful to model plug choices in flexEstimator.
-
-Plots
------------------------------
-A total of two plots are plotted in in this class. First plot is of distribution of charging column in plug profiles and second consists of distribution of purposes in the purpose diary.

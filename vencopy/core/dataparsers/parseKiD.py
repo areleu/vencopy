@@ -9,8 +9,8 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 
-from vencopy.core.dataparsers.dataparsers import IntermediateParsing
-from vencopy.core.dataparsers.parkinference import ParkInference
+from ...core.dataparsers.dataparsers import IntermediateParsing
+from ...core.dataparsers.parkinference import ParkInference
 
 
 class ParseKiD(IntermediateParsing):

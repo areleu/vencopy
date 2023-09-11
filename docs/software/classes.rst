@@ -1,10 +1,9 @@
 ..  venco.py introdcution file created on October 20, 2021
-    by Niklas Wulff
     Licensed under CC BY 4.0: https://creativecommons.org/licenses/by/4.0/deed.en
 
 .. _classes:
 
-venco.py Classes
+venco.py Core
 ===================================
 
 Below is a brief explanation of the four main venco.py classes. For a more detailed explanation about the internal workings and the specific outputs

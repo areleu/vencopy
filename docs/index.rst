@@ -47,7 +47,6 @@ Useful Information about venco.py
 About
 ------------------
 - Authors: Niklas Wulff, Fabia Miorelli
-- Contact: niklas.wulff@dlr.de
 
 
 Links
