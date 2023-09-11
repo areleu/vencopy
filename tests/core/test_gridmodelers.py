@@ -10,10 +10,10 @@ import pytest
 import pandas as pd
 from pathlib import Path
 
-from ...vencopy.core.gridmodelers import GridModeler
+from ...vencopy.core.gridmodellers import GridModeller
 
 
-# TESTS GridModeler class instantiation
+# TESTS GridModeller class instantiation
 # def test_gridmodeler_instantiation():
 #     configs = {
 #         "user_config": {
@@ -38,9 +38,9 @@ from ...vencopy.core.gridmodelers import GridModeler
 #     # TODO: fix activities dataset
 #     activities = ["activity1", "activity2"]
 
-#     my_obj = GridModeler(configs, activities)
+#     my_obj = GridModeller(configs, activities)
 
-#     assert isinstance(my_obj, GridModeler)
+#     assert isinstance(my_obj, GridModeller)
 
 #     assert my_obj.user_config == configs["user_config"]
 #     assert my_obj.dev_config == configs["dev_config"]
@@ -75,7 +75,7 @@ def sample_activities():
 #         }
 #     }
 
-#     charging_instance = GridModeler(user_config, sample_activities.copy())
+#     charging_instance = GridModeller(user_config, sample_activities.copy())
 #     charging_instance.__adjust_power_short_parking_time()
 
 #     expected_rated_power = [0, 0, 30]  # Only the last activity should have rated_power unchanged

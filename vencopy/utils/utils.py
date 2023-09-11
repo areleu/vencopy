@@ -122,7 +122,7 @@ def merge_variables(data: pd.DataFrame, dataset: pd.DataFrame, variables: list) 
     """
     Global venco.py function to merge MiD variables to trip distance, purpose or grid connection data.
 
-    :param data: trip diary data as given by tripDiaryBuilder and gridModeler
+    :param data: trip diary data as given by tripDiaryBuilder and gridModeller
     :param dataset: Survey data that holds specific variables for merge
     :param variables: Name of variables that will be merged
     :return: The merged data

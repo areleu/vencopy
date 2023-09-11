@@ -650,7 +650,7 @@ class TimeDiscretiser:
                 dev_config=self.dev_config,
                 user_config=self.user_config,
                 manual_label=self.column_to_discretise,
-                file_name_id="output_diaryBuilder",
+                file_name_id="output_diarybuilder",
                 dataset=self.dataset,
             )
             write_out(data=self.activities, path=root / folder / file_name)

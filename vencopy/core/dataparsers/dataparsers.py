@@ -440,7 +440,7 @@ class DataParser:
             file_name = create_file_name(
                 dev_config=self.dev_config,
                 user_config=self.user_config,
-                file_name_id="output_dataParser",
+                file_name_id="output_dataparser",
                 dataset=self.dataset,
                 manual_label="",
             )

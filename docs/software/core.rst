@@ -32,7 +32,7 @@ The charging infrastructure allocation makes use of a basic charging infrastruct
 vehicles are parked. Since the analytical focus of the framework lies on a regional level (NUTS1-NUTS0), the infrastructure model is kept simple in
 the current version. Charging availability is allocated based on a binary TRUE/FALSE mapping to a respective trip purpose in the venco.py-config.
 Thus, different scenarios describing different charging availabilities, e.g. at home or at home and at work etc. can be distinguished, but neither a
-regional differentiation nor a charging availability probability or distribution are assumed. At the end of the application of the GridModeler, a
+regional differentiation nor a charging availability probability or distribution are assumed. At the end of the application of the GridModeller, a
 given parking purpose diary parkingType(v, t) is transferred into a binary grid connection diary connectgrid (v, t) with the same format but
 consisting only of TRUE/FALSE values.
 

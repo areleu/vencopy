@@ -209,7 +209,7 @@ class Aggregator:
                 dev_config=self.dev_config,
                 user_config=self.user_config,
                 manual_label=self.profile_name,
-                file_name_id="output_profileAggregator",
+                file_name_id="output_profileaggregator",
                 dataset=self.dataset,
             )
             write_out(data=self.activities, path=root / folder / file_name)

@@ -3,14 +3,14 @@
 .. _gridmodeler:
 
 
-GridModeler Class
+GridModeller Class
 ===================================
 
 .. image:: ../figures/IOgridmodeler.png
 	:width: 800
 	:align: center
 
-GridModeler Input
+GridModeller Input
 ---------------------------------------------------
 **Config File (user_config.yaml):**
 
@@ -24,11 +24,11 @@ GridModeler Input
 
 
 
-GridModeler Output
+GridModeller Output
 ---------------------------------------------------
 **Output Functions:**
 
-* vpGrid = GridModeler(configs=configs, activities=vpData.activities)
+* vpGrid = GridModeller(configs=configs, activities=vpData.activities)
 * vpGrid.assign_grid()
 
 **Disk File:**

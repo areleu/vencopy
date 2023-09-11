@@ -12,7 +12,7 @@ from scipy.stats.sampling import DiscreteAliasUrn
 from ..utils.utils import create_file_name, write_out
 
 
-class GridModeler:
+class GridModeller:
     def __init__(self, configs: dict, activities):
         self.user_config = configs["user_config"]
         self.dev_config = configs["dev_config"]
@@ -139,7 +139,7 @@ class GridModeler:
                 dev_config=self.dev_config,
                 user_config=self.user_config,
                 manual_label="",
-                file_name_id="output_gridModeler",
+                file_name_id="output_gridmodeller",
                 dataset=self.dataset,
             )
             write_out(data=self.activities, path=root / folder / file_name)

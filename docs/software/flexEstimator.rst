@@ -29,7 +29,7 @@ FlexEstimator Input
 
 **venco.py Classes:**
 
-* GridModeler class output
+* GridModeller class output
 
 
 FlexEstimator Output
