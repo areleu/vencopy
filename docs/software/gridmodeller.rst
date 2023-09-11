@@ -6,7 +6,7 @@
 GridModeller Class
 ===================================
 
-.. image:: ../figures/IOgridmodeler.png
+.. image:: ../figures/IOgridmodeler.svg
 	:width: 800
 	:align: center
 

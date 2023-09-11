@@ -7,7 +7,7 @@ DataParser Class
 ===================================
 
 
-.. image:: ../figures/IOdataparser.png
+.. image:: ../figures/IOdataparser.svg
 	:width: 800
 	:align: center
 

@@ -7,7 +7,7 @@ PostProcessor Class
 ===================================
 
 
-.. image:: ../figures/IOpostprocessor.png
+.. image:: ../figures/IOpostprocessor.svg
 	:width: 800
 	:align: center
 

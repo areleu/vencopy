@@ -6,7 +6,7 @@
 FlexEstimator Class
 ===================================
 
-.. image:: ../figures/IOflexestimator.png
+.. image:: ../figures/IOflexestimator.svg
 	:width: 800
 	:align: center
 

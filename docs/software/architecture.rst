@@ -15,7 +15,7 @@ not shown in the figure as it is not needed to calculate results from venco.py. 
 detailed algebraic description of the tool please refer to the :ref:`publications` section.
 
 
-.. image:: ../figures/vencopy_classes.png
+.. image:: ../figures/vencopy_structure_detailed.drawio.png
 	:width: 600
 	:align: center
 

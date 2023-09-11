@@ -7,7 +7,7 @@ ProfileAggregator Class
 ===================================
 
 
-.. image:: ../figures/IOprofileaggregator.png
+.. image:: ../figures/IOprofileaggregator.svg
 	:width: 800
 	:align: center
 

@@ -6,7 +6,7 @@
 DiaryBuilder Class
 ===================================
 
-.. image:: ../figures/IOdiarybuilder.png
+.. image:: ../figures/IOdiarybuilder.svg
 	:width: 800
 	:align: center
 

@@ -17,7 +17,7 @@ in the gitlab repository.
 
 - Tutorial 1: Showcasing run.py
 - Tutorial 2: The DataParser class
-- Tutorial 3: The TripDiaryBuilder class (currently this tutorial is empty, it
+- Tutorial 3: The DiaryBuilder class (currently this tutorial is empty, it
   will be complemented following upcoming developments)
 - Tutorial 4: The GridModeller class
 - Tutorial 5: The FlexEstimator class
