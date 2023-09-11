@@ -7,11 +7,12 @@ PostProcessor Class
 ===================================
 
 
-.. image:: ../figures/IOprofileaggregator.png
+.. image:: ../figures/IOpostprocessor.png
 	:width: 800
 	:align: center
 
-TripDiaryBuilder Input
+
+PostProcessor Input
 ---------------------------------------------------
 **Config File (user_config.yaml):**
 
@@ -23,7 +24,7 @@ TripDiaryBuilder Input
  * ProfileAggregator class output (5 profiles)
 
 
-TripDiaryBuilder Output
+PostProcessor Output
 ---------------------------------------------------
 **Output Functions:**
 
