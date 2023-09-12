@@ -5,6 +5,7 @@ __status__ = "dev"  # options are: dev, test, prod
 __license__ = "BSD-3-Clause"
 
 import pytest
+import pandas as pd
 
 from typing import Any, Literal
 
@@ -48,7 +49,7 @@ local data file from']):
     obj.raw_data_path == expected_raw_data_path assert obj.raw_data is None
     assert obj.trips is None assert obj.activities is None assert
     obj.trips_end_next_day_raw is None assert obj.debug == debug captured =
-    capsys.readouterr() assert expected_message in captured.out 
+    capsys.readouterr() assert expected_message in captured.out
 
 @pytest.fixture def dataparser_class_instance():
     dev_config = {
@@ -62,7 +63,7 @@ local data file from']):
             "dataset": "dataset"
         }
     } dev_config = dev_config user_config = user_config debug = True dataset =
-    "dataset" return DataParser(user_config, dev_config, dataset, debug) 
+    "dataset" return DataParser(user_config, dev_config, dataset, debug)
 
 
 def test_check_dataset_id_valid(dataparser_class_instance):
@@ -100,3 +101,79 @@ def test_create_replacement_dict():
     with pytest.raises(ValueError, match="Dataset dataset3 not specified in dev_config variable dictionary."):
         DataParser._create_replacement_dict(dataset=dataset, data_variables=data_variables)
 
+
+@pytest.fixture
+def sample_data_frame():
+    data = {
+        "transport_mode": ["car", "bus", "bike"],
+        "age": [25, 30, 40],
+    }
+    return pd.DataFrame(data)
+
+
+def test_set_include_filter(sample_data_frame):
+    include_filter_dict = {
+        "transport_mode": ["car"],
+        "age": [30, 35],
+    }
+
+    result = DataParser._set_include_filter(dataset=sample_data_frame, include_filter_dict=include_filter_dict)
+
+    assert isinstance(result, pd.DataFrame)
+    assert set(result.columns) == set(include_filter_dict.keys())
+
+    expected_result = pd.DataFrame({
+        "transport_mode": [True, False, False],
+        "age": [False, True, False],
+    }, index=sample_data_frame.index)
+    assert set(result) == set(expected_result)
+
+
+def test_set_exclude_filter(sample_data_frame):
+    exclude_filter_dict = {
+        "transport_mode": ["car"],
+        "age": [30, 35],
+    }
+
+    result = DataParser._set_exclude_filter(dataset=sample_data_frame, exclude_filter_dict=exclude_filter_dict)
+
+    assert isinstance(result, pd.DataFrame)
+    assert set(result.columns) == set(exclude_filter_dict.keys())
+
+    expected_result = pd.DataFrame({
+        "transport_mode": [False, True, True],
+        "age": [True, False, True],
+    }, index=sample_data_frame.index)
+    assert set(result) == set(expected_result)
+
+
+def test_set_greater_than_filter(sample_data_frame):
+    greater_than_filter_dict = {
+        "age": [30],
+    }
+
+    result = DataParser._set_greater_than_filter(dataset=sample_data_frame, greater_than_filter_dict=greater_than_filter_dict)
+
+    assert isinstance(result, pd.DataFrame)
+    assert set(result.columns) == set(greater_than_filter_dict.keys())
+
+    expected_result = pd.DataFrame({
+        "age": [False, True, True],
+    }, index=sample_data_frame.index)
+    assert set(result) == set(expected_result)
+
+
+def test_set_smaller_than_filter(sample_data_frame):
+    smaller_than_filter_dict = {
+        "age": [25],
+    }
+
+    result = DataParser._set_smaller_than_filter(dataset=sample_data_frame, smaller_than_filter_dict=smaller_than_filter_dict)
+
+    assert isinstance(result, pd.DataFrame)
+    assert set(result.columns) == set(smaller_than_filter_dict.keys())
+
+    expected_result = pd.DataFrame({
+        "age": [True, False, False],
+    }, index=sample_data_frame.index)
+    assert set(result) == set(expected_result)

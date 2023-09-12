@@ -235,13 +235,13 @@ class DataParser:
         # Simple filters checking single columns for specified values
         for i_key, i_value in self.filters.items():
             if i_key == "include" and i_value:
-                simple_filter = simple_filter.join(self.__set_include_filter(i_value, self.trips.index))
+                simple_filter = simple_filter.join(self._set_include_filter(dataset=self.trips, include_filter_dict=i_value))
             elif i_key == "exclude" and i_value:
-                simple_filter = simple_filter.join(self.__set_exclude_filter(i_value, self.trips.index))
+                simple_filter = simple_filter.join(self._set_exclude_filter(dataset=self.trips, include_filter_dict=i_value))
             elif i_key == "greater_than" and i_value:
-                simple_filter = simple_filter.join(self.__set_greater_than_filter(i_value, self.trips.index))
+                simple_filter = simple_filter.join(self._set_greater_than_filter(dataset=self.trips, greater_than_filter_dict=i_value))
             elif i_key == "smaller_than" and i_value:
-                simple_filter = simple_filter.join(self.__set_smaller_than_filter(i_value, self.trips.index))
+                simple_filter = simple_filter.join(self._set_smaller_than_filter(dataset=self.trips, smaller_than_filter_dict=i_value))
             elif i_key not in ["include", "exclude", "greater_than", "smaller_than"]:
                 warnings.warn(
                     f"A filter dictionary was defined in the dev_config with an unknown filtering key."
@@ -250,47 +250,45 @@ class DataParser:
                 )
         return simple_filter
 
-    def __set_include_filter(self, include_filter_dict: dict, data_idx: pd.Index) -> pd.DataFrame:
+    @staticmethod
+    def _set_include_filter(dataset: pd.DataFrame, include_filter_dict: dict) -> pd.DataFrame:
         """
         Read-in function for include filter dict from dev_config.yaml
 
         :param include_filter_dict: Dictionary of include filters defined
                                 in dev_config.yaml
-        :param data_idx: Index for the data frame
-        :return: Returns a data frame with individuals using car
-                as a mode of transport
+        :return: Returns a data frame including the variables specified
         """
-        inc_filter_cols = pd.DataFrame(index=data_idx, columns=include_filter_dict.keys())
+        inc_filter_cols = pd.DataFrame(index=dataset.index, columns=include_filter_dict.keys())
         for inc_col, inc_elements in include_filter_dict.items():
-            inc_filter_cols[inc_col] = self.trips[inc_col].isin(inc_elements)
+            inc_filter_cols[inc_col] = dataset[inc_col].isin(inc_elements)
         return inc_filter_cols
 
-    def __set_exclude_filter(self, exclude_filter_dict: dict, data_idx: pd.Index) -> pd.DataFrame:
+    @staticmethod
+    def _set_exclude_filter(dataset: pd.DataFrame, exclude_filter_dict: dict) -> pd.DataFrame:
         """
         Read-in function for exclude filter dict from dev_config.yaml
 
         :param exclude_filter_dict: Dictionary of exclude filters defined
                                   in dev_config.yaml
-        :param data_idx: Index for the data frame
         :return: Returns a filtered data frame with exclude filters
         """
-        excl_filter_cols = pd.DataFrame(index=data_idx, columns=exclude_filter_dict.keys())
+        excl_filter_cols = pd.DataFrame(index=dataset.index, columns=exclude_filter_dict.keys())
         for exc_col, exc_elements in exclude_filter_dict.items():
-            excl_filter_cols[exc_col] = ~self.trips[exc_col].isin(exc_elements)
+            excl_filter_cols[exc_col] = ~dataset[exc_col].isin(exc_elements)
         return excl_filter_cols
 
-    def __set_greater_than_filter(self, greater_than_filter_dict: dict, data_idx: pd.Index):
+    def _set_greater_than_filter(dataset: pd.DataFrame, greater_than_filter_dict: dict):
         """
         Read-in function for greater_than filter dict from dev_config.yaml
 
         :param greater_than_filter_dict: Dictionary of greater than filters
                                       defined in dev_config.yaml
-        :param data_idx: Index for the data frame
         :return:
         """
-        greater_than_filter_cols = pd.DataFrame(index=data_idx, columns=greater_than_filter_dict.keys())
+        greater_than_filter_cols = pd.DataFrame(index=dataset.index, columns=greater_than_filter_dict.keys())
         for greater_col, greater_elements in greater_than_filter_dict.items():
-            greater_than_filter_cols[greater_col] = self.trips[greater_col] >= greater_elements.pop()
+            greater_than_filter_cols[greater_col] = dataset[greater_col] >= greater_elements.pop()
             if len(greater_elements) > 0:
                 warnings.warn(
                     f"You specified more than one value as lower limit for filtering column {greater_col}."
@@ -298,19 +296,17 @@ class DataParser:
                 )
         return greater_than_filter_cols
 
-    def __set_smaller_than_filter(self, smaller_than_filter_dict: dict, data_idx: pd.Index) -> pd.DataFrame:
+    def _set_smaller_than_filter(dataset: pd.DataFrame, smaller_than_filter_dict: dict) -> pd.DataFrame:
         """
         Read-in function for smaller_than filter dict from dev_config.yaml
 
         :param smaller_than_filter_dict: Dictionary of smaller than filters
                defined in dev_config.yaml
-        :param data_idx: Index for the data frame
-        :return: Returns a data frame of trips covering
-                 a distance of less than 1000 km
+        :return: Returns a data frame of 
         """
-        smaller_than_filter_cols = pd.DataFrame(index=data_idx, columns=smaller_than_filter_dict.keys())
+        smaller_than_filter_cols = pd.DataFrame(index=dataset.index, columns=smaller_than_filter_dict.keys())
         for smaller_col, smaller_elements in smaller_than_filter_dict.items():
-            smaller_than_filter_cols[smaller_col] = self.trips[smaller_col] <= smaller_elements.pop()
+            smaller_than_filter_cols[smaller_col] = dataset[smaller_col] <= smaller_elements.pop()
             if len(smaller_elements) > 0:
                 warnings.warn(
                     f"You specified more than one value as upper limit for filtering column {smaller_col}."
