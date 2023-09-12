@@ -14,8 +14,8 @@ from ....vencopy.core.dataparsers.parseMiD import ParseMiD
 from ....vencopy.core.dataparsers.parseKiD import ParseKiD
 
 
-"""
-sample_configs = {
+
+""" sample_configs = {
     "user_config": {
         "global": {
             "absolute_path": {
@@ -38,7 +38,9 @@ sample_configs = {
         file from"), (sample_configs, "MiD17", False, "Starting to retrieve
         local data file from"),
     ],
-) def test_dataparsers_initialization(configs: dict[str, Any], dataset:
+)
+
+def test_dataparsers_initialization(configs: dict[str, Any], dataset:
 Literal['MiD08', 'MiD17'], load_encrypted: bool, expected_message:
 Literal['Starting to retrieve encrypted data file from', 'Starting to retrieve
 local data file from']):
@@ -49,43 +51,45 @@ local data file from']):
     obj.raw_data_path == expected_raw_data_path assert obj.raw_data is None
     assert obj.trips is None assert obj.activities is None assert
     obj.trips_end_next_day_raw is None assert obj.debug == debug captured =
-    capsys.readouterr() assert expected_message in captured.out
-
-@pytest.fixture def dataparser_class_instance():
-    dev_config = {
-        "dataparsers": {
-            "data_variables": {
-                "dataset": ["dataset1", "dataset2"]
-            }
-        }
-    } user_config = {
-        "global": {
-            "dataset": "dataset"
-        }
-    } dev_config = dev_config user_config = user_config debug = True dataset =
-    "dataset" return DataParser(user_config, dev_config, dataset, debug)
+    capsys.readouterr() assert expected_message in captured.out """
 
 
-def test_check_dataset_id_valid(dataparser_class_instance):
-    dataset = "dataset1" result =
-    dataparser_class_instance.__check_dataset_id(dataset) assert result ==
-    dataset
+""" 
+class MockDataParser:
+    def __init__(self):
+        dev_config = {
+            "dataparsers": {
+                "data_variables": {
+                    "dataset": ["dataset1", "dataset2", "dataset3"]
+                    }}}
+        self.dev_config = dev_config
+        self.debug = False
 
 
-def test_check_dataset_id_invalid(dataparser_class_instance):
+@pytest.fixture
+def mock_data_parser():
+    return MockDataParser()
+
+
+def test_check_dataset_id(mock_data_parser):
+    dataset = "dataset2"
+    result = DataParser()._check_dataset_id(dataset=dataset)
+    assert result == dataset
+
+    dataset = "non_existent_dataset"
+    with pytest.raises(AssertionError) as excinfo:
+        DataParser._check_dataset_id(dataset=dataset)
+    assert "Defined dataset non_existent_dataset not specified" in str(excinfo.value)
+
     dataset = "invalid_dataset" with pytest.raises(AssertionError) as e:
-        dataparser_class_instance.__check_dataset_id(dataset)
+        DataParser._check_dataset_id(dataset=dataset)
 
-    expected_error_message = (
-        f"Defined dataset {dataset} not specified " f"under data_variables in
-        dev_config. " f"Specified datasetIDs are ['dataset1', 'dataset2']"
-    )
-
-    assert str(e.value) == expected_error_message
-"""
+    expected_error_message = (f"Defined dataset {dataset} not specified under "
+                              "data_variables in dev_config. Specified "
+                              "dataset_id are ['dataset1', 'dataset2'].")
+    assert str(e.value) == expected_error_message """
 
 
-# TESTS  _create_replacement_dict()
 def test_create_replacement_dict():
     data_variables = {"dataset": ["dataset1", "dataset2"],
                       "vencopy_var1": ["dataset1_var1", "dataset2_var1"],
@@ -107,6 +111,8 @@ def sample_data_frame():
     data = {
         "transport_mode": ["car", "bus", "bike"],
         "age": [25, 30, 40],
+        "trip_distance": [10.0, 15.0, 10.0],
+        "travel_time": [10.0, 45.0, 90.0],
     }
     return pd.DataFrame(data)
 
@@ -177,3 +183,15 @@ def test_set_smaller_than_filter(sample_data_frame):
         "age": [True, False, False],
     }, index=sample_data_frame.index)
     assert set(result) == set(expected_result)
+
+
+def test_filter_inconsistent_speeds(sample_data_frame):
+    lower_speed_threshold = 10.0
+    higher_speed_threshold = 30.0
+    result = DataParser._filter_inconsistent_speeds(sample_data_frame, lower_speed_threshold, higher_speed_threshold)
+
+    assert isinstance(result, pd.Series)
+    assert len(result) == len(sample_data_frame)
+
+    expected_result = pd.Series([False, True, False])
+    assert result.equals(expected_result)

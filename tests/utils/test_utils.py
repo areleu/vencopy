@@ -15,7 +15,6 @@ from pathlib import Path
 from ...vencopy.utils.utils import load_configs, return_lowest_level_dict_keys, return_lowest_level_dict_values, replace_vec, create_output_folders, create_file_name, write_out
 
 
-# TESTS load_config
 # Define a fixture to provide a temporary directory for testing
 @pytest.fixture
 def temp_dir(tmp_path):
@@ -65,7 +64,6 @@ def test_load_configs():
     # ]
 
 
-# TESTS return_lowest_level_dict_keys
 def test_return_lowest_level_dict_keys():
     # Test when the input dictionary has nested dictionaries
     dictionary = {
@@ -102,7 +100,6 @@ def test_return_lowest_level_dict_keys():
 
 
 
-# TESTS return_lowest_level_dict_values
 def test_return_lowest_level_dict_values():
     # Test when the input dictionary has nested dictionaries
     dictionary = {
@@ -138,7 +135,6 @@ def test_return_lowest_level_dict_values():
     assert result == expected_result
 
 
-# TESTS replace_vec
 def test_replace_vec():
     data = pd.DataFrame({
         "timestamp": [pd.to_datetime("2021-01-01 12:30:45"), pd.to_datetime("2022-02-02 13:45:00")]
@@ -180,7 +176,6 @@ def test_replace_vec():
     assert all(result == expected_result)
 
 
-# TESTS create_output_folders
 @pytest.fixture
 def sample_configs(tmp_path):
     root_path = tmp_path / "sample_root"

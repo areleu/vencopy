@@ -44,7 +44,7 @@ class DataParser:
         """
         self.user_config = configs["user_config"]
         self.dev_config = configs["dev_config"]
-        self.dataset = self.__check_dataset_id(dataset)
+        self.dataset = self._check_dataset_id(dataset=dataset)
         filepath = (
             Path(self.user_config["global"]["absolute_path"][self.dataset])
             / self.dev_config["global"]["files"][self.dataset]["trips_data_raw"]
@@ -132,21 +132,19 @@ class DataParser:
 
         print(f"Finished loading {len(self.raw_data)} rows of raw data of type {self.raw_data_path.suffix}.")
 
-    def __check_dataset_id(self, dataset: str) -> str:
+    def _check_dataset_id(self, dataset: str) -> str:
         """
         General check if data set ID is defined in dev_config.yaml
 
         :param dataset: list of strings declaring the datasetIDs
                           to be read in
-        :param user_config: A yaml config file holding a dictionary with the
-                            keys 'relative_path' and 'absolute_path'
-        :return: Returns a string value of a mobility data
+        :return: Returns a string with a dataset name
         """
         available_dataset_ids = self.dev_config["dataparsers"]["data_variables"]["dataset"]
         assert dataset in available_dataset_ids, (
             f"Defined dataset {dataset} not specified "
             f"under data_variables in dev_config. "
-            f"Specified dataset_ids are {available_dataset_ids}"
+            f"Specified dataset_ids are {available_dataset_ids}."
         )
         return dataset
 
@@ -237,7 +235,7 @@ class DataParser:
             if i_key == "include" and i_value:
                 simple_filter = simple_filter.join(self._set_include_filter(dataset=self.trips, include_filter_dict=i_value))
             elif i_key == "exclude" and i_value:
-                simple_filter = simple_filter.join(self._set_exclude_filter(dataset=self.trips, include_filter_dict=i_value))
+                simple_filter = simple_filter.join(self._set_exclude_filter(dataset=self.trips, exclude_filter_dict=i_value))
             elif i_key == "greater_than" and i_value:
                 simple_filter = simple_filter.join(self._set_greater_than_filter(dataset=self.trips, greater_than_filter_dict=i_value))
             elif i_key == "smaller_than" and i_value:
@@ -278,6 +276,7 @@ class DataParser:
             excl_filter_cols[exc_col] = ~dataset[exc_col].isin(exc_elements)
         return excl_filter_cols
 
+    @staticmethod
     def _set_greater_than_filter(dataset: pd.DataFrame, greater_than_filter_dict: dict):
         """
         Read-in function for greater_than filter dict from dev_config.yaml
@@ -296,6 +295,7 @@ class DataParser:
                 )
         return greater_than_filter_cols
 
+    @staticmethod
     def _set_smaller_than_filter(dataset: pd.DataFrame, smaller_than_filter_dict: dict) -> pd.DataFrame:
         """
         Read-in function for smaller_than filter dict from dev_config.yaml
@@ -325,12 +325,15 @@ class DataParser:
             data set.
         """
         complex_filters = pd.DataFrame(index=self.trips.index)
-        complex_filters = complex_filters.join(self._filter_inconsistent_speeds())
+        lower_speed_threshold = self.dev_config["dataparsers"]["filters"]["lower_speed_threshold"]
+        higher_speed_threshold = self.dev_config["dataparsers"]["filters"]["higher_speed_threshold"]
+        complex_filters = complex_filters.join(self._filter_inconsistent_speeds(dataset=self.trips, lower_speed_threshold=lower_speed_threshold, higher_speed_threshold=higher_speed_threshold))
         complex_filters = complex_filters.join(self._filter_inconsistent_travel_times())
         complex_filters = complex_filters.join(self._filter_overlapping_trips())
         return complex_filters
 
-    def _filter_inconsistent_speeds(self) -> pd.Series:
+    @staticmethod
+    def _filter_inconsistent_speeds(dataset: pd.DataFrame, lower_speed_threshold, higher_speed_threshold) -> pd.Series:
         """
         Filter out trips with inconsistent average speed. These trips are mainly trips where survey participant
         responses suggest that participants were travelling for the entire time they took for the whole purpose
@@ -339,11 +342,9 @@ class DataParser:
         :return: Boolean vector with observations marked True that should be
         kept in the data set
         """
-        self.trips["averageSpeed"] = self.trips["trip_distance"] / (self.trips["travel_time"] / 60)
-
-        return (self.trips["averageSpeed"] > self.dev_config["dataparsers"]["filters"]["lower_speed_threshold"]) & (
-            self.trips["averageSpeed"] <= self.dev_config["dataparsers"]["filters"]["higher_speed_threshold"]
-        )
+        dataset["average_speed"] = dataset["trip_distance"] / (dataset["travel_time"] / 60)
+        dataset = (dataset["average_speed"] > lower_speed_threshold) & (dataset["average_speed"] <= higher_speed_threshold)
+        return dataset
 
     def _filter_inconsistent_travel_times(self) -> pd.Series:
         """
@@ -418,7 +419,7 @@ class DataParser:
         bool_dict = {i_column: sum(filter_data[i_column]) for i_column in filter_data}
         print("The following number of observations were taken into account after filtering:")
         pprint.pprint(bool_dict)
-        # print(f'{filter_data["averageSpeed"].sum()} trips have plausible average speeds')
+        # print(f'{filter_data["average_speed"].sum()} trips have plausible average speeds')
         # print(f'{(~filter_data["tripDoesNotOverlap"]).sum()} trips overlap and were thus filtered out')
         print(f"All filters combined yielded that a total of {len_data} trips are taken into account.")
         print(f"This corresponds to {len_data / len(filter_data)* 100} percent of the original data.")
@@ -532,7 +533,9 @@ class IntermediateParsing(DataParser):
             data set.
         """
         complex_filters = pd.DataFrame(index=self.trips.index)
-        complex_filters = complex_filters.join(self._filter_inconsistent_speeds())
+        lower_speed_threshold = self.dev_config["dataparsers"]["filters"]["lower_speed_threshold"]
+        higher_speed_threshold = self.dev_config["dataparsers"]["filters"]["higher_speed_threshold"]
+        complex_filters = complex_filters.join(self._filter_inconsistent_speeds(dataset=self.trips, lower_speed_threshold=lower_speed_threshold, higher_speed_threshold=higher_speed_threshold))
         complex_filters = complex_filters.join(self._filter_inconsistent_travel_times())
         complex_filters = complex_filters.join(self._filter_overlapping_trips())
         complex_filters = complex_filters.join(self._filter_consistent_hours())
