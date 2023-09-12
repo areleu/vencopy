@@ -100,7 +100,7 @@ class ParseMiD(IntermediateParsing):
         """
         Wrapper function for harmonising and filtering the trips dataset as well as adding parking rows.
         """
-        self.trips = self._select_columns()
+        self._select_columns()
         self.__harmonize_variables()
         self._harmonize_variables_unique_id_names()
         self._convert_types()

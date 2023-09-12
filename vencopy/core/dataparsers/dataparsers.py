@@ -146,7 +146,7 @@ class DataParser:
         assert dataset in available_dataset_ids, (
             f"Defined dataset {dataset} not specified "
             f"under data_variables in dev_config. "
-            f"Specified datasetIDs are {available_dataset_ids}"
+            f"Specified dataset_ids are {available_dataset_ids}"
         )
         return dataset
 
@@ -162,12 +162,11 @@ class DataParser:
         replacement_dict = self._create_replacement_dict(
             self.dataset, self.dev_config["dataparsers"]["data_variables"]
         )
-        data_renamed = self.trips.rename(columns=replacement_dict)
-        self.trips = data_renamed
+        self.trips = self.trips.rename(columns=replacement_dict)
         print("Finished harmonization of variables.")
 
     @staticmethod
-    def _create_replacement_dict(dataset: str, dict_raw: dict) -> dict:
+    def _create_replacement_dict(dataset: str, data_variables: dict) -> dict:
         """
         Creates the mapping dictionary from raw data variable names to venco.py
         internal variable names as specified in dev_config.yaml
@@ -178,10 +177,10 @@ class DataParser:
         :return: Dictionary with internal names as keys and raw data column
                  names as values.
         """
-        if dataset not in dict_raw["dataset"]:
-            raise ValueError(f"Data set {dataset} not specified in dev_config variable dictionary.")
-        list_index = dict_raw["dataset"].index(dataset)
-        return {val[list_index]: key for (key, val) in dict_raw.items()}
+        if dataset not in data_variables["dataset"]:
+            raise ValueError(f"Dataset {dataset} not specified in dev_config variable dictionary.")
+        list_index = data_variables["dataset"].index(dataset)
+        return {val[list_index]: key for (key, val) in data_variables.items()}
 
     def _check_filter_dict(self):
         """
@@ -509,7 +508,7 @@ class IntermediateParsing(DataParser):
 
         :return: None
         """
-        return self.raw_data.loc[:, self.columns]
+        self.trips = self.raw_data.loc[:, self.columns]
 
     def _convert_types(self):
         """
