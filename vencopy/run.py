@@ -10,9 +10,9 @@ import time
 from pathlib import Path
 
 from vencopy.core.dataparsers import parse_data
-from vencopy.core.diarybuilders import DiaryBuilder
 from vencopy.core.gridmodellers import GridModeller
 from vencopy.core.flexestimators import FlexEstimator
+from vencopy.core.diarybuilders import DiaryBuilder
 from vencopy.core.profileaggregators import ProfileAggregator
 from vencopy.core.postprocessors import PostProcessor
 from vencopy.utils.utils import load_configs, create_output_folders

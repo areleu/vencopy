@@ -118,25 +118,6 @@ def create_file_name(
     return f"{dev_config['global']['disk_file_names'][file_name_id]}_{user_config['global']['run_label']}_{manual_label}_{dataset}.{suffix}"
 
 
-def merge_variables(data: pd.DataFrame, dataset: pd.DataFrame, variables: list) -> pd.DataFrame:
-    """
-    Global venco.py function to merge MiD variables to trip distance, purpose or grid connection data.
-
-    :param data: trip diary data as given by tripDiaryBuilder and gridModeller
-    :param dataset: Survey data that holds specific variables for merge
-    :param variables: Name of variables that will be merged
-    :return: The merged data
-    """
-    variableDataUnique = dataset.loc[~dataset["unique_id"].duplicated(), :]
-    variables.append("unique_id")
-    variableDataMerge = variableDataUnique.loc[:, variables].set_index("unique_id")
-    if "unique_id" not in data.index.names:
-        data.set_index("unique_id", inplace=True, drop=True)
-    mergedData = pd.concat([variableDataMerge, data], axis=1, join="inner")
-    mergedData.reset_index(inplace=True)
-    return mergedData
-
-
 def write_out(data: pd.DataFrame, path: Path):
     data.to_csv(path)
     print(f"Dataset written to {path}.")

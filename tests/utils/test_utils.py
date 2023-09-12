@@ -12,7 +12,7 @@ from unittest.mock import mock_open, patch
 import pandas as pd
 from pathlib import Path
 
-from ...vencopy.utils.utils import load_configs, return_lowest_level_dict_keys, return_lowest_level_dict_values, replace_vec, create_output_folders, create_file_name, merge_variables, write_out
+from ...vencopy.utils.utils import load_configs, return_lowest_level_dict_keys, return_lowest_level_dict_values, replace_vec, create_output_folders, create_file_name, write_out
 
 
 # TESTS load_config
@@ -219,9 +219,8 @@ def test_create_output_folders(sample_configs):
 
     for sub_dir in sub_dirs:
         assert os.path.exists(Path(sample_configs["user_config"]["global"]["absolute_path"]["vencopy_root"]) / main_dir / sub_dir)
-"""
 
-"""
+
 # TESTS create_file_name
 def test_create_file_name():
     dev_config = {
@@ -252,47 +251,6 @@ def test_create_file_name():
     # Test when all parameters are provided
     result = create_file_name(dev_config, user_config, "file1", "dataset1", manual_label="label123", suffix="txt")
     assert result == "file1_dev_run123_label123_dataset1.txt"
-
-
-# TESTS merge_variables
-def test_merge_variables():
-    data = pd.DataFrame({
-        "unique_id": [1, 2, 3],
-        "var1": [10, 20, 30],
-        "var2": [100, 200, 300]
-    })
-    dataset = pd.DataFrame({
-        "unique_id": [1, 2, 3],
-        "var1": [11, 22, 33],
-        "var3": [111, 222, 333]
-    })
-    variables = ["var1", "var2", "var3"]
-
-    # Test when 'unique_id' is not in data.index.names
-    result = merge_variables(data, dataset, variables)
-
-    expected_result = pd.DataFrame({
-        "unique_id": [1, 2, 3],
-        "var1": [10, 20, 30],
-        "var2": [100, 200, 300],
-        "var3": [111, 222, 333]
-    })
-
-    assert result == expected_result
-
-    # Test when 'unique_id' is already in data.index.names
-    data.set_index("unique_id", inplace=True)
-    result = merge_variables(data, dataset, variables)
-
-    expected_result = pd.DataFrame({
-        "unique_id": [1, 2, 3],
-        "var1": [10, 20, 30],
-        "var2": [100, 200, 300],
-        "var3": [111, 222, 333]
-    })
-
-    pd.testing.assert_frame_equal(result, expected_result)
-
 
 # TESTS write_out
 def test_write_out(temp_dir):

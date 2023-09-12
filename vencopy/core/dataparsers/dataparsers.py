@@ -142,11 +142,11 @@ class DataParser:
                             keys 'relative_path' and 'absolute_path'
         :return: Returns a string value of a mobility data
         """
-        available_dataset_IDs = self.dev_config["dataparsers"]["data_variables"]["dataset"]
-        assert dataset in available_dataset_IDs, (
+        available_dataset_ids = self.dev_config["dataparsers"]["data_variables"]["dataset"]
+        assert dataset in available_dataset_ids, (
             f"Defined dataset {dataset} not specified "
             f"under data_variables in dev_config. "
-            f"Specified datasetIDs are {available_dataset_IDs}"
+            f"Specified datasetIDs are {available_dataset_ids}"
         )
         return dataset
 
@@ -166,19 +166,20 @@ class DataParser:
         self.trips = data_renamed
         print("Finished harmonization of variables.")
 
-    def _create_replacement_dict(self, dataset: str, dict_raw: dict) -> dict:
+    @staticmethod
+    def _create_replacement_dict(dataset: str, dict_raw: dict) -> dict:
         """
         Creates the mapping dictionary from raw data variable names to venco.py
         internal variable names as specified in dev_config.yaml
         for the specified data set.
 
-        :param dataset: list of strings declaring the datasetIDs to be read
+        :param dataset: list of strings declaring the dataset_id to be read
         :param dict_raw: Contains dictionary of the raw data
         :return: Dictionary with internal names as keys and raw data column
                  names as values.
         """
         if dataset not in dict_raw["dataset"]:
-            raise ValueError(f"Data set {dataset} not specified in" f"dev_config variable dictionary.")
+            raise ValueError(f"Data set {dataset} not specified in dev_config variable dictionary.")
         list_index = dict_raw["dataset"].index(dataset)
         return {val[list_index]: key for (key, val) in dict_raw.items()}
 
@@ -508,7 +509,7 @@ class IntermediateParsing(DataParser):
 
         :return: None
         """
-        self.trips = self.raw_data.loc[:, self.columns]
+        return self.raw_data.loc[:, self.columns]
 
     def _convert_types(self):
         """
@@ -520,7 +521,6 @@ class IntermediateParsing(DataParser):
 
         :return: None
         """
-        # Filter for dataset specific columns
         conversion_dict = self.dev_config["dataparsers"]["input_data_types"][self.dataset]
         keys = {i_column for i_column in conversion_dict.keys() if i_column in self.trips.columns}
         self.var_datatype_dict = {key: conversion_dict[key] for key in conversion_dict.keys() & keys}

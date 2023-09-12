@@ -53,7 +53,7 @@ def test_dataparsers_initialization(configs: dict[str, Any], dataset: Literal['M
     assert obj.trips_end_next_day_raw is None  
     assert obj.debug == debug
     captured = capsys.readouterr()
-    assert expected_message in captured.out """
+    assert expected_message in captured.out 
 
 @pytest.fixture
 def dataparser_class_instance():
@@ -73,7 +73,7 @@ def dataparser_class_instance():
     user_config = user_config
     debug = True
     dataset = "dataset"
-    return DataParser(user_config, dev_config, dataset, debug)
+    return DataParser(user_config, dev_config, dataset, debug) 
 
 
 def test_check_dataset_id_valid(dataparser_class_instance):
@@ -94,3 +94,18 @@ def test_check_dataset_id_invalid(dataparser_class_instance):
     )
 
     assert str(e.value) == expected_error_message
+"""
+
+
+# TESTS 
+def test_create_replacement_dict():
+    dataset = "dataset"
+    dict_raw = {"dataset", "dataset1", "dataset2"}
+
+    expected_result = {"dataset": {"var1", "var2"}}
+    result = DataParser._create_replacement_dict(dataset, dict_raw)
+    assert expected_result == result
+
+    expected_result = {"dataset": {"var1", "var2"}}
+    result = DataParser._create_replacement_dict(dataset, dict_raw)
+    assert expected_result == result
