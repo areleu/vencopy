@@ -10,8 +10,7 @@ import pandas as pd
 from typing import Any, Literal
 
 from ....vencopy.core.dataparsers.dataparsers import DataParser
-from ....vencopy.core.dataparsers.parseMiD import ParseMiD
-from ....vencopy.core.dataparsers.parseKiD import ParseKiD
+from ....vencopy.core.dataparsers.dataparsers import IntermediateParsing
 
 
 
@@ -107,23 +106,21 @@ def test_create_replacement_dict():
 
 
 @pytest.fixture
-def sample_data_frame():
+def sample_data_frame_filters():
     data = {
         "transport_mode": ["car", "bus", "bike"],
-        "age": [25, 30, 40],
-        "trip_distance": [10.0, 15.0, 10.0],
-        "travel_time": [10.0, 45.0, 90.0],
+        "age": [25, 30, 40]
     }
     return pd.DataFrame(data)
 
 
-def test_set_include_filter(sample_data_frame):
+def test_set_include_filter(sample_data_frame_filters):
     include_filter_dict = {
         "transport_mode": ["car"],
         "age": [30, 35],
     }
 
-    result = DataParser._set_include_filter(dataset=sample_data_frame, include_filter_dict=include_filter_dict)
+    result = DataParser._set_include_filter(dataset=sample_data_frame_filters, include_filter_dict=include_filter_dict)
 
     assert isinstance(result, pd.DataFrame)
     assert set(result.columns) == set(include_filter_dict.keys())
@@ -131,17 +128,17 @@ def test_set_include_filter(sample_data_frame):
     expected_result = pd.DataFrame({
         "transport_mode": [True, False, False],
         "age": [False, True, False],
-    }, index=sample_data_frame.index)
-    assert set(result) == set(expected_result)
+    }, index=sample_data_frame_filters.index)
+    assert result.equals(expected_result)
 
 
-def test_set_exclude_filter(sample_data_frame):
+def test_set_exclude_filter(sample_data_frame_filters):
     exclude_filter_dict = {
         "transport_mode": ["car"],
         "age": [30, 35],
     }
 
-    result = DataParser._set_exclude_filter(dataset=sample_data_frame, exclude_filter_dict=exclude_filter_dict)
+    result = DataParser._set_exclude_filter(dataset=sample_data_frame_filters, exclude_filter_dict=exclude_filter_dict)
 
     assert isinstance(result, pd.DataFrame)
     assert set(result.columns) == set(exclude_filter_dict.keys())
@@ -149,49 +146,109 @@ def test_set_exclude_filter(sample_data_frame):
     expected_result = pd.DataFrame({
         "transport_mode": [False, True, True],
         "age": [True, False, True],
-    }, index=sample_data_frame.index)
-    assert set(result) == set(expected_result)
+    }, index=sample_data_frame_filters.index)
+    assert result.equals(expected_result)
 
 
-def test_set_greater_than_filter(sample_data_frame):
+def test_set_greater_than_filter(sample_data_frame_filters):
     greater_than_filter_dict = {
         "age": [30],
     }
 
-    result = DataParser._set_greater_than_filter(dataset=sample_data_frame, greater_than_filter_dict=greater_than_filter_dict)
+    result = DataParser._set_greater_than_filter(dataset=sample_data_frame_filters, greater_than_filter_dict=greater_than_filter_dict)
 
     assert isinstance(result, pd.DataFrame)
     assert set(result.columns) == set(greater_than_filter_dict.keys())
 
     expected_result = pd.DataFrame({
         "age": [False, True, True],
-    }, index=sample_data_frame.index)
-    assert set(result) == set(expected_result)
+    }, index=sample_data_frame_filters.index)
+    assert result.equals(expected_result)
 
 
-def test_set_smaller_than_filter(sample_data_frame):
+def test_set_smaller_than_filter(sample_data_frame_filters):
     smaller_than_filter_dict = {
         "age": [25],
     }
 
-    result = DataParser._set_smaller_than_filter(dataset=sample_data_frame, smaller_than_filter_dict=smaller_than_filter_dict)
+    result = DataParser._set_smaller_than_filter(dataset=sample_data_frame_filters, smaller_than_filter_dict=smaller_than_filter_dict)
 
     assert isinstance(result, pd.DataFrame)
     assert set(result.columns) == set(smaller_than_filter_dict.keys())
 
     expected_result = pd.DataFrame({
         "age": [True, False, False],
-    }, index=sample_data_frame.index)
-    assert set(result) == set(expected_result)
+    }, index=sample_data_frame_filters.index)
+    assert result.equals(expected_result)
 
 
-def test_filter_inconsistent_speeds(sample_data_frame):
+@pytest.fixture
+def sample_data_frame_other_filters():
+    data = {
+        "unique_id": [1, 1, 2, 2, 3],
+        "timestamp_start": ["2023-09-01 08:00", "2023-09-01 09:00", "2023-09-01 10:00", "2023-09-01 10:30", "2023-09-01 11:00"],
+        "timestamp_end": ["2023-09-01 09:15", "2023-09-01 09:30", "2023-09-01 10:15", "2023-09-01 11:15", "2023-09-01 11:30"],
+        "trip_distance": [10.0, 15.0, 10.0, 10.0, 10.0],
+        "travel_time": [10.0, 45.0, 90.0, 90.0, 90.0],
+    }
+    return pd.DataFrame(data)
+
+
+def test_filter_inconsistent_speeds(sample_data_frame_other_filters):
     lower_speed_threshold = 10.0
     higher_speed_threshold = 30.0
-    result = DataParser._filter_inconsistent_speeds(sample_data_frame, lower_speed_threshold, higher_speed_threshold)
+    result = DataParser._filter_inconsistent_speeds(sample_data_frame_other_filters, lower_speed_threshold, higher_speed_threshold)
 
     assert isinstance(result, pd.Series)
-    assert len(result) == len(sample_data_frame)
+    assert len(result) == len(sample_data_frame_other_filters)
 
-    expected_result = pd.Series([False, True, False])
+    expected_result = pd.Series([False, True, False, False, False])
     assert result.equals(expected_result)
+
+# TODO: adapat data in fixture to make it work
+# def test_filter_inconsistent_travel_times(sample_data_frame_other_filters):
+#     result = DataParser._filter_inconsistent_travel_times(sample_data_frame_other_filters)
+
+#     assert isinstance(result, pd.Series)
+#     assert len(result) == len(sample_data_frame_other_filters)
+
+#     expected_result = pd.Series([True, True, True])
+#     assert result.equals(expected_result)
+
+
+def test_filter_overlapping_trips(sample_data_frame_other_filters):
+    result = DataParser._filter_overlapping_trips(sample_data_frame_other_filters, lookahead_periods=1)
+
+    assert isinstance(result, pd.Series)
+    assert len(result) == len(sample_data_frame_other_filters)
+
+    expected_result = pd.Series([True, False, True, True, True])
+    assert result.equals(expected_result)
+
+
+def test_identify_overlapping_trips(sample_data_frame_other_filters):
+    result = DataParser._identify_overlapping_trips(sample_data_frame_other_filters, 1)
+
+    assert isinstance(result, pd.Series)
+    assert len(result) == len(sample_data_frame_other_filters)
+
+    expected_result = pd.Series([True, False, True, True, True])
+    assert result.equals(expected_result)
+
+
+def test_filter_analysis(capsys):
+    filter_data = pd.DataFrame({
+        "Filter1": [True, False, True, True],
+        "Filter2": [False, True, True, False],
+    })
+
+    DataParser._filter_analysis(filter_data)
+
+    captured = capsys.readouterr()
+    expected_output = (
+        "The following number of observations were taken into account after filtering:\n"
+        "{'Filter1': 3, 'Filter2': 2}\n"
+        "All filters combined yielded that a total of 1 trips are taken into account.\n"
+        "This corresponds to 25.0 percent of the original data.\n"
+    )
+    assert captured.out == expected_output

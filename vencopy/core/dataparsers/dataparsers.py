@@ -328,8 +328,8 @@ class DataParser:
         lower_speed_threshold = self.dev_config["dataparsers"]["filters"]["lower_speed_threshold"]
         higher_speed_threshold = self.dev_config["dataparsers"]["filters"]["higher_speed_threshold"]
         complex_filters = complex_filters.join(self._filter_inconsistent_speeds(dataset=self.trips, lower_speed_threshold=lower_speed_threshold, higher_speed_threshold=higher_speed_threshold))
-        complex_filters = complex_filters.join(self._filter_inconsistent_travel_times())
-        complex_filters = complex_filters.join(self._filter_overlapping_trips())
+        complex_filters = complex_filters.join(self._filter_inconsistent_travel_times(dataset=self.trips))
+        complex_filters = complex_filters.join(self._filter_overlapping_trips(dataset=self.trips))
         return complex_filters
 
     @staticmethod
@@ -346,7 +346,8 @@ class DataParser:
         dataset = (dataset["average_speed"] > lower_speed_threshold) & (dataset["average_speed"] <= higher_speed_threshold)
         return dataset
 
-    def _filter_inconsistent_travel_times(self) -> pd.Series:
+    @staticmethod
+    def _filter_inconsistent_travel_times(dataset) -> pd.Series:
         """
         Calculates a travel time from the given timestamps and compares it
         to the travel time given by the interviewees. Selects observations where
@@ -355,14 +356,15 @@ class DataParser:
         :return: Boolean vector with observations marked True that should be
         kept in the data set
         """
-        self.trips["travelTime_ts"] = (
-            (self.trips["timestamp_end"] - self.trips["timestamp_start"]).dt.total_seconds().div(60).astype(int)
+        dataset["travel_time_ts"] = (
+            (dataset["timestamp_end"] - dataset["timestamp_start"]).dt.total_seconds().div(60).astype(int)
         )
-        filt = self.trips["travelTime_ts"] == self.trips["travel_time"]
-        filt.name = "travel_time"  # Required for column-join in _filter()
+        filt = dataset["travel_time_ts"] == dataset["travel_time"]
+        filt.name = "travel_time"
         return filt
 
-    def _filter_overlapping_trips(self, lookahead_periods: int = 1) -> pd.DataFrame:
+    @staticmethod
+    def _filter_overlapping_trips(dataset, lookahead_periods: int = 1) -> pd.DataFrame:
         """
         Filter out trips carried out by the same car as next (second next, third next up to period next etc) trip but
         overlap with at least one of the period next trips.
@@ -378,14 +380,15 @@ class DataParser:
         """
         lst = []
         for profile in range(1, lookahead_periods + 1):
-            ser = self.__identify_overlapping_trips(dat=self.trips, period=profile)
+            ser = DataParser._identify_overlapping_trips(dataset, period=profile)
             ser.name = f"profile={profile}"
             lst.append(ser)
         ret = pd.concat(lst, axis=1).all(axis=1)
         ret.name = "no_overlap_next_trips"
         return ret
 
-    def __identify_overlapping_trips(self, dat: pd.DataFrame, period: int) -> pd.Series:
+    @staticmethod
+    def _identify_overlapping_trips(dataset: pd.DataFrame, period: int) -> pd.Series:
         """
         Calculates a boolean vector of same length as dat that is True if the current trip does not overlap with
         the next trip. "Next" can relate to the consecutive trip (if period==1) or to a later trip defined by the
@@ -393,9 +396,8 @@ class DataParser:
         current trip is compared to the start timestamp of the "next" trip.
 
         Args:
-            dat (pd.DataFrame): A trip data set containing consecutive trips containing at least the columns id_col,
+            dataset (pd.DataFrame): A trip data set containing consecutive trips containing at least the columns id_col,
                 timestamp_start, timestamp_end.
-            id_col (str): Column that differentiates units of trips e.g. daily trips carried out by the same vehicle.
             period (int): Forward looking period to compare trip overlap. Should be the maximum number of trip that one
                 vehicle carries out in a time interval (e.g. day) in the data set.
 
@@ -403,14 +405,15 @@ class DataParser:
             pd.Series: A boolean vector that is True if the trip does not overlap with the period-next trip but belongs
                 to the same vehicle.
         """
-        dat["is_same_id_as_previous"] = dat["unique_id"] == dat["unique_id"].shift(period)
-        dat["trip_starts_after_previous_trip"] = dat["timestamp_start"] > dat["timestamp_end"].shift(period)
-        return ~(dat["is_same_id_as_previous"] & ~dat["trip_starts_after_previous_trip"])
+        dataset["is_same_id_as_previous"] = dataset["unique_id"] == dataset["unique_id"].shift(period)
+        dataset["trip_starts_after_previous_trip"] = dataset["timestamp_start"] > dataset["timestamp_end"].shift(period)
+        dataset = ~(dataset["is_same_id_as_previous"] & ~dataset["trip_starts_after_previous_trip"])
+        return dataset
 
-    def _filter_analysis(self, filter_data: pd.DataFrame):
+    @staticmethod
+    def _filter_analysis(filter_data: pd.DataFrame):
         """
-        Function supplies some aggregate info of the data after filtering to the user wihtouh chaning any
-        class attributes.
+        Function supplies some aggregate info of the data after filtering to the user.
 
         :param filter_data:
         :return: None

@@ -70,6 +70,14 @@ class ParseKiD(IntermediateParsing):
                         added in a separate column
         :return: None
         """
+        if weekday:
+            self._add_string_column_from_variable(col_name="weekday_string", var_name="trip_start_weekday")
+        if purpose:
+            self._add_string_column_from_variable(col_name="purpose_string", var_name="trip_purpose")
+        if vehicle_segment:
+            self._add_string_column_from_variable(col_name="vehicle_segment_string", var_name="vehicle_segment")
+
+    def _extract_timestamps(self):
         self.trips["trip_start_date"] = pd.to_datetime(self.trips["trip_start_date"], format="%d.%m.%Y")
         self.trips["trip_start_year"] = self.trips["trip_start_date"].dt.year
         self.trips["trip_start_month"] = self.trips["trip_start_date"].dt.month
@@ -80,12 +88,6 @@ class ParseKiD(IntermediateParsing):
         self.trips["trip_start_minute"] = pd.to_datetime(self.trips["trip_start_clock"], format="%H:%M").dt.minute
         self.trips["trip_end_hour"] = pd.to_datetime(self.trips["trip_end_clock"], format="%H:%M").dt.hour
         self.trips["trip_end_minute"] = pd.to_datetime(self.trips["trip_end_clock"], format="%H:%M").dt.minute
-        if weekday:
-            self._add_string_column_from_variable(col_name="weekday_string", var_name="trip_start_weekday")
-        if purpose:
-            self._add_string_column_from_variable(col_name="purpose_string", var_name="trip_purpose")
-        if vehicle_segment:
-            self._add_string_column_from_variable(col_name="vehicle_segment_string", var_name="vehicle_segment")
 
     def __update_end_timestamp(self):
         """
@@ -120,6 +122,7 @@ class ParseKiD(IntermediateParsing):
         self.__change_separator()
         self._convert_types()
         self.__exclude_hours()
+        self._extract_timestamps()
         self.__add_string_columns()
         self._compose_start_and_end_timestamps()
         self.__update_end_timestamp()
