@@ -15,23 +15,23 @@ from pathlib import Path
 from ...vencopy.utils.utils import load_configs, return_lowest_level_dict_keys, return_lowest_level_dict_values, replace_vec, create_output_folders, create_file_name, write_out
 
 
-# Define a fixture to provide a temporary directory for testing
 @pytest.fixture
 def temp_dir(tmp_path):
     return tmp_path / "temp_dir"
 
 
-""" def test_load_configs_with_valid_files(temp_dir):
-    temp_dir.mkdir()
-    user_config_path = temp_dir / "config" / "user_config.yaml"
-    dev_config_path = temp_dir / "config" / "dev_config.yaml"
+def test_load_configs(temp_dir):
+    temp_dir.mkdir(parents=True)
+    (temp_dir / "config").mkdir()
+    user_config_name = "user_config.yaml"
+    dev_config_name = "dev_config.yaml"
 
     user_config_data = {"user_key": "user_value"}
     dev_config_data = {"dev_key": "dev_value"}
 
-    with open(user_config_path, "w") as user_file:
+    with open((temp_dir / "config" / user_config_name), "w") as user_file:
         yaml.dump(user_config_data, user_file, default_flow_style=False)
-    with open(dev_config_path, "w") as dev_file:
+    with open((temp_dir / "config" / dev_config_name), "w") as dev_file:
         yaml.dump(dev_config_data, dev_file, default_flow_style=False)
 
     configs = load_configs(temp_dir)
@@ -41,27 +41,15 @@ def temp_dir(tmp_path):
     assert configs["user_config"] == user_config_data
     assert configs["dev_config"] == dev_config_data
 
+    user_config_data = {}
+    dev_config_data = {}
+    with open((temp_dir / "config" / user_config_name), "w") as user_file:
+        yaml.dump(user_config_data, user_file, default_flow_style=False)
+    with open((temp_dir / "config" / dev_config_name), "w") as dev_file:
+        yaml.dump(dev_config_data, dev_file, default_flow_style=False)
 
-def test_load_configs_with_missing_files(temp_dir):
-    temp_dir.mkdir()
     configs = load_configs(temp_dir)
-    assert configs == {}
-"""
-
-
-def test_load_configs():
-    base_path = os.getcwd() + "/tests/data"
-    expected_result = {
-        "user_config": {"user_key": {"user_key_next_level": "user_value"}},
-        "dev_config": {"dev_key": {"dev_key_next_level": "dev_value"}},
-    }
-    # with patch("builtins.open", mock_open()) as mock_file:
-    result = load_configs(base_path)
-    assert result == expected_result
-    # assert mock_file.call_args_list == [
-    #     (("test_config/config/user_config.yaml",),),
-    #     (("test_config/config/dev_config.yaml",),),
-    # ]
+    assert configs == {"dev_config": {}, "user_config": {}}
 
 
 def test_return_lowest_level_dict_keys():
@@ -97,7 +85,6 @@ def test_return_lowest_level_dict_keys():
 
     result = return_lowest_level_dict_keys(dictionary)
     assert result == expected_result
-
 
 
 def test_return_lowest_level_dict_values():
@@ -193,15 +180,14 @@ def sample_configs(tmp_path):
 
     return configs
 
-"""
-def test_create_output_folders(sample_configs):
-    with patch("os.path.exists", return_value=False), \
-         patch("os.mkdir"):
-        create_output_folders(sample_configs)
 
-    assert os.path.exists(Path(sample_configs["user_config"]["global"]["absolute_path"]["vencopy_root"]))
+def test_create_output_folders(sample_configs):
+    root_path = Path(sample_configs["user_config"]["global"]["absolute_path"]["vencopy_root"])
     main_dir = "output"
-    assert os.path.exists(Path(sample_configs["user_config"]["global"]["absolute_path"]["vencopy_root"]) / main_dir)
+    create_output_folders(sample_configs)
+
+    assert os.path.exists(Path(root_path))
+    assert os.path.exists(Path(root_path / main_dir))
 
     sub_dirs = (
         "dataparser",
@@ -211,12 +197,10 @@ def test_create_output_folders(sample_configs):
         "profileaggregator",
         "postprocessor"
     )
-
     for sub_dir in sub_dirs:
-        assert os.path.exists(Path(sample_configs["user_config"]["global"]["absolute_path"]["vencopy_root"]) / main_dir / sub_dir)
+        assert os.path.exists(Path(root_path / main_dir / sub_dir))
 
 
-# TESTS create_file_name
 def test_create_file_name():
     dev_config = {
         "global": {
@@ -247,22 +231,22 @@ def test_create_file_name():
     result = create_file_name(dev_config, user_config, "file1", "dataset1", manual_label="label123", suffix="txt")
     assert result == "file1_dev_run123_label123_dataset1.txt"
 
-# TESTS write_out
-def test_write_out(temp_dir):
+
+def test_write_out(tmp_path, capsys):
     data = pd.DataFrame({
         "A": [1, 2, 3],
         "B": [4, 5, 6]
     })
-    output_path = Path(temp_dir) / "output.csv"
+    output_path = Path(tmp_path) / "output.csv"
 
     write_out(data, output_path)
 
     assert os.path.isfile(output_path)
     assert output_path.exists()
 
-    loaded_data = pd.read_csv(output_path)
+    loaded_data = pd.read_csv(output_path, index_col=0)
     assert data.equals(loaded_data)
 
-    captured = capsys.readouterr()  # capsys is a built-in fixture for capturing printed output
+    captured = capsys.readouterr()
     assert f"Dataset written to {output_path}." in captured.out
-"""
+
