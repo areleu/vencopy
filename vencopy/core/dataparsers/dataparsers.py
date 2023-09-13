@@ -409,8 +409,8 @@ class DataParser:
 
     def _filter_analysis(self, filter_data: pd.DataFrame):
         """
-        Function supplies some aggregate info of the data after filtering to the user Function does not change any
-        class attributes
+        Function supplies some aggregate info of the data after filtering to the user wihtouh chaning any
+        class attributes.
 
         :param filter_data:
         :return: None
@@ -428,7 +428,7 @@ class DataParser:
         """
         Wrapper function for harmonising and filtering the dataset.
         """
-        raise NotImplementedError("Implement process method for DataParser.")
+        raise NotImplementedError("A process method for DataParser is not implemented.")
 
     def write_output(self):
         if self.user_config["global"]["write_output_to_disk"]["parse_output"]:
