@@ -115,6 +115,8 @@ def create_file_name(
     """
     if dataset is None:
         return f"{dev_config['global']['disk_file_names'][file_name_id]}_{user_config['global']['run_label']}_{manual_label}.{suffix}"
+    if len(manual_label) == 0:
+        return f"{dev_config['global']['disk_file_names'][file_name_id]}_{user_config['global']['run_label']}_{dataset}.{suffix}"
     return f"{dev_config['global']['disk_file_names'][file_name_id]}_{user_config['global']['run_label']}_{manual_label}_{dataset}.{suffix}"
 
 
