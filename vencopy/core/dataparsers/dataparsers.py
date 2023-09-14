@@ -539,8 +539,8 @@ class IntermediateParsing(DataParser):
         lower_speed_threshold = self.dev_config["dataparsers"]["filters"]["lower_speed_threshold"]
         higher_speed_threshold = self.dev_config["dataparsers"]["filters"]["higher_speed_threshold"]
         complex_filters = complex_filters.join(self._filter_inconsistent_speeds(dataset=self.trips, lower_speed_threshold=lower_speed_threshold, higher_speed_threshold=higher_speed_threshold))
-        complex_filters = complex_filters.join(self._filter_inconsistent_travel_times())
-        complex_filters = complex_filters.join(self._filter_overlapping_trips())
+        complex_filters = complex_filters.join(self._filter_inconsistent_travel_times(dataset=self.trips))
+        complex_filters = complex_filters.join(self._filter_overlapping_trips(dataset=self.trips))
         complex_filters = complex_filters.join(self._filter_consistent_hours())
         complex_filters = complex_filters.join(self._filter_zero_length_trips())
         return complex_filters

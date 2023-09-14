@@ -7,6 +7,8 @@ __license__ = "BSD-3-Clause"
 import pytest
 import pandas as pd
 
+
+from dateutil import parser
 from typing import Any, Literal
 
 from ....vencopy.core.dataparsers.dataparsers import DataParser
@@ -107,10 +109,9 @@ def test_create_replacement_dict():
 
 @pytest.fixture
 def sample_data_frame_filters():
-    data = {
-        "transport_mode": ["car", "bus", "bike"],
-        "age": [25, 30, 40]
-    }
+    data = {"transport_mode": ["car", "bus", "bike"],
+            "age": [25, 30, 40]
+            }
     return pd.DataFrame(data)
 
 
@@ -186,11 +187,13 @@ def test_set_smaller_than_filter(sample_data_frame_filters):
 def sample_data_frame_other_filters():
     data = {
         "unique_id": [1, 1, 2, 2, 3],
-        "timestamp_start": ["2023-09-01 08:00", "2023-09-01 09:00", "2023-09-01 10:00", "2023-09-01 10:30", "2023-09-01 11:00"],
-        "timestamp_end": ["2023-09-01 09:15", "2023-09-01 09:30", "2023-09-01 10:15", "2023-09-01 11:15", "2023-09-01 11:30"],
-        "trip_distance": [10.0, 15.0, 10.0, 10.0, 10.0],
-        "travel_time": [10.0, 45.0, 90.0, 90.0, 90.0],
+        "timestamp_start": ["2023-09-01 08:00", "2023-09-01 08:45", "2023-09-01 10:00", "2023-09-01 10:30", "2023-09-01 11:00"],
+        "timestamp_end": ["2023-09-01 09:00", "2023-09-01 09:30", "2023-09-01 10:15", "2023-09-01 11:15", "2023-09-01 11:30"],
+        "trip_distance": [60.0, 15.0, 10.0, 10.0, 10.0],
+        "travel_time": [60, 45, 90, 90, 90],
     }
+    data["timestamp_start"] = [parser.parse(x) for x in data["timestamp_start"]]
+    data["timestamp_end"] = [parser.parse(x) for x in data["timestamp_end"]]
     return pd.DataFrame(data)
 
 
@@ -205,15 +208,15 @@ def test_filter_inconsistent_speeds(sample_data_frame_other_filters):
     expected_result = pd.Series([False, True, False, False, False])
     assert result.equals(expected_result)
 
-# TODO: adapat data in fixture to make it work
-# def test_filter_inconsistent_travel_times(sample_data_frame_other_filters):
-#     result = DataParser._filter_inconsistent_travel_times(sample_data_frame_other_filters)
 
-#     assert isinstance(result, pd.Series)
-#     assert len(result) == len(sample_data_frame_other_filters)
+def test_filter_inconsistent_travel_times(sample_data_frame_other_filters):
+    result = DataParser._filter_inconsistent_travel_times(sample_data_frame_other_filters)
 
-#     expected_result = pd.Series([True, True, True])
-#     assert result.equals(expected_result)
+    assert isinstance(result, pd.Series)
+    assert len(result) == len(sample_data_frame_other_filters)
+
+    expected_result = pd.Series([True, True, False, False, False])
+    assert result.equals(expected_result)
 
 
 def test_filter_overlapping_trips(sample_data_frame_other_filters):
