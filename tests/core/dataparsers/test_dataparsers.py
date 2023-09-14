@@ -7,55 +7,15 @@ __license__ = "BSD-3-Clause"
 import pytest
 import pandas as pd
 
-
+from mock import patch
 from dateutil import parser
 from typing import Any, Literal
 
 from ....vencopy.core.dataparsers.dataparsers import DataParser
 from ....vencopy.core.dataparsers.dataparsers import IntermediateParsing
 
-# NOT TESTED:  _harmonize_variables(), filer(), _complex_filters(), _complex_filters(), write_output(), process()
+# NOT TESTED: _load_data(), _load_encrypted_data(), _harmonize_variables(), filter(), _complex_filters(), _complex_filters(), write_output(), process()
 
-""" sample_configs = {
-    "user_config": {
-        "global": {
-            "absolute_path": {
-                "MiD08": "/path/to/MiD08_data", "MiD17": "/path/to/MiD17_data"
-            }
-        }
-    }, "dev_config": {
-        "global": {
-            "files": {
-                "MiD08": {"trips_data_raw": "raw_data_MiD08.csv"}, "MiD17":
-                {"trips_data_raw": "raw_data_MiD17.csv"}
-            }
-        }
-    }
-}
-
- @pytest.mark.parametrize(
-    "configs, dataset, load_encrypted, expected_message", [
-        (sample_configs, "MiD08", True, "Starting to retrieve encrypted data
-        file from"), (sample_configs, "MiD17", False, "Starting to retrieve
-        local data file from"),
-    ],
-)
-
-def test_dataparsers_initialization(configs: dict[str, Any], dataset:
-Literal['MiD08', 'MiD17'], load_encrypted: bool, expected_message:
-Literal['Starting to retrieve encrypted data file from', 'Starting to retrieve
-local data file from']):
-    obj = DataParser(configs, dataset, load_encrypted)
-
-    assert obj.user_config == configs["user_config"] assert obj.dev_config ==
-    configs["dev_config"] assert obj.dataset == dataset assert
-    obj.raw_data_path == expected_raw_data_path assert obj.raw_data is None
-    assert obj.trips is None assert obj.activities is None assert
-    obj.trips_end_next_day_raw is None assert obj.debug == debug captured =
-    capsys.readouterr() assert expected_message in captured.out """
-
-
-""" 
 class MockDataParser:
     def __init__(self):
         dev_config = {
@@ -71,24 +31,25 @@ class MockDataParser:
 def mock_data_parser():
     return MockDataParser()
 
-
+@patch('DataParser._check_dataset_id')
 def test_check_dataset_id(mock_data_parser):
     dataset = "dataset2"
-    result = DataParser()._check_dataset_id(dataset=dataset)
+    result = DataParser._check_dataset_id(mock_data_parser, dataset=dataset)
     assert result == dataset
 
     dataset = "non_existent_dataset"
     with pytest.raises(AssertionError) as excinfo:
-        DataParser._check_dataset_id(dataset=dataset)
+        mock_data_parser._check_dataset_id(dataset=dataset)
     assert "Defined dataset non_existent_dataset not specified" in str(excinfo.value)
 
-    dataset = "invalid_dataset" with pytest.raises(AssertionError) as e:
-        DataParser._check_dataset_id(dataset=dataset)
+    dataset = "invalid_dataset"
+    with pytest.raises(AssertionError) as e:
+        mock_data_parser._check_dataset_id(dataset=dataset)
 
     expected_error_message = (f"Defined dataset {dataset} not specified under "
                               "data_variables in dev_config. Specified "
                               "dataset_id are ['dataset1', 'dataset2'].")
-    assert str(e.value) == expected_error_message """
+    assert str(e.value) == expected_error_message 
 
 
 def test_create_replacement_dict():
