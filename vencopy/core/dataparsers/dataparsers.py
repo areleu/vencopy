@@ -190,7 +190,7 @@ class DataParser:
         """
         assert all(
             isinstance(val, list) for val in return_lowest_level_dict_values(dictionary=self.filters)
-        ), "All values in filter dictionaries have to be lists, but are not"
+        ), "Not all values in filter dictionaries are lists."
 
     def _filter(self, filters: dict = None):
         """
@@ -210,7 +210,7 @@ class DataParser:
         #  might be easy to code but hard to implement correctly. See issue #445
 
         # Application of simple value-based filters
-        simple_filters = self.__simple_filters()
+        simple_filters = self._simple_filters()
         self.data_simple = self.trips[simple_filters.all(axis="columns")]
 
         # Application of sophisticated filters
@@ -220,7 +220,7 @@ class DataParser:
         # Print user feedback on filtering
         self._filter_analysis(simple_filters.join(complex_filters))
 
-    def __simple_filters(self) -> pd.DataFrame:
+    def _simple_filters(self) -> pd.DataFrame:
         """
         Apply single-column scalar value filtering as defined in the config.
 
