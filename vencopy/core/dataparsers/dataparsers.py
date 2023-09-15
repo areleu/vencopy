@@ -18,7 +18,7 @@ from ...utils.utils import create_file_name, write_out, return_lowest_level_dict
 
 
 class DataParser:
-    def __init__(self, configs: dict, dataset: str, debug, zip_filepath=None, load_encrypted=False):
+    def __init__(self, configs: dict, dataset: str):
         """
         Basic class for parsing a mobility survey trip data set. Currently both
         German travel surveys MiD 2008 and MiD 2017 are pre-configured and one
@@ -44,31 +44,30 @@ class DataParser:
         """
         self.user_config = configs["user_config"]
         self.dev_config = configs["dev_config"]
+        self.debug = configs["user_config"]["global"]["debug"]
         self.dataset = self._check_dataset_id(dataset=dataset)
-        filepath = (
-            Path(self.user_config["global"]["absolute_path"][self.dataset])
-            / self.dev_config["global"]["files"][self.dataset]["trips_data_raw"]
-        )
-        self.raw_data_path = filepath
+        self.raw_data_path = (Path(self.user_config["global"]["absolute_path"][self.dataset])
+                             / self.dev_config["global"]["files"][self.dataset]["trips_data_raw"])
         self.raw_data = None
         self.trips = None
         self.activities = None
         self.filters = {}
         print("Generic file parsing properties set up.")
+
+    def _load_data(self):
+        number_lines_debug = self.user_config["global"]["number_lines_debug"]
+        load_encrypted = False
         if load_encrypted:
             print(f"Starting to retrieve encrypted data file from {self.raw_data_path}.")
-            self._load_encrypted_data(zip_path=filepath, path_zip_data=zip_filepath)
+            self._load_encrypted_data(zip_path=self.raw_data_path, path_zip_data=self.raw_data_path)
         else:
             print(f"Starting to retrieve local data file from {self.raw_data_path}.")
-            self._load_data()
-        number_lines_debug = self.user_config["global"]["number_lines_debug"]
-        self.raw_data = self.raw_data.loc[0 : number_lines_debug - 1, :] if debug else self.raw_data.copy()
-        if debug:
+            self._load_unencrypted_data()
+        self.raw_data = self.raw_data.loc[0 : number_lines_debug - 1, :] if self.debug else self.raw_data.copy()
+        if self.debug:
             print("Running in debug mode.")
-        # Storage for original data variable that is being overwritten throughout adding of park rows
-        self.trips_end_next_day_raw = None
 
-    def _load_data(self) -> pd.DataFrame:
+    def _load_unencrypted_data(self) -> pd.DataFrame:
         """
         Loads data specified in self.raw_data_path and stores it in self.raw_data.
         Raises an exception if a invalid suffix is specified in
@@ -448,7 +447,7 @@ class DataParser:
 
 
 class IntermediateParsing(DataParser):
-    def __init__(self, configs: dict, dataset: str, debug, load_encrypted=False):
+    def __init__(self, configs: dict, dataset: str):
         """
         Intermediate parsing class.
 
@@ -459,7 +458,7 @@ class IntermediateParsing(DataParser):
                               file. For this, a possword has to be
                               specified in user_config['PW'].
         """
-        super().__init__(configs, dataset=dataset, load_encrypted=load_encrypted, debug=debug)
+        super().__init__(configs, dataset=dataset)
         self.filters = self.dev_config["dataparsers"]["filters"][self.dataset]
         self.var_datatype_dict = {}
         self.columns = self.__compile_variable_list()

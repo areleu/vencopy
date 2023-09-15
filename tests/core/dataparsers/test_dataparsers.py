@@ -16,25 +16,17 @@ from ....vencopy.core.dataparsers.dataparsers import IntermediateParsing
 
 # NOT TESTED: _load_data(), _load_encrypted_data(), _harmonize_variables(), filter(), _complex_filters(), _complex_filters(), write_output(), process()
 
-class MockDataParser:
-    def __init__(self):
-        dev_config = {
+
+def test_check_dataset_id():
+    dataset = "dataset2"
+    mock_data_parser = DataParser()
+    dev_config = {
             "dataparsers": {
                 "data_variables": {
                     "dataset": ["dataset1", "dataset2", "dataset3"]
                     }}}
-        self.dev_config = dev_config
-        self.debug = False
-
-
-@pytest.fixture
-def mock_data_parser():
-    return MockDataParser()
-
-@patch('DataParser._check_dataset_id')
-def test_check_dataset_id(mock_data_parser):
-    dataset = "dataset2"
-    result = DataParser._check_dataset_id(mock_data_parser, dataset=dataset)
+    mock_data_parser.dev_config = dev_config
+    result = mock_data_parser._check_dataset_id(mock_data_parser, dataset=dataset)
     assert result == dataset
 
     dataset = "non_existent_dataset"
@@ -49,7 +41,7 @@ def test_check_dataset_id(mock_data_parser):
     expected_error_message = (f"Defined dataset {dataset} not specified under "
                               "data_variables in dev_config. Specified "
                               "dataset_id are ['dataset1', 'dataset2'].")
-    assert str(e.value) == expected_error_message 
+    assert str(e.value) == expected_error_message
 
 
 def test_create_replacement_dict():

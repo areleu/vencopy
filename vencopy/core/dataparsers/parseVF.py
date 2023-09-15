@@ -13,7 +13,7 @@ from ...core.dataparsers.parkinference import ParkInference
 
 
 class ParseVF(IntermediateParsing):
-    def __init__(self, configs: dict, dataset: str, debug, load_encrypted=False):
+    def __init__(self, configs: dict, dataset: str):
         """
         Class for parsing MiD data sets. The venco.py configs globalConfig,
         parseConfig and localPathConfig have to be given on instantiation as
@@ -30,10 +30,10 @@ class ParseVF(IntermediateParsing):
                               file. For this, a possword has to be
                               specified in parseConfig['PW'].
         """
-        super().__init__(configs=configs, dataset=dataset, debug=debug, load_encrypted=load_encrypted)
+        super().__init__(configs=configs, dataset=dataset)
         self.park_inference = ParkInference(configs=configs)
 
-    def _load_data(self):
+    def _load_unencrypted_data(self):
         """
         raw_data_path_trips, unlike for other MiD classes is taken from the MiD B1 dataset
         raw_data_path_vehicles is an internal dataset from VF
@@ -107,12 +107,12 @@ class ParseVF(IntermediateParsing):
         :return: None
         """
         if weekday:
-            self._add_string_column_from_variable(colName="weekday_string", varName="trip_start_weekday")
+            self._add_string_column_from_variable(col_name="weekday_string", var_name="trip_start_weekday")
         if purpose:
-            self._add_string_column_from_variable(colName="purpose_string", varName="trip_purpose")
+            self._add_string_column_from_variable(col_name="purpose_string", var_name="trip_purpose")
         if vehicle_segment:
             self.trips = self.trips.replace("groß", "gross")
-            self._add_string_column_from_variable(colName="vehicle_segment_string", varName="vehicle_segment")
+            self._add_string_column_from_variable(col_name="vehicle_segment_string", var_name="vehicle_segment")
 
     def _drop_redundant_columns(self):
         """
@@ -140,6 +140,7 @@ class ParseVF(IntermediateParsing):
         """
         Wrapper function for harmonising and filtering the dataset.
         """
+        self._load_data()
         self._select_columns()
         self.__harmonize_variables()
         self._harmonize_variables_unique_id_names()

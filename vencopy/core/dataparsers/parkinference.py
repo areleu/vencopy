@@ -14,6 +14,7 @@ class ParkInference:
     def __init__(self, configs) -> None:
         self.user_config = configs["user_config"]
         self.activities = None
+        self.trips_end_next_day_raw = None
         self.overnight_splitter = OvernightSplitter()
 
     def add_parking_rows(self, trips: pd.DataFrame) -> pd.DataFrame:

@@ -14,16 +14,16 @@ from ...core.dataparsers.parkinference import ParkInference
 
 
 class ParseKiD(IntermediateParsing):
-    def __init__(self, configs: dict, dataset: str, debug, load_encrypted=False):
+    def __init__(self, configs: dict, dataset: str):
         """
         Inherited data class to differentiate between abstract interfaces such
         as vencopy internal variable namings and data set specific functions
         such as filters etc.
         """
-        super().__init__(configs=configs, dataset=dataset, load_encrypted=load_encrypted, debug=debug)
+        super().__init__(configs=configs, dataset=dataset)
         self.park_inference = ParkInference(configs=configs)
 
-    def _load_data(self):
+    def _load_unencrypted_data(self):
         raw_data_path_trips = (
             Path(self.user_config["global"]["absolute_path"][self.dataset])
             / self.dev_config["global"]["files"][self.dataset]["trips_data_raw"]
@@ -116,6 +116,7 @@ class ParseKiD(IntermediateParsing):
         """
         Wrapper function for harmonising and filtering the dataset.
         """
+        self._load_data()
         self._select_columns()
         self._harmonize_variables()
         self._harmonize_variables_unique_id_names()

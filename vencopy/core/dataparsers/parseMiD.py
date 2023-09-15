@@ -12,7 +12,7 @@ from ...core.dataparsers.parkinference import ParkInference
 
 
 class ParseMiD(IntermediateParsing):
-    def __init__(self, configs: dict, dataset: str, load_encrypted=False, debug=False):
+    def __init__(self, configs: dict, dataset: str):
         """
         Class for parsing MiD data sets. The venco.py configs globalConfig,
         parseConfig and localPathConfig have to be given on instantiation as
@@ -31,9 +31,7 @@ class ParseMiD(IntermediateParsing):
         """
         super().__init__(
             configs=configs,
-            dataset=dataset,
-            load_encrypted=load_encrypted,
-            debug=debug,
+            dataset=dataset
         )
         self.park_inference = ParkInference(configs=configs)
 
@@ -100,6 +98,7 @@ class ParseMiD(IntermediateParsing):
         """
         Wrapper function for harmonising and filtering the trips dataset as well as adding parking rows.
         """
+        self._load_data()
         self._select_columns()
         self.__harmonize_variables()
         self._harmonize_variables_unique_id_names()
