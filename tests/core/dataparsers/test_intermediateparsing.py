@@ -127,7 +127,19 @@ def intermediate_parser_instance():
                         "dataset2": {
                             "filter3": [True, False, True]
                                     }
-                                }
+                                },
+                "input_data_types": {
+                    "dataset1": {
+                        "var1dataset1": int,
+                        "var2dataset1": str
+                    }},
+                "replacements":{
+                    "dataset1": {
+                        "var1dataset1": {
+                            "1": "One",
+                            "2": "Two",
+                            "3": "Three"
+                        }}}
                             }
                         }
                     }
@@ -137,7 +149,7 @@ def intermediate_parser_instance():
 
 def test_select_columns(intermediate_parser_instance):
     raw_data = pd.DataFrame({
-        "var1dataset1": [1, 2, 3],
+        "var1dataset1": [1.0, 2.0, 3.0],
         "var2dataset1": ["A", "B", "C"],
     })
 
@@ -145,3 +157,56 @@ def test_select_columns(intermediate_parser_instance):
     intermediate_parser_instance._select_columns()
     expected_columns = ["var1dataset1", "var2dataset1"]
     assert list(intermediate_parser_instance.trips.columns) == expected_columns
+
+
+def test_convert_types(intermediate_parser_instance):
+    trips_data = pd.DataFrame({
+        "var1dataset1": [1.0, 2.0, 3.0],
+        "var2dataset1": ["A", "B", "C"],
+    })
+
+    intermediate_parser_instance.trips = trips_data
+    intermediate_parser_instance._convert_types()
+
+    assert intermediate_parser_instance.trips["var1dataset1"].dtype == int
+    assert intermediate_parser_instance.trips["var2dataset1"].dtype == object #TODO: should be string here
+
+
+def test_filter_consistent_hours():
+    dataset = pd.DataFrame({
+        "timestamp_start": [pd.to_datetime("2023-09-12 08:00:00"), pd.to_datetime("2023-09-12 09:00:00"), pd.to_datetime("2023-09-12 09:50:00")],
+        "timestamp_end": [pd.to_datetime("2023-09-12 09:00:00"), pd.to_datetime("2023-09-12 10:00:00"), pd.to_datetime("2023-09-12 09:30:00")]
+    })
+
+    results = IntermediateParsing._filter_consistent_hours(dataset)
+
+    expected_results = pd.Series([True, True, False], name="trip_start_after_end")
+    pd.testing.assert_series_equal(results, expected_results)
+
+
+def test_filter_zero_length_trips():
+    dataset = pd.DataFrame({
+        "trip_start_hour": [8, 9, 10],
+        "trip_start_minute": [0, 0, 0],
+        "trip_end_hour": [8, 9, 10],
+        "trip_end_minute": [0, 0, 1],
+        "trip_end_next_day": [False, False, False]
+    })
+
+    results = IntermediateParsing._filter_zero_length_trips(dataset)
+
+    expected_results = pd.Series([False, False, True], name="is_no_zero_length_trip")
+    pd.testing.assert_series_equal(results, expected_results)
+
+
+def test_add_string_column_from_variable(intermediate_parser_instance):
+    trips_data = pd.DataFrame({
+        "var1dataset1": ["1", "2", "2", "3"],
+        "var2dataset1": ["A", "B", "A", "B"],
+    })
+
+    intermediate_parser_instance .trips = trips_data
+    intermediate_parser_instance._add_string_column_from_variable("new_var", "var1dataset1")
+
+    expected_result = pd.Series(["One", "Two", "Two", "Three"], name="new_var")
+    pd.testing.assert_series_equal(intermediate_parser_instance.trips["new_var"], expected_result)
