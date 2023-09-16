@@ -131,7 +131,7 @@ class GridModeller:
         else:
             self.activities["available_power"] = self.activities["rated_power"]
 
-    def __writeOutput(self):
+    def __write_output(self):
         if self.user_config["global"]["write_output_to_disk"]["grid_output"]:
             root = Path(self.user_config["global"]["absolute_path"]["vencopy_root"])
             folder = self.dev_config["global"]["relative_path"]["grid_output"]
@@ -171,4 +171,4 @@ class GridModeller:
                 )
             )
         self.__add_grid_losses()
-        self.__writeOutput()
+        self.__write_output()
