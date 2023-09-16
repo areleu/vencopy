@@ -147,7 +147,7 @@ class DataParser:
         )
         return dataset
 
-    def _harmonize_variables(self):
+    def _harmonise_variables(self):
         """
         Harmonizes the input data variables to match internal venco.py names
         given as specified in the mapping in dev_config['data_variables'].
@@ -179,7 +179,8 @@ class DataParser:
         list_index = data_variables["dataset"].index(dataset)
         return {val[list_index]: key for (key, val) in data_variables.items()}
 
-    def _check_filter_dict(self):
+    @staticmethod
+    def _check_filter_dict(dictionary):
         """
         Checking if all values of filter dictionaries are of type list.
         Currently only checking if list of list str not typechecked
@@ -188,7 +189,7 @@ class DataParser:
         :return: None
         """
         assert all(
-            isinstance(val, list) for val in return_lowest_level_dict_values(dictionary=self.filters)
+            isinstance(val, list) for val in return_lowest_level_dict_values(dictionary)
         ), "Not all values in filter dictionaries are lists."
 
     def _filter(self, filters: dict = None):
@@ -461,9 +462,9 @@ class IntermediateParsing(DataParser):
         super().__init__(configs, dataset=dataset)
         self.filters = self.dev_config["dataparsers"]["filters"][self.dataset]
         self.var_datatype_dict = {}
-        self.columns = self.__compile_variable_list()
+        self.columns = self._compile_variable_list()
 
-    def __compile_variable_list(self) -> list:
+    def _compile_variable_list(self) -> list:
         """
         Clean up the replacement dictionary of raw data file variable (column)
         names. This has to be done because some variables that may be relevant
@@ -484,7 +485,8 @@ class IntermediateParsing(DataParser):
         self.__remove_na(variables)
         return variables
 
-    def __remove_na(self, variables: list):
+    @staticmethod
+    def __remove_na(variables: list):
         """
         Removes all strings that can be capitalized to 'NA' from the list
         of variables

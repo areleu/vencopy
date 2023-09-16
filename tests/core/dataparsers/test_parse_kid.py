@@ -15,7 +15,7 @@ from ....vencopy.core.dataparsers.parseKiD import ParseKiD
 
 # TODO: test init
 # TODO: test _load_data()
-# TODO: test __harmonize_variables()
+# TODO: test __harmonise_variables()
 # TODO: test __add_string_columns()
 # TODO: test __change_separator()()
 # TODO: test _extract_timestamps()

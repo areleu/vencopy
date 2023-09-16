@@ -35,7 +35,7 @@ class ParseMiD(IntermediateParsing):
         )
         self.park_inference = ParkInference(configs=configs)
 
-    def __harmonize_variables(self):
+    def __harmonise_variables(self):
         """
         Harmonizes the input data variables to match internal venco.py names
         given as specified in the mapping in parseConfig['data_variables'].
@@ -100,14 +100,14 @@ class ParseMiD(IntermediateParsing):
         """
         self._load_data()
         self._select_columns()
-        self.__harmonize_variables()
+        self.__harmonise_variables()
         self._harmonize_variables_unique_id_names()
         self._convert_types()
         self.__add_string_columns()
         self._compose_start_and_end_timestamps()
         self._update_end_timestamp()
-        self._check_filter_dict()
-        self._filter(self.filters)
+        self._check_filter_dict(dictionary=self.filters)
+        self._filter(filters=self.filters)
         self._filter_consistent_hours()
         self.activities = self.park_inference.add_parking_rows(trips=self.trips)
         self._cleanup_dataset()

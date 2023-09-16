@@ -14,6 +14,6 @@ from ....vencopy.core.dataparsers.parseMiD import ParseMiD
 
 
 # TODO: test init
-# TODO: test __harmonize_variables()
+# TODO: test __harmonise_variables()
 # TODO: test __add_string_columns()
 # TODO: test_drop_redundant_columns()

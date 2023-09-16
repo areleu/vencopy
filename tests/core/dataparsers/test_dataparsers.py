@@ -7,26 +7,63 @@ __license__ = "BSD-3-Clause"
 import pytest
 import pandas as pd
 
-from mock import patch
 from dateutil import parser
-from typing import Any, Literal
 
 from ....vencopy.core.dataparsers.dataparsers import DataParser
-from ....vencopy.core.dataparsers.dataparsers import IntermediateParsing
 
-# NOT TESTED: _load_data(), _load_encrypted_data(), _harmonize_variables(), filter(), _complex_filters(), _complex_filters(), write_output(), process()
+# NOT TESTED: _load_data(), _load_unencrypted_data(), _load_encrypted_data(), _harmonise_variables(), _filter(), _simple_filters(), _complex_filters(), write_output(), process()
 
 
-def test_check_dataset_id():
-    dataset = "dataset2"
-    mock_data_parser = DataParser()
-    dev_config = {
-            "dataparsers": {
-                "data_variables": {
-                    "dataset": ["dataset1", "dataset2", "dataset3"]
-                    }}}
-    mock_data_parser.dev_config = dev_config
-    result = mock_data_parser._check_dataset_id(mock_data_parser, dataset=dataset)
+@pytest.fixture
+def sample_configs():
+    configs = {
+        'user_config': {
+            'global': {
+                'debug': False,
+                'absolute_path': {
+                    'dataset1': '/path/to/dataset1',
+                    'dataset2': '/path/to/dataset2'
+                    }
+                }
+            },
+        'dev_config': {
+            'dataparsers': {
+                'data_variables': {
+                    'dataset': ['dataset1', 'dataset2', 'dataset3']
+                    }},
+                'global': {
+                    'files': {
+                        "dataset1": {
+                            "trips_data_raw": "trips01.csv"
+                        },
+                        "dataset2": {
+                            "trips_data_raw": "trips02.csv"
+                        }
+                    }
+                }
+            }
+        }
+    return configs
+
+def test_data_parser_init(sample_configs):
+    dataset = "dataset1"
+    parser = DataParser(sample_configs, dataset)
+
+    assert parser.user_config == sample_configs["user_config"]
+    assert parser.dev_config == sample_configs["dev_config"]
+    assert parser.debug == sample_configs["user_config"]["global"]["debug"]
+    assert parser.dataset == dataset
+    assert str(parser.raw_data_path) == "\\path\\to\\dataset1\\trips01.csv"
+    assert parser.raw_data is None
+    assert parser.trips is None
+    assert parser.activities is None
+    assert parser.filters == {}
+
+
+def test_check_dataset_id(sample_configs):
+    dataset = 'dataset2'
+    mock_data_parser = DataParser(configs=sample_configs, dataset=dataset)
+    result = mock_data_parser._check_dataset_id(dataset=dataset)
     assert result == dataset
 
     dataset = "non_existent_dataset"
@@ -40,7 +77,7 @@ def test_check_dataset_id():
 
     expected_error_message = (f"Defined dataset {dataset} not specified under "
                               "data_variables in dev_config. Specified "
-                              "dataset_id are ['dataset1', 'dataset2'].")
+                              "dataset_ids are ['dataset1', 'dataset2', 'dataset3'].")
     assert str(e.value) == expected_error_message
 
 
@@ -58,6 +95,24 @@ def test_create_replacement_dict():
     # Use a context manager to check for the raised ValueError
     with pytest.raises(ValueError, match="Dataset dataset3 not specified in dev_config variable dictionary."):
         DataParser._create_replacement_dict(dataset=dataset, data_variables=data_variables)
+
+
+def test_check_filter_dict():
+    valid_dict = {
+        "filter1": [1, 2, 3],
+        "filter2": ["A", "B", "C"],
+        "filter3": [True, False, True]
+    }
+    DataParser._check_filter_dict(valid_dict) 
+
+    invalid_dict = {
+        "filter1": [1, 2, 3],
+        "filter2": "A", 
+        "filter3": [True, False, True]
+    }
+    with pytest.raises(AssertionError) as excinfo:
+        DataParser._check_filter_dict(invalid_dict)
+    assert "Not all values in filter dictionaries are lists." in str(excinfo.value)
 
 
 @pytest.fixture

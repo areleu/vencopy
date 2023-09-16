@@ -60,7 +60,7 @@ class ParseVF(IntermediateParsing):
         self.raw_data = raw_data
         print(f"Finished loading {len(self.raw_data)} rows of raw data of type .dta.")
 
-    def __harmonize_variables(self):
+    def __harmonise_variables(self):
         """
         Harmonizes the input data variables to match internal venco.py names given as specified in the mapping in
         self.dev_config["dataparsers"]['data_variables']. Mappings for MiD08 and MiD17 are given. Since the MiD08 does not provide a
@@ -142,7 +142,7 @@ class ParseVF(IntermediateParsing):
         """
         self._load_data()
         self._select_columns()
-        self.__harmonize_variables()
+        self.__harmonise_variables()
         self._harmonize_variables_unique_id_names()
         self.__pad_missing_car_segments()
         self.__exclude_hours()
@@ -150,8 +150,8 @@ class ParseVF(IntermediateParsing):
         self.__add_string_columns()
         self._compose_start_and_end_timestamps()
         self._update_end_timestamp()
-        self._check_filter_dict()
-        self._filter(self.filters)
+        self._check_filter_dict(dictionary=self.filters)
+        self._filter(filters=self.filters)
         self._filter_consistent_hours()
         self.activities = self.park_inference.add_parking_rows(trips=self.trips)
         self._subset_vehicle_segment()
