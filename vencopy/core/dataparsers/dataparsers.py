@@ -482,11 +482,11 @@ class IntermediateParsing(DataParser):
         ]
 
         variables.remove(self.dataset)
-        self.__remove_na(variables)
+        self._remove_na(variables)
         return variables
 
     @staticmethod
-    def __remove_na(variables: list):
+    def _remove_na(variables: list):
         """
         Removes all strings that can be capitalized to 'NA' from the list
         of variables
@@ -542,33 +542,31 @@ class IntermediateParsing(DataParser):
         complex_filters = complex_filters.join(self._filter_inconsistent_speeds(dataset=self.trips, lower_speed_threshold=lower_speed_threshold, higher_speed_threshold=higher_speed_threshold))
         complex_filters = complex_filters.join(self._filter_inconsistent_travel_times(dataset=self.trips))
         complex_filters = complex_filters.join(self._filter_overlapping_trips(dataset=self.trips))
-        complex_filters = complex_filters.join(self._filter_consistent_hours())
-        complex_filters = complex_filters.join(self._filter_zero_length_trips())
+        complex_filters = complex_filters.join(self._filter_consistent_hours(dataset=self.trips))
+        complex_filters = complex_filters.join(self._filter_zero_length_trips(dataset=self.trips))
         return complex_filters
 
-    def _filter_consistent_hours(self) -> pd.Series:
+    @staticmethod
+    def _filter_consistent_hours(dataset) -> pd.Series:
         """
         Filtering out records where starting timestamp is before end timestamp. These observations are data errors.
 
         :return: Returns a boolean Series indicating erroneous rows (trips) with False.
         """
-        ser = self.trips["timestamp_start"] <= self.trips["timestamp_end"]
+        ser = dataset["timestamp_start"] <= dataset["timestamp_end"]
         ser.name = "trip_start_after_end"
         return ser
 
-    def _filter_zero_length_trips(self) -> pd.Series:
+    @staticmethod
+    def _filter_zero_length_trips(dataset) -> pd.Series:
         """
         Filter out trips that start and end at same hour and minute but are not ending on next day (no 24-hour
         trips).
-
-        Returns:
-            _type_: _description_
         """
-
         ser = ~(
-            (self.trips.loc[:, "trip_start_hour"] == self.trips.loc[:, "trip_end_hour"])
-            & (self.trips.loc[:, "trip_start_minute"] == self.trips.loc[:, "trip_end_minute"])
-            & (~self.trips.loc[:, "trip_end_next_day"])
+            (dataset.loc[:, "trip_start_hour"] == dataset.loc[:, "trip_end_hour"])
+            & (dataset.loc[:, "trip_start_minute"] == dataset.loc[:, "trip_end_minute"])
+            & (~dataset.loc[:, "trip_end_next_day"])
         )
         ser.name = "is_no_zero_length_trip"
         return ser
