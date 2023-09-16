@@ -25,33 +25,32 @@ def sample_configs():
                 }
             },
         'dev_config': {
-            'dataparsers': {
-                'data_variables': {
-                    'dataset': ['dataset1', 'dataset2', 'dataset3']
-                    }},
-                'global': {
+            'global': {
                     'files': {
                         "dataset1": {
                             "trips_data_raw": "trips01.csv"
-                        },
+                                    },
                         "dataset2": {
                             "trips_data_raw": "trips02.csv"
+                                    }
+                            }
                         },
-                    "datapersers": {
-                        "filters": {
-                            "dataset1": {
-                                "filter1": [1, 2, 3],
-                                "filter2": ["A", "B", "C"]
-                                },
-                            "dataset2": {
-                                "filter3": [True, False, True]
+            'dataparsers': {
+                'data_variables': {
+                    'dataset': ['dataset1', 'dataset2', 'dataset3']
+                    },
+                "filters": {
+                        "dataset1": {
+                            "filter1": [1, 2, 3],
+                            "filter2": ["A", "B", "C"]
+                                    },
+                        "dataset2": {
+                            "filter3": [True, False, True]
+                                    }
                                 }
                             }
                         }
                     }
-                }
-            }
-        }
     return configs
 
 
@@ -67,6 +66,6 @@ def test_intermediate_parsing_init(sample_configs):
     assert parser.raw_data is None
     assert parser.trips is None
     assert parser.activities is None
-    assert parser.filters == {}
-    assert parser.filters == sample_configs["dev_config"]["global"]["dataparsers"]["filters"][dataset]
+    assert parser.filters == {'filter1': [1, 2, 3], 'filter2': ['A', 'B', 'C']}
+    assert parser.filters == sample_configs["dev_config"]["dataparsers"]["filters"][dataset]
     assert parser.var_datatype_dict == {}
