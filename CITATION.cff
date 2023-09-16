@@ -1,0 +1,24 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: venco.py
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Niklas
+    family-names: Wulff
+    email: niklas.wulff@dlr.de
+    affiliation: German Aerospace Center (DLR)
+    orcid: 'https://orcid.org/0000-0002-4659-6984'
+  - given-names: Fabia
+    family-names: Miorelli
+    email: fabia.miorelli@dlr.de
+    affiliation: German Aerospace Center (DLR)
+    orcid: 'https://orcid.org/0000-0001-5095-5401'
+repository-code: 'https://gitlab.com/dlr-ve/esy/vencopy/vencopy'
+license: BSD-3-Clause
+version: 1.0.0
+date-released: '2023-10-09'
