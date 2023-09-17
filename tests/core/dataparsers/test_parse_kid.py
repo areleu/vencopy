@@ -80,6 +80,7 @@ def parse_kid_instance():
     dataset = "dataset1"
     return ParseKiD(configs, dataset)
 
+
 def test_parse_kid_init(parse_kid_instance):
     assert isinstance(parse_kid_instance, ParseKiD)
     assert isinstance(parse_kid_instance.park_inference, ParkInference)
