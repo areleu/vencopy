@@ -108,9 +108,9 @@ class ParseMiD(IntermediateParsing):
         self._update_end_timestamp(trips=self.trips)
         self._check_filter_dict(dictionary=self.filters)
         self._filter(filters=self.filters)
-        self._filter_consistent_hours(dataset==self.trips)
+        self._filter_consistent_hours(dataset=self.trips)
         self.activities = self.park_inference.add_parking_rows(trips=self.trips)
-        self._cleanup_dataset()
+        self._cleanup_dataset(dataset=self.activities)
         self.write_output()
         print("Parsing MiD dataset completed.")
         return self.activities

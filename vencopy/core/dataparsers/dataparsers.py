@@ -663,13 +663,14 @@ class IntermediateParsing(DataParser):
             self.activities = self.activities[
                 self.activities["vehicle_segment_string"]
                 == self.user_config["dataparsers"]["vehicle_segment"][self.dataset]
-            ]
+            ].reset_index(drop=True)
             print(
                 f'The subset contains only vehicles of the class {(self.user_config["dataparsers"]["vehicle_segment"][self.dataset])} for a total of {len(self.activities.unique_id.unique())} individual vehicles.'
             )
 
-    def _cleanup_dataset(self):
-        self.activities.drop(
+    @staticmethod
+    def _cleanup_dataset(dataset):
+        dataset.drop(
             columns=[
                 "level_0",
                 "trip_is_intermodal",
@@ -681,3 +682,4 @@ class IntermediateParsing(DataParser):
             ],
             inplace=True,
         )
+        return dataset

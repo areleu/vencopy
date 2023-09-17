@@ -100,7 +100,13 @@ def intermediate_parser_instance():
                     'dataset1': '/path/to/dataset1',
                     'dataset2': '/path/to/dataset2'
                     }
-                }
+                },
+        "dataparsers": {
+            "subset_vehicle_segment": True,
+            "vehicle_segment": {
+                "dataset1": "Car",
+                "dataset2": "L"
+            }}
             },
         'dev_config': {
             'global': {
@@ -139,10 +145,14 @@ def intermediate_parser_instance():
                             "1": "One",
                             "2": "Two",
                             "3": "Three"
-                        }}}
+                        }}},
+                "id_variables_names": {
+                    "dataset1": "id01",
+                    "dataset2": "id02"
                             }
                         }
                     }
+        }
     dataset = "dataset1"
     return IntermediateParsing(configs, dataset)
 
@@ -178,10 +188,10 @@ def test_filter_consistent_hours():
         "timestamp_end": [pd.to_datetime("2023-09-12 09:00:00"), pd.to_datetime("2023-09-12 10:00:00"), pd.to_datetime("2023-09-12 09:30:00")]
     })
 
-    results = IntermediateParsing._filter_consistent_hours(dataset)
+    result = IntermediateParsing._filter_consistent_hours(dataset)
     
-    expected_results = pd.Series([True, True, False], name="trip_start_after_end")
-    pd.testing.assert_series_equal(results, expected_results)
+    expected_result = pd.Series([True, True, False], name="trip_start_after_end")
+    pd.testing.assert_series_equal(result, expected_result)
 
 
 def test_filter_zero_length_trips():
@@ -193,10 +203,10 @@ def test_filter_zero_length_trips():
         "trip_end_next_day": [False, False, False]
     })
 
-    results = IntermediateParsing._filter_zero_length_trips(dataset)
+    result = IntermediateParsing._filter_zero_length_trips(dataset)
     
-    expected_results = pd.Series([False, False, True], name="is_no_zero_length_trip")
-    pd.testing.assert_series_equal(results, expected_results)
+    expected_result = pd.Series([False, False, True], name="is_no_zero_length_trip")
+    pd.testing.assert_series_equal(result, expected_result)
 
 
 def test_add_string_column_from_variable(intermediate_parser_instance):
@@ -222,8 +232,8 @@ def test_compose_timestamp():
     })
     col_name = "composed_timestamp"
 
-    results = IntermediateParsing._compose_timestamp(data, "col_year", "col_week", "col_day", "col_hour", "col_min", col_name)
-    expected_results = pd.DataFrame({
+    result = IntermediateParsing._compose_timestamp(data, "col_year", "col_week", "col_day", "col_hour", "col_min", col_name)
+    expected_result = pd.DataFrame({
         "col_year": [2023, 2023, 2023],
         "col_week": [37, 37, 38],
         "col_day": [2, 3, 4],
@@ -231,7 +241,7 @@ def test_compose_timestamp():
         "col_min": [0, 15, 30],
         "composed_timestamp": pd.DatetimeIndex(["2023-09-19 08:00:00", "2023-09-20 09:15:00", "2023-09-28 10:30:00"])
         })
-    assert (results[col_name] == expected_results[col_name]).all()
+    assert (result[col_name] == expected_result[col_name]).all()
 
 
 def test_update_end_timestamp():
@@ -240,7 +250,55 @@ def test_update_end_timestamp():
         "timestamp_end": pd.DatetimeIndex(["2023-09-12 08:00:00", "2023-09-13 01:00:00", "2023-09-13 10:00:00"])
     })
 
-    results = IntermediateParsing._update_end_timestamp(trips=trips)
+    result = IntermediateParsing._update_end_timestamp(trips=trips)
 
-    expected_results = pd.DataFrame({"timestamp_end": pd.to_datetime(["2023-09-12 08:00:00", "2023-09-14 01:00:00", "2023-09-13 10:00:00"])})
-    pd.testing.assert_series_equal(results["timestamp_end"], expected_results["timestamp_end"])
+    expected_result = pd.DataFrame({"timestamp_end": pd.to_datetime(["2023-09-12 08:00:00", "2023-09-14 01:00:00", "2023-09-13 10:00:00"])})
+    pd.testing.assert_series_equal(result["timestamp_end"], expected_result["timestamp_end"])
+
+
+def test_harmonize_variables_unique_id_names(intermediate_parser_instance):
+    trips = pd.DataFrame({
+        "id01": [1, 2, 3],
+    })
+
+    intermediate_parser_instance.trips = trips
+    intermediate_parser_instance._harmonize_variables_unique_id_names()
+
+    expected_result = pd.Series([1, 2, 3], name="unique_id", dtype="int32")
+    pd.testing.assert_series_equal(intermediate_parser_instance.trips["unique_id"], expected_result)
+
+
+def test_subset_vehicle_segment(intermediate_parser_instance):
+    activities = pd.DataFrame({
+        "vehicle_segment_string": ["Car", "SUV", "Car", "SUV"],
+        "unique_id": [1, 2, 3, 4],
+    })
+
+    intermediate_parser_instance.activities = activities
+    intermediate_parser_instance._subset_vehicle_segment()
+
+    expected_result = pd.DataFrame({
+        "vehicle_segment_string": ["Car", "Car"],
+        "unique_id": [1, 3],
+    })
+    pd.testing.assert_frame_equal(intermediate_parser_instance.activities, expected_result)
+
+
+def test_cleanup_dataset():
+    dataset = pd.DataFrame({
+        "level_0": [0, 1, 2, 3],
+        "unique_id": [1, 2, 3, 4],
+        "trip_is_intermodal": [True, False, True, False],
+        "timedelta_total": [10, 20, 30, 40],
+        "timedelta_morning": [5, 15, 25, 35],
+        "time_share_morning": [0.5, 0.7, 0.6, 0.8],
+        "time_share_evening": [0.5, 0.3, 0.4, 0.2],
+        "total_trip_distance": [100, 200, 300, 400],
+    })
+
+    result = IntermediateParsing._cleanup_dataset(dataset)
+
+    expected_result = pd.DataFrame({
+        "unique_id": [1, 2, 3, 4]
+    })
+    pd.testing.assert_frame_equal(result, expected_result)
