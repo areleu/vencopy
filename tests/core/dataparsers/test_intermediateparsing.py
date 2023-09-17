@@ -9,7 +9,7 @@ import pandas as pd
 
 from ....vencopy.core.dataparsers.dataparsers import IntermediateParsing
 
-# NOT TESTED: _complex_filters(), 
+# NOT TESTED: _complex_filters(), _compose_start_and_end_timestamps(), 
 
 
 @pytest.fixture
@@ -179,7 +179,7 @@ def test_filter_consistent_hours():
     })
 
     results = IntermediateParsing._filter_consistent_hours(dataset)
-
+    
     expected_results = pd.Series([True, True, False], name="trip_start_after_end")
     pd.testing.assert_series_equal(results, expected_results)
 
@@ -194,7 +194,7 @@ def test_filter_zero_length_trips():
     })
 
     results = IntermediateParsing._filter_zero_length_trips(dataset)
-
+    
     expected_results = pd.Series([False, False, True], name="is_no_zero_length_trip")
     pd.testing.assert_series_equal(results, expected_results)
 
@@ -210,3 +210,37 @@ def test_add_string_column_from_variable(intermediate_parser_instance):
 
     expected_result = pd.Series(["One", "Two", "Two", "Three"], name="new_var")
     pd.testing.assert_series_equal(intermediate_parser_instance.trips["new_var"], expected_result)
+
+
+def test_compose_timestamp():
+    data = pd.DataFrame({
+        "col_year": [2023, 2023, 2023],
+        "col_week": [37, 37, 38],
+        "col_day": [2, 3, 4],
+        "col_hour": [8, 9, 10],
+        "col_min": [0, 15, 30],
+    })
+    col_name = "composed_timestamp"
+
+    results = IntermediateParsing._compose_timestamp(data, "col_year", "col_week", "col_day", "col_hour", "col_min", col_name)
+    expected_results = pd.DataFrame({
+        "col_year": [2023, 2023, 2023],
+        "col_week": [37, 37, 38],
+        "col_day": [2, 3, 4],
+        "col_hour": [8, 9, 10],
+        "col_min": [0, 15, 30],
+        "composed_timestamp": pd.DatetimeIndex(["2023-09-19 08:00:00", "2023-09-20 09:15:00", "2023-09-28 10:30:00"])
+        })
+    assert (results[col_name] == expected_results[col_name]).all()
+
+
+def test_update_end_timestamp():
+    trips = pd.DataFrame({
+        "trip_end_next_day": [0, 1, 0],
+        "timestamp_end": pd.DatetimeIndex(["2023-09-12 08:00:00", "2023-09-13 01:00:00", "2023-09-13 10:00:00"])
+    })
+
+    results = IntermediateParsing._update_end_timestamp(trips=trips)
+
+    expected_results = pd.DataFrame({"timestamp_end": pd.to_datetime(["2023-09-12 08:00:00", "2023-09-14 01:00:00", "2023-09-13 10:00:00"])})
+    pd.testing.assert_series_equal(results["timestamp_end"], expected_results["timestamp_end"])

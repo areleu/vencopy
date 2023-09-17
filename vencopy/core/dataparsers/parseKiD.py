@@ -129,7 +129,7 @@ class ParseKiD(IntermediateParsing):
         self.__update_end_timestamp()
         self._check_filter_dict(dictionary=self.filters)
         self._filter(filters=self.filters)
-        self._filter_consistent_hours()
+        self._filter_consistent_hours(dataset=self.trips)
         self.activities = self.park_inference.add_parking_rows(trips=self.trips)
         self._subset_vehicle_segment()
         self._cleanup_dataset()

@@ -586,16 +586,16 @@ class IntermediateParsing(DataParser):
             self.dev_config["dataparsers"]["replacements"][self.dataset][var_name]
         )
 
-    def __compose_timestamp(
-        self,
+    @staticmethod
+    def _compose_timestamp(
         data: pd.DataFrame = None,
-        col_year: str = "trip_start_year",
-        col_week: str = "trip_start_week",
-        col_day: str = "trip_start_weekday",
-        col_hour: str = "trip_start_hour",
-        col_min: str = "trip_start_minute",
-        col_name: str = "timestamp_start",
-    ) -> np.datetime64:
+        col_year: str = None,
+        col_week: str = None,
+        col_day: str = None,
+        col_hour: str = None,
+        col_min: str = None,
+        col_name: str = None,
+    ) -> pd.DatetimeIndex:
         """
         :param data: a data frame
         :param col_year: year of start of a particular trip
@@ -613,30 +613,41 @@ class IntermediateParsing(DataParser):
             + pd.to_timedelta(data.loc[:, col_hour], unit="hour")
             + pd.to_timedelta(data.loc[:, col_min], unit="minute")
         )
-        # return data
+        return data
 
     def _compose_start_and_end_timestamps(self):
         """
         :return: Returns start and end time of a trip
         """
-        self.__compose_timestamp(data=self.trips)  # Starting timestamp
-        self.__compose_timestamp(
-            data=self.trips,  # Ending timestamps
+        self._compose_timestamp(
+            data=self.trips,
+            col_year="trip_start_year",
+            col_week="trip_start_week",
+            col_day="trip_start_weekday",
+            col_hour="trip_start_hour",
+            col_min="trip_start_minute",
+            col_name="timestamp_start")
+        self._compose_timestamp(
+            data=self.trips,
+            col_year="trip_start_year",
+            col_week="trip_start_week",
+            col_day="trip_start_weekday",
             col_hour="trip_end_hour",
             col_min="trip_end_minute",
-            col_name="timestamp_end",
-        )
+            col_name="timestamp_end")
 
-    def _update_end_timestamp(self):
+    @staticmethod
+    def _update_end_timestamp(trips):
         """
         Updates the end timestamp for overnight trips adding 1 day
 
-        :return: None, only activities on the class variable
+        :return: datsets trips
         """
-        ends_following_day = self.trips["trip_end_next_day"] == 1
-        self.trips.loc[ends_following_day, "timestamp_end"] = self.trips.loc[
+        ends_following_day = trips["trip_end_next_day"] == 1
+        trips.loc[ends_following_day, "timestamp_end"] = trips.loc[
             ends_following_day, "timestamp_end"
         ] + pd.offsets.Day(1)
+        return trips
 
     def _harmonize_variables_unique_id_names(self):
         """
