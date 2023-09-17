@@ -25,9 +25,6 @@ class ParseMiD(IntermediateParsing):
                            config dictionaries globalConfig, parseConfig and
                            localPathConfig.
         :param dataset: A string identifying the MiD data set.
-        :param load_encrypted: Boolean. If True, data is read from encrypted
-                              file. For this, a possword has to be
-                              specified in parseConfig['PW'].
         """
         super().__init__(
             configs=configs,
@@ -35,7 +32,7 @@ class ParseMiD(IntermediateParsing):
         )
         self.park_inference = ParkInference(configs=configs)
 
-    def __harmonise_variables(self):
+    def _harmonise_variables(self):
         """
         Harmonizes the input data variables to match internal venco.py names
         given as specified in the mapping in parseConfig['data_variables'].
@@ -71,11 +68,12 @@ class ParseMiD(IntermediateParsing):
         if purpose:
             self._add_string_column_from_variable(col_name="purpose_string", var_name="trip_purpose")
 
-    def _drop_redundant_columns(self):
+    @staticmethod #TODO: check whether this method is used at all (if not remove test)
+    def _drop_redundant_columns(dataset):
         """
         Removes temporary redundant columns.
         """
-        self.trips.drop(
+        dataset.drop(
             columns=[
                 "is_driver",
                 "trip_start_clock",
@@ -93,6 +91,7 @@ class ParseMiD(IntermediateParsing):
             ],
             inplace=True,
         )
+        return dataset
 
     def process(self) -> pd.DataFrame:
         """
@@ -100,7 +99,7 @@ class ParseMiD(IntermediateParsing):
         """
         self._load_data()
         self._select_columns()
-        self.__harmonise_variables()
+        self._harmonise_variables()
         self._harmonize_variables_unique_id_names()
         self._convert_types()
         self.__add_string_columns()

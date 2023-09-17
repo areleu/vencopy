@@ -26,9 +26,6 @@ class ParseVF(IntermediateParsing):
                            config dictionaries globalConfig, parseConfig and
                            localPathConfig.
         :param dataset: A string identifying the MiD data set.
-        :param load_encrypted: Boolean. If True, data is read from encrypted
-                              file. For this, a possword has to be
-                              specified in parseConfig['PW'].
         """
         super().__init__(configs=configs, dataset=dataset)
         self.park_inference = ParkInference(configs=configs)
@@ -60,7 +57,7 @@ class ParseVF(IntermediateParsing):
         self.raw_data = raw_data
         print(f"Finished loading {len(self.raw_data)} rows of raw data of type .dta.")
 
-    def __harmonise_variables(self):
+    def _harmonise_variables(self):
         """
         Harmonizes the input data variables to match internal venco.py names given as specified in the mapping in
         self.dev_config["dataparsers"]['data_variables']. Mappings for MiD08 and MiD17 are given. Since the MiD08 does not provide a
@@ -142,7 +139,7 @@ class ParseVF(IntermediateParsing):
         """
         self._load_data()
         self._select_columns()
-        self.__harmonise_variables()
+        self._harmonise_variables()
         self._harmonize_variables_unique_id_names()
         self.__pad_missing_car_segments()
         self.__exclude_hours()
