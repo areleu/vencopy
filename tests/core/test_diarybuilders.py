@@ -10,7 +10,7 @@ import pandas as pd
 
 from ...vencopy.core.diarybuilders import DiaryBuilder
 
-# NOT TESTED: 
+# NOT TESTED: create_diaries(), __update_activities()
 
 
 @pytest.fixture
@@ -49,3 +49,32 @@ def test_diarybuilder_init(sample_configs):
     assert builder.time_resolution == 15
     assert builder.is_week_diary == False
 
+
+@pytest.fixture
+def activities_dataset():
+    sample_activities = pd.DataFrame({
+        "activity_id": [1, 2, 3, 4],
+        "activity_duration": [pd.Timedelta(minutes=76), pd.Timedelta(minutes=80), pd.Timedelta(0), pd.Timedelta(minutes=45)],
+        "timestamp_start": pd.DatetimeIndex(["2023-09-12 08:00:00", "2023-09-12 10:30:00", "2023-09-12 10:30:00", "2023-09-12 10:00:00"]),
+        "timestamp_end": pd.DatetimeIndex(["2023-09-12 09:16:00", "2023-09-12 11:50:00", "2023-09-12 10:30:00", "2023-09-12 10:45:00"])
+        })
+    return sample_activities
+
+
+def test_correct_timestamps(sample_configs, activities_dataset):
+    builder = DiaryBuilder(configs=sample_configs, activities=activities_dataset)
+    time_resolution = 15
+    result = builder._correct_timestamps(dataset=activities_dataset, time_resolution=time_resolution)
+    expected_result = pd.DataFrame({
+        "timestamp_start_corrected": pd.DatetimeIndex(["2023-09-12 08:00:00", "2023-09-12 10:30:00", "2023-09-12 10:30:00", "2023-09-12 10:00:00"]),
+        "timestamp_end_corrected": pd.DatetimeIndex(["2023-09-12 09:15:00", "2023-09-12 11:45:00", "2023-09-12 10:30:00", "2023-09-12 10:45:00"])
+    })
+
+    pd.testing.assert_series_equal(result["timestamp_start_corrected"], expected_result["timestamp_start_corrected"])
+    pd.testing.assert_series_equal(result["timestamp_end_corrected"], expected_result["timestamp_end_corrected"])
+
+
+def test_removes_zero_length_activities(activities_dataset):
+    result = DiaryBuilder._removes_zero_length_activities(dataset=activities_dataset)
+
+    assert len(result) == 3

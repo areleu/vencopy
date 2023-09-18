@@ -42,31 +42,35 @@ class DiaryBuilder:
         which are separatly discretised (interdependence at single vehicle level of drain, charging power etc i.e.
         no charging available when driving).
         """
-        self.__correct_timestamps()
-        self.__removes_zero_length_activities()
+        self._correct_timestamps(dataset=self.activities, time_resolution=self.time_resolution)
+        self._removes_zero_length_activities(dataset=self.activities)
 
-    def __correct_timestamps(self) -> pd.DataFrame:
+    @staticmethod
+    def _correct_timestamps(dataset, time_resolution) -> pd.DataFrame:
         """
         Rounds timestamps to predifined resolution.
         """
-        self.activities["timestamp_start_corrected"] = self.activities["timestamp_start"].dt.round(f"{self.time_resolution}min")
-        self.activities["timestamp_end_corrected"] = self.activities["timestamp_end"].dt.round(f"{self.time_resolution}min")
-        self.activities["activity_duration"] = (
-            self.activities["timestamp_end_corrected"] - self.activities["timestamp_start_corrected"]
+        dataset["timestamp_start_corrected"] = dataset["timestamp_start"].dt.round(f"{time_resolution}min")
+        dataset["timestamp_end_corrected"] = dataset["timestamp_end"].dt.round(f"{time_resolution}min")
+        dataset["activity_duration"] = (
+            dataset["timestamp_end_corrected"] - dataset["timestamp_start_corrected"]
         )
+        return dataset
 
-    def __removes_zero_length_activities(self):
+    @staticmethod
+    def _removes_zero_length_activities(dataset):
         """
         Drops line when activity duration is zero, which causes inconsistencies in diaryBuilder (e.g. division by zero in number_bins calculation).
         """
-        start_length = len(self.activities)
-        self.activities = self.activities.drop(
-            self.activities[self.activities.activity_duration == pd.Timedelta(0)].index.to_list()
+        start_length = len(dataset)
+        dataset = dataset.drop(
+            dataset[dataset.activity_duration == pd.Timedelta(0)].index.to_list()
         )
-        end_length = len(self.activities)
+        end_length = len(dataset)
         print(
             f"{start_length - end_length} activities dropped from {start_length} total activities because activity length equals zero."
         )
+        return dataset
 
     def create_diaries(self):
         start_time = time.time()
