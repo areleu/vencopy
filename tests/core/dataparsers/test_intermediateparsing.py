@@ -62,7 +62,7 @@ def test_intermediate_parsing_init(sample_configs):
 
     assert parser.user_config == sample_configs["user_config"]
     assert parser.dev_config == sample_configs["dev_config"]
-    assert parser.debug == sample_configs["user_config"]["global"]["debug"]
+    assert parser.debug == False
     assert parser.dataset == dataset
     assert str(parser.raw_data_path) == "\\path\\to\\dataset1\\trips01.csv"
     assert parser.raw_data is None

@@ -11,7 +11,7 @@ import time
 import numpy as np
 import pandas as pd
 from typing import Optional
-from vencopy.utils.utils import create_file_name, write_out
+from ..utils.utils import create_file_name, write_out
 
 
 class DiaryBuilder:
@@ -22,7 +22,6 @@ class DiaryBuilder:
         self.activities = activities
         self.time_resolution = configs["user_config"]["diarybuilders"]["time_resolution"]
         self.is_week_diary = is_week_diary
-        self.__update_activities()
         self.drain = None
         self.charging_power = None
         self.uncontrolled_charging = None
@@ -71,6 +70,7 @@ class DiaryBuilder:
 
     def create_diaries(self):
         start_time = time.time()
+        self.__update_activities()
         self.drain = self.distributor.discretise(profile=self.drain, profile_name="drain", method="distribute")
         self.charging_power = self.distributor.discretise(
             profile=self.charging_power, profile_name="available_power", method="select"

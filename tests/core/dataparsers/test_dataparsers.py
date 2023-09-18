@@ -45,7 +45,8 @@ def sample_configs():
         }
     return configs
 
-def test_data_parser_init(sample_configs):
+
+def test_dataparser_init(sample_configs):
     dataset = "dataset1"
     parser = DataParser(sample_configs, dataset)
 
