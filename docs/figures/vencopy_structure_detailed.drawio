@@ -1,0 +1,165 @@
+<mxfile host="app.diagrams.net" modified="2023-09-11T16:16:50.623Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36 Edg/116.0.1938.69" etag="cQN44CT0Si1I1Wxg96gb" version="21.7.4" type="device">
+  <diagram id="YimaGMnV5s-QCDrL5l2j" name="Page-1">
+    <mxGraphModel dx="2074" dy="1124" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="HGCUKCm3Jx_b27lc3u62-32" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;arcSize=7;" parent="1" vertex="1">
+          <mxGeometry x="40" y="480" width="370" height="430" as="geometry" />
+        </mxCell>
+        <mxCell id="HGCUKCm3Jx_b27lc3u62-52" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=20;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="HGCUKCm3Jx_b27lc3u62-21" target="yWLFi-7v6lwdjs25CXLh-1" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="645" y="426.37" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="HGCUKCm3Jx_b27lc3u62-21" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;arcSize=12;" parent="1" vertex="1">
+          <mxGeometry x="460" y="132" width="370" height="250" as="geometry" />
+        </mxCell>
+        <mxCell id="HGCUKCm3Jx_b27lc3u62-51" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=20;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="HGCUKCm3Jx_b27lc3u62-3" target="HGCUKCm3Jx_b27lc3u62-22" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="190" y="570" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="HGCUKCm3Jx_b27lc3u62-3" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" parent="1" vertex="1">
+          <mxGeometry x="30" y="40" width="370" height="260" as="geometry" />
+        </mxCell>
+        <mxCell id="lDoaL4beW7mUjwmd4tld-1" value="data read-in" style="whiteSpace=wrap;html=1;aspect=fixed;spacing=2;spacingLeft=2;spacingRight=1;" parent="1" vertex="1">
+          <mxGeometry x="70" y="55" width="70" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="lDoaL4beW7mUjwmd4tld-2" value="filtering, cleaning" style="whiteSpace=wrap;html=1;aspect=fixed;" parent="1" vertex="1">
+          <mxGeometry x="70" y="135" width="70" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="lDoaL4beW7mUjwmd4tld-3" value="variable replace-ments" style="whiteSpace=wrap;html=1;aspect=fixed;" parent="1" vertex="1">
+          <mxGeometry x="70" y="215" width="70" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="lDoaL4beW7mUjwmd4tld-4" value="composition of daily travel diaries" style="whiteSpace=wrap;html=1;aspect=fixed;spacingLeft=2;spacingRight=2;" parent="1" vertex="1">
+          <mxGeometry x="480" y="177" width="70" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="lDoaL4beW7mUjwmd4tld-7" value="&lt;div align=&quot;left&quot;&gt;&lt;ul&gt;&lt;li&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;trip start and end timestamps, trip distances, speeds have plausible values&lt;/span&gt;&lt;/li&gt;&lt;li&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;remove outlier values&lt;/span&gt;&lt;/li&gt;&lt;li&gt;account only for motorised vehicles&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacing=2;spacingLeft=-20;arcSize=10;" parent="1" vertex="1">
+          <mxGeometry x="170" y="115" width="210" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="lDoaL4beW7mUjwmd4tld-8" value="&lt;ul&gt;&lt;li&gt;variable unification&lt;/li&gt;&lt;li&gt;input data types replacement&lt;br&gt;&lt;/li&gt;&lt;/ul&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=-20;" parent="1" vertex="1">
+          <mxGeometry x="170" y="55" width="210" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="lDoaL4beW7mUjwmd4tld-9" value="&lt;ul&gt;&lt;li&gt;weekdays&lt;/li&gt;&lt;li&gt;purposes&lt;/li&gt;&lt;li&gt;separate start and end timestamps&lt;br&gt;&lt;/li&gt;&lt;/ul&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacing=2;spacingLeft=-20;" parent="1" vertex="1">
+          <mxGeometry x="172.5" y="225" width="210" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="lDoaL4beW7mUjwmd4tld-10" value="discreti-&lt;br&gt;sation" style="whiteSpace=wrap;html=1;aspect=fixed;spacingLeft=2;spacingRight=2;" parent="1" vertex="1">
+          <mxGeometry x="480" y="272" width="70" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="lDoaL4beW7mUjwmd4tld-12" value="&lt;ul&gt;&lt;li&gt;definition of a user-specific temporal resolution&lt;/li&gt;&lt;li&gt;merging individual trips to daily travel diaries for each vehicle&lt;br&gt;&lt;/li&gt;&lt;/ul&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacing=2;spacingLeft=-20;" parent="1" vertex="1">
+          <mxGeometry x="580" y="167" width="210" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="HGCUKCm3Jx_b27lc3u62-4" value="DataParser" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=20;rotation=270;" parent="1" vertex="1">
+          <mxGeometry x="-85" y="160" width="270" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="HGCUKCm3Jx_b27lc3u62-16" value="DiaryBuilder" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=20;rotation=270;" parent="1" vertex="1">
+          <mxGeometry x="692" y="247" width="240" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="HGCUKCm3Jx_b27lc3u62-22" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;arcSize=24;" parent="1" vertex="1">
+          <mxGeometry x="30" y="325.63" width="370" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="HGCUKCm3Jx_b27lc3u62-24" value="assign charging capability" style="whiteSpace=wrap;html=1;aspect=fixed;spacingLeft=2;spacingRight=2;" parent="1" vertex="1">
+          <mxGeometry x="70" y="350.63" width="70" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="HGCUKCm3Jx_b27lc3u62-25" value="&lt;ul&gt;&lt;li&gt;discrete mapping of trip purposes to charging availability (True / False)&lt;br&gt;&lt;/li&gt;&lt;li&gt;probability-bases mapping of trip purposes to charging availability (probability distributions)&lt;/li&gt;&lt;/ul&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingRight=2;spacingLeft=-20;arcSize=12;" parent="1" vertex="1">
+          <mxGeometry x="162.38" y="343.13" width="217.62" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="HGCUKCm3Jx_b27lc3u62-31" value="FlexEstimator" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=20;rotation=270;" parent="1" vertex="1">
+          <mxGeometry x="-160" y="685" width="427.5" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="HGCUKCm3Jx_b27lc3u62-33" value="state profile calculation (SoC max)" style="whiteSpace=wrap;html=1;aspect=fixed;spacingLeft=2;spacingRight=2;" parent="1" vertex="1">
+          <mxGeometry x="72.5" y="575" width="70" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="HGCUKCm3Jx_b27lc3u62-34" value="flow profile calculation (drain and power)" style="whiteSpace=wrap;html=1;aspect=fixed;spacingLeft=2;spacingRight=2;" parent="1" vertex="1">
+          <mxGeometry x="72.5" y="495" width="70" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="HGCUKCm3Jx_b27lc3u62-35" value="&lt;ul&gt;&lt;li&gt;drain profile calculation&lt;/li&gt;&lt;li&gt;charging capacity calculation&lt;br&gt;&lt;/li&gt;&lt;/ul&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingRight=2;spacingLeft=-20;" parent="1" vertex="1">
+          <mxGeometry x="172.5" y="495" width="210" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="HGCUKCm3Jx_b27lc3u62-36" value="&lt;ul&gt;&lt;li&gt;maximum SoCcalculation&lt;br&gt;&lt;/li&gt;&lt;li&gt;iterationto to ensure SoC(t=start) = SoC(t=end)&lt;br&gt;&lt;/li&gt;&lt;/ul&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=-20;spacingRight=2;" parent="1" vertex="1">
+          <mxGeometry x="172.5" y="560" width="210" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="HGCUKCm3Jx_b27lc3u62-37" value="flow profile calculation (UC and fuel)" style="whiteSpace=wrap;html=1;aspect=fixed;spacingLeft=2;spacingRight=2;" parent="1" vertex="1">
+          <mxGeometry x="72.5" y="655" width="70" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="HGCUKCm3Jx_b27lc3u62-38" value="&lt;ul&gt;&lt;li&gt;uncontrolled charging profile calculation&lt;/li&gt;&lt;li&gt;fuel consumption calculation for PHEVs / FCEVs&lt;br&gt;&lt;/li&gt;&lt;/ul&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=-20;" parent="1" vertex="1">
+          <mxGeometry x="172.5" y="640" width="210" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="HGCUKCm3Jx_b27lc3u62-39" value="state profile calculation (SoC min)" style="whiteSpace=wrap;html=1;aspect=fixed;" parent="1" vertex="1">
+          <mxGeometry x="72.5" y="735" width="70" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="HGCUKCm3Jx_b27lc3u62-40" value="&lt;ul&gt;&lt;li&gt;minimum SoCcalculation&lt;br&gt;&lt;/li&gt;&lt;li&gt;iteration to ensure SoC(t=start) = SoC(t=end)&lt;br&gt;&lt;/li&gt;&lt;/ul&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=-20;" parent="1" vertex="1">
+          <mxGeometry x="172.5" y="725" width="210" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="HGCUKCm3Jx_b27lc3u62-41" value="filtering" style="whiteSpace=wrap;html=1;aspect=fixed;" parent="1" vertex="1">
+          <mxGeometry x="72.5" y="815" width="70" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="HGCUKCm3Jx_b27lc3u62-42" value="&lt;ul&gt;&lt;li&gt;no additional fuel required&lt;/li&gt;&lt;li&gt;mileage above threshold&lt;/li&gt;&lt;li&gt;consumption &amp;lt; maximum charging&lt;/li&gt;&lt;li&gt;battery capacity sufficient for daily mileage&lt;br&gt;&lt;/li&gt;&lt;/ul&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=-20;" parent="1" vertex="1">
+          <mxGeometry x="172.5" y="795" width="210" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="HGCUKCm3Jx_b27lc3u62-50" value="GridModeller" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=20;rotation=270;" parent="1" vertex="1">
+          <mxGeometry x="1.8800000000000008" y="381.26" width="96.25" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="yWLFi-7v6lwdjs25CXLh-1" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;arcSize=7;" parent="1" vertex="1">
+          <mxGeometry x="460" y="426.37" width="370" height="175.63" as="geometry" />
+        </mxCell>
+        <mxCell id="yWLFi-7v6lwdjs25CXLh-2" value="ProfileAggregator" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=20;rotation=270;" parent="1" vertex="1">
+          <mxGeometry x="724.62" y="506" width="174.75" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="yWLFi-7v6lwdjs25CXLh-13" value="aggregation" style="whiteSpace=wrap;html=1;aspect=fixed;" parent="1" vertex="1">
+          <mxGeometry x="480" y="472" width="70" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="yWLFi-7v6lwdjs25CXLh-16" value="&lt;ul&gt;&lt;li&gt;aggregation of flow profiles by averaging&lt;/li&gt;&lt;li&gt;aggregation of state profiles by nth-value selection&lt;br&gt;&lt;/li&gt;&lt;/ul&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=-20;" parent="1" vertex="1">
+          <mxGeometry x="580" y="472" width="210" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="yWLFi-7v6lwdjs25CXLh-20" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=20;entryX=0.472;entryY=-0.002;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" parent="1" source="HGCUKCm3Jx_b27lc3u62-22" target="HGCUKCm3Jx_b27lc3u62-32" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="215" y="460" as="sourcePoint" />
+            <mxPoint x="225" y="341" as="targetPoint" />
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="yWLFi-7v6lwdjs25CXLh-21" value="&lt;ul&gt;&lt;li&gt;calculation shares of electricity demand for driving, charging power, uncontrolled charging load, maximum and minimum SoC&lt;br&gt;&lt;/li&gt;&lt;li&gt;allocation of values to the specified time resolution&amp;nbsp;&lt;/li&gt;&lt;/ul&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacing=2;spacingLeft=-20;" parent="1" vertex="1">
+          <mxGeometry x="580" y="262" width="210" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="yWLFi-7v6lwdjs25CXLh-27" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=20;exitX=0.482;exitY=0.999;exitDx=0;exitDy=0;exitPerimeter=0;" parent="1" source="HGCUKCm3Jx_b27lc3u62-32" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="225" y="466" as="sourcePoint" />
+            <mxPoint x="640" y="130" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="218" y="920" />
+              <mxPoint x="430" y="920" />
+              <mxPoint x="430" y="100" />
+              <mxPoint x="640" y="100" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="CpkEmurNDCk1gUvXqK35-1" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;arcSize=7;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="460" y="645" width="370" height="197" as="geometry" />
+        </mxCell>
+        <mxCell id="yWLFi-7v6lwdjs25CXLh-15" value="weekly and annual timeseries" style="whiteSpace=wrap;html=1;aspect=fixed;" parent="1" vertex="1">
+          <mxGeometry x="480" y="661.19" width="70" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="yWLFi-7v6lwdjs25CXLh-18" value="&lt;ul&gt;&lt;li&gt;composition of weekly and annual&amp;nbsp; timeseries for all profiles&lt;/li&gt;&lt;/ul&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=-20;" parent="1" vertex="1">
+          <mxGeometry x="580" y="666.19" width="210" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="yWLFi-7v6lwdjs25CXLh-23" value="normali-sation" style="whiteSpace=wrap;html=1;aspect=fixed;" parent="1" vertex="1">
+          <mxGeometry x="480" y="748.8199999999999" width="70" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="yWLFi-7v6lwdjs25CXLh-24" value="&lt;ul&gt;&lt;li&gt;profiles normalized to battery capacity, charging power or annual demand respectively&lt;/li&gt;&lt;/ul&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=-20;" parent="1" vertex="1">
+          <mxGeometry x="580" y="748.82" width="210" height="73.18" as="geometry" />
+        </mxCell>
+        <mxCell id="CpkEmurNDCk1gUvXqK35-3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=20;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="646" y="646" as="targetPoint" />
+            <mxPoint x="646" y="602" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="CpkEmurNDCk1gUvXqK35-4" value="PostProcessor" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=20;rotation=270;" vertex="1" parent="1">
+          <mxGeometry x="724.63" y="726.19" width="174.75" height="35" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -15,8 +15,8 @@ import sys
 import sphinx_rtd_theme
 sys.path.insert(0, os.path.abspath('.'))
 sys.path.append(os.path.abspath('..'))
-sys.path.append(os.path.abspath('../scripts'))
-sys.path.append(os.path.abspath('../classes'))
+sys.path.append(os.path.abspath('../utils'))
+sys.path.append(os.path.abspath('../core'))
 
 # -- Project information -----------------------------------------------------
 
@@ -25,7 +25,7 @@ copyright = '2020-2023, German Aerospace Center (DLR)'
 author = 'German Aerospace Center (DLR)'
 
 # The full version, including alpha/beta/rc tags
-release = 'September 2023'
+release = 'October 2023'
 
 highlight_language = 'python3'
 

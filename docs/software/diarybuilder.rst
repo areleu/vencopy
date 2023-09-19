@@ -3,29 +3,38 @@
 .. _diarybuilder:
 
 
-TripDiaryBuilder Class
+DiaryBuilder Class
 ===================================
 
-.. image:: ../figures/IOtripDiaryBuilder.png
+.. image:: ../figures/IOdiarybuilder.svg
 	:width: 800
 	:align: center
 
 TripDiaryBuilder Input
 ---------------------------------------------------
-**Config File (tripConfig.yaml):** currently empty.
+**Config File (user_config.yaml):**
+
+* time_resolution: <value> - User-specific time resolution in minutes
+* is_week_diary: bool - Determine if the activity data set comprises weekly activity chains (synthesized by WeekDiaryBuilder)
+
 
 **venco.py Classes:**
 
- * DataParser class output
+ * FlexEstimator class output
+
 
 TripDiaryBuilder Output
 ---------------------------------------------------
 **Output Functions:**
 
- * vpDiary = TripDiaryBuilder(configs=configs, ParseData=vpData, dataset=dataset, debug=True)
+ * vpDiary = DiaryBuilder(configs=configs, activities=vpFlex.activities)
+ * vpDiary.create_diaries()
 
 
 **Disk Files:**
 
- * Hourly boolean dataset with parking and driving time fo all vehicles (.csv)
- * Hourly purpose dataset for all vehicles (.csv)
+ * Electric battery drain (.csv)
+ * Available charging power (.csv)
+ * Uncontrolled charging profile (.csv)
+ * Maximum SoC (.csv)
+ * Minimum SoC (.csv)
