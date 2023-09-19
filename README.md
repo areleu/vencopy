@@ -7,7 +7,7 @@
 ![Gitter](https://img.shields.io/badge/chat-on%20Gitter-blue?color=%23009d94&link=https%3A%2F%2Fapp.gitter.im%2F%23%2Froom%2F%23vencopy_community%3Agitter.im)
 
 - Authors: Niklas Wulff, Fabia Miorelli
-- Contact: niklas.wulff@dlr.de
+- Contact: vencopy@dlr.de
 
 # Contents
 
