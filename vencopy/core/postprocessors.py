@@ -8,8 +8,8 @@ __license__ = "BSD-3-Clause"
 from pathlib import Path
 import pandas as pd
 
-from vencopy.core.profileaggregators import ProfileAggregator
-from vencopy.utils.utils import create_file_name, write_out
+from ..core.profileaggregators import ProfileAggregator
+from ..utils.utils import create_file_name, write_out
 
 
 class PostProcessor:

@@ -220,22 +220,6 @@ class TimeDiscretiser:
         )
         self.data_to_discretise["timestamp_end_corrected"] = self.data_to_discretise["timestamp_end"].dt.round(f"{self.time_resolution}min")
 
-    def __create_discretised_structure_week(self):
-        """
-        Method for future release working with sampled weeks.
-
-        Create an empty dataframe with columns each representing one time_delta (e.g. one 15-min slot). Scope can
-        currently be either day (nCol = 24*60 / time_resolution) or week - determined be self.is_week (nCol= 7 * 24 * 60 / time_resolution).
-        self.time_index is set on instantiation.
-        """
-        number_hours = len(list(self.time_index)) - 1
-        hours_per_day = int(number_hours / len(self.weekdays))
-        hours = range(hours_per_day)
-        self.discrete_data = pd.DataFrame(
-            index=self.data_to_discretise.unique_id.unique(),
-            columns=pd.MultiIndex.from_product([self.weekdays, hours]),
-        )
-
     def __identify_bin_shares(self):
         """
         Calculates value share to be assigned to bins and identifies the bins.

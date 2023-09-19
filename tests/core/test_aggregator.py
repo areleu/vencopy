@@ -8,6 +8,6 @@ import pytest
 
 import pandas as pd
 
-from ....vencopy.core.dataparsers.parkinference import ParkInference
+from ...vencopy.core.profileaggregators import Aggregator
 
 # NOT TESTED:
