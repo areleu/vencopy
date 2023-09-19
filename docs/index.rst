@@ -82,6 +82,7 @@ Links
    :hidden:
    :maxdepth: 1
 
+   research/research
    research/projects
    research/publications
 
