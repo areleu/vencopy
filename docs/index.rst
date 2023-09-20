@@ -40,7 +40,7 @@ Useful Information about venco.py
 - :ref:`Find the different installation instructions here <gettingstarted/installation>`
 - :ref:`Find some frequently asked questions here <faq>`
 - :ref:`Find information on planned future features <contribution/releasetimeline>`
-- :ref:`Find information on how to contribute <contribution/howtocontribute>`
+- :ref:`Find information on how to contribute <contribution/contributing>`
 
 
 
