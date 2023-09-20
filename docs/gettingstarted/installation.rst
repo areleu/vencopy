@@ -61,7 +61,7 @@ venco.py user folder will now be created. It will look like this:
     │   │   ├── parkinference
     │   │   ├── parseMiD
     │   │   └── parseKiD
-    │   ├── gridmodeler
+    │   ├── gridmodeller
     │   ├── flexestimator
     │   ├── diarybuilder
     │   ├── profileaggregator

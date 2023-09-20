@@ -102,7 +102,7 @@ class PostProcessor:
             self.drain_normalised = self.__normalize_flows(self.input_profiles["drain"])
             self.uncontrolled_charging_normalised = self.__normalize_flows(self.input_profiles["uncontrolled_charging"])
             self.charging_power_normalised = self.__normalize_states(
-                profile=self.input_profiles["charging_power"], base=self.user_config["gridmodelers"]["rated_power_simple"]
+                profile=self.input_profiles["charging_power"], base=self.user_config["gridmodellers"]["rated_power_simple"]
             )
             self.max_battery_level_normalised = self.__normalize_states(
                 profile=self.input_profiles["max_battery_level"],
@@ -112,10 +112,10 @@ class PostProcessor:
                 profile=self.input_profiles["min_battery_level"],
                 base=self.user_config["flexestimators"]["battery_capacity"],
             )
-            if self.user_config["gridmodelers"]["grid_model"] != "simple":
+            if self.user_config["gridmodellers"]["grid_model"] != "simple":
                 raise(TypeError(
                     f"You selected a grid model where normalization is not meaningful. For normalization, the"
-                    f" rated power of {self.user_config['gridmodelers']['rated_power_simple']}kW was used."
+                    f" rated power of {self.user_config['gridmodellers']['rated_power_simple']}kW was used."
                 ))
             if self.user_config["global"]["write_output_to_disk"]["processor_output"]["normalised_annual_profiles"]:
                 self.__write_out_profiles(filename_id="output_postprocessor_normalised")

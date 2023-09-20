@@ -46,7 +46,7 @@ This part of the documentation holds the function definitions of venco.py from t
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: vencopy.core.gridmodelers
+.. automodule:: vencopy.core.gridmodellers
     :members:
     :undoc-members:
     :show-inheritance:

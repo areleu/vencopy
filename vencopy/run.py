@@ -11,7 +11,7 @@ from pathlib import Path
 
 from vencopy.core.dataparsers import parse_data
 from vencopy.core.diarybuilders import DiaryBuilder
-from vencopy.core.gridmodelers import GridModeler
+from vencopy.core.gridmodellers import GridModeller
 from vencopy.core.flexestimators import FlexEstimator
 from vencopy.core.profileaggregators import ProfileAggregator
 from vencopy.core.postprocessors import PostProcessor
@@ -27,7 +27,7 @@ if __name__ == "__main__":
     vpData = parse_data(configs=configs)
     vpData.process()
 
-    vpGrid = GridModeler(configs=configs, activities=vpData.activities)
+    vpGrid = GridModeller(configs=configs, activities=vpData.activities)
     vpGrid.assign_grid()
 
     vpFlex = FlexEstimator(configs=configs, activities=vpGrid.activities)
