@@ -44,8 +44,9 @@ An overview of conferences contributions including venco.py is listed below:
   passenger and commercial transport in Germany", International EV Conference, Edinburgh, 21-23 June 2023
 - Miorelli, F., Arellano Ruiz, E. S., Jochem P.: "Electric vehicle charging infrastructure in transportation research and energy systems analysis:
   Semantic interoperability of modelling approaches", World Conference on Transport Research (WCTR) 2023, Montréal, 17-21 July 2023
-- Frey, U., ...: "Uncertainties and interactions in various transition pathways of a decentralised energy system", 12th International Ruhr Energy
-  Conference (INREC) 2023 "Uncertainties in Energy - Markets, Systems & Decisions", Essen, 5-6 September 2023
+- Frey, U., Sperber, E., El Ghazi, A. A., Miorelli, F., Schimeczek, C., Stumpf, S., Kaya, A., Rebennack, S.: "Uncertainties and interactions in
+  various transition pathways of a decentralised energy system", 12th International Ruhr Energy Conference (INREC) 2023 "Uncertainties in Energy -
+  Markets, Systems & Decisions", Essen, 5-6 September 2023
 - Frey, U., Sperber, E., El Ghazi, A., Miorelli, F., Schimeczek, C., Stumpf, S., Kaya, A., Rebennack, S.: "Uncertainties in transition pathways
   towards Net Zero in a decentralized energy system", European Climate and Energy Modelling Forum (ECEMP) 2023, Online, 5-6 October 2023
 - Frey, U., Sperber, E., El Ghazi, A., Miorelli, F., Schimeczek, C., Stumpf, S., Kaya, A., Rebennack, S.: "Modellierung von Akteursverhalten mit
