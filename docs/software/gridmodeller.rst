@@ -38,11 +38,11 @@ GridModeller Output
 
 
 
-Grid Modeling
+Grid Modelling
 ===================================
 
 
-This file documents the gridmodellers class of venco.py. It presents a methodology of allocation of charging infrastructure for every hour of a trip  and also calculation of transaction start hour.
+This file documents the GridModeller class of venco.py. It presents a methodology of allocation of charging infrastructure for every hour of a trip  and also calculation of transaction start hour.
 There are currently two ways for grid assignment in venco.py.
 
 
