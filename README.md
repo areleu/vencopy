@@ -62,5 +62,5 @@ sphinx-build -b html ./docs/ ./build/
 ## Want to contribute?
 
 Great, welcome on the venco.py team! Please read our contribute section in the documentation and reach out to Niklas
-(niklas.wulff@dlr.de). If experience difficulties on set up or have other technical questions, join our
+(niklas.wulff@dlr.de). If you experience difficulties on set up or have other technical questions, join our
 [gitter community](https://gitter.im/vencopy/community)
