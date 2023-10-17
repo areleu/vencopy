@@ -27,10 +27,12 @@ Welcome to venco.py's documentation!
 
 A data processing tool offering hourly demand and flexibility profiles for future electric vehicle fleets in an aggregated manner.
 venco.py is developed at the `Department of Energy Systems Analysis <https://www.dlr.de/ve/en/desktopdefault.aspx/tabid-15971/25909_read-66550/>`_ at the `German Aerospace Center (DLR) <https://www.dlr.de/EN/Home/home_node.html>`_.
+
 In a nutshell, with venco.py you can:
-- :ref:`simulate different charging strategies (uncontrolled, controlled charging , V2G) for EV fleets <flexestimator>`
-- :ref:`model different grid infrastructure options (home charging, work charging, ..) <gridmodeller>`
-- :ref:`analyse charging behaviour based on socio-economic data and trip purpose <dataparser>`
+
+- :ref:`simulate different charging strategies (uncontrolled, controlled charging , V2G) for EV fleets <software/flexEstimator>`
+- :ref:`model different grid infrastructure options (home charging, work charging, ..) <software/gridModeler>`
+- :ref:`analyse charging behaviour based on socio-economic data and trip purpose <software/dataParser>`
 
 
 

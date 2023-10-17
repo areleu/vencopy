@@ -9,9 +9,10 @@ Architecture Documentation
 General structure of the framework
 ---------------------------------------------------
 
-The figure below shows the detailed venco.py components in a developer diagram. The four components - implemented as Python classes - DataParser,
-DiaryBuilder, GridModeller, FlexEstimator, ProfileAggregator and PostProcessor can be clearly distinguished. A fifth component, Evaluator, used to create the plots for this work is
-not shown in the figure as it is not needed to calculate results from venco.py. A brief description of the classes is presented below. For a more
+The figure below shows the detailed venco.py components in a developer diagram. The four components - implemented as 
+Python classes - DataParser, DiaryBuilder, GridModeller, FlexEstimator, ProfileAggregator and PostProcessor can be 
+clearly distinguished. A fifth component, Evaluator, used to create the plots for this work is not shown in the figure
+as it is not needed to calculate results from venco.py. A brief description of the classes is presented below. For a more
 detailed algebraic description of the tool please refer to the :ref:`publications` section.
 
 
@@ -67,8 +68,7 @@ Organizational information
      - Features, dependencies and components which are contraindicative or at odds with an open source publication should not be used
    * - Development tools
      - Source code and all artefacts are located in the DLR GitLab repository for venco.py including the software documentation. For development, the
-       PyCharm community edition IDE, VSCode and gitbash are used. For graphical depictions of software components and similar documentation draw.io
-       and InkScape used.
+       PyCharm community edition IDE, VSCode, gitbash and mambaforge are used. For graphical depictions of software components and similar documentation draw.io and InkScape are used.
 
 
 
