@@ -14,7 +14,12 @@ import numpy as np
 import pandas as pd
 
 
-from vencopy.utils.utils import create_file_name, write_out, return_lowest_level_dict_keys, return_lowest_level_dict_values
+from vencopy.utils.utils import (
+    create_file_name,
+    write_out,
+    return_lowest_level_dict_keys,
+    return_lowest_level_dict_values,
+)
 
 
 class DataParser:
@@ -159,9 +164,7 @@ class DataParser:
 
         :return: None
         """
-        replacement_dict = self._create_replacement_dict(
-            self.dataset, self.dev_config["dataparsers"]["data_variables"]
-        )
+        replacement_dict = self._create_replacement_dict(self.dataset, self.dev_config["dataparsers"]["data_variables"])
         data_renamed = self.trips.rename(columns=replacement_dict)
         self.trips = data_renamed
         print("Finished harmonization of variables.")
@@ -656,17 +659,3 @@ class IntermediateParsing(DataParser):
             print(
                 f'The subset contains only vehicles of the class {(self.user_config["dataparsers"]["vehicle_segment"][self.dataset])} for a total of {len(self.activities.unique_id.unique())} individual vehicles.'
             )
-
-    def _cleanup_dataset(self):
-        self.activities.drop(
-            columns=[
-                "level_0",
-                "trip_is_intermodal",
-                "timedelta_total",
-                "timedelta_morning",
-                "time_share_morning",
-                "time_share_evening",
-                "total_trip_distance",
-            ],
-            inplace=True,
-        )
