@@ -315,7 +315,7 @@ class TimeDiscretiser:
 
     def __value_non_linear_level(self):
         """
-        Calculates the bin values dynamically (e.g. for the SoC). It returns a
+        Calculates the bin values dynamically (e.g. for the battery level). It returns a
         non-linearly increasing list of values capped to upper and lower battery
         capacity limitations. The list of values is alloacted to bins in the
         function __allocate() in the same way as for value-per-bins. Operates
@@ -424,9 +424,8 @@ class TimeDiscretiser:
         with soc_start with added value of added_energy_per_bin.
 
         Args:
-            soc_start (float): Starting SOC
-            added_energy_per_bin (float): Consecutive (constant) additions to the start
-            SOC
+            soc_start (float): Starting battery SoC
+            added_energy_per_bin (float): Consecutive (constant) additions to the start battery energy level
             number_bins (int): Number of discretized bins (one per timeslot)
 
         Returns:
