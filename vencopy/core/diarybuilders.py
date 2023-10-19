@@ -50,8 +50,12 @@ class DiaryBuilder:
         """
         Rounds timestamps to predifined resolution.
         """
-        self.activities["timestamp_start_corrected"] = self.activities["timestamp_start"].dt.round(f"{self.time_resolution}min")
-        self.activities["timestamp_end_corrected"] = self.activities["timestamp_end"].dt.round(f"{self.time_resolution}min")
+        self.activities["timestamp_start_corrected"] = self.activities["timestamp_start"].dt.round(
+            f"{self.time_resolution}min"
+        )
+        self.activities["timestamp_end_corrected"] = self.activities["timestamp_end"].dt.round(
+            f"{self.time_resolution}min"
+        )
         self.activities["activity_duration"] = (
             self.activities["timestamp_end_corrected"] - self.activities["timestamp_start_corrected"]
         )
@@ -130,7 +134,9 @@ class TimeDiscretiser:
         self.quantum = pd.Timedelta(value=1, unit="min")
         self.time_resolution = time_resolution  # e.g. 15 min
         self.is_week = is_week
-        self.number_time_slots = int(self.__number_slots_per_interval(interval=pd.Timedelta(value=self.time_resolution, unit="min")))
+        self.number_time_slots = int(
+            self.__number_slots_per_interval(interval=pd.Timedelta(value=self.time_resolution, unit="min"))
+        )
         if is_week:
             self.time_delta = pd.timedelta_range(start="00:00:00", end="168:00:00", freq=f"{self.time_resolution}T")
             self.weekdays = self.activities["weekday_string"].unique()
@@ -203,7 +209,9 @@ class TimeDiscretiser:
         if self.column_to_discretise == "drain":
             self.data_to_discretise["drain"] = self.data_to_discretise["drain"].fillna(0)
         elif self.column_to_discretise == "uncontrolled_charging":
-            self.data_to_discretise["uncontrolled_charging"] = self.data_to_discretise["uncontrolled_charging"].fillna(0)
+            self.data_to_discretise["uncontrolled_charging"] = self.data_to_discretise["uncontrolled_charging"].fillna(
+                0
+            )
         elif self.column_to_discretise == "residual_need":
             self.data_to_discretise["residual_need"] = self.data_to_discretise["residual_need"].fillna(0)
 
@@ -214,7 +222,9 @@ class TimeDiscretiser:
         self.data_to_discretise["timestamp_start_corrected"] = self.data_to_discretise["timestamp_start"].dt.round(
             f"{self.time_resolution}min"
         )
-        self.data_to_discretise["timestamp_end_corrected"] = self.data_to_discretise["timestamp_end"].dt.round(f"{self.time_resolution}min")
+        self.data_to_discretise["timestamp_end_corrected"] = self.data_to_discretise["timestamp_end"].dt.round(
+            f"{self.time_resolution}min"
+        )
 
     def __create_discretised_structure_week(self):
         """
@@ -454,18 +464,26 @@ class TimeDiscretiser:
         self.__uncontrolled_charging_driving()
 
     def __uncontrolled_charging_parking(self):
-        self.data_to_discretise["timestamp_end_uncontrolled_charging"] = pd.to_datetime(self.data_to_discretise["timestamp_end_uncontrolled_charging"])
+        self.data_to_discretise["timestamp_end_uncontrolled_charging"] = pd.to_datetime(
+            self.data_to_discretise["timestamp_end_uncontrolled_charging"]
+        )
         self.data_to_discretise["time_delta_uncontrolled_chaging"] = (
             self.data_to_discretise["timestamp_end_uncontrolled_charging"] - self.data_to_discretise["timestamp_start"]
         )
         self.data_to_discretise["number_full_bins_uncontrolled_charging"] = (
-            self.data_to_discretise.loc[self.data_to_discretise["trip_id"].isna(), "time_delta_uncontrolled_chaging"].dt.total_seconds()
+            self.data_to_discretise.loc[
+                self.data_to_discretise["trip_id"].isna(), "time_delta_uncontrolled_chaging"
+            ].dt.total_seconds()
             / 60
             / self.time_resolution
         ).astype(int)
-        self.data_to_discretise["value_per_bin"] = self.data_to_discretise.loc[self.data_to_discretise["trip_id"].isna(), :].apply(
+        self.data_to_discretise["value_per_bin"] = self.data_to_discretise.loc[
+            self.data_to_discretise["trip_id"].isna(), :
+        ].apply(
             lambda x: self.__charge_rate_per_bin(
-                charging_rate=x["available_power"], charged_volume=x["uncontrolled_charging"], number_bins=x["number_bins"]
+                charging_rate=x["available_power"],
+                charged_volume=x["uncontrolled_charging"],
+                number_bins=x["number_bins"],
             ),
             axis=1,
         )
@@ -510,13 +528,15 @@ class TimeDiscretiser:
         """
         Identifies every first bin for each activity (trip or parking).
         """
-        self.data_to_discretise["timestamp_start_corrected"] = self.data_to_discretise["timestamp_start_corrected"].apply(
-            lambda x: pd.to_datetime(str(x))
-        )
+        self.data_to_discretise["timestamp_start_corrected"] = self.data_to_discretise[
+            "timestamp_start_corrected"
+        ].apply(lambda x: pd.to_datetime(str(x)))
         day_start = self.data_to_discretise["timestamp_start_corrected"].apply(
             lambda x: pd.Timestamp(year=x.year, month=x.month, day=x.day)
         )
-        self.data_to_discretise["dailyTimeDeltaStart"] = self.data_to_discretise["timestamp_start_corrected"] - day_start
+        self.data_to_discretise["dailyTimeDeltaStart"] = (
+            self.data_to_discretise["timestamp_start_corrected"] - day_start
+        )
         self.data_to_discretise["startTimeFromMidnightSeconds"] = self.data_to_discretise["dailyTimeDeltaStart"].apply(
             lambda x: x.seconds
         )
@@ -578,7 +598,9 @@ class TimeDiscretiser:
         indeces_no_length_activities = self.data_to_discretise[
             self.data_to_discretise.activity_duration == pd.Timedelta(0)
         ].index.to_list()
-        self.ids_with_no_length_activities = self.data_to_discretise.loc[indeces_no_length_activities]["unique_id"].unique()
+        self.ids_with_no_length_activities = self.data_to_discretise.loc[indeces_no_length_activities][
+            "unique_id"
+        ].unique()
         self.data_to_discretise = self.data_to_discretise.drop(indeces_no_length_activities)
         end_length = len(self.data_to_discretise)
         dropped_activities = start_length - end_length
