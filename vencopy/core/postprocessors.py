@@ -24,7 +24,7 @@ class PostProcessor:
         self.time_resolution = self.user_config["diarybuilders"]["time_resolution"]
         self.time_delta = pd.timedelta_range(start="00:00:00", end="24:00:00", freq=f"{self.time_resolution}T")
         self.time_index = list(self.time_delta)
-        self.vehicle_numbers = profiles.activities.groupby(by="trip_start_weekday").unique_id.unique()
+        self.vehicle_numbers = [len(_) for _ in profiles.activities.groupby(by="trip_start_weekday").unique_id.unique().to_list()]
 
         self.drain = profiles.drain_weekly
         self.charging_power = profiles.charging_power_weekly
@@ -59,7 +59,17 @@ class PostProcessor:
         return profile / base
 
     def __normalize_charging_power(self, profile: pd.Series, base: int) -> pd.Series:
-        return profile / base
+        profile_normalised = []
+        for day in range(0, 7):
+            start = day * len(self.time_delta)
+            end = start + len(self.time_delta) - 1
+            profile_day = profile[start:end] / base[day]
+            if profile_normalised == []:
+                profile_normalised = profile_day.to_list()
+            else:
+                profile_normalised.extend(profile_day.to_list())
+        profile = pd.Series(profile_normalised)
+        return profile
 
     def __write_out_profiles(self, filename_id: str):
         self.__write_output(profile_name="drain", profile=self.drain_normalised, filename_id=filename_id)
