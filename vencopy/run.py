@@ -24,24 +24,24 @@ if __name__ == "__main__":
     configs = load_configs(base_path=base_path)
     create_output_folders(configs=configs)
 
-    vpData = parse_data(configs=configs)
-    vpData.process()
+    data = parse_data(configs=configs)
+    data.process()
 
-    vpGrid = GridModeller(configs=configs, activities=vpData.activities)
-    vpGrid.assign_grid()
+    grid = GridModeller(configs=configs, activities=data.activities)
+    grid.assign_grid()
 
-    vpFlex = FlexEstimator(configs=configs, activities=vpGrid.activities)
-    vpFlex.estimate_technical_flexibility_through_iteration()
+    flex = FlexEstimator(configs=configs, activities=grid.activities)
+    flex.estimate_technical_flexibility_through_iteration()
 
-    vpDiary = DiaryBuilder(configs=configs, activities=vpFlex.activities)
-    vpDiary.create_diaries()
+    diary = DiaryBuilder(configs=configs, activities=flex.activities)
+    diary.create_diaries()
 
-    vpProfile = ProfileAggregator(configs=configs, activities=vpDiary.activities, profiles=vpDiary)
-    vpProfile.aggregate_profiles()
+    profile = ProfileAggregator(configs=configs, activities=diary.activities, profiles=diary)
+    profile.aggregate_profiles()
 
-    vpPost = PostProcessor(configs=configs, profiles=vpProfile)
-    vpPost.create_annual_profiles()
-    vpPost.normalise()
+    post = PostProcessor(configs=configs, profiles=profile)
+    post.create_annual_profiles()
+    post.normalise()
 
     elapsed_time = time.time() - start_time
     print(f"Elapsed time: {elapsed_time}.")

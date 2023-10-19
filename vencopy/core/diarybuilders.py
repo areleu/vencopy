@@ -334,7 +334,7 @@ class TimeDiscretiser:
         battery level.
         The function __increase_level_per_bin() is applied to the whole data set with
         the respective start battery levels (soc_start), battery level increases
-        (added_soc_per_bin) and number_bins for each activity respectively in a vectorized
+        (added_energy_per_bin) and number_bins for each activity respectively in a vectorized
         manner.
         The function adds a column 'value_per_bin' to data directly, thus it doesn't
         return anything.
@@ -350,7 +350,7 @@ class TimeDiscretiser:
             data["drain_per_bin"] = (self.activities.drain / data.number_bins) * -1
             data["value_per_bin"] = data.loc[data["park_id"].isna(), :].apply(
                 lambda x: self.__increase_level_per_bin(
-                    soc_start=x[column], added_soc_per_bin=x["drain_per_bin"], number_bins=x["number_bins"]
+                    soc_start=x[column], added_energy_per_bin=x["drain_per_bin"], number_bins=x["number_bins"]
                 ),
                 axis=1,
             )
@@ -359,7 +359,7 @@ class TimeDiscretiser:
             data["value_per_bin"] = data.loc[data["park_id"].isna(), :].apply(
                 lambda x: self.__increase_level_per_bin(
                     soc_start=x[column],
-                    added_soc_per_bin=x["drain_per_bin"],
+                    added_energy_per_bin=x["drain_per_bin"],
                     number_bins=x["number_bins"],
                 ),
                 axis=1,
@@ -376,7 +376,7 @@ class TimeDiscretiser:
         calculated from the 'available_power' column in data.
         The function __increase_level_per_bin() is applied to the whole data set with
         the respective start battery levels (soc_start), battery level increases
-        (added_soc_per_bin) and number_bins for each activity respectively in a vectorized
+        (added_energy_per_bin) and number_bins for each activity respectively in a vectorized
         manner. Then, battery capacity limitations are enforced applying the
         function __enforce_battery_limit().
         The function adds a column 'value_per_bin' to data directly, thus it doesn't
@@ -393,7 +393,7 @@ class TimeDiscretiser:
             data["charge_per_bin"] = self.activities.available_power * self.time_resolution / 60
             data.loc[data["trip_id"].isna(), "value_per_bin"] = data.loc[data["trip_id"].isna(), :].apply(
                 lambda x: self.__increase_level_per_bin(
-                    soc_start=x[column], added_soc_per_bin=x["charge_per_bin"], number_bins=x["number_bins"]
+                    soc_start=x[column], added_energy_per_bin=x["charge_per_bin"], number_bins=x["number_bins"]
                 ),
                 axis=1,
             )
@@ -407,7 +407,7 @@ class TimeDiscretiser:
             data["charge_per_bin"] = self.activities.available_power * self.time_resolution / 60 * -1
             data.loc[data["trip_id"].isna(), "value_per_bin"] = data.loc[data["trip_id"].isna(), :].apply(
                 lambda x: self.__increase_level_per_bin(
-                    soc_start=x[column], added_soc_per_bin=x["charge_per_bin"], number_bins=x["number_bins"]
+                    soc_start=x[column], added_energy_per_bin=x["charge_per_bin"], number_bins=x["number_bins"]
                 ),
                 axis=1,
             )
@@ -418,14 +418,14 @@ class TimeDiscretiser:
                 * self.user_config["flexestimators"]["minimum_soc"],
             )
 
-    def __increase_level_per_bin(self, soc_start: float, added_soc_per_bin: float, number_bins: int) -> list:
+    def __increase_level_per_bin(self, soc_start: float, added_energy_per_bin: float, number_bins: int) -> list:
         """
         Returns a list of battery level values with length number_bins starting
-        with soc_start with added value of added_soc_per_bin.
+        with soc_start with added value of added_energy_per_bin.
 
         Args:
             soc_start (float): Starting SOC
-            added_soc_per_bin (float): Consecutive (constant) additions to the start
+            added_energy_per_bin (float): Consecutive (constant) additions to the start
             SOC
             number_bins (int): Number of discretized bins (one per timeslot)
 
@@ -435,7 +435,7 @@ class TimeDiscretiser:
         tmp = soc_start
         lst = [tmp]
         for _ in range(number_bins - 1):
-            tmp += added_soc_per_bin
+            tmp += added_energy_per_bin
             lst.append(tmp)
         return lst
 

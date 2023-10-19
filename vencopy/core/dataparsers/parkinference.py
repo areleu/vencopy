@@ -502,6 +502,7 @@ class OvernightSplitter:
         first_trip_acts.index = first_park_acts.index  # Aligning trip indices
         indeces_park_timestamp = first_park_acts["timestamp_start"] == first_trip_acts["timestamp_start"]
         self.activities_raw = self.activities_raw.drop(indeces_park_timestamp[indeces_park_timestamp].index)
+        
         # After removing first parking, set first trip to first activity
         self.activities_raw.loc[
             (self.activities_raw["unique_id"].isin(first_park_acts.loc[indeces_park_timestamp, "unique_id"]))

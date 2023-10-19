@@ -353,7 +353,7 @@ class FlexEstimator:
         self, activity_id: int, park_activities: pd.DataFrame, previous_trip_activities: pd.DataFrame = None
     ) -> pd.DataFrame:
         """
-        Calculate the maximum SOC of the given parking activities for the activity ID given by activity_id. Previous trip
+        Calculate the maximum battery level of the given parking activities for the activity ID given by activity_id. Previous trip
         activities are used as boundary for max_battery_level_start. This function is called multiple times once per
         activity ID. It is then applied to all activities with the given activity ID in a vectorized manner.
 
