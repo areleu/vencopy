@@ -232,7 +232,7 @@ class FlexEstimator:
         parking activities with park_id==1. This method is overwritten in the FlexEstimatorWeek.
 
         Returns:
-            pd.Series: Boolean Series identifying the relevant rows for calculating SOCs for first activities
+            pd.Series: Boolean Series identifying the relevant rows for calculating battery levels for first activities
         """
         return self.activities["is_first_activity"]  # | (self.activities["park_id"] == 1)
 
