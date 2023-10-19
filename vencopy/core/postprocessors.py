@@ -24,7 +24,7 @@ class PostProcessor:
         self.time_resolution = self.user_config["diarybuilders"]["time_resolution"]
         self.time_delta = pd.timedelta_range(start="00:00:00", end="24:00:00", freq=f"{self.time_resolution}T")
         self.time_index = list(self.time_delta)
-        self.vehicle_number = len(profiles.activities.unique_id.unique())
+        self.vehicle_numbers = profiles.activities.groupby(by="trip_start_weekday").unique_id.unique()
 
         self.drain = profiles.drain_weekly
         self.charging_power = profiles.charging_power_weekly
@@ -56,6 +56,9 @@ class PostProcessor:
         return profile / profile.sum()
 
     def __normalize_states(self, profile: pd.Series, base: int) -> pd.Series:
+        return profile / base
+
+    def __normalize_charging_power(self, profile: pd.Series, base: int) -> pd.Series:
         return profile / base
 
     def __write_out_profiles(self, filename_id: str):
@@ -101,8 +104,8 @@ class PostProcessor:
         else:
             self.drain_normalised = self.__normalize_flows(self.input_profiles["drain"])
             self.uncontrolled_charging_normalised = self.__normalize_flows(self.input_profiles["uncontrolled_charging"])
-            self.charging_power_normalised = self.__normalize_states(
-                profile=self.input_profiles["charging_power"], base=self.vehicle_number
+            self.charging_power_normalised = self.__normalize_charging_power(
+                profile=self.input_profiles["charging_power"], base=self.vehicle_numbers
                 )
             self.max_battery_level_normalised = self.__normalize_states(
                 profile=self.input_profiles["max_battery_level"],
