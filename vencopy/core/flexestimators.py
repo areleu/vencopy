@@ -74,6 +74,8 @@ class FlexEstimator:
             activity chain
         """
         print("Starting maximum battery level calculation.")
+        print(f"Calculating maximum battery level for first activities.")
+
         first_activities = self._calculate_max_battery_level_first_activity(start_level=start_level)
         first_parking_activities = first_activities.loc[~first_activities["park_id"].isna(), :]
 
@@ -85,8 +87,8 @@ class FlexEstimator:
         act_temp = pd.concat([first_parking_activities, first_trip_activities])
 
         # Start and end for all trips and parkings in between
-        set_acts = range(int(self.activities["park_id"].max()) + 1)
-        residual_trip_activities = pd.DataFrame()  # Redundant?
+        set_acts = range(1, int(self.activities["park_id"].max()) + 1)
+        subset_trip_activities = pd.DataFrame()  # Redundant?
         for act in set_acts:  # implementable via groupby with actIDs as groups?
             print(f"Calculating maximum battery level for act {act}.")
             trip_rows = (self.activities["trip_id"] == act) & (~self.activities["is_first_activity"])
@@ -94,34 +96,35 @@ class FlexEstimator:
             trip_activities = self.activities.loc[trip_rows, :]
             park_activities = self.activities.loc[park_rows, :]
 
-            # Filtering for the previous trips that have the current activity as
-            # next activity
-            previous_trip_activities = act_temp.loc[
-                (act_temp["next_activity_id"] == act) & (~act_temp["trip_id"].isna()), :
+            # Filtering for the previous park activites that have the current activity as next activity
+            previous_park_activities = act_temp.loc[
+                (act_temp["next_activity_id"] == act) & (~act_temp["park_id"].isna()), :
             ]
 
             # first_activities trips with trip_id==0 (overnight morning splits) are
             # handled in _calculate_max_battery_level_first_activity above
-            if act == 1:
-                residual_trip_activities = self.__calculate_max_battery_level_trip(
-                    activity_id=act, trip_activities=trip_activities, prevParkActs=first_parking_activities
-                )
-                residual_park_activities = self.__calculate_max_battery_level_park(
-                    activity_id=act, park_activities=park_activities, previous_trip_activities=previous_trip_activities
-                )
-            elif act != 0:
-                # Park activities start off a new activity index e.g. parkAct 1 is always before tripAct 1
-                residual_park_activities = self.__calculate_max_battery_level_park(
-                    activity_id=act, park_activities=park_activities, previous_trip_activities=previous_trip_activities
-                )
-                act_temp = pd.concat([act_temp, residual_park_activities], ignore_index=True)
-                prevParkActs = act_temp.loc[(act_temp["next_activity_id"] == act) & (~act_temp["park_id"].isna()), :]
-                residual_trip_activities = self.__calculate_max_battery_level_trip(
-                    activity_id=act, trip_activities=trip_activities, prevParkActs=prevParkActs
-                )
-            act_temp = pd.concat([act_temp, residual_trip_activities], ignore_index=True)
-            previous_trip_activities = residual_trip_activities  # Redundant?
-        self.activities = act_temp.sort_values(by=["unique_id", "activity_id", "park_id"])
+            # if act == 1:
+            #     subset_trip_activities = self.__calculate_max_battery_level_trip(
+            #         activity_id=act, trip_activities=trip_activities, previous_park_activities=first_parking_activities
+            #     )
+            #     subset_park_activities = self.__calculate_max_battery_level_park(
+            #         activity_id=act, park_activities=park_activities, previous_trip_activities=subset_trip_activities
+            #     )
+            # Park activities start off a new activity index e.g. parkAct 1 is always before tripAct 1
+            subset_trip_activities = self.__calculate_max_battery_level_trip(
+                activity_id=act, trip_activities=trip_activities, previous_park_activities=previous_park_activities
+            )
+            act_temp = pd.concat([act_temp, subset_trip_activities], ignore_index=True)
+            previous_trip_activities = act_temp.loc[
+                (act_temp["next_activity_id"] == act) & (~act_temp["trip_id"].isna()), :
+            ]
+            subset_park_activities = self.__calculate_max_battery_level_park(
+                activity_id=act, park_activities=park_activities, previous_trip_activities=previous_trip_activities
+            )
+
+            act_temp = pd.concat([act_temp, subset_park_activities], ignore_index=True)
+            # previous_trip_activities = subset_trip_activities  # Redundant?
+        self.activities = act_temp.sort_values(by=["unique_id", "activity_id", "trip_id"])
         return self.activities.loc[
             self.activities["is_last_activity"], ["unique_id", "max_battery_level_end"]
         ].set_index("unique_id")
@@ -137,30 +140,35 @@ class FlexEstimator:
         first.
         """
         print("Starting minimum battery level calculation.")
-        print(f"Calculate minimum battery level for act {int(self.activities.activity_id.max())}.")
+        print(f"Calculate minimum battery level for last activities.")
         last_activities = self._calculate_min_battery_level_last_activity(end_level=end_level)
         act_temp = last_activities
         # Start and end for all trips and parkings starting from the last
         # activities, then looping to earlier activities
-        set_acts = range(int(self.activities["park_id"].max()) - 1, -1, -1)
-        for act in set_acts:
+        n_act = int(self.activities["park_id"].max())
+        for act in range(n_act, -1, -1):
             print(f"Calculate minimum battery level for act {act}.")
             trip_rows = (self.activities["trip_id"] == act) & (~self.activities["is_last_activity"])
             park_rows = (self.activities["park_id"] == act) & (~self.activities["is_last_activity"])
             trip_activities = self.activities.loc[trip_rows, :]
             park_activities = self.activities.loc[park_rows, :]
-            next_park_activities = act_temp.loc[~act_temp["park_id"].isna(), :]
 
-            residual_trip_activities = self.__calculate_min_battery_level_trip(
+            next_trip_activities = act_temp.loc[
+                (act_temp["previous_activity_id"] == act) & (~act_temp["trip_id"].isna()), :
+            ]
+            if act != n_act:
+                subset_park_activities = self.__calculate_min_battery_level_park(
+                    activity_id=act, park_activities=park_activities, next_trip_activities=next_trip_activities
+                )
+                act_temp = pd.concat([act_temp, subset_park_activities], ignore_index=True)
+            next_park_activities = act_temp.loc[
+                (act_temp["previous_activity_id"] == act) & (~act_temp["park_id"].isna()), :
+            ]
+            subset_trip_activities = self.__calculate_min_battery_level_trip(
                 activity_id=act, trip_activities=trip_activities, next_park_activities=next_park_activities
             )
-            act_temp = pd.concat([act_temp, residual_trip_activities], ignore_index=True)
-            next_trip_activities = act_temp.loc[~act_temp["trip_id"].isna(), :]
-            residual_park_activities = self.__calculate_min_battery_level_park(
-                activity_id=act, park_activities=park_activities, next_trip_activities=next_trip_activities
-            )
-            act_temp = pd.concat([act_temp, residual_park_activities], ignore_index=True)
-        self.activities = act_temp.sort_values(by=["unique_id", "activity_id", "park_id"], ignore_index=True)
+            act_temp = pd.concat([act_temp, subset_trip_activities], ignore_index=True)
+        self.activities = act_temp.sort_values(by=["unique_id", "activity_id", "trip_id"], ignore_index=True)
         return self.activities.loc[
             self.activities["is_first_activity"], ["unique_id", "min_battery_level_start"]
         ].set_index("unique_id")
@@ -268,7 +276,7 @@ class FlexEstimator:
         return last_activities
 
     def __calculate_max_battery_level_trip(
-        self, activity_id: int, trip_activities: pd.DataFrame, prevParkActs: pd.DataFrame = None
+        self, activity_id: int, trip_activities: pd.DataFrame, previous_park_activities: pd.DataFrame = None
     ) -> pd.DataFrame:
         # Setting trip activity battery start level to battery end level of previous parking
         # Index setting of trip activities to be updated
@@ -278,7 +286,7 @@ class FlexEstimator:
         # Index setting of previous park activities as basis for the update
         previous_park_ids = trip_activities.loc[:, "previous_activity_id"]
         multi_index_park = [(id, None, act) for id, act in zip(active_unique_ids, previous_park_ids)]
-        indeces_previous_park_activities = prevParkActs.set_index(["unique_id", "trip_id", "park_id"])
+        indeces_previous_park_activities = previous_park_activities.set_index(["unique_id", "trip_id", "park_id"])
         # Calculation of battery level at start and end of trip
         indeces_trip_activities.loc[multi_index_trip, "max_battery_level_start"] = indeces_previous_park_activities.loc[
             multi_index_park, "max_battery_level_end"
@@ -312,6 +320,7 @@ class FlexEstimator:
         multi_index_trip = [(id, activity_id, None) for id in active_unique_ids]
         # Index the previous park activity via integer index because loc park indices vary
         indeces_trip_activities = trip_activities.set_index(["unique_id", "trip_id", "park_id"])
+
         next_park_ids = trip_activities.loc[:, "next_activity_id"]
         multi_index_park = [(id, None, act) for id, act in zip(active_unique_ids, next_park_ids)]
         indeces_next_park_activities = next_park_activities.set_index(["unique_id", "trip_id", "park_id"])

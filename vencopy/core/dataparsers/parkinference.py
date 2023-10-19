@@ -237,7 +237,6 @@ class ParkInference:
                 "trip_id",
                 "trip_distance",
                 "travel_time",
-                "trip_start_weekday",
                 "trip_is_intermodal",
             ],
         ] = pd.NA
