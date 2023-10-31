@@ -134,7 +134,9 @@ class TimeDiscretiser:
         self.quantum = pd.Timedelta(value=1, unit="min")
         self.time_resolution = time_resolution  # e.g. 15 min
         self.is_week = is_week
-        self.number_time_slots = int(self.__number_slots_per_interval(interval=pd.Timedelta(value=self.time_resolution, unit="min")))
+        self.number_time_slots = int(
+            self.__number_slots_per_interval(interval=pd.Timedelta(value=self.time_resolution, unit="min"))
+        )
         if is_week:
             self.time_delta = pd.timedelta_range(start="00:00:00", end="168:00:00", freq=f"{self.time_resolution}T")
             self.weekdays = self.activities["weekday_string"].unique()
@@ -207,7 +209,9 @@ class TimeDiscretiser:
         if self.column_to_discretise == "drain":
             self.data_to_discretise["drain"] = self.data_to_discretise["drain"].fillna(0)
         elif self.column_to_discretise == "uncontrolled_charging":
-            self.data_to_discretise["uncontrolled_charging"] = self.data_to_discretise["uncontrolled_charging"].fillna(0)
+            self.data_to_discretise["uncontrolled_charging"] = self.data_to_discretise["uncontrolled_charging"].fillna(
+                0
+            )
         elif self.column_to_discretise == "residual_need":
             self.data_to_discretise["residual_need"] = self.data_to_discretise["residual_need"].fillna(0)
 
@@ -218,7 +222,9 @@ class TimeDiscretiser:
         self.data_to_discretise["timestamp_start_corrected"] = self.data_to_discretise["timestamp_start"].dt.round(
             f"{self.time_resolution}min"
         )
-        self.data_to_discretise["timestamp_end_corrected"] = self.data_to_discretise["timestamp_end"].dt.round(f"{self.time_resolution}min")
+        self.data_to_discretise["timestamp_end_corrected"] = self.data_to_discretise["timestamp_end"].dt.round(
+            f"{self.time_resolution}min"
+        )
 
     def __identify_bin_shares(self):
         """
@@ -293,7 +299,7 @@ class TimeDiscretiser:
 
     def __value_non_linear_level(self):
         """
-        Calculates the bin values dynamically (e.g. for the SoC). It returns a
+        Calculates the bin values dynamically (e.g. for the battery level). It returns a
         non-linearly increasing list of values capped to upper and lower battery
         capacity limitations. The list of values is alloacted to bins in the
         function __allocate() in the same way as for value-per-bins. Operates
@@ -312,7 +318,7 @@ class TimeDiscretiser:
         battery level.
         The function __increase_level_per_bin() is applied to the whole data set with
         the respective start battery levels (soc_start), battery level increases
-        (added_soc_per_bin) and number_bins for each activity respectively in a vectorized
+        (added_energy_per_bin) and number_bins for each activity respectively in a vectorized
         manner.
         The function adds a column 'value_per_bin' to data directly, thus it doesn't
         return anything.
@@ -328,7 +334,7 @@ class TimeDiscretiser:
             data["drain_per_bin"] = (self.activities.drain / data.number_bins) * -1
             data["value_per_bin"] = data.loc[data["park_id"].isna(), :].apply(
                 lambda x: self.__increase_level_per_bin(
-                    soc_start=x[column], added_soc_per_bin=x["drain_per_bin"], number_bins=x["number_bins"]
+                    soc_start=x[column], added_energy_per_bin=x["drain_per_bin"], number_bins=x["number_bins"]
                 ),
                 axis=1,
             )
@@ -337,7 +343,7 @@ class TimeDiscretiser:
             data["value_per_bin"] = data.loc[data["park_id"].isna(), :].apply(
                 lambda x: self.__increase_level_per_bin(
                     soc_start=x[column],
-                    added_soc_per_bin=x["drain_per_bin"],
+                    added_energy_per_bin=x["drain_per_bin"],
                     number_bins=x["number_bins"],
                 ),
                 axis=1,
@@ -354,7 +360,7 @@ class TimeDiscretiser:
         calculated from the 'available_power' column in data.
         The function __increase_level_per_bin() is applied to the whole data set with
         the respective start battery levels (soc_start), battery level increases
-        (added_soc_per_bin) and number_bins for each activity respectively in a vectorized
+        (added_energy_per_bin) and number_bins for each activity respectively in a vectorized
         manner. Then, battery capacity limitations are enforced applying the
         function __enforce_battery_limit().
         The function adds a column 'value_per_bin' to data directly, thus it doesn't
@@ -371,7 +377,7 @@ class TimeDiscretiser:
             data["charge_per_bin"] = self.activities.available_power * self.time_resolution / 60
             data.loc[data["trip_id"].isna(), "value_per_bin"] = data.loc[data["trip_id"].isna(), :].apply(
                 lambda x: self.__increase_level_per_bin(
-                    soc_start=x[column], added_soc_per_bin=x["charge_per_bin"], number_bins=x["number_bins"]
+                    soc_start=x[column], added_energy_per_bin=x["charge_per_bin"], number_bins=x["number_bins"]
                 ),
                 axis=1,
             )
@@ -385,7 +391,7 @@ class TimeDiscretiser:
             data["charge_per_bin"] = self.activities.available_power * self.time_resolution / 60 * -1
             data.loc[data["trip_id"].isna(), "value_per_bin"] = data.loc[data["trip_id"].isna(), :].apply(
                 lambda x: self.__increase_level_per_bin(
-                    soc_start=x[column], added_soc_per_bin=x["charge_per_bin"], number_bins=x["number_bins"]
+                    soc_start=x[column], added_energy_per_bin=x["charge_per_bin"], number_bins=x["number_bins"]
                 ),
                 axis=1,
             )
@@ -396,15 +402,14 @@ class TimeDiscretiser:
                 * self.user_config["flexestimators"]["minimum_soc"],
             )
 
-    def __increase_level_per_bin(self, soc_start: float, added_soc_per_bin: float, number_bins: int) -> list:
+    def __increase_level_per_bin(self, soc_start: float, added_energy_per_bin: float, number_bins: int) -> list:
         """
         Returns a list of battery level values with length number_bins starting
-        with soc_start with added value of added_soc_per_bin.
+        with soc_start with added value of added_energy_per_bin.
 
         Args:
-            soc_start (float): Starting SOC
-            added_soc_per_bin (float): Consecutive (constant) additions to the start
-            SOC
+            soc_start (float): Starting battery SoC
+            added_energy_per_bin (float): Consecutive (constant) additions to the start battery energy level
             number_bins (int): Number of discretized bins (one per timeslot)
 
         Returns:
@@ -413,7 +418,7 @@ class TimeDiscretiser:
         tmp = soc_start
         lst = [tmp]
         for _ in range(number_bins - 1):
-            tmp += added_soc_per_bin
+            tmp += added_energy_per_bin
             lst.append(tmp)
         return lst
 
@@ -442,18 +447,26 @@ class TimeDiscretiser:
         self.__uncontrolled_charging_driving()
 
     def __uncontrolled_charging_parking(self):
-        self.data_to_discretise["timestamp_end_uncontrolled_charging"] = pd.to_datetime(self.data_to_discretise["timestamp_end_uncontrolled_charging"])
+        self.data_to_discretise["timestamp_end_uncontrolled_charging"] = pd.to_datetime(
+            self.data_to_discretise["timestamp_end_uncontrolled_charging"]
+        )
         self.data_to_discretise["time_delta_uncontrolled_chaging"] = (
             self.data_to_discretise["timestamp_end_uncontrolled_charging"] - self.data_to_discretise["timestamp_start"]
         )
         self.data_to_discretise["number_full_bins_uncontrolled_charging"] = (
-            self.data_to_discretise.loc[self.data_to_discretise["trip_id"].isna(), "time_delta_uncontrolled_chaging"].dt.total_seconds()
+            self.data_to_discretise.loc[
+                self.data_to_discretise["trip_id"].isna(), "time_delta_uncontrolled_chaging"
+            ].dt.total_seconds()
             / 60
             / self.time_resolution
         ).astype(int)
-        self.data_to_discretise["value_per_bin"] = self.data_to_discretise.loc[self.data_to_discretise["trip_id"].isna(), :].apply(
+        self.data_to_discretise["value_per_bin"] = self.data_to_discretise.loc[
+            self.data_to_discretise["trip_id"].isna(), :
+        ].apply(
             lambda x: self.__charge_rate_per_bin(
-                charging_rate=x["available_power"], charged_volume=x["uncontrolled_charging"], number_bins=x["number_bins"]
+                charging_rate=x["available_power"],
+                charged_volume=x["uncontrolled_charging"],
+                number_bins=x["number_bins"],
             ),
             axis=1,
         )
@@ -498,13 +511,15 @@ class TimeDiscretiser:
         """
         Identifies every first bin for each activity (trip or parking).
         """
-        self.data_to_discretise["timestamp_start_corrected"] = self.data_to_discretise["timestamp_start_corrected"].apply(
-            lambda x: pd.to_datetime(str(x))
-        )
+        self.data_to_discretise["timestamp_start_corrected"] = self.data_to_discretise[
+            "timestamp_start_corrected"
+        ].apply(lambda x: pd.to_datetime(str(x)))
         day_start = self.data_to_discretise["timestamp_start_corrected"].apply(
             lambda x: pd.Timestamp(year=x.year, month=x.month, day=x.day)
         )
-        self.data_to_discretise["dailyTimeDeltaStart"] = self.data_to_discretise["timestamp_start_corrected"] - day_start
+        self.data_to_discretise["dailyTimeDeltaStart"] = (
+            self.data_to_discretise["timestamp_start_corrected"] - day_start
+        )
         self.data_to_discretise["startTimeFromMidnightSeconds"] = self.data_to_discretise["dailyTimeDeltaStart"].apply(
             lambda x: x.seconds
         )
@@ -566,7 +581,9 @@ class TimeDiscretiser:
         indeces_no_length_activities = self.data_to_discretise[
             self.data_to_discretise.activity_duration == pd.Timedelta(0)
         ].index.to_list()
-        self.ids_with_no_length_activities = self.data_to_discretise.loc[indeces_no_length_activities]["unique_id"].unique()
+        self.ids_with_no_length_activities = self.data_to_discretise.loc[indeces_no_length_activities][
+            "unique_id"
+        ].unique()
         self.data_to_discretise = self.data_to_discretise.drop(indeces_no_length_activities)
         end_length = len(self.data_to_discretise)
         dropped_activities = start_length - end_length

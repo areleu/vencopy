@@ -26,7 +26,7 @@ adapted to other travel survey numeric codes via the config-file. By applying a 
 entries representing motorised trips. The last operation in the parsing of raw travel survey data sets is a harmonization step.
 
 
-Charging infrastructure allocation: :ref:`gridmodeler`
+Charging infrastructure allocation: :ref:`gridmodeller`
 ---------------------------------------------------
 The charging infrastructure allocation makes use of a basic charging infrastructure model, which assumes the availability of charging stations when
 vehicles are parked. Since the analytical focus of the framework lies on a regional level (NUTS1-NUTS0), the infrastructure model is kept simple in

@@ -38,7 +38,7 @@ dataparsers:
       KiD: "Car" # options: "Light motorised vehicle", "Car", "Van", "Truck", "Tractor unit", "Coach", "Other tractor unit", "Agriculture and forestry tractor unit", "Other"
 
 
-gridmodelers:
+gridmodellers:
   minimum_parking_time: 900 # charging power is set to zero if parking time lower than <minimum_parking_time> in seconds
   grid_model: "simple" # Options are "simple" and "probability"
   losses: True # Take into account charging station losses

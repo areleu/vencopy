@@ -76,9 +76,9 @@ class Aggregator:
         self.dev_config = dev_config
 
     def __basic_aggregation(self) -> pd.Series:
-        if self.user_config["profileaggregators"]['aggregation_timespan'] == "daily":
+        if self.user_config["profileaggregators"]["aggregation_timespan"] == "daily":
             self._aggregate_daily()
-        elif self.user_config['profileaggregators']['aggregation_timespan'] == "weekly":
+        elif self.user_config["profileaggregators"]["aggregation_timespan"] == "weekly":
             self._aggregate_weekly()
             self.__compose_week_profile()
         else:
@@ -98,7 +98,9 @@ class Aggregator:
                 # weekday_subset = weekday_subset.drop("trip_start_weekday", axis=1)
                 # aggregate activities_weekday to one profile by multiplying by weights
                 weight_sum = sum(self.activities_weekday.trip_weight)
-                daily_subset_weight = self.activities_weekday.apply(lambda x: x * self.activities_weekday.trip_weight.values)
+                daily_subset_weight = self.activities_weekday.apply(
+                    lambda x: x * self.activities_weekday.trip_weight.values
+                )
                 daily_subset_weight = daily_subset_weight.drop("trip_weight", axis=1)
                 daily_subset_weight_agg = daily_subset_weight.sum() / weight_sum
                 self.daily_profile = daily_subset_weight_agg
@@ -170,9 +172,9 @@ class Aggregator:
             weekday_subset = weekday_subset.drop(columns=["trip_start_weekday", "trip_weight"])
             weekday_subset = weekday_subset.convert_dtypes()
             if self.profile_name == "max_battery_level":
-                self.weekday_profiles.iloc[idate - 1] = weekday_subset.quantile(1 - (alpha / 100))
-            elif self.profile_name == "min_battery_level":
                 self.weekday_profiles.iloc[idate - 1] = weekday_subset.quantile(alpha / 100)
+            elif self.profile_name == "min_battery_level":
+                self.weekday_profiles.iloc[idate - 1] = weekday_subset.quantile(1 - (alpha / 100))
             else:
                 raise NotImplementedError(f"An unknown profile {self.profile_name} was selected.")
 

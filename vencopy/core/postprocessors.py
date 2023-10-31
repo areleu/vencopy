@@ -17,7 +17,6 @@ class PostProcessor:
     This class contains functions to post process aggregated venco.py profiles. As of now (August 2023), the class
     contains cloning weekly profiles to year and normalizing it with different normalization bases.
     """
-
     def __init__(self, configs: dict, profiles: ProfileAggregator):
         self.user_config = configs["user_config"]
         self.dev_config = configs["dev_config"]
@@ -25,6 +24,7 @@ class PostProcessor:
         self.time_resolution = self.user_config["diarybuilders"]["time_resolution"]
         self.time_delta = pd.timedelta_range(start="00:00:00", end="24:00:00", freq=f"{self.time_resolution}T")
         self.time_index = list(self.time_delta)
+        self.vehicle_numbers = [len(_) for _ in profiles.activities.groupby(by="trip_start_weekday").unique_id.unique().to_list()]
 
         self.drain = profiles.drain_weekly
         self.charging_power = profiles.charging_power_weekly
@@ -57,6 +57,19 @@ class PostProcessor:
 
     def __normalize_states(self, profile: pd.Series, base: int) -> pd.Series:
         return profile / base
+
+    def __normalize_charging_power(self, profile: pd.Series, base: int) -> pd.Series:
+        profile_normalised = []
+        for day in range(0, 7):
+            start = day * len(self.time_delta)
+            end = start + len(self.time_delta) - 1
+            profile_day = profile[start:end] / base[day]
+            if profile_normalised == []:
+                profile_normalised = profile_day.to_list()
+            else:
+                profile_normalised.extend(profile_day.to_list())
+        profile = pd.Series(profile_normalised)
+        return profile
 
     def __write_out_profiles(self, filename_id: str):
         self.__write_output(profile_name="drain", profile=self.drain_normalised, filename_id=filename_id)
@@ -101,9 +114,9 @@ class PostProcessor:
         else:
             self.drain_normalised = self.__normalize_flows(self.input_profiles["drain"])
             self.uncontrolled_charging_normalised = self.__normalize_flows(self.input_profiles["uncontrolled_charging"])
-            self.charging_power_normalised = self.__normalize_states(
-                profile=self.input_profiles["charging_power"], base=self.user_config["gridmodelers"]["rated_power_simple"]
-            )
+            self.charging_power_normalised = self.__normalize_charging_power(
+                profile=self.input_profiles["charging_power"], base=self.vehicle_numbers
+                )
             self.max_battery_level_normalised = self.__normalize_states(
                 profile=self.input_profiles["max_battery_level"],
                 base=self.user_config["flexestimators"]["battery_capacity"],
@@ -112,11 +125,6 @@ class PostProcessor:
                 profile=self.input_profiles["min_battery_level"],
                 base=self.user_config["flexestimators"]["battery_capacity"],
             )
-            if self.user_config["gridmodelers"]["grid_model"] != "simple":
-                raise(TypeError(
-                    f"You selected a grid model where normalization is not meaningful. For normalization, the"
-                    f" rated power of {self.user_config['gridmodelers']['rated_power_simple']}kW was used."
-                ))
             if self.user_config["global"]["write_output_to_disk"]["processor_output"]["normalised_annual_profiles"]:
                 self.__write_out_profiles(filename_id="output_postprocessor_normalised")
             print("Run finished.")

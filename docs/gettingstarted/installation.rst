@@ -12,11 +12,11 @@ Requirements and boundary conditions
 -------------------------------------
 
 venco.py runs on Unix and Windows-based operating systems. It requires an
-installed version of python and the package, dependency and environment
-management tool conda as well as access to the internet for setting up the
-environment (downloading the required packages). Versioning is based on major,
-minor and fix (X.Y.Z) changes versioning system via git-labels. You can use
-venco.py as a user or contribute to the codebase and documentation as
+installed version of Python and the package, dependency and environment
+management tool conda as well as internet access for setting up the
+environment (downloading the required packages). Versioning is based on 
+semantic versioning (X.Y.Z) changes versioning system via git-labels. You can 
+use venco.py as a user or contribute to the codebase and documentation as
 developer. Depending on that choice the installation and setup differs.
 
 .. image:: ../figures/applicationcontext.drawio.png
@@ -61,7 +61,7 @@ venco.py user folder will now be created. It will look like this:
     │   │   ├── parkinference
     │   │   ├── parseMiD
     │   │   └── parseKiD
-    │   ├── gridmodeler
+    │   ├── gridmodeller
     │   ├── flexestimator
     │   ├── diarybuilder
     │   ├── profileaggregator

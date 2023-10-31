@@ -42,9 +42,7 @@ class ParseMiD(IntermediateParsing):
 
         :return: None
         """
-        replacement_dict = self._create_replacement_dict(
-            self.dataset, self.dev_config["dataparsers"]["data_variables"]
-        )
+        replacement_dict = self._create_replacement_dict(self.dataset, self.dev_config["dataparsers"]["data_variables"])
         activities_renamed = self.trips.rename(columns=replacement_dict)
         if self.dataset == "MiD08":
             activities_renamed["household_person_id"] = (
@@ -109,7 +107,6 @@ class ParseMiD(IntermediateParsing):
         self._filter(filters=self.filters)
         self._filter_consistent_hours(dataset=self.trips)
         self.activities = self.park_inference.add_parking_rows(trips=self.trips)
-        self._cleanup_dataset(dataset=self.activities)
         self.write_output()
         print("Parsing MiD dataset completed.")
         return self.activities

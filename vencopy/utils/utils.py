@@ -93,7 +93,7 @@ def create_output_folders(configs: dict):
     main_dir = "output"
     if not os.path.exists(Path(root / main_dir)):
         os.mkdir(Path(root / main_dir))
-    sub_dirs = ("dataparser", "diarybuilder", "gridmodeler", "flexestimator", "profileaggregator", "postprocessor")
+    sub_dirs = ("dataparser", "diarybuilder", "gridmodeller", "flexestimator", "profileaggregator", "postprocessor")
     for sub_dir in sub_dirs:
         if not os.path.exists(Path(root / main_dir / sub_dir)):
             os.mkdir(Path(root / main_dir / sub_dir))

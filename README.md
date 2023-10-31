@@ -7,7 +7,7 @@
 ![Gitter](https://img.shields.io/badge/chat-on%20Gitter-blue?color=%23009d94&link=https%3A%2F%2Fapp.gitter.im%2F%23%2Froom%2F%23vencopy_community%3Agitter.im)
 
 - Authors: Niklas Wulff, Fabia Miorelli
-- Contact: niklas.wulff@dlr.de
+- Contact: vencopy@dlr.de
 
 # Contents
 
@@ -62,5 +62,5 @@ sphinx-build -b html ./docs/ ./build/
 ## Want to contribute?
 
 Great, welcome on the venco.py team! Please read our contribute section in the documentation and reach out to Niklas
-(niklas.wulff@dlr.de). If experience difficulties on set up or have other technical questions, join our
+(niklas.wulff@dlr.de). If you experience difficulties on set up or have other technical questions, join our
 [gitter community](https://gitter.im/vencopy/community)

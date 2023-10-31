@@ -30,7 +30,7 @@ Classes Input-Output
 
  * :ref:`dataparser`
  * :ref:`diarybuilder`
- * :ref:`gridmodeler`
+ * :ref:`gridmodeller`
  * :ref:`flexestimator`
  * :ref:`profileaggregator`
  * :ref:`postprocessor`

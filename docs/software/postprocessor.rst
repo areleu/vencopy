@@ -38,5 +38,5 @@ PostProcessor Output
  * Electric battery drain (.csv)
  * Available charging power (.csv)
  * Uncontrolled charging profile (.csv)
- * Maximum SoC (.csv)
- * Minimum SoC (.csv)
+ * Maximum battery energy level (.csv)
+ * Minimum battery energy level (.csv)
