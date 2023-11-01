@@ -14,16 +14,12 @@ import numpy as np
 import pandas as pd
 
 
-<<<<<<< HEAD
-from ...utils.utils import create_file_name, write_out, return_lowest_level_dict_keys, return_lowest_level_dict_values
-=======
 from vencopy.utils.utils import (
     create_file_name,
     write_out,
     return_lowest_level_dict_keys,
     return_lowest_level_dict_values,
 )
->>>>>>> main
 
 
 class DataParser:
