@@ -423,10 +423,10 @@ class DataParser:
         :return: None
         """
         len_data = sum(filter_data.all(axis="columns"))
-        bool_dict = {i_column: sum(filter_data[i_column]) for i_column in filter_data}
-        print("The following number of observations were taken into account after filtering:")
-        pprint.pprint(bool_dict)
-        # print(f'{filter_data["average_speed"].sum()} trips have plausible average speeds')
+        # bool_dict = {i_column: sum(filter_data[i_column]) for i_column in filter_data}
+        # print("The following number of observations were taken into account after filtering:")
+        # pprint.pprint(bool_dict)
+        # print(f'{filter_data["averageSpeed"].sum()} trips have plausible average speeds')
         # print(f'{(~filter_data["tripDoesNotOverlap"]).sum()} trips overlap and were thus filtered out')
         print(f"All filters combined yielded that a total of {len_data} trips are taken into account.")
         print(f"This corresponds to {len_data / len(filter_data)* 100} percent of the original data.")
