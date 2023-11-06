@@ -29,8 +29,8 @@ TripDiaryBuilder Output
 ---------------------------------------------------
 **Output Functions:**
 
- * vpProfile = ProfileAggregator(configs=configs, activities=vpDiary.activities, profiles=vpDiary)
- * vpProfile.aggregate_profiles()
+ * profile = ProfileAggregator(configs=configs, activities=diary.activities, profiles=diary)
+ * profile.aggregate_profiles()
 
 
 **Disk Files:**

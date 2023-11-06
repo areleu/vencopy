@@ -27,14 +27,14 @@ TripDiaryBuilder Output
 ---------------------------------------------------
 **Output Functions:**
 
- * vpDiary = DiaryBuilder(configs=configs, activities=vpFlex.activities)
- * vpDiary.create_diaries()
+ * diary = DiaryBuilder(configs=configs, activities=flex.activities)
+ * diary.create_diaries()
 
 
 **Disk Files:**
 
- * Electric battery drain (.csv)
- * Available charging power (.csv)
- * Uncontrolled charging profile (.csv)
- * Maximum SoC (.csv)
- * Minimum SoC (.csv)
+ * Electric battery drain (.csv) `drain`
+ * Available charging power (.csv) `charging_power`
+ * Uncontrolled charging profile (.csv) `uncontrolled_charging`
+ * Maximum battery energy level (.csv) `max_battery_level`
+ * Minimum battery energy level (.csv) `min_battery_level`

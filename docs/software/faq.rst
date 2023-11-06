@@ -15,9 +15,7 @@ Frequently Asked Questions (FAQs)
 2. Which aggregation methods are employed to go from single profiles to fleet profiles? Currently, to go from single profiles to a fleet profile,
    venco.py employs an averaging method and a security parameter *alpha*. The *alpha* value is a percentage value that selects the nth highest value
    for each hour of the minimum and maximum profiles. For example, if *alpha* equals 10 (10 is the default value), the 10% highest (respectively 10%
-   smallest) values are disregarded in the calculation of the maximum and minimum state of charge of the fleet battery. Additional information on the
-   influence of aggregation methods on EV fleet battery can be found here :ref:`Aggregating load shifting potentials of electric vehicles for energy
-   system models <https://ieeexplore.ieee.org/document/9221974>`.
+   smallest) values are disregarded in the calculation of the maximum and minimum state of charge of the fleet battery. 
 
 
 3. Is the the MiD dataset open-access? The MiD dataset(s) is not open-access but can be requested for scientific purposes :ref:`here

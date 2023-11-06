@@ -42,13 +42,13 @@ class DiaryBuilder:
         which are separatly discretised (interdependence at single vehicle level of drain, charging power etc i.e.
         no charging available when driving).
         """
-        self._correct_timestamps(dataset=self.activities, time_resolution=self.time_resolution)
-        self._removes_zero_length_activities(dataset=self.activities)
+        self.activities = self._correct_timestamps(dataset=self.activities, time_resolution=self.time_resolution)
+        self.activities = self._removes_zero_length_activities(dataset=self.activities)
 
     @staticmethod
     def _correct_timestamps(dataset, time_resolution) -> pd.DataFrame:
         """
-        Rounds timestamps to predifined resolution.
+        Rounds timestamps to predefined resolution.
         """
         dataset["timestamp_start_corrected"] = dataset["timestamp_start"].dt.round(f"{time_resolution}min")
         dataset["timestamp_end_corrected"] = dataset["timestamp_end"].dt.round(f"{time_resolution}min")
@@ -665,14 +665,14 @@ class TimeDiscretiser:
         self.data_to_discretise = profile
         self.method = method
         print(f"Starting to discretise {self.column_to_discretise}.")
-        start_time_diaryBuilder = time.time()
+        start_time_diary_builder = time.time()
         self.__dataset_cleanup()
         self.__identify_bin_shares()
         self.__allocate_bin_shares()
         if self.user_config["global"]["write_output_to_disk"]["diary_output"]:
             self.__write_output()
         print(f"Discretisation finished for {self.column_to_discretise}.")
-        elapsed_time_diaryBuilder = time.time() - start_time_diaryBuilder
-        print(f"Needed time to discretise {self.column_to_discretise}: {elapsed_time_diaryBuilder}.")
+        elapsed_time_diary_builder = time.time() - start_time_diary_builder
+        print(f"Needed time to discretise {self.column_to_discretise}: {elapsed_time_diary_builder}.")
         self.column_to_discretise = None
         return self.discrete_data

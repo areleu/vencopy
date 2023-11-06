@@ -36,16 +36,18 @@ FlexEstimator Output
 ---------------------------------------------------
 **Output Functions:**
 
-* vpFlex = FlexEstimator(configs=configs, activities=vpGrid.activities)
-* vpFlex.estimate_technical_flexibility_through_iteration()
+* flex = FlexEstimator(configs=configs, activities=grid.activities)
+* flex.estimate_technical_flexibility_through_iteration()
+
 
 **Disk Files:**
 
-* Profile for connection capacity of the fleet `charging_power`
-* Profile for uncontrolled charging `uncontrolled_charging`
-* Profile for electric demand `drain`
-* Minimum state-of-charge (SoC) battery profile `soc_min`
-* Maximum state-of-charge (SoC) battery profile `soc_max`
+ * Electric battery drain (.csv) `drain`
+ * Available charging power (.csv) `charging_power`
+ * Uncontrolled charging profile (.csv) `uncontrolled_charging`
+ * Maximum battery energy level (.csv) `max_battery_level`
+ * Minimum battery energy level (.csv) `min_battery_level`
+
 
 
 Output Profiles
