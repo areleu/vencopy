@@ -30,9 +30,9 @@ venco.py is developed at the `Department of Energy Systems Analysis <https://www
 
 In a nutshell, with venco.py you can:
 
-- :ref:`simulate different charging strategies (uncontrolled, controlled charging , V2G) for EV fleets <software/flexEstimator>`
-- :ref:`model different grid infrastructure options (home charging, work charging, ..) <software/gridModeler>`
-- :ref:`analyse charging behaviour based on socio-economic data and trip purpose <software/dataParser>`
+- :ref:`simulate different charging strategies (uncontrolled, controlled charging , V2G) for EV fleets <software/flexestimator>`
+- :ref:`model different grid infrastructure options (home charging, work charging, ..) <software/gridmodeller>`
+- :ref:`analyse charging behaviour based on socio-economic data and trip purpose <software/dataparser>`
 
 
 

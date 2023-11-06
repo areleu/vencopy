@@ -9,7 +9,7 @@ Architecture Documentation
 General structure of the framework
 ---------------------------------------------------
 
-The figure below shows the detailed venco.py components in a developer diagram. The four components - implemented as 
+The figure below shows the detailed venco.py components in a developer diagram. The main components - implemented as 
 Python classes - DataParser, DiaryBuilder, GridModeller, FlexEstimator, ProfileAggregator and PostProcessor can be 
 clearly distinguished. A fifth component, Evaluator, used to create the plots for this work is not shown in the figure
 as it is not needed to calculate results from venco.py. A brief description of the classes is presented below. For a more

@@ -28,13 +28,12 @@ GridModeller Output
 ---------------------------------------------------
 **Output Functions:**
 
-* vpGrid = GridModeller(configs=configs, activities=vpData.activities)
-* vpGrid.assign_grid()
+* grid = GridModeller(configs=configs, activities=data.activities)
+* grid.assign_grid()
 
 **Disk File:**
 
 * Activity dataset including rated and available charging power for all vehicles (.csv)
-
 
 
 

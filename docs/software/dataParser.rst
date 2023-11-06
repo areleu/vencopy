@@ -40,5 +40,5 @@ DataParser Output
 ---------------------------------------------------
 **Output Functions:**
 
-* vpData = parse_data(configs=configs)
-* vpData.process()
+* data = parse_data(configs=configs)
+* data.process()

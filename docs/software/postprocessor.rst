@@ -28,9 +28,9 @@ PostProcessor Output
 ---------------------------------------------------
 **Output Functions:**
 
- * vpPost = PostProcessor(configs=configs, profiles=vpProfile)
- * vpPost.create_annual_profiles()
- * vpPost.normalise()
+ * post = PostProcessor(configs=configs, profiles=profile)
+ * post.create_annual_profiles()
+ * post.normalise()
 
 
 **Disk Files:**
