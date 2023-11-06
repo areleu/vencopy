@@ -50,7 +50,7 @@ class ProfileAggregator:
     def aggregate_profiles(self):
         self.drain_weekly = self.aggregator.perform_aggregation(profile=self.drain, profile_name="drain", method="flow")
         self.charging_power_weekly = self.aggregator.perform_aggregation(
-            profile=self.charging_power, profile_name="charge_power", method="flow"
+            profile=self.charging_power, profile_name="charging_power", method="flow"
         )
         self.uncontrolled_charging_weekly = self.aggregator.perform_aggregation(
             profile=self.uncontrolled_charging, profile_name="uncontrolled_charge", method="flow"

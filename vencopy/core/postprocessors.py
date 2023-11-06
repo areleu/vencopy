@@ -74,9 +74,9 @@ class PostProcessor:
     def __write_out_profiles(self, filename_id: str):
         self.__write_output(profile_name="drain", profile=self.drain_normalised, filename_id=filename_id)
         self.__write_output(
-            profile_name="uncontrolled_charge", profile=self.uncontrolled_charging_normalised, filename_id=filename_id
+            profile_name="uncontrolled_charging", profile=self.uncontrolled_charging_normalised, filename_id=filename_id
         )
-        self.__write_output(profile_name="charge_power", profile=self.charging_power_normalised, filename_id=filename_id)
+        self.__write_output(profile_name="charging_power", profile=self.charging_power_normalised, filename_id=filename_id)
         self.__write_output(profile_name="max_battery_level", profile=self.max_battery_level_normalised, filename_id=filename_id)
         self.__write_output(profile_name="min_battery_level", profile=self.min_battery_level_normalised, filename_id=filename_id)
 
