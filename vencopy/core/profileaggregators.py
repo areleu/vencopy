@@ -9,8 +9,8 @@ import time
 from pathlib import Path
 import pandas as pd
 
-from vencopy.core.diarybuilders import DiaryBuilder
-from vencopy.utils.utils import create_file_name, write_out
+from ..core.diarybuilders import DiaryBuilder
+from ..utils.utils import create_file_name, write_out
 
 
 class ProfileAggregator:
@@ -211,7 +211,7 @@ class Aggregator:
                 dev_config=self.dev_config,
                 user_config=self.user_config,
                 manual_label=self.profile_name,
-                file_name_id="output_profileAggregator",
+                file_name_id="output_profileaggregator",
                 dataset=self.dataset,
             )
             write_out(data=self.activities, path=root / folder / file_name)

@@ -7,12 +7,12 @@ __license__ = "BSD-3-Clause"
 
 import pandas as pd
 
-from vencopy.core.dataparsers.dataparsers import IntermediateParsing
-from vencopy.core.dataparsers.parkinference import ParkInference
+from ...core.dataparsers.dataparsers import IntermediateParsing
+from ...core.dataparsers.parkinference import ParkInference
 
 
 class ParseMiD(IntermediateParsing):
-    def __init__(self, configs: dict, dataset: str, load_encrypted=False, debug=False):
+    def __init__(self, configs: dict, dataset: str):
         """
         Class for parsing MiD data sets. The venco.py configs globalConfig,
         parseConfig and localPathConfig have to be given on instantiation as
@@ -25,19 +25,14 @@ class ParseMiD(IntermediateParsing):
                            config dictionaries globalConfig, parseConfig and
                            localPathConfig.
         :param dataset: A string identifying the MiD data set.
-        :param load_encrypted: Boolean. If True, data is read from encrypted
-                              file. For this, a possword has to be
-                              specified in parseConfig['PW'].
         """
         super().__init__(
             configs=configs,
-            dataset=dataset,
-            load_encrypted=load_encrypted,
-            debug=debug,
+            dataset=dataset
         )
         self.park_inference = ParkInference(configs=configs)
 
-    def __harmonize_variables(self):
+    def _harmonise_variables(self):
         """
         Harmonizes the input data variables to match internal venco.py names
         given as specified in the mapping in parseConfig['data_variables'].
@@ -71,11 +66,12 @@ class ParseMiD(IntermediateParsing):
         if purpose:
             self._add_string_column_from_variable(col_name="purpose_string", var_name="trip_purpose")
 
-    def _drop_redundant_columns(self):
+    @staticmethod #TODO: check whether this method is used at all (if not remove test)
+    def _drop_redundant_columns(dataset):
         """
         Removes temporary redundant columns.
         """
-        self.trips.drop(
+        dataset.drop(
             columns=[
                 "is_driver",
                 "trip_start_clock",
@@ -93,21 +89,23 @@ class ParseMiD(IntermediateParsing):
             ],
             inplace=True,
         )
+        return dataset
 
     def process(self) -> pd.DataFrame:
         """
         Wrapper function for harmonising and filtering the trips dataset as well as adding parking rows.
         """
+        self._load_data()
         self._select_columns()
-        self.__harmonize_variables()
+        self._harmonise_variables()
         self._harmonize_variables_unique_id_names()
         self._convert_types()
         self.__add_string_columns()
         self._compose_start_and_end_timestamps()
-        self._update_end_timestamp()
-        self._check_filter_dict()
-        self._filter(self.filters)
-        self._filter_consistent_hours()
+        self._update_end_timestamp(trips=self.trips)
+        self._check_filter_dict(dictionary=self.filters)
+        self._filter(filters=self.filters)
+        self._filter_consistent_hours(dataset=self.trips)
         self.activities = self.park_inference.add_parking_rows(trips=self.trips)
         self.write_output()
         print("Parsing MiD dataset completed.")

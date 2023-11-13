@@ -23,7 +23,7 @@ from vencopy.utils.utils import (
 
 
 class DataParser:
-    def __init__(self, configs: dict, dataset: str, debug, zip_filepath=None, load_encrypted=False):
+    def __init__(self, configs: dict, dataset: str):
         """
         Basic class for parsing a mobility survey trip data set. Currently both
         German travel surveys MiD 2008 and MiD 2017 are pre-configured and one
@@ -49,31 +49,30 @@ class DataParser:
         """
         self.user_config = configs["user_config"]
         self.dev_config = configs["dev_config"]
-        self.dataset = self.__check_dataset_id(dataset)
-        filepath = (
-            Path(self.user_config["global"]["absolute_path"][self.dataset])
-            / self.dev_config["global"]["files"][self.dataset]["trips_data_raw"]
-        )
-        self.raw_data_path = filepath
+        self.debug = configs["user_config"]["global"]["debug"]
+        self.dataset = self._check_dataset_id(dataset=dataset)
+        self.raw_data_path = (Path(self.user_config["global"]["absolute_path"][self.dataset])
+                             / self.dev_config["global"]["files"][self.dataset]["trips_data_raw"])
         self.raw_data = None
         self.trips = None
         self.activities = None
         self.filters = {}
         print("Generic file parsing properties set up.")
+
+    def _load_data(self):
+        number_lines_debug = self.user_config["global"]["number_lines_debug"]
+        load_encrypted = False
         if load_encrypted:
             print(f"Starting to retrieve encrypted data file from {self.raw_data_path}.")
-            self._load_encrypted_data(zip_path=filepath, path_zip_data=zip_filepath)
+            self._load_encrypted_data(zip_path=self.raw_data_path, path_zip_data=self.raw_data_path)
         else:
             print(f"Starting to retrieve local data file from {self.raw_data_path}.")
-            self._load_data()
-        number_lines_debug = self.user_config["global"]["number_lines_debug"]
-        self.raw_data = self.raw_data.loc[0 : number_lines_debug - 1, :] if debug else self.raw_data.copy()
-        if debug:
+            self._load_unencrypted_data()
+        self.raw_data = self.raw_data.loc[0 : number_lines_debug - 1, :] if self.debug else self.raw_data.copy()
+        if self.debug:
             print("Running in debug mode.")
-        # Storage for original data variable that is being overwritten throughout adding of park rows
-        self.trips_end_next_day_raw = None
 
-    def _load_data(self) -> pd.DataFrame:
+    def _load_unencrypted_data(self) -> pd.DataFrame:
         """
         Loads data specified in self.raw_data_path and stores it in self.raw_data.
         Raises an exception if a invalid suffix is specified in
@@ -137,25 +136,23 @@ class DataParser:
 
         print(f"Finished loading {len(self.raw_data)} rows of raw data of type {self.raw_data_path.suffix}.")
 
-    def __check_dataset_id(self, dataset: str) -> str:
+    def _check_dataset_id(self, dataset: str) -> str:
         """
         General check if data set ID is defined in dev_config.yaml
 
         :param dataset: list of strings declaring the datasetIDs
                           to be read in
-        :param user_config: A yaml config file holding a dictionary with the
-                            keys 'relative_path' and 'absolute_path'
-        :return: Returns a string value of a mobility data
+        :return: Returns a string with a dataset name
         """
-        available_dataset_IDs = self.dev_config["dataparsers"]["data_variables"]["dataset"]
-        assert dataset in available_dataset_IDs, (
+        available_dataset_ids = self.dev_config["dataparsers"]["data_variables"]["dataset"]
+        assert dataset in available_dataset_ids, (
             f"Defined dataset {dataset} not specified "
             f"under data_variables in dev_config. "
-            f"Specified datasetIDs are {available_dataset_IDs}"
+            f"Specified dataset_ids are {available_dataset_ids}."
         )
         return dataset
 
-    def _harmonize_variables(self):
+    def _harmonise_variables(self):
         """
         Harmonizes the input data variables to match internal venco.py names
         given as specified in the mapping in dev_config['data_variables'].
@@ -169,23 +166,25 @@ class DataParser:
         self.trips = data_renamed
         print("Finished harmonization of variables.")
 
-    def _create_replacement_dict(self, dataset: str, dict_raw: dict) -> dict:
+    @staticmethod
+    def _create_replacement_dict(dataset: str, data_variables: dict) -> dict:
         """
         Creates the mapping dictionary from raw data variable names to venco.py
         internal variable names as specified in dev_config.yaml
         for the specified data set.
 
-        :param dataset: list of strings declaring the datasetIDs to be read
+        :param dataset: list of strings declaring the dataset_id to be read
         :param dict_raw: Contains dictionary of the raw data
         :return: Dictionary with internal names as keys and raw data column
                  names as values.
         """
-        if dataset not in dict_raw["dataset"]:
-            raise ValueError(f"Data set {dataset} not specified in" f"dev_config variable dictionary.")
-        list_index = dict_raw["dataset"].index(dataset)
-        return {val[list_index]: key for (key, val) in dict_raw.items()}
+        if dataset not in data_variables["dataset"]:
+            raise ValueError(f"Dataset {dataset} not specified in dev_config variable dictionary.")
+        list_index = data_variables["dataset"].index(dataset)
+        return {val[list_index]: key for (key, val) in data_variables.items()}
 
-    def _check_filter_dict(self):
+    @staticmethod
+    def _check_filter_dict(dictionary):
         """
         Checking if all values of filter dictionaries are of type list.
         Currently only checking if list of list str not typechecked
@@ -194,8 +193,8 @@ class DataParser:
         :return: None
         """
         assert all(
-            isinstance(val, list) for val in return_lowest_level_dict_values(dictionary=self.filters)
-        ), "All values in filter dictionaries have to be lists, but are not"
+            isinstance(val, list) for val in return_lowest_level_dict_values(dictionary)
+        ), "Not all values in filter dictionaries are lists."
 
     def _filter(self, filters: dict = None):
         """
@@ -215,7 +214,7 @@ class DataParser:
         #  might be easy to code but hard to implement correctly. See issue #445
 
         # Application of simple value-based filters
-        simple_filters = self.__simple_filters()
+        simple_filters = self._simple_filters()
         self.data_simple = self.trips[simple_filters.all(axis="columns")]
 
         # Application of sophisticated filters
@@ -225,7 +224,7 @@ class DataParser:
         # Print user feedback on filtering
         self._filter_analysis(simple_filters.join(complex_filters))
 
-    def __simple_filters(self) -> pd.DataFrame:
+    def _simple_filters(self) -> pd.DataFrame:
         """
         Apply single-column scalar value filtering as defined in the config.
 
@@ -238,13 +237,13 @@ class DataParser:
         # Simple filters checking single columns for specified values
         for i_key, i_value in self.filters.items():
             if i_key == "include" and i_value:
-                simple_filter = simple_filter.join(self.__set_include_filter(i_value, self.trips.index))
+                simple_filter = simple_filter.join(self._set_include_filter(dataset=self.trips, include_filter_dict=i_value))
             elif i_key == "exclude" and i_value:
-                simple_filter = simple_filter.join(self.__set_exclude_filter(i_value, self.trips.index))
+                simple_filter = simple_filter.join(self._set_exclude_filter(dataset=self.trips, exclude_filter_dict=i_value))
             elif i_key == "greater_than" and i_value:
-                simple_filter = simple_filter.join(self.__set_greater_than_filter(i_value, self.trips.index))
+                simple_filter = simple_filter.join(self._set_greater_than_filter(dataset=self.trips, greater_than_filter_dict=i_value))
             elif i_key == "smaller_than" and i_value:
-                simple_filter = simple_filter.join(self.__set_smaller_than_filter(i_value, self.trips.index))
+                simple_filter = simple_filter.join(self._set_smaller_than_filter(dataset=self.trips, smaller_than_filter_dict=i_value))
             elif i_key not in ["include", "exclude", "greater_than", "smaller_than"]:
                 warnings.warn(
                     f"A filter dictionary was defined in the dev_config with an unknown filtering key."
@@ -253,47 +252,46 @@ class DataParser:
                 )
         return simple_filter
 
-    def __set_include_filter(self, include_filter_dict: dict, data_idx: pd.Index) -> pd.DataFrame:
+    @staticmethod
+    def _set_include_filter(dataset: pd.DataFrame, include_filter_dict: dict) -> pd.DataFrame:
         """
         Read-in function for include filter dict from dev_config.yaml
 
         :param include_filter_dict: Dictionary of include filters defined
                                 in dev_config.yaml
-        :param data_idx: Index for the data frame
-        :return: Returns a data frame with individuals using car
-                as a mode of transport
+        :return: Returns a data frame including the variables specified
         """
-        inc_filter_cols = pd.DataFrame(index=data_idx, columns=include_filter_dict.keys())
+        inc_filter_cols = pd.DataFrame(index=dataset.index, columns=include_filter_dict.keys())
         for inc_col, inc_elements in include_filter_dict.items():
-            inc_filter_cols[inc_col] = self.trips[inc_col].isin(inc_elements)
+            inc_filter_cols[inc_col] = dataset[inc_col].isin(inc_elements)
         return inc_filter_cols
 
-    def __set_exclude_filter(self, exclude_filter_dict: dict, data_idx: pd.Index) -> pd.DataFrame:
+    @staticmethod
+    def _set_exclude_filter(dataset: pd.DataFrame, exclude_filter_dict: dict) -> pd.DataFrame:
         """
         Read-in function for exclude filter dict from dev_config.yaml
 
         :param exclude_filter_dict: Dictionary of exclude filters defined
                                   in dev_config.yaml
-        :param data_idx: Index for the data frame
         :return: Returns a filtered data frame with exclude filters
         """
-        excl_filter_cols = pd.DataFrame(index=data_idx, columns=exclude_filter_dict.keys())
+        excl_filter_cols = pd.DataFrame(index=dataset.index, columns=exclude_filter_dict.keys())
         for exc_col, exc_elements in exclude_filter_dict.items():
-            excl_filter_cols[exc_col] = ~self.trips[exc_col].isin(exc_elements)
+            excl_filter_cols[exc_col] = ~dataset[exc_col].isin(exc_elements)
         return excl_filter_cols
 
-    def __set_greater_than_filter(self, greater_than_filter_dict: dict, data_idx: pd.Index):
+    @staticmethod
+    def _set_greater_than_filter(dataset: pd.DataFrame, greater_than_filter_dict: dict):
         """
         Read-in function for greater_than filter dict from dev_config.yaml
 
         :param greater_than_filter_dict: Dictionary of greater than filters
                                       defined in dev_config.yaml
-        :param data_idx: Index for the data frame
         :return:
         """
-        greater_than_filter_cols = pd.DataFrame(index=data_idx, columns=greater_than_filter_dict.keys())
+        greater_than_filter_cols = pd.DataFrame(index=dataset.index, columns=greater_than_filter_dict.keys())
         for greater_col, greater_elements in greater_than_filter_dict.items():
-            greater_than_filter_cols[greater_col] = self.trips[greater_col] >= greater_elements.pop()
+            greater_than_filter_cols[greater_col] = dataset[greater_col] >= greater_elements.pop()
             if len(greater_elements) > 0:
                 warnings.warn(
                     f"You specified more than one value as lower limit for filtering column {greater_col}."
@@ -301,19 +299,18 @@ class DataParser:
                 )
         return greater_than_filter_cols
 
-    def __set_smaller_than_filter(self, smaller_than_filter_dict: dict, data_idx: pd.Index) -> pd.DataFrame:
+    @staticmethod
+    def _set_smaller_than_filter(dataset: pd.DataFrame, smaller_than_filter_dict: dict) -> pd.DataFrame:
         """
         Read-in function for smaller_than filter dict from dev_config.yaml
 
         :param smaller_than_filter_dict: Dictionary of smaller than filters
                defined in dev_config.yaml
-        :param data_idx: Index for the data frame
-        :return: Returns a data frame of trips covering
-                 a distance of less than 1000 km
+        :return: Returns a data frame of 
         """
-        smaller_than_filter_cols = pd.DataFrame(index=data_idx, columns=smaller_than_filter_dict.keys())
+        smaller_than_filter_cols = pd.DataFrame(index=dataset.index, columns=smaller_than_filter_dict.keys())
         for smaller_col, smaller_elements in smaller_than_filter_dict.items():
-            smaller_than_filter_cols[smaller_col] = self.trips[smaller_col] <= smaller_elements.pop()
+            smaller_than_filter_cols[smaller_col] = dataset[smaller_col] <= smaller_elements.pop()
             if len(smaller_elements) > 0:
                 warnings.warn(
                     f"You specified more than one value as upper limit for filtering column {smaller_col}."
@@ -332,12 +329,15 @@ class DataParser:
             data set.
         """
         complex_filters = pd.DataFrame(index=self.trips.index)
-        complex_filters = complex_filters.join(self._filter_inconsistent_speeds())
-        complex_filters = complex_filters.join(self._filter_inconsistent_travel_times())
-        complex_filters = complex_filters.join(self._filter_overlapping_trips())
+        lower_speed_threshold = self.dev_config["dataparsers"]["filters"]["lower_speed_threshold"]
+        higher_speed_threshold = self.dev_config["dataparsers"]["filters"]["higher_speed_threshold"]
+        complex_filters = complex_filters.join(self._filter_inconsistent_speeds(dataset=self.trips, lower_speed_threshold=lower_speed_threshold, higher_speed_threshold=higher_speed_threshold))
+        complex_filters = complex_filters.join(self._filter_inconsistent_travel_times(dataset=self.trips))
+        complex_filters = complex_filters.join(self._filter_overlapping_trips(dataset=self.trips))
         return complex_filters
 
-    def _filter_inconsistent_speeds(self) -> pd.Series:
+    @staticmethod
+    def _filter_inconsistent_speeds(dataset: pd.DataFrame, lower_speed_threshold, higher_speed_threshold) -> pd.Series:
         """
         Filter out trips with inconsistent average speed. These trips are mainly trips where survey participant
         responses suggest that participants were travelling for the entire time they took for the whole purpose
@@ -346,13 +346,12 @@ class DataParser:
         :return: Boolean vector with observations marked True that should be
         kept in the data set
         """
-        self.trips["averageSpeed"] = self.trips["trip_distance"] / (self.trips["travel_time"] / 60)
+        dataset["average_speed"] = dataset["trip_distance"] / (dataset["travel_time"] / 60)
+        dataset = (dataset["average_speed"] > lower_speed_threshold) & (dataset["average_speed"] <= higher_speed_threshold)
+        return dataset
 
-        return (self.trips["averageSpeed"] > self.dev_config["dataparsers"]["filters"]["lower_speed_threshold"]) & (
-            self.trips["averageSpeed"] <= self.dev_config["dataparsers"]["filters"]["higher_speed_threshold"]
-        )
-
-    def _filter_inconsistent_travel_times(self) -> pd.Series:
+    @staticmethod
+    def _filter_inconsistent_travel_times(dataset) -> pd.Series:
         """
         Calculates a travel time from the given timestamps and compares it
         to the travel time given by the interviewees. Selects observations where
@@ -361,14 +360,15 @@ class DataParser:
         :return: Boolean vector with observations marked True that should be
         kept in the data set
         """
-        self.trips["travelTime_ts"] = (
-            (self.trips["timestamp_end"] - self.trips["timestamp_start"]).dt.total_seconds().div(60).astype(int)
+        dataset["travel_time_ts"] = (
+            (dataset["timestamp_end"] - dataset["timestamp_start"]).dt.total_seconds().div(60).astype(int)
         )
-        filt = self.trips["travelTime_ts"] == self.trips["travel_time"]
-        filt.name = "travel_time"  # Required for column-join in _filter()
+        filt = dataset["travel_time_ts"] == dataset["travel_time"]
+        filt.name = "travel_time"
         return filt
 
-    def _filter_overlapping_trips(self, lookahead_periods: int = 1) -> pd.DataFrame:
+    @staticmethod
+    def _filter_overlapping_trips(dataset, lookahead_periods: int = 1) -> pd.DataFrame:
         """
         Filter out trips carried out by the same car as next (second next, third next up to period next etc) trip but
         overlap with at least one of the period next trips.
@@ -384,14 +384,15 @@ class DataParser:
         """
         lst = []
         for profile in range(1, lookahead_periods + 1):
-            ser = self.__identify_overlapping_trips(dat=self.trips, period=profile)
+            ser = DataParser._identify_overlapping_trips(dataset, period=profile)
             ser.name = f"profile={profile}"
             lst.append(ser)
         ret = pd.concat(lst, axis=1).all(axis=1)
         ret.name = "no_overlap_next_trips"
         return ret
 
-    def __identify_overlapping_trips(self, dat: pd.DataFrame, period: int) -> pd.Series:
+    @staticmethod
+    def _identify_overlapping_trips(dataset: pd.DataFrame, period: int) -> pd.Series:
         """
         Calculates a boolean vector of same length as dat that is True if the current trip does not overlap with
         the next trip. "Next" can relate to the consecutive trip (if period==1) or to a later trip defined by the
@@ -399,9 +400,8 @@ class DataParser:
         current trip is compared to the start timestamp of the "next" trip.
 
         Args:
-            dat (pd.DataFrame): A trip data set containing consecutive trips containing at least the columns id_col,
+            dataset (pd.DataFrame): A trip data set containing consecutive trips containing at least the columns id_col,
                 timestamp_start, timestamp_end.
-            id_col (str): Column that differentiates units of trips e.g. daily trips carried out by the same vehicle.
             period (int): Forward looking period to compare trip overlap. Should be the maximum number of trip that one
                 vehicle carries out in a time interval (e.g. day) in the data set.
 
@@ -409,14 +409,15 @@ class DataParser:
             pd.Series: A boolean vector that is True if the trip does not overlap with the period-next trip but belongs
                 to the same vehicle.
         """
-        dat["is_same_id_as_previous"] = dat["unique_id"] == dat["unique_id"].shift(period)
-        dat["trip_starts_after_previous_trip"] = dat["timestamp_start"] > dat["timestamp_end"].shift(period)
-        return ~(dat["is_same_id_as_previous"] & ~dat["trip_starts_after_previous_trip"])
+        dataset["is_same_id_as_previous"] = dataset["unique_id"] == dataset["unique_id"].shift(period)
+        dataset["trip_starts_after_previous_trip"] = dataset["timestamp_start"] > dataset["timestamp_end"].shift(period)
+        dataset = ~(dataset["is_same_id_as_previous"] & ~dataset["trip_starts_after_previous_trip"])
+        return dataset
 
-    def _filter_analysis(self, filter_data: pd.DataFrame):
+    @staticmethod
+    def _filter_analysis(filter_data: pd.DataFrame):
         """
-        Function supplies some aggregate info of the data after filtering to the user Function does not change any
-        class attributes
+        Function supplies some aggregate info of the data after filtering to the user.
 
         :param filter_data:
         :return: None
@@ -434,7 +435,7 @@ class DataParser:
         """
         Wrapper function for harmonising and filtering the dataset.
         """
-        raise NotImplementedError("Implement process method for DataParser.")
+        raise NotImplementedError("A process method for DataParser is not implemented.")
 
     def write_output(self):
         if self.user_config["global"]["write_output_to_disk"]["parse_output"]:
@@ -443,7 +444,7 @@ class DataParser:
             file_name = create_file_name(
                 dev_config=self.dev_config,
                 user_config=self.user_config,
-                file_name_id="output_dataParser",
+                file_name_id="output_dataparser",
                 dataset=self.dataset,
                 manual_label="",
             )
@@ -451,7 +452,7 @@ class DataParser:
 
 
 class IntermediateParsing(DataParser):
-    def __init__(self, configs: dict, dataset: str, debug, load_encrypted=False):
+    def __init__(self, configs: dict, dataset: str):
         """
         Intermediate parsing class.
 
@@ -462,12 +463,12 @@ class IntermediateParsing(DataParser):
                               file. For this, a possword has to be
                               specified in user_config['PW'].
         """
-        super().__init__(configs, dataset=dataset, load_encrypted=load_encrypted, debug=debug)
+        super().__init__(configs, dataset=dataset)
         self.filters = self.dev_config["dataparsers"]["filters"][self.dataset]
         self.var_datatype_dict = {}
-        self.columns = self.__compile_variable_list()
+        self.columns = self._compile_variable_list()
 
-    def __compile_variable_list(self) -> list:
+    def _compile_variable_list(self) -> list:
         """
         Clean up the replacement dictionary of raw data file variable (column)
         names. This has to be done because some variables that may be relevant
@@ -485,10 +486,11 @@ class IntermediateParsing(DataParser):
         ]
 
         variables.remove(self.dataset)
-        self.__remove_na(variables)
+        self._remove_na(variables)
         return variables
 
-    def __remove_na(self, variables: list):
+    @staticmethod
+    def _remove_na(variables: list):
         """
         Removes all strings that can be capitalized to 'NA' from the list
         of variables
@@ -523,7 +525,6 @@ class IntermediateParsing(DataParser):
 
         :return: None
         """
-        # Filter for dataset specific columns
         conversion_dict = self.dev_config["dataparsers"]["input_data_types"][self.dataset]
         keys = {i_column for i_column in conversion_dict.keys() if i_column in self.trips.columns}
         self.var_datatype_dict = {key: conversion_dict[key] for key in conversion_dict.keys() & keys}
@@ -540,36 +541,36 @@ class IntermediateParsing(DataParser):
             data set.
         """
         complex_filters = pd.DataFrame(index=self.trips.index)
-        complex_filters = complex_filters.join(self._filter_inconsistent_speeds())
-        complex_filters = complex_filters.join(self._filter_inconsistent_travel_times())
-        complex_filters = complex_filters.join(self._filter_overlapping_trips())
-        complex_filters = complex_filters.join(self._filter_consistent_hours())
-        complex_filters = complex_filters.join(self._filter_zero_length_trips())
+        lower_speed_threshold = self.dev_config["dataparsers"]["filters"]["lower_speed_threshold"]
+        higher_speed_threshold = self.dev_config["dataparsers"]["filters"]["higher_speed_threshold"]
+        complex_filters = complex_filters.join(self._filter_inconsistent_speeds(dataset=self.trips, lower_speed_threshold=lower_speed_threshold, higher_speed_threshold=higher_speed_threshold))
+        complex_filters = complex_filters.join(self._filter_inconsistent_travel_times(dataset=self.trips))
+        complex_filters = complex_filters.join(self._filter_overlapping_trips(dataset=self.trips))
+        complex_filters = complex_filters.join(self._filter_consistent_hours(dataset=self.trips))
+        complex_filters = complex_filters.join(self._filter_zero_length_trips(dataset=self.trips))
         return complex_filters
 
-    def _filter_consistent_hours(self) -> pd.Series:
+    @staticmethod
+    def _filter_consistent_hours(dataset) -> pd.Series:
         """
         Filtering out records where starting timestamp is before end timestamp. These observations are data errors.
 
         :return: Returns a boolean Series indicating erroneous rows (trips) with False.
         """
-        ser = self.trips["timestamp_start"] <= self.trips["timestamp_end"]
+        ser = dataset["timestamp_start"] <= dataset["timestamp_end"]
         ser.name = "trip_start_after_end"
         return ser
 
-    def _filter_zero_length_trips(self) -> pd.Series:
+    @staticmethod
+    def _filter_zero_length_trips(dataset) -> pd.Series:
         """
         Filter out trips that start and end at same hour and minute but are not ending on next day (no 24-hour
         trips).
-
-        Returns:
-            _type_: _description_
         """
-
         ser = ~(
-            (self.trips.loc[:, "trip_start_hour"] == self.trips.loc[:, "trip_end_hour"])
-            & (self.trips.loc[:, "trip_start_minute"] == self.trips.loc[:, "trip_end_minute"])
-            & (~self.trips.loc[:, "trip_end_next_day"])
+            (dataset.loc[:, "trip_start_hour"] == dataset.loc[:, "trip_end_hour"])
+            & (dataset.loc[:, "trip_start_minute"] == dataset.loc[:, "trip_end_minute"])
+            & (~dataset.loc[:, "trip_end_next_day"])
         )
         ser.name = "is_no_zero_length_trip"
         return ser
@@ -589,16 +590,16 @@ class IntermediateParsing(DataParser):
             self.dev_config["dataparsers"]["replacements"][self.dataset][var_name]
         )
 
-    def __compose_timestamp(
-        self,
+    @staticmethod
+    def _compose_timestamp(
         data: pd.DataFrame = None,
-        col_year: str = "trip_start_year",
-        col_week: str = "trip_start_week",
-        col_day: str = "trip_start_weekday",
-        col_hour: str = "trip_start_hour",
-        col_min: str = "trip_start_minute",
-        col_name: str = "timestamp_start",
-    ) -> np.datetime64:
+        col_year: str = None,
+        col_week: str = None,
+        col_day: str = None,
+        col_hour: str = None,
+        col_min: str = None,
+        col_name: str = None,
+    ) -> pd.DatetimeIndex:
         """
         :param data: a data frame
         :param col_year: year of start of a particular trip
@@ -616,30 +617,41 @@ class IntermediateParsing(DataParser):
             + pd.to_timedelta(data.loc[:, col_hour], unit="hour")
             + pd.to_timedelta(data.loc[:, col_min], unit="minute")
         )
-        # return data
+        return data
 
     def _compose_start_and_end_timestamps(self):
         """
         :return: Returns start and end time of a trip
         """
-        self.__compose_timestamp(data=self.trips)  # Starting timestamp
-        self.__compose_timestamp(
-            data=self.trips,  # Ending timestamps
+        self._compose_timestamp(
+            data=self.trips,
+            col_year="trip_start_year",
+            col_week="trip_start_week",
+            col_day="trip_start_weekday",
+            col_hour="trip_start_hour",
+            col_min="trip_start_minute",
+            col_name="timestamp_start")
+        self._compose_timestamp(
+            data=self.trips,
+            col_year="trip_start_year",
+            col_week="trip_start_week",
+            col_day="trip_start_weekday",
             col_hour="trip_end_hour",
             col_min="trip_end_minute",
-            col_name="timestamp_end",
-        )
+            col_name="timestamp_end")
 
-    def _update_end_timestamp(self):
+    @staticmethod
+    def _update_end_timestamp(trips):
         """
         Updates the end timestamp for overnight trips adding 1 day
 
-        :return: None, only activities on the class variable
+        :return: datsets trips
         """
-        ends_following_day = self.trips["trip_end_next_day"] == 1
-        self.trips.loc[ends_following_day, "timestamp_end"] = self.trips.loc[
+        ends_following_day = trips["trip_end_next_day"] == 1
+        trips.loc[ends_following_day, "timestamp_end"] = trips.loc[
             ends_following_day, "timestamp_end"
         ] + pd.offsets.Day(1)
+        return trips
 
     def _harmonize_variables_unique_id_names(self):
         """
@@ -655,7 +667,7 @@ class IntermediateParsing(DataParser):
             self.activities = self.activities[
                 self.activities["vehicle_segment_string"]
                 == self.user_config["dataparsers"]["vehicle_segment"][self.dataset]
-            ]
+            ].reset_index(drop=True)
             print(
                 f'The subset contains only vehicles of the class {(self.user_config["dataparsers"]["vehicle_segment"][self.dataset])} for a total of {len(self.activities.unique_id.unique())} individual vehicles.'
             )

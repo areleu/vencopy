@@ -9,7 +9,7 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 from scipy.stats.sampling import DiscreteAliasUrn
-from vencopy.utils.utils import create_file_name, write_out
+from ..utils.utils import create_file_name, write_out
 
 
 class GridModeller:
@@ -131,7 +131,7 @@ class GridModeller:
         else:
             self.activities["available_power"] = self.activities["rated_power"]
 
-    def __writeOutput(self):
+    def __write_output(self):
         if self.user_config["global"]["write_output_to_disk"]["grid_output"]:
             root = Path(self.user_config["global"]["absolute_path"]["vencopy_root"])
             folder = self.dev_config["global"]["relative_path"]["grid_output"]
@@ -139,7 +139,7 @@ class GridModeller:
                 dev_config=self.dev_config,
                 user_config=self.user_config,
                 manual_label="",
-                file_name_id="output_gridModeler",
+                file_name_id="output_gridmodeller",
                 dataset=self.dataset,
             )
             write_out(data=self.activities, path=root / folder / file_name)
@@ -171,4 +171,4 @@ class GridModeller:
                 )
             )
         self.__add_grid_losses()
-        self.__writeOutput()
+        self.__write_output()

@@ -11,7 +11,7 @@ import time
 import numpy as np
 import pandas as pd
 from typing import Optional
-from vencopy.utils.utils import create_file_name, write_out
+from ..utils.utils import create_file_name, write_out
 
 
 class DiaryBuilder:
@@ -22,7 +22,6 @@ class DiaryBuilder:
         self.activities = activities
         self.time_resolution = configs["user_config"]["diarybuilders"]["time_resolution"]
         self.is_week_diary = is_week_diary
-        self.__update_activities()
         self.drain = None
         self.charging_power = None
         self.uncontrolled_charging = None
@@ -43,38 +42,39 @@ class DiaryBuilder:
         which are separatly discretised (interdependence at single vehicle level of drain, charging power etc i.e.
         no charging available when driving).
         """
-        self.__correct_timestamps()
-        self.__removes_zero_length_activities()
+        self.activities = self._correct_timestamps(dataset=self.activities, time_resolution=self.time_resolution)
+        self.activities = self._removes_zero_length_activities(dataset=self.activities)
 
-    def __correct_timestamps(self) -> pd.DataFrame:
+    @staticmethod
+    def _correct_timestamps(dataset, time_resolution) -> pd.DataFrame:
         """
-        Rounds timestamps to predifined resolution.
+        Rounds timestamps to predefined resolution.
         """
-        self.activities["timestamp_start_corrected"] = self.activities["timestamp_start"].dt.round(
-            f"{self.time_resolution}min"
+        dataset["timestamp_start_corrected"] = dataset["timestamp_start"].dt.round(f"{time_resolution}min")
+        dataset["timestamp_end_corrected"] = dataset["timestamp_end"].dt.round(f"{time_resolution}min")
+        dataset["activity_duration"] = (
+            dataset["timestamp_end_corrected"] - dataset["timestamp_start_corrected"]
         )
-        self.activities["timestamp_end_corrected"] = self.activities["timestamp_end"].dt.round(
-            f"{self.time_resolution}min"
-        )
-        self.activities["activity_duration"] = (
-            self.activities["timestamp_end_corrected"] - self.activities["timestamp_start_corrected"]
-        )
+        return dataset
 
-    def __removes_zero_length_activities(self):
+    @staticmethod
+    def _removes_zero_length_activities(dataset):
         """
         Drops line when activity duration is zero, which causes inconsistencies in diaryBuilder (e.g. division by zero in number_bins calculation).
         """
-        start_length = len(self.activities)
-        self.activities = self.activities.drop(
-            self.activities[self.activities.activity_duration == pd.Timedelta(0)].index.to_list()
+        start_length = len(dataset)
+        dataset = dataset.drop(
+            dataset[dataset.activity_duration == pd.Timedelta(0)].index.to_list()
         )
-        end_length = len(self.activities)
+        end_length = len(dataset)
         print(
             f"{start_length - end_length} activities dropped from {start_length} total activities because activity length equals zero."
         )
+        return dataset
 
     def create_diaries(self):
         start_time = time.time()
+        self.__update_activities()
         self.drain = self.distributor.discretise(profile=self.drain, profile_name="drain", method="distribute")
         self.charging_power = self.distributor.discretise(
             profile=self.charging_power, profile_name="available_power", method="select"
@@ -224,22 +224,6 @@ class TimeDiscretiser:
         )
         self.data_to_discretise["timestamp_end_corrected"] = self.data_to_discretise["timestamp_end"].dt.round(
             f"{self.time_resolution}min"
-        )
-
-    def __create_discretised_structure_week(self):
-        """
-        Method for future release working with sampled weeks.
-
-        Create an empty dataframe with columns each representing one time_delta (e.g. one 15-min slot). Scope can
-        currently be either day (nCol = 24*60 / time_resolution) or week - determined be self.is_week (nCol= 7 * 24 * 60 / time_resolution).
-        self.time_index is set on instantiation.
-        """
-        number_hours = len(list(self.time_index)) - 1
-        hours_per_day = int(number_hours / len(self.weekdays))
-        hours = range(hours_per_day)
-        self.discrete_data = pd.DataFrame(
-            index=self.data_to_discretise.unique_id.unique(),
-            columns=pd.MultiIndex.from_product([self.weekdays, hours]),
         )
 
     def __identify_bin_shares(self):
@@ -671,7 +655,7 @@ class TimeDiscretiser:
                 dev_config=self.dev_config,
                 user_config=self.user_config,
                 manual_label=self.column_to_discretise,
-                file_name_id="output_diaryBuilder",
+                file_name_id="output_diarybuilder",
                 dataset=self.dataset,
             )
             write_out(data=self.activities, path=root / folder / file_name)
@@ -681,14 +665,14 @@ class TimeDiscretiser:
         self.data_to_discretise = profile
         self.method = method
         print(f"Starting to discretise {self.column_to_discretise}.")
-        start_time_diaryBuilder = time.time()
+        start_time_diary_builder = time.time()
         self.__dataset_cleanup()
         self.__identify_bin_shares()
         self.__allocate_bin_shares()
         if self.user_config["global"]["write_output_to_disk"]["diary_output"]:
             self.__write_output()
         print(f"Discretisation finished for {self.column_to_discretise}.")
-        elapsed_time_diaryBuilder = time.time() - start_time_diaryBuilder
-        print(f"Needed time to discretise {self.column_to_discretise}: {elapsed_time_diaryBuilder}.")
+        elapsed_time_diary_builder = time.time() - start_time_diary_builder
+        print(f"Needed time to discretise {self.column_to_discretise}: {elapsed_time_diary_builder}.")
         self.column_to_discretise = None
         return self.discrete_data

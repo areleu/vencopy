@@ -521,7 +521,7 @@ class FlexEstimator:
                 user_config=self.user_config,
                 dev_config=self.dev_config,
                 manual_label="",
-                file_name_id="output_flexEstimator",
+                file_name_id="output_flexestimator",
                 dataset=self.dataset,
             )
             write_out(data=self.activities, path=root / folder / file_name)

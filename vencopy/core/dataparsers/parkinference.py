@@ -7,16 +7,14 @@ __license__ = "BSD-3-Clause"
 
 import pandas as pd
 
-from vencopy.utils.utils import replace_vec
+from ...utils.utils import replace_vec
 
 
 class ParkInference:
     def __init__(self, configs) -> None:
         self.user_config = configs["user_config"]
         self.activities = None
-
         self.activities_raw = None
-
         self.overnight_splitter = OvernightSplitter()
 
     def add_parking_rows(self, trips: pd.DataFrame) -> pd.DataFrame:

@@ -8,12 +8,12 @@ __license__ = "BSD-3-Clause"
 import pandas as pd
 from pathlib import Path
 
-from vencopy.core.dataparsers.dataparsers import IntermediateParsing
-from vencopy.core.dataparsers.parkinference import ParkInference
+from ...core.dataparsers.dataparsers import IntermediateParsing
+from ...core.dataparsers.parkinference import ParkInference
 
 
 class ParseVF(IntermediateParsing):
-    def __init__(self, configs: dict, dataset: str, debug, load_encrypted=False):
+    def __init__(self, configs: dict, dataset: str):
         """
         Class for parsing MiD data sets. The venco.py configs globalConfig,
         parseConfig and localPathConfig have to be given on instantiation as
@@ -26,14 +26,11 @@ class ParseVF(IntermediateParsing):
                            config dictionaries globalConfig, parseConfig and
                            localPathConfig.
         :param dataset: A string identifying the MiD data set.
-        :param load_encrypted: Boolean. If True, data is read from encrypted
-                              file. For this, a possword has to be
-                              specified in parseConfig['PW'].
         """
-        super().__init__(configs=configs, dataset=dataset, debug=debug, load_encrypted=load_encrypted)
+        super().__init__(configs=configs, dataset=dataset)
         self.park_inference = ParkInference(configs=configs)
 
-    def _load_data(self):
+    def _load_unencrypted_data(self):
         """
         raw_data_path_trips, unlike for other MiD classes is taken from the MiD B1 dataset
         raw_data_path_vehicles is an internal dataset from VF
@@ -60,7 +57,7 @@ class ParseVF(IntermediateParsing):
         self.raw_data = raw_data
         print(f"Finished loading {len(self.raw_data)} rows of raw data of type .dta.")
 
-    def __harmonize_variables(self):
+    def _harmonise_variables(self):
         """
         Harmonizes the input data variables to match internal venco.py names given as specified in the mapping in
         self.dev_config["dataparsers"]['data_variables']. Mappings for MiD08 and MiD17 are given. Since the MiD08 does not provide a
@@ -107,12 +104,12 @@ class ParseVF(IntermediateParsing):
         :return: None
         """
         if weekday:
-            self._add_string_column_from_variable(colName="weekday_string", varName="trip_start_weekday")
+            self._add_string_column_from_variable(col_name="weekday_string", var_name="trip_start_weekday")
         if purpose:
-            self._add_string_column_from_variable(colName="purpose_string", varName="trip_purpose")
+            self._add_string_column_from_variable(col_name="purpose_string", var_name="trip_purpose")
         if vehicle_segment:
             self.trips = self.trips.replace("groß", "gross")
-            self._add_string_column_from_variable(colName="vehicle_segment_string", varName="vehicle_segment")
+            self._add_string_column_from_variable(col_name="vehicle_segment_string", var_name="vehicle_segment")
 
     def _drop_redundant_columns(self):
         """
@@ -140,21 +137,22 @@ class ParseVF(IntermediateParsing):
         """
         Wrapper function for harmonising and filtering the dataset.
         """
+        self._load_data()
         self._select_columns()
-        self.__harmonize_variables()
+        self._harmonise_variables()
         self._harmonize_variables_unique_id_names()
         self.__pad_missing_car_segments()
         self.__exclude_hours()
         self._convert_types()
         self.__add_string_columns()
         self._compose_start_and_end_timestamps()
-        self._update_end_timestamp()
-        self._check_filter_dict()
-        self._filter(self.filters)
-        self._filter_consistent_hours()
+        self._update_end_timestamp(trips=self.trips)
+        self._check_filter_dict(dictionary=self.filters)
+        self._filter(filters=self.filters)
+        self._filter_consistent_hours(dataset=self.trips)
         self.activities = self.park_inference.add_parking_rows(trips=self.trips)
         self._subset_vehicle_segment()
-        self._cleanup_dataset()
+        self._cleanup_dataset(dataset=self.activities)
         self.write_output()
         print("Parsing VF dataset completed.")
         return self.activities
