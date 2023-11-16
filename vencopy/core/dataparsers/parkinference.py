@@ -41,7 +41,7 @@ class ParkInference:
         self._drop_redundant_columns()
         self.__remove_next_day_park_acts()
         self.__adjust_park_timestamps()
-        self.__set_trip_attrs_na_for_park_acts()
+        # self.__set_trip_attrs_na_for_park_acts()
         self.__add_next_and_prev_ids()
         self.__overnight_split_decider(split=split_overnight_trips)
         self.__add_timedelta_column()
@@ -82,12 +82,17 @@ class ParkInference:
 
         df_add = self.activities_raw.loc[new_indeces, :]
         df_add["park_id"] = 0
-        df_add["trip_id"] = pd.NA
+
+        # This most likely throws a warning in the concat in the last line
+        # df_add["trip_id"] = pd.NA
+
         df_add["purpose_string"] = "HOME"  # Assumption
-
         self.activities_raw.loc[new_indeces, "is_first_activity"] = False
-
         self.activities_raw = pd.concat([self.activities_raw, df_add]).sort_index()
+
+        self.activities_raw.loc[
+            (self.activities_raw["is_first_activity"]) & (self.activities_raw["park_id"] == 0), "trip_id"
+        ] = pd.NA
 
     # DEPRECATED
     def __add_park_act_after_last_trip(self):
@@ -500,7 +505,7 @@ class OvernightSplitter:
         first_trip_acts.index = first_park_acts.index  # Aligning trip indices
         indeces_park_timestamp = first_park_acts["timestamp_start"] == first_trip_acts["timestamp_start"]
         self.activities_raw = self.activities_raw.drop(indeces_park_timestamp[indeces_park_timestamp].index)
-        
+
         # After removing first parking, set first trip to first activity
         self.activities_raw.loc[
             (self.activities_raw["unique_id"].isin(first_park_acts.loc[indeces_park_timestamp, "unique_id"]))
