@@ -51,8 +51,10 @@ class DataParser:
         self.dev_config = configs["dev_config"]
         self.debug = configs["user_config"]["global"]["debug"]
         self.dataset = self._check_dataset_id(dataset=dataset)
-        self.raw_data_path = (Path(self.user_config["global"]["absolute_path"][self.dataset])
-                             / self.dev_config["global"]["files"][self.dataset]["trips_data_raw"])
+        self.raw_data_path = (
+            Path(self.user_config["global"]["absolute_path"][self.dataset])
+            / self.dev_config["global"]["files"][self.dataset]["trips_data_raw"]
+        )
         self.raw_data = None
         self.trips = None
         self.activities = None
@@ -237,13 +239,21 @@ class DataParser:
         # Simple filters checking single columns for specified values
         for i_key, i_value in self.filters.items():
             if i_key == "include" and i_value:
-                simple_filter = simple_filter.join(self._set_include_filter(dataset=self.trips, include_filter_dict=i_value))
+                simple_filter = simple_filter.join(
+                    self._set_include_filter(dataset=self.trips, include_filter_dict=i_value)
+                )
             elif i_key == "exclude" and i_value:
-                simple_filter = simple_filter.join(self._set_exclude_filter(dataset=self.trips, exclude_filter_dict=i_value))
+                simple_filter = simple_filter.join(
+                    self._set_exclude_filter(dataset=self.trips, exclude_filter_dict=i_value)
+                )
             elif i_key == "greater_than" and i_value:
-                simple_filter = simple_filter.join(self._set_greater_than_filter(dataset=self.trips, greater_than_filter_dict=i_value))
+                simple_filter = simple_filter.join(
+                    self._set_greater_than_filter(dataset=self.trips, greater_than_filter_dict=i_value)
+                )
             elif i_key == "smaller_than" and i_value:
-                simple_filter = simple_filter.join(self._set_smaller_than_filter(dataset=self.trips, smaller_than_filter_dict=i_value))
+                simple_filter = simple_filter.join(
+                    self._set_smaller_than_filter(dataset=self.trips, smaller_than_filter_dict=i_value)
+                )
             elif i_key not in ["include", "exclude", "greater_than", "smaller_than"]:
                 warnings.warn(
                     f"A filter dictionary was defined in the dev_config with an unknown filtering key."
@@ -306,7 +316,7 @@ class DataParser:
 
         :param smaller_than_filter_dict: Dictionary of smaller than filters
                defined in dev_config.yaml
-        :return: Returns a data frame of 
+        :return: Returns a data frame of
         """
         smaller_than_filter_cols = pd.DataFrame(index=dataset.index, columns=smaller_than_filter_dict.keys())
         for smaller_col, smaller_elements in smaller_than_filter_dict.items():
@@ -331,7 +341,13 @@ class DataParser:
         complex_filters = pd.DataFrame(index=self.trips.index)
         lower_speed_threshold = self.dev_config["dataparsers"]["filters"]["lower_speed_threshold"]
         higher_speed_threshold = self.dev_config["dataparsers"]["filters"]["higher_speed_threshold"]
-        complex_filters = complex_filters.join(self._filter_inconsistent_speeds(dataset=self.trips, lower_speed_threshold=lower_speed_threshold, higher_speed_threshold=higher_speed_threshold))
+        complex_filters = complex_filters.join(
+            self._filter_inconsistent_speeds(
+                dataset=self.trips,
+                lower_speed_threshold=lower_speed_threshold,
+                higher_speed_threshold=higher_speed_threshold,
+            )
+        )
         complex_filters = complex_filters.join(self._filter_inconsistent_travel_times(dataset=self.trips))
         complex_filters = complex_filters.join(self._filter_overlapping_trips(dataset=self.trips))
         return complex_filters
@@ -347,7 +363,9 @@ class DataParser:
         kept in the data set
         """
         dataset["average_speed"] = dataset["trip_distance"] / (dataset["travel_time"] / 60)
-        dataset = (dataset["average_speed"] > lower_speed_threshold) & (dataset["average_speed"] <= higher_speed_threshold)
+        dataset = (dataset["average_speed"] > lower_speed_threshold) & (
+            dataset["average_speed"] <= higher_speed_threshold
+        )
         return dataset
 
     @staticmethod
@@ -411,8 +429,7 @@ class DataParser:
         """
         dataset["is_same_id_as_previous"] = dataset["unique_id"] == dataset["unique_id"].shift(period)
         dataset["trip_starts_after_previous_trip"] = dataset["timestamp_start"] > dataset["timestamp_end"].shift(period)
-        dataset = ~(dataset["is_same_id_as_previous"] & ~dataset["trip_starts_after_previous_trip"])
-        return dataset
+        return dataset["is_same_id_as_previous"] & ~dataset["trip_starts_after_previous_trip"]
 
     @staticmethod
     def _filter_analysis(filter_data: pd.DataFrame):
@@ -543,7 +560,13 @@ class IntermediateParsing(DataParser):
         complex_filters = pd.DataFrame(index=self.trips.index)
         lower_speed_threshold = self.dev_config["dataparsers"]["filters"]["lower_speed_threshold"]
         higher_speed_threshold = self.dev_config["dataparsers"]["filters"]["higher_speed_threshold"]
-        complex_filters = complex_filters.join(self._filter_inconsistent_speeds(dataset=self.trips, lower_speed_threshold=lower_speed_threshold, higher_speed_threshold=higher_speed_threshold))
+        complex_filters = complex_filters.join(
+            self._filter_inconsistent_speeds(
+                dataset=self.trips,
+                lower_speed_threshold=lower_speed_threshold,
+                higher_speed_threshold=higher_speed_threshold,
+            )
+        )
         complex_filters = complex_filters.join(self._filter_inconsistent_travel_times(dataset=self.trips))
         complex_filters = complex_filters.join(self._filter_overlapping_trips(dataset=self.trips))
         complex_filters = complex_filters.join(self._filter_consistent_hours(dataset=self.trips))
@@ -630,7 +653,8 @@ class IntermediateParsing(DataParser):
             col_day="trip_start_weekday",
             col_hour="trip_start_hour",
             col_min="trip_start_minute",
-            col_name="timestamp_start")
+            col_name="timestamp_start",
+        )
         self._compose_timestamp(
             data=self.trips,
             col_year="trip_start_year",
@@ -638,7 +662,8 @@ class IntermediateParsing(DataParser):
             col_day="trip_start_weekday",
             col_hour="trip_end_hour",
             col_min="trip_end_minute",
-            col_name="timestamp_end")
+            col_name="timestamp_end",
+        )
 
     @staticmethod
     def _update_end_timestamp(trips):
