@@ -30,9 +30,6 @@ global:
         KiD:
             trips_data_raw: KiD2010-Fahrten-Datei-puf.dta
             vehicles_data_raw: KiD2010-Fahrzeug-Datei-puf.dta
-        VF:
-            trips_data_raw: MiD2017_Wege.dta
-            vehicles_data_raw: tripDataMergedWVehicleData.csv
     disk_file_names:
         output_dataparser: vencopy_output_dataparser
         output_gridmodeller: vencopy_output_gridmodeller
@@ -44,49 +41,48 @@ global:
 
 dataparsers:
     data_variables:
-        dataset: ["MiD08", "MiD17", "KiD", "VF"]
-        is_driver: ["pkw_f", "W_VM_G", "NA", "NA"]
-        household_id: ["household_id", "H_ID_Reg", "NA", "H_ID"]
-        vehicleID: ["NA", "NA", "k00", "A_ID"] # Fahrzeug ID
-        vehicle_segment: ["NA", "NA", "k01", "seg_kba_gr"] # Fahrzeugart
-        drivetrain: ["NA", "NA", "NA", "A_ANTRIEB"]
-        person_id: ["pid", "P_ID", "NA", "P_ID"]
-        household_person_id: ["NA", "HP_ID_Reg", "NA", "HP_ID"]
-        trip_id: ["wid", "W_ID", "f00", "W_ID"]
-        trip_weight: ["w_gew", "W_GEW", "k93", "W_GEW"]
-        trip_scale_factor: ["NA", "W_HOCH", "k90", "W_HOCH"]
-        trip_start_clock: ["st_time", "W_SZ", "f04", "W_SZ"]
-        trip_end_clock: ["en_time", "W_AZ", "f10a", "W_AZ"]
-        trip_purpose: ["w04", "zweck", "f07a", "zweck"]
-        trip_distance: ["wegkm_k", "wegkm", "f14", "wegkm_imp"]
-        travel_time: ["wegmin_k", "wegmin_imp1", "f15", "wegmin_imp1"]
-        trip_start_year: ["stich_j", "ST_JAHR", "NA", "ST_JAHR"]
-        trip_start_month: ["stich_m", "ST_MONAT", "NA", "ST_MONAT"]
-        trip_start_week: ["stichwo", "ST_WOCHE", "NA", "ST_WOCHE"]
-        trip_start_weekday: ["stichtag", "ST_WOTAG", "NA", "ST_WOTAG"]
-        trip_start_hour: ["st_std", "W_SZS", "NA", "W_SZS"]
-        trip_start_minute: ["st_min", "W_SZM", "NA", "W_SZM"]
-        trip_start_date: ["NA", "NA", "k22d", "NA"]
-        trip_end_hour: ["en_std", "W_AZS", "NA", "W_AZS"]
-        trip_end_minute: ["en_min", "W_AZM", "NA", "W_AZM"]
-        trip_end_next_day: ["en_dat", "W_FOLGETAG", "NA", "W_FOLGETAG"]
-        trip_is_intermodal: ["NA", "weg_intermod", "NA", "weg_intermod"]
-        # weather: ["NA", "wetter", "NA", "wetter"]
-        # economic_status: ["NA", "oek_status", "NA", "oek_status"]
-        # household_building: ["NA", "hhtyp2", "NA", "hhtyp2"] # Gebäudetyp detailliert
-        # household_type: ["NA", "haustyp", "NA", "haustyp"]
-        # household_person_age: ["NA", "alter_gr5", "NA", "alter_gr5"]
-        # household_person_job: ["NA", "taet", "NA", "NA"]
-        # bundesland: ["NA", "BLAND", "NA", "BLAND"]
-        # area_type: ["NA", "SKTYP", "k50", "SKTYP"]
-        # garage: ["NA", "garage", "NA", "garage"]
+        dataset: ["MiD08", "MiD17", "KiD"]
+        is_driver: ["pkw_f", "W_VM_G", "NA"]
+        household_id: ["household_id", "H_ID_Reg", "NA"]
+        vehicleID: ["NA", "NA", "k00"] # Fahrzeug ID
+        vehicle_segment: ["NA", "NA", "k01"] # Fahrzeugart
+        drivetrain: ["NA", "NA", "NA"]
+        person_id: ["pid", "P_ID", "NA"]
+        household_person_id: ["NA", "HP_ID_Reg", "NA"]
+        trip_id: ["wid", "W_ID", "f00"]
+        trip_weight: ["w_gew", "W_GEW", "k93"]
+        trip_scale_factor: ["NA", "W_HOCH", "k90"]
+        trip_start_clock: ["st_time", "W_SZ", "f04"]
+        trip_end_clock: ["en_time", "W_AZ", "f10a"]
+        trip_purpose: ["w04", "zweck", "f07a"]
+        trip_distance: ["wegkm_k", "wegkm", "f14"]
+        travel_time: ["wegmin_k", "wegmin_imp1", "f15"]
+        trip_start_year: ["stich_j", "ST_JAHR", "NA"]
+        trip_start_month: ["stich_m", "ST_MONAT", "NA"]
+        trip_start_week: ["stichwo", "ST_WOCHE", "NA"]
+        trip_start_weekday: ["stichtag", "ST_WOTAG", "NA"]
+        trip_start_hour: ["st_std", "W_SZS", "NA"]
+        trip_start_minute: ["st_min", "W_SZM", "NA"]
+        trip_start_date: ["NA", "NA", "k22d"]
+        trip_end_hour: ["en_std", "W_AZS", "NA"]
+        trip_end_minute: ["en_min", "W_AZM", "NA"]
+        trip_end_next_day: ["en_dat", "W_FOLGETAG", "NA"]
+        trip_is_intermodal: ["NA", "weg_intermod", "NA"]
+        # weather: ["NA", "wetter", "NA"]
+        # economic_status: ["NA", "oek_status", "NA"]
+        # household_building: ["NA", "hhtyp2", "NA"] # Gebäudetyp detailliert
+        # household_type: ["NA", "haustyp", "NA"]
+        # household_person_age: ["NA", "alter_gr5", "NA"]
+        # household_person_job: ["NA", "taet", "NA"]
+        # bundesland: ["NA", "BLAND", "NA"]
+        # area_type: ["NA", "SKTYP", "k50"]
+        # garage: ["NA", "garage", "NA"]
         #    tripStartLocation: [ 'NA', 'KKZ_SO' ]
         #    tripEndLocation: [ 'NA', 'KKZ_ZO' ]
     id_variables_names:
         MiD08: "household_person_id"
         MiD17: "household_person_id"
         KiD: "vehicleID"
-        VF: "household_person_id"
     input_data_types:
         MiD17:
             is_driver: "bool"
@@ -142,26 +138,6 @@ dataparsers:
             travel_time: "int"
             trip_start_date: "str"
             area_type: "int"
-        VF:
-            is_driver: "bool"
-            vehicleID: "int"
-            drivetrain: "str"
-            household_person_id: "int"
-            trip_id: "int"
-            trip_weight: "float"
-            trip_purpose: "int"
-            trip_distance: "float"
-            trip_start_year: "int"
-            trip_start_month: "int"
-            trip_start_week: "int"
-            trip_start_weekday: "int"
-            trip_start_hour: "int"
-            trip_start_minute: "int"
-            trip_end_hour: "int"
-            trip_end_minute: "int"
-            trip_end_next_day: "bool"
-            trip_is_intermodal: "int"
-            weather: "int"
     filters:
         lower_speed_threshold: 10 # Minimum speed required
         higher_speed_threshold: 200 # Maximum speed allowed
@@ -200,17 +176,6 @@ dataparsers:
             greater_than:
             smaller_than:
                 trip_distance: [3000]
-        VF:
-            include:
-            exclude:
-                trip_start_hour: [99, 701]
-                trip_end_hour: [99, 701]
-                trip_start_clock: [" "]
-                trip_end_clock: [" "]
-                trip_purpose: [99]
-            greater_than:
-            smaller_than:
-                trip_distance: [1000]
     replacements:
         MiD08:
             trip_start_weekday:
@@ -295,32 +260,3 @@ dataparsers:
                 8: "Other tractor unit"
                 9: "Agriculture and forestry tractor unit"
                 11: "Other"
-        VF:
-            trip_start_weekday:
-                1: "MON"
-                2: "TUE"
-                3: "WED"
-                4: "THU"
-                5: "FRI"
-                6: "SAT"
-                7: "SUN"
-            trip_purpose:
-                1: "WORK" # Erreichen des Arbeitsplatzes
-                2: "WORK" # dienstlich/geschäftlich
-                3: "SCHOOL" # Erreichen der Ausbildungsstätte/Schule
-                4: "SHOPPING" # Einkauf
-                5: "SHOPPING" # private Erledigung
-                6: "LEISURE" # Bringen/Holen/Begleiten von Personen
-                7: "LEISURE" # Freizeitaktivität
-                8: "HOME" # nach Hause
-                9: "HOME" # Rückweg vom vorherigen Weg
-                10: "OTHER" # anderer Zweck
-                11: "HOME" # Begleitung Erwachsener (MiD08)
-                31: "SCHOOL" # Zur Schule oder Vorschule (MiD08)
-                32: "SCHOOL" # Kindertagesstaette oder Kindergarten (MiD08)
-                99: "NA" # keine Angabe
-            vehicle_segment:
-                "klein": "S"
-                "kompakt": "S"
-                "mittel": "M"
-                "gross": "L"
