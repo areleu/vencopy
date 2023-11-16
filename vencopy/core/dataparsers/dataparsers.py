@@ -5,12 +5,10 @@ __status__ = "test"  # options are: dev, test, prod
 __license__ = "BSD-3-Clause"
 
 
-import pprint
 import warnings
 from pathlib import Path
 from zipfile import ZipFile
 
-import numpy as np
 import pandas as pd
 
 

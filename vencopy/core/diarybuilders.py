@@ -75,7 +75,7 @@ class DiaryBuilder:
     def create_diaries(self):
         start_time = time.time()
         self.__update_activities()
-        self.drain = self.distributor.discretise(profile=self.drain, profile_name="drain", method="distribute")
+        self.drain = self.distributor.discretise(profile=self.activities, profile_name="drain", method="distribute")
         self.charging_power = self.distributor.discretise(
             profile=self.charging_power, profile_name="available_power", method="select"
         )
@@ -662,7 +662,7 @@ class TimeDiscretiser:
 
     def discretise(self, profile, profile_name: str, method: str) -> pd.DataFrame:
         self.column_to_discretise: Optional[str] = profile_name
-        self.data_to_discretise = profile
+        self.data_to_discretise = self.activities[self.column_to_discretise]
         self.method = method
         print(f"Starting to discretise {self.column_to_discretise}.")
         start_time_diary_builder = time.time()
