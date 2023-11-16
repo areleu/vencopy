@@ -35,7 +35,7 @@ global:
             vehicles_data_raw: tripDataMergedWVehicleData.csv
     disk_file_names:
         output_dataparser: vencopy_output_dataparser
-        output_gridmodeler: vencopy_output_gridmodeller
+        output_gridmodeller: vencopy_output_gridmodeller
         output_flexestimator: vencopy_output_flexestimator
         output_diarybuilder: vencopy_output_diarybuilder
         output_profileaggregator: vencopy_output_profileaggregator
