@@ -34,11 +34,11 @@ global:
             trips_data_raw: MiD2017_Wege.dta
             vehicles_data_raw: tripDataMergedWVehicleData.csv
     disk_file_names:
-        output_dataParser: vencopy_output_dataparser
-        output_gridModeler: vencopy_output_gridmodeller
-        output_flexEstimator: vencopy_output_flexestimator
-        output_diaryBuilder: vencopy_output_diarybuilder
-        output_profileAggregator: vencopy_output_profileaggregator
+        output_dataparser: vencopy_output_dataparser
+        output_gridmodeler: vencopy_output_gridmodeller
+        output_flexestimator: vencopy_output_flexestimator
+        output_diarybuilder: vencopy_output_diarybuilder
+        output_profileaggregator: vencopy_output_profileaggregator
         output_postprocessor_annual: vencopy_output_postprocessor_annual
         output_postprocessor_normalised: vencopy_output_postprocessor_normalized
 
