@@ -31,7 +31,7 @@ class DiaryBuilder:
             dataset=self.dataset,
             dev_config=self.dev_config,
             user_config=self.user_config,
-            activities=self.activities,
+            # activities=self.activities,
             time_resolution=self.time_resolution,
             is_week=is_week_diary,
         )
@@ -52,9 +52,7 @@ class DiaryBuilder:
         """
         dataset["timestamp_start_corrected"] = dataset["timestamp_start"].dt.round(f"{time_resolution}min")
         dataset["timestamp_end_corrected"] = dataset["timestamp_end"].dt.round(f"{time_resolution}min")
-        dataset["activity_duration"] = (
-            dataset["timestamp_end_corrected"] - dataset["timestamp_start_corrected"]
-        )
+        dataset["activity_duration"] = dataset["timestamp_end_corrected"] - dataset["timestamp_start_corrected"]
         return dataset
 
     @staticmethod
@@ -63,30 +61,29 @@ class DiaryBuilder:
         Drops line when activity duration is zero, which causes inconsistencies in diaryBuilder (e.g. division by zero in number_bins calculation).
         """
         start_length = len(dataset)
-        dataset = dataset.drop(
-            dataset[dataset.activity_duration == pd.Timedelta(0)].index.to_list()
-        )
+        dataset = dataset.drop(dataset[dataset.activity_duration == pd.Timedelta(0)].index.to_list())
         end_length = len(dataset)
         print(
-            f"{start_length - end_length} activities dropped from {start_length} total activities because activity length equals zero."
+            f"{start_length - end_length} activities dropped from {start_length} total activities because activity "
+            "length equals zero."
         )
         return dataset
 
     def create_diaries(self):
         start_time = time.time()
         self.__update_activities()
-        self.drain = self.distributor.discretise(profile=self.drain, profile_name="drain", method="distribute")
+        self.drain = self.distributor.discretise(activities=self.activities, profile_name="drain", method="distribute")
         self.charging_power = self.distributor.discretise(
-            profile=self.charging_power, profile_name="available_power", method="select"
+            activities=self.activities, profile_name="available_power", method="select"
         )
         self.uncontrolled_charging = self.distributor.discretise(
-            profile=self.uncontrolled_charging, profile_name="uncontrolled_charging", method="dynamic"
+            activities=self.activities, profile_name="uncontrolled_charging", method="dynamic"
         )
         self.max_battery_level = self.distributor.discretise(
-            profile=self.max_battery_level, profile_name="max_battery_level_start", method="dynamic"
+            activities=self.activities, profile_name="max_battery_level_start", method="dynamic"
         )
         self.min_battery_level = self.distributor.discretise(
-            profile=self.min_battery_level, profile_name="min_battery_level_end", method="dynamic"
+            activities=self.activities, profile_name="min_battery_level_end", method="dynamic"
         )
         needed_time = time.time() - start_time
         print(f"Needed time to discretise all columns: {needed_time}.")
@@ -95,7 +92,7 @@ class DiaryBuilder:
 class TimeDiscretiser:
     def __init__(
         self,
-        activities: pd.DataFrame,
+        # activities: pd.DataFrame,
         time_resolution: int,
         dataset: str,
         user_config: dict,
@@ -126,7 +123,7 @@ class TimeDiscretiser:
             activities (pd.dataFrame): _description_
             time_resolution (pd.Timedelta): _description_
         """
-        self.activities = activities
+        self.activities = None
         self.dataset = dataset
         self.data_to_discretise = None
         self.user_config = user_config
@@ -660,9 +657,9 @@ class TimeDiscretiser:
             )
             write_out(data=self.activities, path=root / folder / file_name)
 
-    def discretise(self, profile, profile_name: str, method: str) -> pd.DataFrame:
+    def discretise(self, activities, profile_name: str, method: str) -> pd.DataFrame:
         self.column_to_discretise: Optional[str] = profile_name
-        self.data_to_discretise = profile
+        self.activities = activities
         self.method = method
         print(f"Starting to discretise {self.column_to_discretise}.")
         start_time_diary_builder = time.time()
