@@ -349,7 +349,7 @@ class DataParser:
             )
         )
         complex_filters = complex_filters.join(self._filter_inconsistent_travel_times(dataset=self.trips))
-        complex_filters = complex_filters.join(self._filter_overlapping_trips(dataset=self.trips))
+        complex_filters = complex_filters.join(~self._filter_overlapping_trips(dataset=self.trips))
         return complex_filters
 
     @staticmethod
@@ -428,7 +428,9 @@ class DataParser:
                 to the same vehicle.
         """
         dataset["is_same_id_as_previous"] = dataset["unique_id"] == dataset["unique_id"].shift(period)
-        dataset["trip_starts_after_previous_trip"] = dataset["timestamp_start"] > dataset["timestamp_end"].shift(period)
+        dataset["trip_starts_after_previous_trip"] = dataset["timestamp_start"] >= dataset["timestamp_end"].shift(
+            period
+        )
         return dataset["is_same_id_as_previous"] & ~dataset["trip_starts_after_previous_trip"]
 
     @staticmethod
@@ -568,7 +570,7 @@ class IntermediateParsing(DataParser):
             )
         )
         complex_filters = complex_filters.join(self._filter_inconsistent_travel_times(dataset=self.trips))
-        complex_filters = complex_filters.join(self._filter_overlapping_trips(dataset=self.trips))
+        complex_filters = complex_filters.join(~self._filter_overlapping_trips(dataset=self.trips))
         complex_filters = complex_filters.join(self._filter_consistent_hours(dataset=self.trips))
         complex_filters = complex_filters.join(self._filter_zero_length_trips(dataset=self.trips))
         return complex_filters
