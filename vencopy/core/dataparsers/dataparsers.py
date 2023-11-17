@@ -570,7 +570,7 @@ class IntermediateParsing(DataParser):
             )
         )
         complex_filters = complex_filters.join(self._filter_inconsistent_travel_times(dataset=self.trips))
-        complex_filters = complex_filters.join(self._filter_overlapping_trips(dataset=self.trips))
+        complex_filters = complex_filters.join(~self._filter_overlapping_trips(dataset=self.trips))
         complex_filters = complex_filters.join(self._filter_consistent_hours(dataset=self.trips))
         complex_filters = complex_filters.join(self._filter_zero_length_trips(dataset=self.trips))
         return complex_filters
