@@ -33,12 +33,12 @@ class ParkInference:
         """
         self.trips = trips
         split_overnight_trips = self.user_config["dataparsers"]["split_overnight_trips"]
-        self.__copy_rows()
-        self.__add_util_attributes()
+        self.activities_raw = self.__copy_rows(trips=self.trips)
+        self.activities_raw = self.__add_util_attributes(activities_raw=self.activities_raw)
         # self.__add_park_act_after_last_trip()
         self.__add_park_act_before_first_trip()
         self.__adjust_park_attrs()
-        self._drop_redundant_columns()
+        self._drop_redundant_columns(dataset=self.activities_raw)
         self.__remove_next_day_park_acts()
         self.__adjust_park_timestamps()
         # self.__set_trip_attrs_na_for_park_acts()
@@ -52,27 +52,31 @@ class ParkInference:
         )
         return self.activities_raw
 
-    def __copy_rows(self):
+    @staticmethod
+    def __copy_rows(trips):
         """
-        Adds. skeleton duplicate rows for parking activities.
+        Adds skeleton duplicate rows for parking activities.
         """
-        self.activities_raw = pd.concat([self.trips] * 2).sort_index(ignore_index=True)
-        self.activities_raw["park_id"] = self.activities_raw["trip_id"]
-        self.activities_raw.loc[range(1, len(self.activities_raw), 2), "trip_id"] = pd.NA
-        self.activities_raw.loc[range(0, len(self.activities_raw), 2), "park_id"] = pd.NA
+        activities_raw = pd.concat([trips] * 2).sort_index(ignore_index=True)
+        activities_raw["park_id"] = activities_raw["trip_id"]
+        activities_raw.loc[range(1, len(activities_raw), 2), "trip_id"] = pd.NA
+        activities_raw.loc[range(0, len(activities_raw), 2), "park_id"] = pd.NA
+        return activities_raw
 
-    def __add_util_attributes(self):
+    @staticmethod
+    def __add_util_attributes(activities_raw):
         """
         Adding additional attribute columns with previous and next unique_id.
         """
-        self.activities_raw["previous_unique_id"] = self.activities_raw["unique_id"].shift(fill_value=0)
-        self.activities_raw["is_first_activity"] = (
-            self.activities_raw["previous_unique_id"] != self.activities_raw["unique_id"]
+        activities_raw["previous_unique_id"] = activities_raw["unique_id"].shift(fill_value=0)
+        activities_raw["is_first_activity"] = (
+            activities_raw["previous_unique_id"] != activities_raw["unique_id"]
         )
-        self.activities_raw["next_unique_id"] = self.activities_raw["unique_id"].shift(-1, fill_value=0)
-        self.activities_raw["is_last_activity"] = (
-            self.activities_raw["next_unique_id"] != self.activities_raw["unique_id"]
+        activities_raw["next_unique_id"] = activities_raw["unique_id"].shift(-1, fill_value=0)
+        activities_raw["is_last_activity"] = (
+            activities_raw["next_unique_id"] != activities_raw["unique_id"]
         )
+        return activities_raw
 
     def __add_park_act_before_first_trip(self):
         """
@@ -117,11 +121,12 @@ class ParkInference:
         self.activities_raw["column_from_index"] = self.activities_raw.index
         self.activities_raw = self.activities_raw.sort_values(by=["column_from_index", "park_id", "trip_id"])
 
-    def _drop_redundant_columns(self):
+    @staticmethod
+    def _drop_redundant_columns(dataset):
         """
         Removes temporary redundant columns.
         """
-        self.activities_raw.drop(
+        dataset.drop(
             columns=[
                 "trip_start_clock",
                 "trip_end_clock",
@@ -138,6 +143,7 @@ class ParkInference:
             ],
             inplace=True,
         )
+        return dataset
 
     def __remove_next_day_park_acts(self):
         """
@@ -146,10 +152,9 @@ class ParkInference:
         # DEPRECATED
         # indeces_overnight = self.activities_raw["is_last_activity"] & self.activities_raw["trip_end_next_day"]
         # indeces_overnight = indeces_overnight.loc[indeces_overnight]
-
         # self.activities_raw = self.activities_raw.reset_index()
-        # Get rid of park activities after overnight trips
 
+        # Get rid of park activities after overnight trips
         indeces_multi_day_activities = (
             self.activities_raw["is_last_activity"]
             & self.activities_raw["trip_end_next_day"]
@@ -373,7 +378,6 @@ class OvernightSplitter:
         self.__merge_adjacent_trips()
         # Implement DELTA mileage check of overnight morning split trip distances
         self.__check_and_assert()
-        self.__cleanup_dataset()
         self.__sort_activities()
 
         return self.activities_raw
@@ -572,21 +576,6 @@ class OvernightSplitter:
             minute=0,
         )
         self.activities_raw.loc[indeces_consolidated_trips, "previous_activity_id"] = pd.NA
-
-    def __cleanup_dataset(self):
-        self.activities_raw.drop(
-            columns=[
-                "level_0",
-                "trip_is_intermodal",
-                "timedelta_total",
-                "timedelta_morning",
-                "time_share_morning",
-                "time_share_evening",
-                "total_trip_distance",
-                "trip_end_next_day",
-            ],
-            inplace=True,
-        )
 
     def __sort_activities(self):
         """

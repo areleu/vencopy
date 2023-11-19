@@ -5,12 +5,10 @@ __status__ = "test"  # options are: dev, test, prod
 __license__ = "BSD-3-Clause"
 
 
-import pprint
 import warnings
 from pathlib import Path
 from zipfile import ZipFile
 
-import numpy as np
 import pandas as pd
 
 
@@ -82,9 +80,6 @@ class DataParser:
 
         :return: None
         """
-        # Future releases: Are potential error messages (.dta not being a stata
-        # file even as the ending matches) readable for the user?
-        # Should we have a manual error treatment here?
         if self.raw_data_path.suffix == ".dta":
             self.raw_data = pd.read_stata(
                 self.raw_data_path,
@@ -92,7 +87,6 @@ class DataParser:
                 convert_dates=False,
                 preserve_dtypes=False,
             )
-        # This has not been tested before the beta release
         elif self.raw_data_path.suffix == ".csv":
             self.raw_data = pd.read_csv(self.raw_data_path)
         else:
@@ -209,11 +203,6 @@ class DataParser:
         :return: None. The function operates on self.trips class-internally.
         """
         print(f"Starting filtering, applying {len(return_lowest_level_dict_keys(filters))} filters.")
-        # Future releases: as discussed before we could indeed work here with a plug and pray approach.
-        #  we would need to introduce a filter manager and a folder structure where to look for filters.
-        #  this is very similar code than the one from ioproc. If we want to go down this route we should
-        #  take inspiration from the code there. It was not easy to get it right in the first place. This
-        #  might be easy to code but hard to implement correctly. See issue #445
 
         # Application of simple value-based filters
         simple_filters = self._simple_filters()

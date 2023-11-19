@@ -66,30 +66,15 @@ class ParseMiD(IntermediateParsing):
         if purpose:
             self._add_string_column_from_variable(col_name="purpose_string", var_name="trip_purpose")
 
-    @staticmethod #TODO: check whether this method is used at all (if not remove test)
-    def _drop_redundant_columns(dataset):
-        """
-        Removes temporary redundant columns.
-        """
-        dataset.drop(
+    def __cleanup_dataset(self):
+        self.activities.drop(
             columns=[
                 "is_driver",
-                "trip_start_clock",
-                "trip_end_clock",
-                "trip_start_year",
-                "trip_start_month",
-                "trip_start_week",
-                "trip_start_hour",
-                "trip_start_minute",
-                "trip_end_hour",
-                "trip_end_minute",
-                "previous_unique_id",
-                "next_unique_id",
-                "column_from_index",
+                "trip_is_intermodal",
+                "trip_end_next_day",
             ],
             inplace=True,
         )
-        return dataset
 
     def process(self) -> pd.DataFrame:
         """
@@ -107,6 +92,7 @@ class ParseMiD(IntermediateParsing):
         self._filter(filters=self.filters)
         self._filter_consistent_hours(dataset=self.trips)
         self.activities = self.park_inference.add_parking_rows(trips=self.trips)
+        self.__cleanup_dataset()
         self.write_output()
         print("Parsing MiD dataset completed.")
         return self.activities

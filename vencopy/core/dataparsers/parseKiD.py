@@ -146,3 +146,4 @@ class ParseKiD(IntermediateParsing):
         self.write_output()
         print("Parsing KiD dataset completed.")
         return self.activities
+    
