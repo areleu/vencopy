@@ -40,3 +40,26 @@ TripDiaryBuilder Output
  * Uncontrolled charging profile (.csv)
  * Maximum battery energy level (.csv)
  * Minimum battery energy level (.csv)
+
+
+Aggregation Approaches
+---------------------------------------------------
+
+The aggregation approach implemented in venco.py varies according to the considered profile.
+Below the different approaches are illustrated.
+
+
+Profile for uncontrolled charging `uncontrolled_charging`
+#################################################################
+
+
+Profile for the electric demand `drain`
+#################################################################
+
+
+Profile for the charging capacity of the fleet `charging_power`
+############################################################
+
+
+Maximum and minimum battery level profile `max_battery_level` and `min_battery_level`
+#################################################################

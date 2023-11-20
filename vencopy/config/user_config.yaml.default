@@ -26,7 +26,7 @@ global:
       MiD08: PATH_TO_DATA_FOLDER
       MiD17: PATH_TO_DATA_FOLDER  # e.g. C:/MiD/proprietary/B2/STATA
       KiD: PATH_TO_DATA_FOLDER
-      vencopy_root: [USER FOLDER ROOT]
+      vencopy_root: USER_FOLDER_ROOT
 
 
 dataparsers:

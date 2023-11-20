@@ -40,3 +40,9 @@ PostProcessor Output
  * Uncontrolled charging profile (.csv)
  * Maximum battery energy level (.csv)
  * Minimum battery energy level (.csv)
+
+
+Timeseries Creation and Normalisation
+---------------------------------------------------
+
+Weekly or annual timeseries and normalisation.

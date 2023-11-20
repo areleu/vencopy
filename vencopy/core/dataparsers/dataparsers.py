@@ -12,7 +12,7 @@ from zipfile import ZipFile
 import pandas as pd
 
 
-from vencopy.utils.utils import (
+from ...utils.utils import (
     create_file_name,
     write_out,
     return_lowest_level_dict_keys,
@@ -60,6 +60,9 @@ class DataParser:
         print("Generic file parsing properties set up.")
 
     def _load_data(self):
+        """
+        
+        """
         number_lines_debug = self.user_config["global"]["number_lines_debug"]
         load_encrypted = False
         if load_encrypted:

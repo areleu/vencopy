@@ -69,7 +69,7 @@ parkingType(v, t).
 
 Aggregation to fleet level: :ref:`profileaggregator`
 ---------------------------------------------------
-In the profileAggregator, ...
+In the ProfileAggregator, ...
 
 
 Output postprocessing: :ref:`postprocessor`
