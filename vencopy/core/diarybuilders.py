@@ -16,6 +16,14 @@ from ..utils.utils import create_file_name, write_out
 
 class DiaryBuilder:
     def __init__(self, configs: dict, activities: pd.DataFrame, is_week_diary: bool = False):
+        """
+        _summary_
+
+        Args:
+            configs (dict): _description_
+            activities (pd.DataFrame): _description_
+            is_week_diary (bool, optional): _description_. Defaults to False.
+        """
         self.dev_config = configs["dev_config"]
         self.user_config = configs["user_config"]
         self.dataset = configs["user_config"]["global"]["dataset"]
@@ -49,6 +57,13 @@ class DiaryBuilder:
     def _correct_timestamps(dataset, time_resolution) -> pd.DataFrame:
         """
         Rounds timestamps to predefined resolution.
+
+        Args:
+            dataset (_type_): _description_
+            time_resolution (_type_): _description_
+
+        Returns:
+            pd.DataFrame: _description_
         """
         dataset["timestamp_start_corrected"] = dataset["timestamp_start"].dt.round(f"{time_resolution}min")
         dataset["timestamp_end_corrected"] = dataset["timestamp_end"].dt.round(f"{time_resolution}min")
@@ -59,6 +74,12 @@ class DiaryBuilder:
     def _removes_zero_length_activities(dataset):
         """
         Drops line when activity duration is zero, which causes inconsistencies in diaryBuilder (e.g. division by zero in number_bins calculation).
+
+        Args:
+            dataset (_type_): _description_
+
+        Returns:
+            _type_: _description_
         """
         start_length = len(dataset)
         dataset = dataset.drop(dataset[dataset.activity_duration == pd.Timedelta(0)].index.to_list())
@@ -70,6 +91,9 @@ class DiaryBuilder:
         return dataset
 
     def create_diaries(self):
+        """
+        _summary_
+        """
         start_time = time.time()
         self.__update_activities()
         self.drain = self.distributor.discretise(activities=self.activities, profile_name="drain", method="distribute")

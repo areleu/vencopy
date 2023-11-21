@@ -15,6 +15,14 @@ from ..utils.utils import create_file_name, write_out
 
 class ProfileAggregator:
     def __init__(self, configs: dict, activities: pd.DataFrame, profiles: DiaryBuilder):
+        """
+        _summary_
+
+        Args:
+            configs (dict): _description_
+            activities (pd.DataFrame): _description_
+            profiles (DiaryBuilder): _description_
+        """
         self.user_config = configs["user_config"]
         self.dev_config = configs["dev_config"]
         self.dataset = self.user_config["global"]["dataset"]
@@ -48,6 +56,9 @@ class ProfileAggregator:
         )
 
     def aggregate_profiles(self):
+        """
+        _summary_
+        """
         self.drain_weekly = self.aggregator.perform_aggregation(profile=self.drain, profile_name="drain", method="flow")
         self.charging_power_weekly = self.aggregator.perform_aggregation(
             profile=self.charging_power, profile_name="charging_power", method="flow"
@@ -68,6 +79,17 @@ class Aggregator:
     def __init__(
         self, activities: pd.DataFrame, dataset: str, alpha: int, user_config: dict, dev_config: dict, weighted: bool
     ):
+        """
+        _summary_
+
+        Args:
+            activities (pd.DataFrame): _description_
+            dataset (str): _description_
+            alpha (int): _description_
+            user_config (dict): _description_
+            dev_config (dict): _description_
+            weighted (bool): _description_
+        """
         self.dataset = dataset
         self.alpha = alpha
         self.activities = activities
@@ -76,6 +98,12 @@ class Aggregator:
         self.dev_config = dev_config
 
     def __basic_aggregation(self) -> pd.Series:
+        """
+        _summary_
+
+        Returns:
+            pd.Series: _description_
+        """
         if self.user_config["profileaggregators"]["aggregation_timespan"] == "daily":
             self._aggregate_daily()
         elif self.user_config["profileaggregators"]["aggregation_timespan"] == "weekly":
@@ -85,6 +113,12 @@ class Aggregator:
             NotImplementedError("The aggregation timespan can either be daily or weekly.")
 
     def _aggregate_daily(self):
+        """
+        _summary_
+
+        Raises:
+            NotImplementedError: _description_
+        """
         self.daily_profile = pd.DataFrame(columns=self.profile.columns, index=range(1, 2))
         cols = ["unique_id", "trip_weight"]
         self.activities_subset = (
@@ -118,6 +152,12 @@ class Aggregator:
                 raise NotImplementedError(f"An unknown profile {self.profile_name} was selected.")
 
     def _aggregate_weekly(self, by_column: str = "trip_start_weekday"):
+        """
+        _summary_
+
+        Args:
+            by_column (str, optional): _description_. Defaults to "trip_start_weekday".
+        """
         self.weekday_profiles = pd.DataFrame(columns=self.profile.columns, index=range(1, 8))
         cols = ["unique_id", "trip_weight"] + [by_column]
         self.activities_subset = (
@@ -136,6 +176,12 @@ class Aggregator:
             self.__aggregate_state_profiles(by_column="trip_start_weekday", alpha=self.alpha)
 
     def __calculate_average_flow_profiles(self, by_column: str):
+        """
+        _summary_
+
+        Args:
+            by_column (str): _description_
+        """
         for idate in self.activities_weekday[by_column].unique():
             weekday_subset = self.activities_weekday[self.activities_weekday[by_column] == idate].reset_index(drop=True)
             weekday_subset = weekday_subset.drop(columns=["trip_start_weekday", "trip_weight"], axis=1)
@@ -143,6 +189,12 @@ class Aggregator:
             self.weekday_profiles.iloc[idate - 1] = weekday_subset_agg
 
     def __caculate_weighted_mean_flow_profiles(self, by_column: str):
+        """
+        _summary_
+
+        Args:
+            by_column (str): _description_
+        """
         for idate in self.activities_weekday[by_column].unique():
             weekday_subset = self.activities_weekday[self.activities_weekday[by_column] == idate].reset_index(drop=True)
             weekday_subset = weekday_subset.drop("trip_start_weekday", axis=1)
@@ -160,11 +212,13 @@ class Aggregator:
         10%-biggest (10%-smallest) value is selected, all values beyond are
         disregarded as outliers.
 
-        :param by_column: Currently trip_weekday
-        :param alpha: Percentage, giving the amount of profiles whose mobility demand can not be
-            fulfilled after selection.
-        :return: No return. Result is written to self.weekday_profiles with bins
-            in the columns and weekday identifiers in the rows.
+        Args:
+            by_column (str): Column to be used to aggregate (currently trip_weekday)
+            alpha (int, optional): Percentage, giving the amount of profiles whose mobility demand can not be
+                                   fulfilled after selection. Defaults to 10.
+
+        Raises:
+            NotImplementedError: _description_
         """
         for idate in self.activities_weekday[by_column].unique():
             levels = self.activities_weekday.copy()

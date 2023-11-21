@@ -13,6 +13,13 @@ from vencopy.utils.utils import create_file_name, write_out
 
 class FlexEstimator:
     def __init__(self, configs: dict, activities: pd.DataFrame):
+        """
+        _summary_
+
+        Args:
+            configs (dict): _description_
+            activities (pd.DataFrame): _description_
+        """
         self.dataset = configs["user_config"]["global"]["dataset"]
         self.user_config = configs["user_config"]
         self.dev_config = configs["dev_config"]
@@ -48,12 +55,26 @@ class FlexEstimator:
         ] = None
         self.activities_without_residual = None
 
-    def _drain(self):
-        self.activities["drain"] = (
-            self.activities["trip_distance"] * self.user_config["flexestimators"]["electric_consumption"] / 100
+    @staticmethod
+    def _drain(self, dataset):
+        """
+        _summary_
+
+        Args:
+            dataset (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """
+        dataset["drain"] = (
+            dataset["trip_distance"] * self.user_config["flexestimators"]["electric_consumption"] / 100
         )
+        return dataset
 
     def _max_charge_volume_per_parking_activity(self):
+        """
+        _summary_
+        """
         self.activities.loc[self.is_park, "max_charge_volume"] = (
             self.activities.loc[self.is_park, "available_power"]
             * self.activities.loc[self.is_park, "time_delta"]
@@ -138,6 +159,12 @@ class FlexEstimator:
         trips influence the energy that has to be charged in parking activities
         before. Thus, activities are looped over from the last activity to
         first.
+
+        Args:
+            end_level (pd.Series): _description_
+
+        Returns:
+            pd.Series: _description_
         """
         print("Starting minimum battery level calculation.")
         print(f"Calculate minimum battery level for last activities.")
@@ -181,9 +208,10 @@ class FlexEstimator:
         Args:
             start_level (float): Start battery level at beginning of simulation (MON, 00:00). Defaults to
             self.upper_battery_level, the maximum battery level.
+        
         Returns:
             pd.DataFrame: First activities with all battery level columns as anchor for the consecutive calculation
-            of maximum charge
+                          of maximum charge
         """
         # First activities - parking and trips
         indeces = self.__get_indeces_first_activity()
@@ -278,6 +306,17 @@ class FlexEstimator:
     def __calculate_max_battery_level_trip(
         self, activity_id: int, trip_activities: pd.DataFrame, previous_park_activities: pd.DataFrame = None
     ) -> pd.DataFrame:
+        """
+        _summary_
+
+        Args:
+            activity_id (int): _description_
+            trip_activities (pd.DataFrame): _description_
+            previous_park_activities (pd.DataFrame, optional): _description_. Defaults to None.
+
+        Returns:
+            pd.DataFrame: _description_
+        """
         # Setting trip activity battery start level to battery end level of previous parking
         # Index setting of trip activities to be updated
         active_unique_ids = trip_activities.loc[:, "unique_id"]
@@ -315,6 +354,17 @@ class FlexEstimator:
     def __calculate_min_battery_level_trip(
         self, activity_id: int, trip_activities: pd.DataFrame, next_park_activities: pd.DataFrame = None
     ) -> pd.DataFrame:
+        """
+        _summary_
+
+        Args:
+            activity_id (int): _description_
+            trip_activities (pd.DataFrame): _description_
+            next_park_activities (pd.DataFrame, optional): _description_. Defaults to None.
+
+        Returns:
+            pd.DataFrame: _description_
+        """
         # Setting trip activity battery start level to battery end level of previous parking
         active_unique_ids = trip_activities.loc[:, "unique_id"]
         multi_index_trip = [(id, activity_id, None) for id in active_unique_ids]
@@ -439,6 +489,8 @@ class FlexEstimator:
         return indeces_park_activities.reset_index()
 
     def _uncontrolled_charging(self):
+        """_summary_
+        """
         park_activities = self.activities.loc[self.activities["trip_id"].isna(), :].copy()
         park_activities["uncontrolled_charging"] = (
             park_activities["max_battery_level_end"] - park_activities["max_battery_level_start"]
@@ -592,10 +644,21 @@ class FlexEstimator:
         return epsilon * battery_capacity * number_vehicles
 
     def __get_delta(self, start_column: str, end_column: str) -> float:
-        return abs(
+        """
+        _summary_
+
+        Args:
+            start_column (str): _description_
+            end_column (str): _description_
+
+        Returns:
+            float: _description_
+        """
+        delta = abs(
             self.activities.loc[self.activities["is_last_activity"], end_column].values
             - self.activities.loc[self.activities["is_first_activity"], start_column].values
         ).sum()
+        return delta
 
     def estimate_technical_flexibility_no_boundary_constraints(self) -> pd.DataFrame:
         """

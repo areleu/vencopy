@@ -14,6 +14,13 @@ from ..utils.utils import create_file_name, write_out
 
 class GridModeller:
     def __init__(self, configs: dict, activities):
+        """
+        _summary_
+
+        Args:
+            configs (dict): _description_
+            activities (_type_): _description_
+        """
         self.user_config = configs["user_config"]
         self.dev_config = configs["dev_config"]
         self.dataset = configs["user_config"]["global"]["dataset"]
@@ -29,8 +36,6 @@ class GridModeller:
         """
         Assigns the grid connection power using the trip purposes though a true/false mapping in the user_config.yaml
         to represent the charging station availability for each individual vehicle.
-
-        :return: None
         """
         print("Starting with charge connection replacement of location purposes.")
         self.charging_availability = self.activities.purpose_string.replace(self.grid_availability_simple)
@@ -43,8 +48,8 @@ class GridModeller:
         """
         Assigns the grid usig probability distributions defined in user_config.yaml.
 
-        :param set_seed: Seed for reproducing random number
-        :return: None
+        Args:
+            set_seed (int): Seed for reproducing random number
         """
         activities_no_home = []
         print("Starting with charge connection replacement of location purposes.")
@@ -118,8 +123,8 @@ class GridModeller:
         and values being floats between 0 and 1. The factor is the LOSS FACTOR not the EFFICIENCY, thus 0.1 applied to
         a rated power of 11 kW will yield an available power of 9.9 kW.
 
-        :param activities [bool]: Should electric losses in the charging equipment be considered?
-        :param losses [bool]: Should electric losses in the charging equipment be considered?
+        Returns:
+            pd.DataFrame: _description_
         """
         if self.user_config["gridmodellers"]["losses"]:
             self.activities["available_power"] = self.activities["rated_power"] - (
@@ -157,6 +162,12 @@ class GridModeller:
         Wrapper function for grid assignment. The number of iterations for
         assignGridViaProbabilities() and seed for
         reproduction of random numbers can be specified here.
+
+        Args:
+            seed (int, optional): _description_. Defaults to 42.
+
+        Returns:
+            pd.DataFrame: _description_
         """
         if self.grid_model == "simple":
             self.__assign_grid_via_purposes()
