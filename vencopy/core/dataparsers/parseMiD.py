@@ -63,6 +63,7 @@ class ParseMiD(IntermediateParsing):
         if purpose:
             self._add_string_column_from_variable(col_name="purpose_string", var_name="trip_purpose")
 
+    # DEPRECATED since we need the variables downstream
     @staticmethod  # TODO: check whether this method is used at all (if not remove test)
     def _drop_redundant_columns(dataset):
         """
@@ -93,7 +94,7 @@ class ParseMiD(IntermediateParsing):
         self._filter(filters=self.filters)
         # self._filter_consistent_hours(dataset=self.trips)
         self.activities = self.park_inference.add_parking_rows(trips=self.trips)
-        self.__cleanup_dataset()
+        # self._drop_redundant_columns(self.activities)
         self.write_output()
         print("Parsing MiD dataset completed.")
         return self.activities
