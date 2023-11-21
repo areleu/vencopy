@@ -139,8 +139,8 @@ dataparsers:
             trip_start_date: "str"
             area_type: "int"
     filters:
-        lower_speed_threshold: 10 # Minimum speed required
-        higher_speed_threshold: 200 # Maximum speed allowed
+        lower_speed_threshold: 10 # Minimum speed required in km/h
+        higher_speed_threshold: 200 # Maximum speed allowed in km/h
         MiD08:
             include:
                 is_driver: [1]
