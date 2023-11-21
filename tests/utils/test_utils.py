@@ -192,7 +192,7 @@ def test_create_output_folders(sample_configs):
     sub_dirs = (
         "dataparser",
         "diarybuilder",
-        "gridmodeler",
+        "gridmodeller",
         "flexestimator",
         "profileaggregator",
         "postprocessor"

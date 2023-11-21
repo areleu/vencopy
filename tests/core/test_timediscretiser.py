@@ -49,15 +49,14 @@ def sample_activities():
     return activities
 
 
-def test_timediscretiser_init(sample_configs, sample_activities):
+def test_timediscretiser_init(sample_configs,):
 
-    discretiser = TimeDiscretiser(dataset="dataset1", user_config=sample_configs["user_config"], dev_config=sample_configs["dev_config"], time_resolution=15, activities=sample_activities)
+    discretiser = TimeDiscretiser(dataset="dataset1", user_config=sample_configs["user_config"], dev_config=sample_configs["dev_config"], time_resolution=15)
 
-    assert discretiser.activities.equals(sample_activities)
+    assert discretiser.activities == None
     assert discretiser.dev_config == sample_configs["dev_config"]
     assert discretiser.user_config == sample_configs["user_config"]
     assert discretiser.dataset == "dataset1"
-    assert discretiser.activities.equals(sample_activities)
     assert discretiser.time_resolution == 15
     assert discretiser.quantum == pd.Timedelta(value=1, unit="min")
     assert discretiser.is_week == False
