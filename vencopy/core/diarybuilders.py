@@ -92,7 +92,6 @@ class DiaryBuilder:
 class TimeDiscretiser:
     def __init__(
         self,
-        # activities: pd.DataFrame,
         time_resolution: int,
         dataset: str,
         user_config: dict,
@@ -102,26 +101,23 @@ class TimeDiscretiser:
         """
         Class for discretisation of activities to fixed temporal resolution
 
-        Activities is a pandas Series with a unique ID in the index, ts is a pandas dataframe with two
-        columns: timestamp_start and timestamp_end, time_resolution is a pandas time_delta object
-        specifying the fixed resolution that the discretisation should output. Method
-        specifies how the discretisation should be carried out. 'Distribute' assumes
-        act provides a divisible variable (energy, distance etc.) and distributes this
-        depending on the time share of the activity within the respective time interval.
-        'Select' assumes an undivisible variable such as power is given and selects
-        the values for the given timestamps. For now: If start or end timestamp of an
-        activity exactly hits the middle of a time interval (time_resolution/2), the value is allocated
-        if its ending but not if its starting (value set to 0). For time_resolution=30 min, a parking
-        activity ending at 9:15 with a charging availability of 11 kW, 11 kW will be assigned
-        to the last slot (9:00-9:30) whereas if it had started at 7:45, the slot (7:30-8:00)
-        is set to 0 kW.
-        The quantum is the shortest possible time interval for the discretiser, hard
-        coded in the init and given as a pandas.time_delta. Thus if 1 minute is selected
-        discretisation down to resolutions of seconds are not possible.
-
         Args:
-            activities (pd.dataFrame): _description_
-            time_resolution (pd.Timedelta): _description_
+            time_resolution (int): A pandas time_delta object specifying the fixed resolution that the discretisation should output
+            dataset (str): specifies how the discretisation should be carried out. 'Distribute' assumes
+                            act provides a divisible variable (energy, distance etc.) and distributes this
+                            depending on the time share of the activity within the respective time interval.
+                            'Select' assumes an undivisible variable such as power is given and selects
+                            the values for the given timestamps. For now: If start or end timestamp of an
+                            activity exactly hits the middle of a time interval (time_resolution/2), the value is allocated
+                            if its ending but not if its starting (value set to 0). For time_resolution=30 min, a parking
+                            activity ending at 9:15 with a charging availability of 11 kW, 11 kW will be assigned
+                            to the last slot (9:00-9:30) whereas if it had started at 7:45, the slot (7:30-8:00)
+                            is set to 0 kW. The quantum is the shortest possible time interval for the discretiser, hard
+                            coded in the init and given as a pandas.time_delta. Thus if 1 minute is selected
+                            discretisation down to resolutions of seconds are not possible.
+            user_config (dict): _description_
+            dev_config (dict): _description_
+            is_week (bool, optional): _description_. Defaults to False.
         """
         self.activities = None
         self.dataset = dataset
