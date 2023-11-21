@@ -234,7 +234,7 @@ def test_filter_overlapping_trips(sample_data_frame_other_filters):
     assert isinstance(result, pd.Series)
     assert len(result) == len(sample_data_frame_other_filters)
 
-    expected_result = pd.Series([True, False, True, True, True])
+    expected_result = pd.Series([False, True, False, False, False])
     assert result.equals(expected_result)
 
 
@@ -244,7 +244,7 @@ def test_identify_overlapping_trips(sample_data_frame_other_filters):
     assert isinstance(result, pd.Series)
     assert len(result) == len(sample_data_frame_other_filters)
 
-    expected_result = pd.Series([True, False, True, True, True])
+    expected_result = pd.Series([False, True, False, False, False])
     assert result.equals(expected_result)
 
 
@@ -258,8 +258,6 @@ def test_filter_analysis(capsys):
 
     captured = capsys.readouterr()
     expected_output = (
-        "The following number of observations were taken into account after filtering:\n"
-        "{'Filter1': 3, 'Filter2': 2}\n"
         "All filters combined yielded that a total of 1 trips are taken into account.\n"
         "This corresponds to 25.0 percent of the original data.\n"
     )

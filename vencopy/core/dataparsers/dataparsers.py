@@ -217,7 +217,7 @@ class DataParser:
         self.data_simple = self.trips[simple_filters.all(axis="columns")]
 
         # Application of sophisticated filters
-        complex_filters = self._complex_filters()
+        complex_filters = self._complex_filters(data=self.data_simple)
         self.trips = self.data_simple.loc[complex_filters.all(axis="columns"), :]
 
         # Print user feedback on filtering
@@ -325,7 +325,7 @@ class DataParser:
                 )
         return smaller_than_filter_cols
 
-    def _complex_filters(self) -> pd.DataFrame:
+    def _complex_filters(self, data: pd.DataFrame) -> pd.DataFrame:
         """
         Collects filters that compare multiple columns or derived variables or calculation results thereof. True
         in this filter means "keep row". The function needs self.trips to determine the length and the index of the
@@ -335,18 +335,18 @@ class DataParser:
             pd.DataFrame: DataFrame with a boolean column per complex filter. True means keep the row in the trips
             data set.
         """
-        complex_filters = pd.DataFrame(index=self.trips.index)
+        complex_filters = pd.DataFrame(index=data.index)
         lower_speed_threshold = self.dev_config["dataparsers"]["filters"]["lower_speed_threshold"]
         higher_speed_threshold = self.dev_config["dataparsers"]["filters"]["higher_speed_threshold"]
         complex_filters = complex_filters.join(
             self._filter_inconsistent_speeds(
-                dataset=self.trips,
+                dataset=data,
                 lower_speed_threshold=lower_speed_threshold,
                 higher_speed_threshold=higher_speed_threshold,
             )
         )
-        complex_filters = complex_filters.join(self._filter_inconsistent_travel_times(dataset=self.trips))
-        complex_filters = complex_filters.join(~self._filter_overlapping_trips(dataset=self.trips))
+        complex_filters = complex_filters.join(self._filter_inconsistent_travel_times(dataset=data))
+        complex_filters = complex_filters.join(~self._filter_overlapping_trips(dataset=data))
         return complex_filters
 
     @staticmethod
@@ -366,7 +366,7 @@ class DataParser:
         return dataset
 
     @staticmethod
-    def _filter_inconsistent_travel_times(dataset) -> pd.Series:
+    def _filter_inconsistent_travel_times(dataset_in: pd.DataFrame) -> pd.Series:
         """
         Calculates a travel time from the given timestamps and compares it
         to the travel time given by the interviewees. Selects observations where
@@ -375,6 +375,7 @@ class DataParser:
         :return: Boolean vector with observations marked True that should be
         kept in the data set
         """
+        dataset = dataset_in.copy()
         dataset["travel_time_ts"] = (
             (dataset["timestamp_end"] - dataset["timestamp_start"]).dt.total_seconds().div(60).astype(int)
         )
@@ -407,7 +408,7 @@ class DataParser:
         return ret
 
     @staticmethod
-    def _identify_overlapping_trips(dataset: pd.DataFrame, period: int) -> pd.Series:
+    def _identify_overlapping_trips(dataset_in: pd.DataFrame, period: int) -> pd.Series:
         """
         Calculates a boolean vector of same length as dat that is True if the current trip does not overlap with
         the next trip. "Next" can relate to the consecutive trip (if period==1) or to a later trip defined by the
@@ -424,6 +425,7 @@ class DataParser:
             pd.Series: A boolean vector that is True if the trip does not overlap with the period-next trip but belongs
                 to the same vehicle.
         """
+        dataset = dataset_in.copy()
         dataset["is_same_id_as_previous"] = dataset["unique_id"] == dataset["unique_id"].shift(period)
         dataset["trip_starts_after_previous_trip"] = dataset["timestamp_start"] >= dataset["timestamp_end"].shift(
             period
@@ -546,7 +548,7 @@ class IntermediateParsing(DataParser):
         self.var_datatype_dict = {key: conversion_dict[key] for key in conversion_dict.keys() & keys}
         self.trips = self.trips.astype(self.var_datatype_dict)
 
-    def _complex_filters(self) -> pd.DataFrame:
+    def _complex_filters(self, data: pd.DataFrame) -> pd.DataFrame:
         """
         Collects filters that compare multiple columns or derived variables or calculation results thereof. True
         in this filter means "keep row". The function needs self.trips to determine the length and the index of the
@@ -556,7 +558,7 @@ class IntermediateParsing(DataParser):
             pd.DataFrame: DataFrame with a boolean column per complex filter. True means keep the row in the activities
             data set.
         """
-        complex_filters = pd.DataFrame(index=self.trips.index)
+        complex_filters = pd.DataFrame(index=data.index)
         lower_speed_threshold = self.dev_config["dataparsers"]["filters"]["lower_speed_threshold"]
         higher_speed_threshold = self.dev_config["dataparsers"]["filters"]["higher_speed_threshold"]
         complex_filters = complex_filters.join(
@@ -566,10 +568,10 @@ class IntermediateParsing(DataParser):
                 higher_speed_threshold=higher_speed_threshold,
             )
         )
-        complex_filters = complex_filters.join(self._filter_inconsistent_travel_times(dataset=self.trips))
-        complex_filters = complex_filters.join(~self._filter_overlapping_trips(dataset=self.trips))
-        complex_filters = complex_filters.join(self._filter_consistent_hours(dataset=self.trips))
-        complex_filters = complex_filters.join(self._filter_zero_length_trips(dataset=self.trips))
+        complex_filters = complex_filters.join(self._filter_inconsistent_travel_times(dataset_in=data))
+        complex_filters = complex_filters.join(~self._filter_overlapping_trips(dataset=data))
+        complex_filters = complex_filters.join(self._filter_consistent_hours(dataset=data))
+        complex_filters = complex_filters.join(self._filter_zero_length_trips(dataset=data))
         return complex_filters
 
     @staticmethod
