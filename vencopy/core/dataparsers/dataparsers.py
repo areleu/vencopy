@@ -687,6 +687,9 @@ class IntermediateParsing(DataParser):
                 self.activities["vehicle_segment_string"]
                 == self.user_config["dataparsers"]["vehicle_segment"][self.dataset]
             ].reset_index(drop=True)
+            segment = self.user_config["dataparsers"]["vehicle_segment"][self.dataset]
+            n_vehicles = len(self.activities.unique_id.unique())
             print(
-                f'The subset contains only vehicles of the class {(self.user_config["dataparsers"]["vehicle_segment"][self.dataset])} for a total of {len(self.activities.unique_id.unique())} individual vehicles.'
+                f"The subset contains only vehicles of the class {segment} for a total of {n_vehicles} individual "
+                f"vehicles."
             )
