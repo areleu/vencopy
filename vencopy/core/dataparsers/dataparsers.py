@@ -39,11 +39,9 @@ class DataParser:
         and respective columns are added. Pandas timestamp columns are
         synthesized from the given trip start and trip end time information.
 
-        :param configs: A dictionary containing multiple yaml config files
-        :param dataset: Currently, MiD08 and MiD17 are implemented as travel
-                          survey data sets
-        :param load_encrypted: If True, load an encrypted ZIP file as specified
-                              in user_config
+        Args:
+            configs (dict): A dictionary containing multiple yaml config files
+            dataset (str): Abbreviation representation the National Travel Survey to be parsed
         """
         self.user_config = configs["user_config"]
         self.dev_config = configs["dev_config"]
@@ -60,7 +58,9 @@ class DataParser:
         print("Generic file parsing properties set up.")
 
     def _load_data(self):
-        """ """
+        """
+        _missing_
+        """
         number_lines_debug = self.user_config["global"]["number_lines_debug"]
         load_encrypted = False
         if load_encrypted:
@@ -79,7 +79,8 @@ class DataParser:
         Raises an exception if a invalid suffix is specified in
         self.raw_data_path.
 
-        :return: None
+        Returns:
+            pd.DataFrame: raw_data
         """
         if self.raw_data_path.suffix == ".dta":
             self.raw_data = pd.read_stata(
@@ -139,7 +140,7 @@ class DataParser:
 
         :param dataset: list of strings declaring the datasetIDs
                           to be read in
-        :return: Returns a string with a dataset name
+        :return: a string with a dataset name
         """
         available_dataset_ids = self.dev_config["dataparsers"]["data_variables"]["dataset"]
         assert dataset in available_dataset_ids, (
@@ -168,11 +169,17 @@ class DataParser:
         """
         Creates the mapping dictionary from raw data variable names to venco.py
         internal variable names as specified in dev_config.yaml
-        for the specified data set.
+        for the specified dataset.
 
-        :param dataset: list of strings declaring the dataset_id to be read
-        :param dict_raw: Contains dictionary of the raw data
-        :return: Dictionary with internal names as keys and raw data column
+        Args:
+            dataset (str): A list of strings declaring the dataset_id to be read
+            data_variables (dict): _description_
+
+        Raises:
+            ValueError: _description_
+
+        Returns:
+            dict: A dictionary with internal names as keys and raw data column
                  names as values.
         """
         if dataset not in data_variables["dataset"]:
