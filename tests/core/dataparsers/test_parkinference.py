@@ -7,6 +7,7 @@ __license__ = "BSD-3-Clause"
 import pytest
 
 import pandas as pd
+import numpy as np
 
 from ....vencopy.core.dataparsers.parkinference import ParkInference
 from ....vencopy.core.dataparsers.parkinference import OvernightSplitter
@@ -67,8 +68,8 @@ def test_copy_rows():
 
     result = ParkInference._copy_rows(sample_trips_df)
     expected_result = pd.DataFrame({
-        "trip_id": [pd.NA, 1, pd.NA, 2, pd.NA, 3],
-        "park_id": [1, pd.NA, 2, pd.NA, 3]
+        "trip_id": [1, np.nan, 2, np.nan, 3, np.nan],
+        "park_id": [np.nan, 1, np.nan, 2, np.nan, 3],
     })
 
     assert len(result) == 2 * len(sample_trips_df)
