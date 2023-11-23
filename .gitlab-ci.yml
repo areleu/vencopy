@@ -53,8 +53,8 @@ test:
 pages:
   script:
     - pip install -e .[docs]
-    - sphinx-build -b html docs/ build/
-    - mv build/html/ public/
+    - sphinx-build -b html docs/ public/
+    # - mv build/html/ public/
   artifacts:
     paths:
       - public
