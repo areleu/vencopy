@@ -18,17 +18,16 @@ documentation = 'https://vencopy.readthedocs.io/en/latest/index.html'
 
 classifiers = [
     "Development Status :: 5 - Production/Stable",
-    "Intended Audience :: Researchers",
+    "Intended Audience :: Science/Research",
     "License :: OSI Approved :: BSD License",
     "Operating System :: Microsoft :: Windows",
-    "Operating System :: POSIX",
     "Operating System :: Unix",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.9",
-    "Topic :: Scientific Engineering",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Scientific/Engineering",
 ]
 
 requires-python = ">=3.9"
