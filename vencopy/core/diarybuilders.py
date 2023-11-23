@@ -17,7 +17,7 @@ from ..utils.utils import create_file_name, write_out
 class DiaryBuilder:
     def __init__(self, configs: dict, activities: pd.DataFrame, is_week_diary: bool = False):
         """
-        _summary_
+        ...
 
         Args:
             configs (dict): _description_
