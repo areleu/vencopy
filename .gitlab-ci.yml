@@ -33,7 +33,7 @@ test:
     - coverage run -m pytest
     - coverage report
     - coverage xml
-  coverage: '/^TOTAL.+?(\d+\%)$/'
+  coverage: '/^TOTAL.+?([\d.]+\%)$/'
   artifacts:
     expire_in: 3 days
     reports:
