@@ -38,6 +38,7 @@ def sample_configs():
         }
     return configs
 
+
 @pytest.fixture
 def sample_activities():
     activities = pd.DataFrame({
@@ -49,8 +50,8 @@ def sample_activities():
     return activities
 
 
-def test_park_inference_init():
-    park_inference = ParkInference(configs=sample_configs)
+def test_park_inference_init(sample_configs):
+    park_inference = ParkInference(sample_configs)
 
     assert park_inference.user_config == sample_configs["user_config"]
     assert park_inference.activities is None
@@ -64,8 +65,11 @@ def test_copy_rows():
     }
     sample_trips_df = pd.DataFrame(sample_trips_data)
 
-    result_df = ParkInference.__copy_rows(sample_trips_df)
+    result = ParkInference._copy_rows(sample_trips_df)
+    expected_result = pd.DataFrame({
+        "trip_id": [pd.NA, 1, pd.NA, 2, pd.NA, 3],
+        "park_id": [1, pd.NA, 2, pd.NA, 3]
+    })
 
-    assert len(result_df) == 2 * len(sample_trips_df)
-    assert result_df["trip_id"].equals(pd.concat([sample_trips_df["trip_id"]] * 2).reset_index(drop=True))
-    assert result_df["park_id"].equals(sample_trips_df["trip_id"].append(pd.Series([pd.NA] * len(sample_trips_df))).reset_index(drop=True))
+    assert len(result) == 2 * len(sample_trips_df)
+    assert result.equals(expected_result)

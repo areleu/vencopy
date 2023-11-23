@@ -33,7 +33,7 @@ class ParkInference:
         """
         self.trips = trips
         split_overnight_trips = self.user_config["dataparsers"]["split_overnight_trips"]
-        self.activities_raw = self.__copy_rows(trips=self.trips)
+        self.activities_raw = self._copy_rows(trips=self.trips)
         self.activities_raw = self.__add_util_attributes(activities_raw=self.activities_raw)
         # self.__add_park_act_after_last_trip()
         self.__add_park_act_before_first_trip()
@@ -53,7 +53,7 @@ class ParkInference:
         return self.activities_raw
 
     @staticmethod
-    def __copy_rows(trips):
+    def _copy_rows(trips):
         """
         Adds skeleton duplicate rows for parking activities.
         """

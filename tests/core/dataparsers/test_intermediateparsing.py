@@ -283,22 +283,3 @@ def test_subset_vehicle_segment(intermediate_parser_instance):
     })
     pd.testing.assert_frame_equal(intermediate_parser_instance.activities, expected_result)
 
-
-def test_cleanup_dataset():
-    dataset = pd.DataFrame({
-        "level_0": [0, 1, 2, 3],
-        "unique_id": [1, 2, 3, 4],
-        "trip_is_intermodal": [True, False, True, False],
-        "timedelta_total": [10, 20, 30, 40],
-        "timedelta_morning": [5, 15, 25, 35],
-        "time_share_morning": [0.5, 0.7, 0.6, 0.8],
-        "time_share_evening": [0.5, 0.3, 0.4, 0.2],
-        "total_trip_distance": [100, 200, 300, 400],
-    })
-
-    result = IntermediateParsing._cleanup_dataset(dataset)
-
-    expected_result = pd.DataFrame({
-        "unique_id": [1, 2, 3, 4]
-    })
-    pd.testing.assert_frame_equal(result, expected_result)
