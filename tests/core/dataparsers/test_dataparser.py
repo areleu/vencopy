@@ -8,6 +8,7 @@ import pytest
 import pandas as pd
 
 from dateutil import parser
+from pathlib import Path
 
 from ....vencopy.core.dataparsers.dataparsers import DataParser
 
@@ -54,7 +55,7 @@ def test_dataparser_init(sample_configs):
     assert parser.dev_config == sample_configs["dev_config"]
     assert parser.debug == sample_configs["user_config"]["global"]["debug"]
     assert parser.dataset == dataset
-    assert str(parser.raw_data_path) == "\\path\\to\\dataset1\\trips01.csv"
+    assert parser.raw_data_path == Path("/path/to/dataset1/trips01.csv")
     assert parser.raw_data is None
     assert parser.trips is None
     assert parser.activities is None
