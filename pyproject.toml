@@ -3,9 +3,9 @@ name = "vencopy"
 version = "1.0.0"
 description = "Vehicle Energy Consumption in Python: A tool to simulate load flexibility of electric vehicle fleets."
 authors = [
-    "Niklas Wulff <niklas.wulff@dlr.de>",
-    "Fabia Miorelli <fabia.miorelli@dlr.de>",
-]
+    {name = "Niklas Wulff", email = "niklas.wulff@dlr.de"},
+    {name = "Fabia Miorelli", email = "fabia.miorelli@dlr.de"}
+    ]
 maintainers = ["Niklas Wulff <niklas.wulff@dlr.de>"]
 license = "BSD-3-Clause"
 readme = "README.md"
