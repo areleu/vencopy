@@ -56,7 +56,6 @@ def sample_configs():
     return configs
 
 
-@pytest.mark.skip(reason="no way of currently testing this") 
 def test_intermediate_parsing_init(sample_configs):
     dataset = "dataset1"
     parser = IntermediateParsing(sample_configs, dataset)
@@ -257,7 +256,6 @@ def test_update_end_timestamp():
     pd.testing.assert_series_equal(result["timestamp_end"], expected_result["timestamp_end"])
 
 
-@pytest.mark.skip(reason="no way of currently testing this") 
 def test_harmonize_variables_unique_id_names(intermediate_parser_instance):
     trips = pd.DataFrame({
         "id01": [1, 2, 3],

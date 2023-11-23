@@ -22,11 +22,16 @@ import vencopy
 @click.option(
     "--tutorials",
     default="false",
-    help="Specify if tutorials should be copied to the user folder on set up. " "Defaults to true",
+    help="Specify if tutorials should be copied to the user folder on set up." "Defaults to true",
 )
 def create(name: str, tutorials: bool):
     """
-    venco.py folder set up after installation
+    Folder set up after installation.
+
+
+    Args:
+        name (str): _description_
+        tutorials (bool): _description_
     """
     cwd = pathlib.Path(os.getcwd())
     target = cwd / name
@@ -49,10 +54,10 @@ def setup_folders(src: pathlib.Path, trg: pathlib.Path, tutorials: bool):
     """
     Setup function to create a vencopy user folder and to copy run, config and tutorial files from the package source.
 
-    :param src: Absolute path to the vencopy package source folder
-    :param trg: Absolute path to the vencopy user folder
-    :param tutorials: Boolean, if true (default) tutorials are being copied from package source to user folder
-    :return: None
+    Args:
+        src (pathlib.Path): Absolute path to the vencopy package source folder
+        trg (pathlib.Path): Absolute path to the vencopy user folder
+        tutorials (bool): Boolean, if true (default) tutorials are being copied from package source to user folder
     """
     os.mkdir(trg / "config")
     os.mkdir(trg / "core")
@@ -73,6 +78,12 @@ def setup_folders(src: pathlib.Path, trg: pathlib.Path, tutorials: bool):
 
 
 def update_config(new_vencopy_root: pathlib.Path):
+    """
+    _missing_
+
+    Args:
+        new_vencopy_root (pathlib.Path): _description_
+    """
     with open(new_vencopy_root / "config" / "user.yaml") as f:
         user_cfg = yaml.load(f, Loader=yaml.SafeLoader)
 
