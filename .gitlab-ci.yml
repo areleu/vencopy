@@ -29,7 +29,7 @@ before_script:
 
 test:
   script:
-    - pip install -e .
+    - pip install -e .[test]
     - coverage run -m pytest
     - coverage report
     - coverage xml
