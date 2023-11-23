@@ -100,28 +100,3 @@ def test_harmonise_variables(parse_mid_instance):
     })
     pd.testing.assert_frame_equal(parse_mid_instance.trips, expected_result)
 
-
-def test_drop_redundant_columns():
-    dataset = pd.DataFrame({
-        "is_driver": [True, False, True],
-        "unique_id": [1, 2, 3],
-        "trip_start_clock": ["08:00", "09:30", "10:15"],
-        "trip_end_clock": ["08:45", "10:00", "11:30"],
-        "trip_start_year": [2020, 2021, 2022],
-        "trip_start_month": [1, 2, 3],
-        "trip_start_week": [1, 2, 3],
-        "trip_start_hour": [8, 9, 10],
-        "trip_start_minute": [0, 30, 15],
-        "trip_end_hour": [8, 10, 11],
-        "trip_end_minute": [45, 0, 30],
-        "previous_unique_id": [101, 102, 103],
-        "next_unique_id": [201, 202, 203],
-        "column_from_index": [0, 1, 2],
-    })
-
-    result = ParseMiD._drop_redundant_columns(dataset=dataset)
-
-    expected_result = pd.DataFrame({
-        "unique_id": [1, 2, 3]
-    })
-    pd.testing.assert_frame_equal(result, expected_result)

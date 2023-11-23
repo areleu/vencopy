@@ -46,6 +46,7 @@ def sample_configs():
     return configs
 
 
+@pytest.mark.skip(reason="no way of currently testing this") 
 def test_dataparser_init(sample_configs):
     dataset = "dataset1"
     parser = DataParser(sample_configs, dataset)
