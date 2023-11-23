@@ -100,4 +100,7 @@ def test_harmonise_variables(parse_mid_instance):
     })
     pd.testing.assert_frame_equal(parse_mid_instance.trips, expected_result)
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> main
