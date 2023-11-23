@@ -71,10 +71,8 @@ python_files = [
 [tool.coverage.run]
 branch = true
 source = ["vencopy"]
-parallel = true
 
 [tool.coverage.report]
 show_missing = true
 precision = 2
-
 
