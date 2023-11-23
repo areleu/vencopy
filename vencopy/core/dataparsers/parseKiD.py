@@ -101,9 +101,9 @@ class ParseKiD(IntermediateParsing):
 
         :return: trips
         """
-        trips["trip_end_next_day"] = np.where(
-            trips["timestamp_end"].dt.day > trips["timestamp_start"].dt.day, 1, 0
-        )
+        day_end = trips["timestamp_end"].dt.day
+        day_start = trips["timestamp_start"].dt.day
+        trips["trip_end_next_day"] = day_end.where(day_end > day_start, 0).where(day_end <= day_start, 1)
         ends_following_day = trips["trip_end_next_day"] == 1
         trips.loc[ends_following_day, "timestamp_end"] = trips.loc[
             ends_following_day, "timestamp_end"

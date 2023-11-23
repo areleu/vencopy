@@ -266,7 +266,7 @@ def test_harmonize_variables_unique_id_names(intermediate_parser_instance):
     intermediate_parser_instance.trips = trips
     intermediate_parser_instance._harmonize_variables_unique_id_names()
 
-    expected_result = pd.Series([1, 2, 3], name="unique_id", dtype="int32")
+    expected_result = pd.Series([1, 2, 3], name="unique_id", dtype="int")
     pd.testing.assert_series_equal(intermediate_parser_instance.trips["unique_id"], expected_result)
 
 

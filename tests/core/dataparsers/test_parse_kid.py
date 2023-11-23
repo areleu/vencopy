@@ -117,7 +117,7 @@ def test_extract_timestamps():
         'trip_end_hour': [8, 10, 11],
         'trip_end_minute': [45, 0, 30],
     })
-    expected_result['trip_start_week'] = pd.Series(expected_result["trip_start_week"], dtype="int32")
+    expected_result['trip_start_week'] = pd.Series(expected_result["trip_start_week"], dtype="int")
     pd.testing.assert_frame_equal(result, expected_result)
 
 
@@ -133,7 +133,6 @@ def test_update_end_timestamp():
         "timestamp_start": pd.DatetimeIndex(["2023-09-01 08:00:00", "2023-09-01 09:30:00", "2023-09-02 23:15:00"]),
         "timestamp_end": pd.DatetimeIndex(["2023-09-01 08:45:00", "2023-09-01 10:00:00", "2023-09-02 00:30:00"]),
         "trip_end_next_day": [0, 0, 0]})
-    expected_result['trip_end_next_day'] = expected_result['trip_end_next_day'].astype(np.int32)
     pd.testing.assert_frame_equal(result, expected_result)
 
 
