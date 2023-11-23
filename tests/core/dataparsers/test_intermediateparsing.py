@@ -7,6 +7,8 @@ __license__ = "BSD-3-Clause"
 import pytest
 import pandas as pd
 
+from pathlib import Path
+
 from ....vencopy.core.dataparsers.dataparsers import IntermediateParsing
 
 # NOT TESTED: _complex_filters(), _compose_start_and_end_timestamps(), 
@@ -64,7 +66,7 @@ def test_intermediate_parsing_init(sample_configs):
     assert parser.dev_config == sample_configs["dev_config"]
     assert parser.debug == False
     assert parser.dataset == dataset
-    assert str(parser.raw_data_path) == "\\path\\to\\dataset1\\trips01.csv"
+    assert parser.raw_data_path == Path("/path/to/dataset1/trips01.csv")
     assert parser.raw_data is None
     assert parser.trips is None
     assert parser.activities is None
