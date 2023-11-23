@@ -8,7 +8,7 @@ __license__ = "BSD-3-Clause"
 from pathlib import Path
 
 import pandas as pd
-from vencopy.utils.utils import create_file_name, write_out
+from ..utils.utils import create_file_name, write_out
 
 
 class FlexEstimator:
@@ -55,21 +55,16 @@ class FlexEstimator:
         ] = None
         self.activities_without_residual = None
 
-    @staticmethod
-    def _drain(self, dataset):
+    def _drain(self):
         """
         _summary_
-
-        Args:
-            dataset (_type_): _description_
 
         Returns:
             _type_: _description_
         """
-        dataset["drain"] = (
-            dataset["trip_distance"] * self.user_config["flexestimators"]["electric_consumption"] / 100
+        self.activities["drain"] = (
+            self.activities["trip_distance"] * self.user_config["flexestimators"]["electric_consumption"] / 100
         )
-        return dataset
 
     def _max_charge_volume_per_parking_activity(self):
         """

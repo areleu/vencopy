@@ -38,6 +38,17 @@ def sample_configs():
     return configs
 
 
+@pytest.fixture
+def sample_activities():
+    activities = pd.DataFrame({
+        "activity_id": [1, 2, 3, 4],
+        "activity_duration": [pd.Timedelta(minutes=76), pd.Timedelta(minutes=80), pd.Timedelta(0), pd.Timedelta(minutes=45)],
+        "timestamp_start": pd.DatetimeIndex(["2023-09-12 08:00:00", "2023-09-12 10:30:00", "2023-09-12 10:30:00", "2023-09-12 10:00:00"]),
+        "timestamp_end": pd.DatetimeIndex(["2023-09-12 09:16:00", "2023-09-12 11:50:00", "2023-09-12 10:30:00", "2023-09-12 10:45:00"])
+        })
+    return activities
+
+
 def test_diarybuilder_init(sample_configs):
     sample_activities_data = pd.DataFrame({})
     builder = DiaryBuilder(configs=sample_configs, activities=sample_activities_data)
@@ -48,17 +59,6 @@ def test_diarybuilder_init(sample_configs):
     assert builder.activities.equals(sample_activities_data)
     assert builder.time_resolution == 15
     assert builder.is_week_diary == False
-
-
-@pytest.fixture
-def sample_activities():
-    activities = pd.DataFrame({
-        "activity_id": [1, 2, 3, 4],
-        "activity_duration": [pd.Timedelta(minutes=76), pd.Timedelta(minutes=80), pd.Timedelta(0), pd.Timedelta(minutes=45)],
-        "timestamp_start": pd.DatetimeIndex(["2023-09-12 08:00:00", "2023-09-12 10:30:00", "2023-09-12 10:30:00", "2023-09-12 10:00:00"]),
-        "timestamp_end": pd.DatetimeIndex(["2023-09-12 09:16:00", "2023-09-12 11:50:00", "2023-09-12 10:30:00", "2023-09-12 10:45:00"])
-        })
-    return activities
 
 
 def test_correct_timestamps(sample_configs, sample_activities):

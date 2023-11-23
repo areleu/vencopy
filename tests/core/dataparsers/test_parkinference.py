@@ -9,5 +9,63 @@ import pytest
 import pandas as pd
 
 from ....vencopy.core.dataparsers.parkinference import ParkInference
+from ....vencopy.core.dataparsers.parkinference import OvernightSplitter
 
-# NOT TESTED:
+# NOT TESTED: add_parking_rows(), 
+
+
+@pytest.fixture
+def sample_configs():
+    configs = {
+        'user_config': {
+            'global': {
+                'dataset': "dataset1",
+                'debug': False,
+                'absolute_path': {
+                    'dataset1': '/path/to/dataset1',
+                    'dataset2': '/path/to/dataset2'
+                    }
+                },
+            'diarybuilders': {
+                'time_resolution': 15
+            }
+            },
+        'dev_config': {
+            'dataparsers': {
+                'data_variables': False
+                }
+            }
+        }
+    return configs
+
+@pytest.fixture
+def sample_activities():
+    activities = pd.DataFrame({
+        "activity_id": [1, 2, 3, 4],
+        "activity_duration": [pd.Timedelta(minutes=76), pd.Timedelta(minutes=80), pd.Timedelta(0), pd.Timedelta(minutes=45)],
+        "timestamp_start": pd.DatetimeIndex(["2023-09-12 08:00:00", "2023-09-12 10:30:00", "2023-09-12 10:30:00", "2023-09-12 10:00:00"]),
+        "timestamp_end": pd.DatetimeIndex(["2023-09-12 09:16:00", "2023-09-12 11:50:00", "2023-09-12 10:30:00", "2023-09-12 10:45:00"])
+        })
+    return activities
+
+
+def test_park_inference_init():
+    park_inference = ParkInference(configs=sample_configs)
+
+    assert park_inference.user_config == sample_configs["user_config"]
+    assert park_inference.activities is None
+    assert park_inference.activities_raw is None
+    assert isinstance(park_inference.overnight_splitter, OvernightSplitter)
+
+
+def test_copy_rows():
+    sample_trips_data = {
+        "trip_id": [1, 2, 3],
+    }
+    sample_trips_df = pd.DataFrame(sample_trips_data)
+
+    result_df = ParkInference.__copy_rows(sample_trips_df)
+
+    assert len(result_df) == 2 * len(sample_trips_df)
+    assert result_df["trip_id"].equals(pd.concat([sample_trips_df["trip_id"]] * 2).reset_index(drop=True))
+    assert result_df["park_id"].equals(sample_trips_df["trip_id"].append(pd.Series([pd.NA] * len(sample_trips_df))).reset_index(drop=True))
