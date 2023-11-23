@@ -6,7 +6,7 @@ authors = [
     {name = "Niklas Wulff", email = "niklas.wulff@dlr.de"},
     {name = "Fabia Miorelli", email = "fabia.miorelli@dlr.de"}
     ]
-maintainers = ["Niklas Wulff <niklas.wulff@dlr.de>"]
+maintainers = [{name = "Niklas Wulff", email = "niklas.wulff@dlr.de"}]
 license = "BSD-3-Clause"
 readme = "README.md"
 
