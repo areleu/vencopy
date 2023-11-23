@@ -71,6 +71,8 @@ matplotlib = "3.7.2"
 
 [tool.poetry.group.docs.dependencies]
 sphinx = "*"
+sphinx-rtd-theme = "*"
+rst2pdf = "*"
 
 [tool.poetry.group.dev.dependencies]
 black = "*"
