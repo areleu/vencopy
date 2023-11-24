@@ -116,6 +116,12 @@ class ParkInference:
     def _drop_redundant_columns(activities_raw: pd.DataFrame) -> pd.DataFrame:
         """
         Removes temporary redundant columns.
+
+        Args:
+            activities_raw (pd.DataFrame): _description_
+
+        Returns:
+            activities_raw (pd.DataFrame): _description_
         """
         activities_raw.drop(
             columns=[

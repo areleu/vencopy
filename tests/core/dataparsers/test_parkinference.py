@@ -116,3 +116,48 @@ def test_adjust_park_attrs(sample_activities):
 
     expected_column_from_index = [0, 0, 1, 2, 2, 3]
     assert result["column_from_index"].equals(pd.Series(expected_column_from_index, index=[0, 0, 1, 2, 2, 3]))
+
+
+def test_drop_redundant_columns(sample_activities):
+    input_data = ParkInference._add_util_attributes(sample_activities)
+    input_data = ParkInference._add_park_act_before_first_trip(input_data)
+    input_data = ParkInference._adjust_park_attrs(input_data)
+    input_data["trip_start_clock"] = pd.NA
+    input_data["trip_start_year"] = pd.NA
+    input_data["trip_start_month"] = pd.NA
+    input_data["trip_start_week"] = pd.NA
+    input_data["trip_start_hour"] = pd.NA
+    input_data["trip_start_minute"] = pd.NA
+    input_data["trip_end_clock"] = pd.NA
+    input_data["trip_end_hour"] = pd.NA
+    input_data["trip_end_minute"] = pd.NA
+    result = ParkInference._drop_redundant_columns(input_data)
+
+    expected_columns = [
+        "trip_id",
+        "unique_id",
+        "activity_duration",
+        "timestamp_start",
+        "timestamp_end",
+        "park_id",
+        "is_first_activity",
+        "purpose_string",
+    ]
+
+    assert all(col in result.columns for col in expected_columns)
+
+    dropped_columns = [
+        "trip_start_clock",
+        "trip_end_clock",
+        "trip_start_year",
+        "trip_start_month",
+        "trip_start_week",
+        "trip_start_hour",
+        "trip_start_minute",
+        "trip_end_hour",
+        "trip_end_minute",
+        "previous_unique_id",
+        "next_unique_id",
+        "column_from_index",
+    ]
+    assert not any(col in result.columns for col in dropped_columns)
