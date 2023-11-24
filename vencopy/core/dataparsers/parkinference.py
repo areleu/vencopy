@@ -35,16 +35,16 @@ class ParkInference:
         self.trips = trips
         split_overnight_trips = self.user_config["dataparsers"]["split_overnight_trips"]
         self.activities_raw = self._copy_rows(trips=self.trips)
-        self._add_util_attributes(activities_raw=self.activities_raw)
-        self._add_park_act_before_first_trip(activities_raw=self.activities_raw)
-        self._adjust_park_attrs(activities_raw=self.activities_raw)
-        self._drop_redundant_columns(activities_raw=self.activities_raw)
-        self._remove_next_day_park_acts(activities_raw=self.activities_raw)
+        self.activities_raw = self._add_util_attributes(activities_raw=self.activities_raw)
+        self.activities_raw = self._add_park_act_before_first_trip(activities_raw=self.activities_raw)
+        self.activities_raw = self._adjust_park_attrs(activities_raw=self.activities_raw)
+        self.activities_raw = self._drop_redundant_columns(activities_raw=self.activities_raw)
+        self.activities_raw = self._remove_next_day_park_acts(activities_raw=self.activities_raw)
         self.__adjust_park_timestamps()
-        self._add_next_and_prev_ids(activities_raw=self.activities_raw)
-        self.__overnight_split_decider(split=split_overnight_trips)
-        self._add_timedelta_column(activities_raw=self.activities_raw)
-        self._unique_indeces(activities_raw=self.activities_raw)
+        self.activities_raw = self._add_next_and_prev_ids(activities_raw=self.activities_raw)
+        self.activities_raw = self.__overnight_split_decider(split=split_overnight_trips)
+        self.activities_raw = self._add_timedelta_column(activities_raw=self.activities_raw)
+        self.activities_raw = self._unique_indeces(activities_raw=self.activities_raw)
         print(
             f'Finished activity composition with {self.activities_raw["trip_id"].fillna(0).astype(bool).sum()} trips '
             f'and {self.activities_raw["park_id"].fillna(0).astype(bool).sum()} parking activites.'
@@ -169,10 +169,10 @@ class ParkInference:
         """
         self.activities_raw = self.activities_raw.reset_index()
         park_act_wo_first, park_act_wo_last = self._get_park_acts_wo_first_and_last(activities_raw=self.activities_raw)
-        self._update_park_start(activities_raw=self.activities_raw,park_act_wo_first=park_act_wo_first)
-        self._update_park_end(activities_raw=self.activities_raw, park_act_wo_last=park_act_wo_last)
-        self._update_timestamp_first_park_act(activities_raw=self.activities_raw)
-        self._update_timestamp_last_park_act(activities_raw=self.activities_raw)
+        self.activities_raw = self._update_park_start(activities_raw=self.activities_raw,park_act_wo_first=park_act_wo_first)
+        self.activities_raw = self._update_park_end(activities_raw=self.activities_raw, park_act_wo_last=park_act_wo_last)
+        self.activities_raw = self._update_timestamp_first_park_act(activities_raw=self.activities_raw)
+        self.activities_raw = self._update_timestamp_last_park_act(activities_raw=self.activities_raw)
         print("Completed park timestamp adjustments.")
  
     @staticmethod
