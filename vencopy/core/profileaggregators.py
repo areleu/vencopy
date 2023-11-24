@@ -49,7 +49,7 @@ class ProfileAggregator:
 
     def aggregate_profiles(self):
         """
-        _summary_
+        Wrapper method for the ProfileAggregator class.
         """
         self.drain_weekly = self.aggregator.perform_aggregation(profile=self.drain, profile_name="drain", method="flow")
         self.charging_power_weekly = self.aggregator.perform_aggregation(
@@ -82,11 +82,12 @@ class Aggregator:
             weighted (bool): _description_
         """
         self.dataset = dataset
-        self.alpha = self.user_config["profileaggregators"]["alpha"]
         self.activities = activities
         self.weighted = weighted
         self.user_config = user_config
         self.dev_config = dev_config
+        self.alpha = self.user_config["profileaggregators"]["alpha"]
+
 
     def _extract_weights(self):
         self.weights = (
