@@ -1,11 +1,5 @@
 # Welcome to venco.py!
 
-![PyPI](https://img.shields.io/pypi/v/vencopy)
-![PyPI - Python Version](https://img.shields.io/pypi/pyversions/vencopy)
-![Documentation Status](https://readthedocs.org/projects/vencopy/badge/?version=latest)
-![PyPI - License](https://img.shields.io/pypi/l/vencopy)
-![Gitter](https://img.shields.io/badge/chat-on%20Gitter-blue?color=%23009d94&link=https%3A%2F%2Fapp.gitter.im%2F%23%2Froom%2F%23vencopy_community%3Agitter.im)
-
 - Authors: Niklas Wulff, Fabia Miorelli
 - Contact: vencopy@dlr.de
 
