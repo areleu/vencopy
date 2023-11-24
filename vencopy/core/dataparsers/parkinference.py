@@ -42,7 +42,7 @@ class ParkInference:
         self.activities_raw = self._remove_next_day_park_acts(activities_raw=self.activities_raw)
         self.__adjust_park_timestamps()
         self.activities_raw = self._add_next_and_prev_ids(activities_raw=self.activities_raw)
-        self.activities_raw = self.__overnight_split_decider(split=split_overnight_trips)
+        self.__overnight_split_decider(split=split_overnight_trips)
         self.activities_raw = self._add_timedelta_column(activities_raw=self.activities_raw)
         self.activities_raw = self._unique_indeces(activities_raw=self.activities_raw)
         print(
