@@ -10,4 +10,5 @@ import pandas as pd
 
 from ...vencopy.core.profileaggregators import ProfileAggregator
 
-# NOT TESTED:
+# NOT TESTED: aggregate_profiles()
+
