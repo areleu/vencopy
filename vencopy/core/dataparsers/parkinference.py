@@ -13,7 +13,6 @@ from ...utils.utils import replace_vec
 class ParkInference:
     def __init__(self, configs) -> None:
         self.user_config = configs["user_config"]
-        self.activities = None
         self.activities_raw = None
         self.overnight_splitter = OvernightSplitter()
 
@@ -35,7 +34,7 @@ class ParkInference:
         """
         self.trips = trips
         split_overnight_trips = self.user_config["dataparsers"]["split_overnight_trips"]
-        self._copy_rows(trips=self.trips)
+        self.activities_raw = self._copy_rows(trips=self.trips)
         self._add_util_attributes(activities_raw=self.activities_raw)
         self._add_park_act_before_first_trip(activities_raw=self.activities_raw)
         self._adjust_park_attrs(activities_raw=self.activities_raw)
@@ -301,7 +300,7 @@ class ParkInference:
         return activities_raw
 
     @staticmethod
-    def __unique_indeces(activities_raw):
+    def _unique_indeces(activities_raw):
         activities_raw.drop(columns=["index"], inplace=True)
         activities_raw.reset_index(inplace=True)  # Due to copying and appending rows, the index has to be reset
         return activities_raw
