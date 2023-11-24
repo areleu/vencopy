@@ -43,10 +43,11 @@ def sample_configs():
 @pytest.fixture
 def sample_activities():
     activities = pd.DataFrame({
-        "activity_id": [1, 2, 3, 4],
-        "activity_duration": [pd.Timedelta(minutes=76), pd.Timedelta(minutes=80), pd.Timedelta(0), pd.Timedelta(minutes=45)],
-        "timestamp_start": pd.DatetimeIndex(["2023-09-12 08:00:00", "2023-09-12 10:30:00", "2023-09-12 10:30:00", "2023-09-12 10:00:00"]),
-        "timestamp_end": pd.DatetimeIndex(["2023-09-12 09:16:00", "2023-09-12 11:50:00", "2023-09-12 10:30:00", "2023-09-12 10:45:00"])
+        "trip_id": [1, 2, 1, 2],
+        "unique_id": [1, 1, 2, 2],
+        "activity_duration": [pd.Timedelta(minutes=76), pd.Timedelta(minutes=80), pd.Timedelta(minutes=30), pd.Timedelta(minutes=75)],
+        "timestamp_start": pd.DatetimeIndex(["2023-09-12 08:00:00", "2023-09-12 10:30:00", "2023-09-15 13:30:00", "2023-09-15 14:30:00"]),
+        "timestamp_end": pd.DatetimeIndex(["2023-09-12 09:16:00", "2023-09-12 11:50:00", "2023-09-15 14:00:00", "2023-09-15 15:45:00"])
         })
     return activities
 
@@ -55,22 +56,63 @@ def test_park_inference_init(sample_configs):
     park_inference = ParkInference(sample_configs)
 
     assert park_inference.user_config == sample_configs["user_config"]
-    assert park_inference.activities is None
     assert park_inference.activities_raw is None
     assert isinstance(park_inference.overnight_splitter, OvernightSplitter)
 
 
-def test_copy_rows():
-    sample_trips_data = {
-        "trip_id": [1, 2, 3],
-    }
-    sample_trips_df = pd.DataFrame(sample_trips_data)
+def test_copy_rows(sample_activities):
+    result = ParkInference._copy_rows(sample_activities)
+    result = result[["trip_id", "park_id"]]
 
-    result = ParkInference._copy_rows(sample_trips_df)
     expected_result = pd.DataFrame({
-        "trip_id": [1, np.nan, 2, np.nan, 3, np.nan],
-        "park_id": [np.nan, 1, np.nan, 2, np.nan, 3],
+        "trip_id": [1, np.nan, 2, np.nan, 1, np.nan, 2, np.nan],
+        "park_id": [np.nan, 1, np.nan, 2, np.nan, 1, np.nan, 2],
     })
 
-    assert len(result) == 2 * len(sample_trips_df)
+    assert len(result) == 2 * len(sample_activities)
     assert result.equals(expected_result)
+
+
+def test_add_util_attributes(sample_activities):
+    result = ParkInference._add_util_attributes(sample_activities)
+
+    assert "previous_unique_id" in result.columns
+    assert "is_first_activity" in result.columns
+    assert "next_unique_id" in result.columns
+    assert "is_last_activity" in result.columns
+
+    assert result["previous_unique_id"].equals(pd.Series([0, 1, 1, 2]))
+    assert result["is_first_activity"].equals(pd.Series([True, False, True, False]))
+    assert result["next_unique_id"].equals(pd.Series([1, 2, 2, 0]))
+    assert result["is_last_activity"].equals(pd.Series([False, True, False, True]))
+
+
+def test_add_park_act_before_first_trip(sample_activities):
+    input_data = ParkInference._add_util_attributes(sample_activities)
+    result = ParkInference._add_park_act_before_first_trip(input_data)
+
+    assert "park_id" in result.columns
+    assert "purpose_string" in result.columns
+
+    assert result.loc[result["is_first_activity"], "park_id"].equals(pd.Series([float(0), float(0)], index=[0, 2]))
+    assert result.loc[result["is_first_activity"], "purpose_string"].equals(pd.Series(["HOME", "HOME"], index=[0, 2]))
+    assert result.loc[result["is_first_activity"] & (result["park_id"] == 0), "trip_id"].equals(pd.Series([np.nan, np.nan], index=[0, 2]))
+
+
+def test_adjust_park_attrs(sample_activities):
+    input_data = ParkInference._add_util_attributes(sample_activities)
+    input_data = ParkInference._add_park_act_before_first_trip(input_data)
+    result = ParkInference._adjust_park_attrs(input_data)
+
+    assert "trip_distance" in result.columns
+    assert "travel_time" in result.columns
+    assert "trip_is_intermodal" in result.columns
+    assert "column_from_index" in result.columns
+
+    parking_activities = result[result["trip_id"].isna()]
+    assert parking_activities["trip_distance"].equals(pd.Series([np.nan, np.nan], index=[0, 2]))
+    assert parking_activities["travel_time"].equals(pd.Series([np.nan, np.nan], index=[0, 2]))
+    assert parking_activities["trip_is_intermodal"].equals(pd.Series([np.nan, np.nan], index=[0, 2]))
+
+    expected_column_from_index = [0, 0, 1, 2, 2, 3]
+    assert result["column_from_index"].equals(pd.Series(expected_column_from_index, index=[0, 0, 1, 2, 2, 3]))

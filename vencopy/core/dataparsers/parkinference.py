@@ -52,9 +52,15 @@ class ParkInference:
         return self.activities_raw
 
     @staticmethod
-    def _copy_rows(trips):
+    def _copy_rows(trips: pd.DataFrame):
         """
         Adds skeleton duplicate rows for parking activities.
+
+        Args:
+            trips (pd.DataFrame): _description_
+
+        Returns:
+            activities_raw (pd.DataFrame): _description_
         """
         activities_raw = pd.concat([trips] * 2).sort_index(ignore_index=True)
         activities_raw["park_id"] = activities_raw["trip_id"]
@@ -63,7 +69,7 @@ class ParkInference:
         return activities_raw
 
     @staticmethod
-    def _add_util_attributes(activities_raw):
+    def _add_util_attributes(activities_raw: pd.DataFrame):
         """
         Adding additional attribute columns with previous and next unique_id.
         """
@@ -78,7 +84,7 @@ class ParkInference:
         return activities_raw
 
     @staticmethod
-    def _add_park_act_before_first_trip(activities_raw):
+    def _add_park_act_before_first_trip(activities_raw: pd.DataFrame):
         """
         Adds park activities before first trips. Currently, it is assumed that all cars start home.
         """
@@ -94,7 +100,7 @@ class ParkInference:
         return activities_raw
 
     @staticmethod
-    def _adjust_park_attrs(activities_raw):
+    def _adjust_park_attrs(activities_raw: pd.DataFrame) -> pd.DataFrame:
         """
         Sets trip attribute values to zero where trip_id == NaN (i.e. for all parking activities).
         """
@@ -107,7 +113,7 @@ class ParkInference:
         return activities_raw
 
     @staticmethod
-    def _drop_redundant_columns(activities_raw):
+    def _drop_redundant_columns(activities_raw: pd.DataFrame) -> pd.DataFrame:
         """
         Removes temporary redundant columns.
         """
@@ -131,7 +137,7 @@ class ParkInference:
         return activities_raw
 
     @staticmethod
-    def _remove_next_day_park_acts(activities_raw):
+    def _remove_next_day_park_acts(activities_raw: pd.DataFrame) -> pd.DataFrame:
         """
         Checks for trips across day-limit and removing respective parking activities after ovenight trips.
         """
@@ -164,7 +170,7 @@ class ParkInference:
         print("Completed park timestamp adjustments.")
  
     @staticmethod
-    def _get_park_acts_wo_first_and_last(activities_raw) -> pd.DataFrame:
+    def _get_park_acts_wo_first_and_last(activities_raw: pd.DataFrame) -> pd.DataFrame:
         """
         Returns all parking activities except for the last one (return argument 1) and the first one (return argument
         2)
@@ -178,7 +184,7 @@ class ParkInference:
         return park_act.iloc[1:], park_act.iloc[:-1]
 
     @staticmethod
-    def _update_park_start(activities_raw, park_act_wo_first: pd.Series):
+    def _update_park_start(activities_raw: pd.DataFrame, park_act_wo_first: pd.Series) -> pd.DataFrame:
         """
         Updates park start timestamps for newly added rows
         """
@@ -188,7 +194,7 @@ class ParkInference:
         return activities_raw
 
     @staticmethod
-    def _update_park_end(activities_raw, park_act_wo_last: pd.Series):
+    def _update_park_end(activities_raw: pd.DataFrame, park_act_wo_last: pd.Series) -> pd.DataFrame:
         """
         Updates park end timestamps for newly added rows
         """
@@ -198,7 +204,7 @@ class ParkInference:
         return activities_raw
 
     @staticmethod
-    def _update_timestamp_first_park_act(activities_raw):
+    def _update_timestamp_first_park_act(activities_raw: pd.DataFrame) -> pd.DataFrame:
         """
         Updates park end timestamps for last activity in new park rows
         """
@@ -209,7 +215,7 @@ class ParkInference:
         return activities_raw
 
     @staticmethod
-    def _update_timestamp_last_park_act(activities_raw):
+    def _update_timestamp_last_park_act(activities_raw: pd.DataFrame) -> pd.DataFrame:
         """
         Updates park end timestamps for last activity in new park rows
         """
@@ -220,7 +226,7 @@ class ParkInference:
         return activities_raw
 
     @staticmethod
-    def _add_next_and_prev_ids(activities_raw):
+    def _add_next_and_prev_ids(activities_raw: pd.DataFrame) -> pd.DataFrame:
         activities_raw.loc[~activities_raw["trip_id"].isna(), "activity_id"] = activities_raw["trip_id"]
         activities_raw.loc[~activities_raw["park_id"].isna(), "activity_id"] = activities_raw["park_id"]
         activities_raw.loc[~activities_raw["is_last_activity"], "next_activity_id"] = activities_raw.loc[
@@ -247,7 +253,7 @@ class ParkInference:
             self.activities_raw = self._neglect_overnight_trips(activities_raw=self.activities_raw)
 
     @staticmethod
-    def _set_overnight_var_false_for_last_act_trip(activities_raw):
+    def _set_overnight_var_false_for_last_act_trip(activities_raw: pd.DataFrame) -> pd.DataFrame:
         """
         This function treats the edge case of trips being the last activity in the daily activity chain, i.e. trips
         ending exactly at 00:00. They are falsely labelled as overnight trips which is corrected here.
@@ -264,7 +270,7 @@ class ParkInference:
         return activities_raw
 
     @staticmethod
-    def _neglect_overnight_trips(activities_raw):
+    def _neglect_overnight_trips(activities_raw: pd.DataFrame):
         """
         Removes all overnight trips from the activities data set based on the column 'trip_end_next_day'. Updates
         timestamp end (to 00:00) and is_last_activity for the new last parking activities. Overwrites
@@ -290,9 +296,9 @@ class ParkInference:
         return activities_raw
 
     @staticmethod
-    def _add_timedelta_column(activities_raw):
+    def _add_timedelta_column(activities_raw: pd.DataFrame):
         """
-        Adds column keeping the length information of the activity as a pandas timeDelta.
+        Adds column keeping the length information of the activity as a pandas time_delta.
         """
         activities_raw["time_delta"] = (
             activities_raw["timestamp_end"] - activities_raw["timestamp_start"]
@@ -300,7 +306,7 @@ class ParkInference:
         return activities_raw
 
     @staticmethod
-    def _unique_indeces(activities_raw):
+    def _unique_indeces(activities_raw: pd.DataFrame):
         activities_raw.drop(columns=["index"], inplace=True)
         activities_raw.reset_index(inplace=True)  # Due to copying and appending rows, the index has to be reset
         return activities_raw
