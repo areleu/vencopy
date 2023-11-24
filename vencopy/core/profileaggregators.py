@@ -27,15 +27,8 @@ class ProfileAggregator:
         self.dev_config = configs["dev_config"]
         self.dataset = self.user_config["global"]["dataset"]
         self.weighted = self.user_config["profileaggregators"]["weight_flow_profiles"]
-        self.alpha = self.user_config["profileaggregators"]["alpha"]
         self.activities = activities
         self.profiles = profiles
-        self.weights = (
-            self.activities.loc[:, ["unique_id", "trip_weight"]]
-            .drop_duplicates(subset=["unique_id"])
-            .reset_index(drop=True)
-            .set_index("unique_id")
-        )
         self.drain = profiles.drain
         self.charging_power = profiles.charging_power
         self.uncontrolled_charging = profiles.uncontrolled_charging
@@ -52,19 +45,18 @@ class ProfileAggregator:
             user_config=self.user_config,
             dev_config=self.dev_config,
             weighted=self.weighted,
-            alpha=self.alpha,
         )
 
     def aggregate_profiles(self):
         """
-        _summary_
+        Wrapper method for the ProfileAggregator class.
         """
         self.drain_weekly = self.aggregator.perform_aggregation(profile=self.drain, profile_name="drain", method="flow")
         self.charging_power_weekly = self.aggregator.perform_aggregation(
             profile=self.charging_power, profile_name="charging_power", method="flow"
         )
         self.uncontrolled_charging_weekly = self.aggregator.perform_aggregation(
-            profile=self.uncontrolled_charging, profile_name="uncontrolled_charge", method="flow"
+            profile=self.uncontrolled_charging, profile_name="uncontrolled_charging", method="flow"
         )
         self.max_battery_level_weekly = self.aggregator.perform_aggregation(
             profile=self.max_battery_level, profile_name="max_battery_level", method="state"
@@ -77,7 +69,7 @@ class ProfileAggregator:
 
 class Aggregator:
     def __init__(
-        self, activities: pd.DataFrame, dataset: str, alpha: int, user_config: dict, dev_config: dict, weighted: bool
+        self, activities: pd.DataFrame, dataset: str, user_config: dict, dev_config: dict, weighted: bool
     ):
         """
         _summary_
@@ -85,17 +77,25 @@ class Aggregator:
         Args:
             activities (pd.DataFrame): _description_
             dataset (str): _description_
-            alpha (int): _description_
             user_config (dict): _description_
             dev_config (dict): _description_
             weighted (bool): _description_
         """
         self.dataset = dataset
-        self.alpha = alpha
         self.activities = activities
         self.weighted = weighted
         self.user_config = user_config
         self.dev_config = dev_config
+        self.alpha = self.user_config["profileaggregators"]["alpha"]
+
+
+    def _extract_weights(self):
+        self.weights = (
+            self.activities.loc[:, ["unique_id", "trip_weight"]]
+            .drop_duplicates(subset=["unique_id"])
+            .reset_index(drop=True)
+            .set_index("unique_id")
+        )
 
     def __basic_aggregation(self) -> pd.Series:
         """
@@ -276,6 +276,7 @@ class Aggregator:
         self.method = method
         print(f"Starting to aggregate {self.profile_name} to fleet level based on day of the week.")
         start_time_agg = time.time()
+        self._extract_weights()
         self.__basic_aggregation()
         if self.user_config["global"]["write_output_to_disk"]["aggregator_output"]:
             self.__write_output()

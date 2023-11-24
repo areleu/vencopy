@@ -10,4 +10,4 @@ import pandas as pd
 
 from ...vencopy.core.profileaggregators import Aggregator
 
-# NOT TESTED:
+# NOT TESTED: __basic_aggregation(), 
