@@ -1,9 +1,9 @@
 .. venco.py documentation source file, created for sphinx
 
-.. _flexestimator:
+.. _flexestimators:
 
 
-FlexEstimator Class
+FlexEstimators Level
 ===================================
 
 .. image:: ../figures/IOflexestimator.svg
@@ -48,6 +48,10 @@ FlexEstimator Output
  * Maximum battery energy level (.csv) `max_battery_level`
  * Minimum battery energy level (.csv) `min_battery_level`
 
+
+
+FlexEstimator Class
+#################################################################
 
 
 Output Profiles

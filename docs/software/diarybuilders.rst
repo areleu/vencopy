@@ -3,14 +3,14 @@
 .. _diarybuilder:
 
 
-DiaryBuilder Class
+DiaryBuilders Level
 ===================================
 
 .. image:: ../figures/IOdiarybuilder.svg
 	:width: 800
 	:align: center
 
-TripDiaryBuilder Input
+DiaryBuilders Input
 ---------------------------------------------------
 **Config File (user_config.yaml):**
 
@@ -23,7 +23,7 @@ TripDiaryBuilder Input
  * FlexEstimator class output
 
 
-TripDiaryBuilder Output
+DiaryBuilders Output
 ---------------------------------------------------
 **Output Functions:**
 
@@ -38,3 +38,11 @@ TripDiaryBuilder Output
  * Uncontrolled charging profile (.csv) `uncontrolled_charging`
  * Maximum battery energy level (.csv) `max_battery_level`
  * Minimum battery energy level (.csv) `min_battery_level`
+
+
+DiaryBuilder Class
+#################################################################
+
+
+TimeDiscretiser Class
+#################################################################
