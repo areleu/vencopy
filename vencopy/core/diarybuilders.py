@@ -5,19 +5,20 @@ __status__ = "test"  # options are: dev, test, prod
 __license__ = "BSD-3-Clause"
 
 
-from pathlib import Path
-
 import time
 import numpy as np
 import pandas as pd
+
+from pathlib import Path
 from typing import Optional
+
 from ..utils.utils import create_file_name, write_out
 
 
 class DiaryBuilder:
     def __init__(self, configs: dict, activities: pd.DataFrame, is_week_diary: bool = False):
         """
-        ...
+        _summary_
 
         Args:
             configs (dict): _description_
@@ -167,6 +168,12 @@ class TimeDiscretiser:
         Check if interval is an integer multiple of quantum.
         The minimum resolution is 1 min, case for resolution below 1 min.
         Then check if an integer number of intervals fits into one day (15 min equals 96 intervals)
+
+        Args:
+            interval (pd.Timedelta): _description_
+
+        Returns:
+            int: _description_
         """
         if interval.seconds / 60 < self.quantum.seconds / 60:
             raise (
@@ -188,6 +195,9 @@ class TimeDiscretiser:
             )
 
     def __dataset_cleanup(self):
+        """
+        _summary_
+        """
         self.__remove_columns()
         self.__correct_values()
         self.__correct_timestamps()
@@ -196,6 +206,9 @@ class TimeDiscretiser:
         """
         Removes additional columns not used in the TimeDiscretiser class.
         Only keeps timestamp start and end, unique ID, and the column to discretise.
+
+        Returns:
+            pd.DataFrame: _description_
         """
         necessary_columns = [
             "trip_id",
@@ -222,6 +235,9 @@ class TimeDiscretiser:
         - drain profile: pads NaN with 0s
         - uncontrolled_charging profile: instead of removing rows with trip_id, assign 0 to rows with trip_id
         - residual_need profile: pads NaN with 0s
+
+        Returns:
+            pd.DataFrame: _description_
         """
         if self.column_to_discretise == "drain":
             self.data_to_discretise["drain"] = self.data_to_discretise["drain"].fillna(0)
@@ -235,6 +251,9 @@ class TimeDiscretiser:
     def __correct_timestamps(self) -> pd.DataFrame:
         """
         Rounds timestamps to predifined resolution.
+
+        Returns:
+            pd.DataFrame: _description_
         """
         self.data_to_discretise["timestamp_start_corrected"] = self.data_to_discretise["timestamp_start"].dt.round(
             f"{self.time_resolution}min"
@@ -460,10 +479,16 @@ class TimeDiscretiser:
             return [min(i, lim) for i in delta_battery]
 
     def __value_non_linear_charge(self):
+        """
+        _summary_
+        """
         self.__uncontrolled_charging_parking()
         self.__uncontrolled_charging_driving()
 
     def __uncontrolled_charging_parking(self):
+        """
+        _summary_
+        """
         self.data_to_discretise["timestamp_end_uncontrolled_charging"] = pd.to_datetime(
             self.data_to_discretise["timestamp_end_uncontrolled_charging"]
         )
@@ -489,9 +514,23 @@ class TimeDiscretiser:
         )
 
     def __uncontrolled_charging_driving(self):
+        """
+        _summary_
+        """
         self.data_to_discretise.loc[self.data_to_discretise["park_id"].isna(), "value_per_bin"] = 0
 
     def __charge_rate_per_bin(self, charging_rate: float, charged_volume: float, number_bins: int) -> list:
+        """
+        _summary_
+
+        Args:
+            charging_rate (float): _description_
+            charged_volume (float): _description_
+            number_bins (int): _description_
+
+        Returns:
+            list: _description_
+        """
         if charging_rate == 0:
             return [0] * number_bins
         charging_rates_per_bin = [charging_rate] * number_bins
@@ -611,6 +650,12 @@ class TimeDiscretiser:
         self.__remove_activities_with_zero_value()
 
     def __remove_activities_with_zero_value(self):
+        """
+        _summary_
+
+        Raises:
+            ValueError: _description_
+        """
         start_length = len(self.data_to_discretise)
         subset_no_length_activities_ids = self.data_to_discretise.loc[
             self.data_to_discretise.unique_id.isin(self.ids_with_no_length_activities)
@@ -632,15 +677,17 @@ class TimeDiscretiser:
         Wrapper method for allocating respective values per bin to days within a week. Expects that the activities
         are formatted in a way that unique_id represents a unique week ID. The function then loops over the 7 weekdays
         and calls __allocate for each day a total of 7 times.
+
+        Raises:
+            NotImplementedError: _description_
         """
         raise NotImplementedError("The method has not been implemneted yet.")
 
     def __allocate(self) -> pd.DataFrame:
         """
         Loops over every activity (row) and allocates the respective value per bin (value_per_bin) to each column
-        specified in the columns first_bin and last_bin.
-        Args:
-            weekday (str, optional): _description_. Defaults to None.
+        specified in the columns first_bin and last_bin.      
+
         Returns:
             pd.DataFrame: Discretized data set with temporal discretizations in the columns.
         """
@@ -652,6 +699,12 @@ class TimeDiscretiser:
     def assign_bins(self, activities: pd.DataFrame) -> pd.Series:
         """
         Assigns values for every unique_id based on first and last bin.
+
+        Args:
+            activities (pd.DataFrame): _description_
+
+        Returns:
+            pd.Series: _description_
         """
         s = pd.Series(index=range(self.number_time_slots), dtype=float)
         for _, itrip in activities.iterrows():
@@ -665,6 +718,9 @@ class TimeDiscretiser:
         return s
 
     def __write_output(self):
+        """
+        _summary_
+        """
         if self.user_config["global"]["write_output_to_disk"]["diary_output"]:
             root = Path(self.user_config["global"]["absolute_path"]["vencopy_root"])
             folder = self.dev_config["global"]["relative_path"]["diary_output"]
@@ -678,6 +734,17 @@ class TimeDiscretiser:
             write_out(data=self.activities, path=root / folder / file_name)
 
     def discretise(self, activities, profile_name: str, method: str) -> pd.DataFrame:
+        """
+        _summary_
+
+        Args:
+            activities (_type_): _description_
+            profile_name (str): _description_
+            method (str): _description_
+
+        Returns:
+            pd.DataFrame: _description_
+        """
         self.column_to_discretise: Optional[str] = profile_name
         self.activities = activities
         self.method = method
