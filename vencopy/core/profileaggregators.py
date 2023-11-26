@@ -90,6 +90,9 @@ class Aggregator:
 
 
     def _extract_weights(self):
+        """
+        _summary_
+        """
         self.weights = (
             self.activities.loc[:, ["unique_id", "trip_weight"]]
             .drop_duplicates(subset=["unique_id"])
@@ -233,8 +236,10 @@ class Aggregator:
                 raise NotImplementedError(f"An unknown profile {self.profile_name} was selected.")
 
     def __compose_week_profile(self):
-        # input is self.weekday_profiles. Method only works if aggregation is weekly
-        # check if any day of the week is not filled, copy line above in that case
+        """
+        Input is self.weekday_profiles. Method only works if aggregation is weekly
+        check if any day of the week is not filled, copy line above in that case
+        """
         if self.weekday_profiles.isna().any(axis=1).any():
             index_empty_rows = self.weekday_profiles[self.weekday_profiles.isna().any(axis=1)].index - 1
             for empty_row in index_empty_rows:
@@ -258,6 +263,9 @@ class Aggregator:
         )
 
     def __write_output(self):
+        """
+        _summary_
+        """
         if self.user_config["global"]["write_output_to_disk"]["aggregator_output"]:
             root = Path(self.user_config["global"]["absolute_path"]["vencopy_root"])
             folder = self.dev_config["global"]["relative_path"]["aggregator_output"]
@@ -271,6 +279,17 @@ class Aggregator:
             write_out(data=self.activities, path=root / folder / file_name)
 
     def perform_aggregation(self, profile: pd.DataFrame, profile_name: str, method: str) -> pd.DataFrame:
+        """
+        _summary_
+
+        Args:
+            profile (pd.DataFrame): _description_
+            profile_name (str): _description_
+            method (str): _description_
+
+        Returns:
+            pd.DataFrame: _description_
+        """
         self.profile = profile
         self.profile_name = profile_name
         self.method = method
