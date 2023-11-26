@@ -36,10 +36,10 @@ if __name__ == "__main__":
     diary = DiaryBuilder(configs=configs, activities=flex.activities)
     diary.create_diaries()
 
-    profile = ProfileAggregator(configs=configs, activities=diary.activities, profiles=diary)
-    profile.aggregate_profiles()
+    profiles = ProfileAggregator(configs=configs, activities=diary.activities, profiles=diary)
+    profiles.aggregate_profiles()
 
-    post = PostProcessor(configs=configs, profiles=profile)
+    post = PostProcessor(configs=configs, profiles=profiles)
     post.create_annual_profiles()
     post.normalise()
 
