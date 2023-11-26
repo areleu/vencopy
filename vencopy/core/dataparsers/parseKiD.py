@@ -19,11 +19,18 @@ class ParseKiD(IntermediateParsing):
         Inherited data class to differentiate between abstract interfaces such
         as vencopy internal variable namings and data set specific functions
         such as filters etc.
+
+        Args:
+            configs (dict): _description_
+            dataset (str): _description_
         """
         super().__init__(configs=configs, dataset=dataset)
         self.park_inference = ParkInference(configs=configs)
 
     def _load_unencrypted_data(self):
+        """
+        _summary_
+        """
         raw_data_path_trips = (
             Path(self.user_config["global"]["absolute_path"][self.dataset])
             / self.dev_config["global"]["files"][self.dataset]["trips_data_raw"]
@@ -54,7 +61,11 @@ class ParseKiD(IntermediateParsing):
         """
         Replaces commas with dots in the dataset (German datasets).
 
-        :return: None
+        Args:
+            trips (_type_): _description_
+
+        Returns:
+            _type_: _description_
         """
         for i, x in enumerate(list(trips.trip_distance)):
             trips.at[i, "trip_distance"] = x.replace(",", ".")
@@ -65,12 +76,11 @@ class ParseKiD(IntermediateParsing):
     def __add_string_columns(self, weekday=True, purpose=True, vehicle_segment=True):
         """
         Adds string columns for either weekday or purpose.
-
-        :param weekday: Boolean identifier if weekday string info should be
-                        added in a separate column
-        :param purpose: Boolean identifier if purpose string info should be
-                        added in a separate column
-        :return: None
+ 
+        Args:
+            weekday (bool, optional): Boolean identifier if weekday string info should be added in a separate column. Defaults to True.
+            purpose (bool, optional): Boolean identifier if purpose string info should be added in a separate column. Defaults to True.
+            vehicle_segment (bool, optional): _description_. Defaults to True.
         """
         if weekday:
             self._add_string_column_from_variable(col_name="weekday_string", var_name="trip_start_weekday")
@@ -81,6 +91,15 @@ class ParseKiD(IntermediateParsing):
 
     @staticmethod
     def _extract_timestamps(trips):
+        """
+        _summary_
+
+        Args:
+            trips (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """
         trips["trip_start_date"] = pd.to_datetime(trips["trip_start_date"], format="%d.%m.%Y")
         trips["trip_start_year"] = trips["trip_start_date"].dt.year
         trips["trip_start_month"] = trips["trip_start_date"].dt.month
@@ -99,7 +118,12 @@ class ParseKiD(IntermediateParsing):
         """
         Separate implementation for the KID dataset. Overwrites parent method.
 
-        :return: trips
+
+        Args:
+            trips (_type_): _description_
+
+        Returns:
+            _type_: _description_
         """
         day_end = trips["timestamp_end"].dt.day
         day_start = trips["timestamp_start"].dt.day
@@ -115,6 +139,12 @@ class ParseKiD(IntermediateParsing):
     def _exclude_hours(trips):
         """
         Removes trips where both start and end trip time are missing. KID-specific function.
+
+        Args:
+            trips (_type_): _description_
+
+        Returns:
+            _type_: _description_
         """
         trips = trips.loc[
             (trips["trip_start_clock"] != "-1:-1") & (trips["trip_end_clock"] != "-1:-1"),
@@ -142,7 +172,6 @@ class ParseKiD(IntermediateParsing):
         self._filter_consistent_hours(dataset=self.trips)
         self.activities = self.park_inference.add_parking_rows(trips=self.trips)
         self._subset_vehicle_segment()
-        self._cleanup_dataset(dataset=self.activities)
         self.write_output()
         print("Parsing KiD dataset completed.")
         return self.activities

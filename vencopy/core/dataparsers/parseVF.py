@@ -22,18 +22,17 @@ class ParseVF(IntermediateParsing):
         an encrypted ZIP-file. For this, a password has to be given in the
         parseConfig.
 
-        :param configs: venco.py config dictionary consisting at least of the
-                           config dictionaries globalConfig, parseConfig and
-                           localPathConfig.
-        :param dataset: A string identifying the MiD data set.
+        Args:
+            configs (dict): _description_
+            dataset (str): _description_
         """
         super().__init__(configs=configs, dataset=dataset)
         self.park_inference = ParkInference(configs=configs)
 
     def _load_unencrypted_data(self):
         """
-        raw_data_path_trips, unlike for other MiD classes is taken from the MiD B1 dataset
-        raw_data_path_vehicles is an internal dataset from VF
+        raw_data_path_trips, unlike for other MiD classes is taken from the MiD B1 dataset.
+        raw_data_path_vehicles is an internal dataset from VF.
         """
         raw_data_path_trips = (
             Path(self.user_config["global"]["absolute_path"][self.dataset])
@@ -63,8 +62,6 @@ class ParseVF(IntermediateParsing):
         Harmonizes the input data variables to match internal venco.py names given as specified in the mapping in
         self.dev_config["dataparsers"]['data_variables']. Mappings for MiD08 and MiD17 are given. Since the MiD08 does not provide a
         combined household and person unique identifier, it is synthesized of the both IDs.
-
-        :return: None
         """
         replacement_dict = self._create_replacement_dict(self.dataset, self.dev_config["dataparsers"]["data_variables"])
         data_renamed = self.trips.rename(columns=replacement_dict)
@@ -76,6 +73,9 @@ class ParseVF(IntermediateParsing):
         print("Finished harmonization of variables")
 
     def __pad_missing_car_segments(self):
+        """
+        _summary_
+        """
         # remove vehicle_segment nicht zuzuordnen
         self.trips = self.trips[self.trips.vehicle_segment != "nicht zuzuordnen"]
         # pad missing car segments
@@ -96,11 +96,9 @@ class ParseVF(IntermediateParsing):
         """
         Adds string columns for either weekday or purpose.
 
-        :param weekday: Boolean identifier if weekday string info should be
-                        added in a separate column
-        :param purpose: Boolean identifier if purpose string info should be
-                        added in a separate column
-        :return: None
+        Args:
+            weekday (bool, optional): Boolean identifier if weekday string info should be added in a separate column. Defaults to True.
+            purpose (bool, optional): Boolean identifier if purpose string info should be added in a separate column. Defaults to True.
         """
         if weekday:
             self._add_string_column_from_variable(col_name="weekday_string", var_name="trip_start_weekday")

@@ -21,10 +21,9 @@ class ParseMiD(IntermediateParsing):
         an encrypted ZIP-file. For this, a password has to be given in the
         parseConfig.
 
-        :param configs: venco.py config dictionary consisting at least of the
-                           config dictionaries globalConfig, parseConfig and
-                           localPathConfig.
-        :param dataset: A string identifying the MiD data set.
+        Args:
+            configs (dict): _description_
+            dataset (str): _description_
         """
         super().__init__(configs=configs, dataset=dataset)
         self.park_inference = ParkInference(configs=configs)
@@ -36,8 +35,6 @@ class ParseMiD(IntermediateParsing):
         So far mappings for MiD08 and MiD17 are given. Since the MiD08 does
         not provide a combined household and person unique identifier, it is
         synthesized of the both IDs.
-
-        :return: None
         """
         replacement_dict = self._create_replacement_dict(self.dataset, self.dev_config["dataparsers"]["data_variables"])
         activities_renamed = self.trips.rename(columns=replacement_dict)
@@ -52,11 +49,9 @@ class ParseMiD(IntermediateParsing):
         """
         Adds string columns for either weekday or purpose.
 
-        :param weekday: Boolean identifier if weekday string info should be
-                        added in a separate column
-        :param purpose: Boolean identifier if purpose string info should be
-                        added in a separate column
-        :return: None
+        Args:
+            weekday (bool, optional): Boolean identifier if weekday string info should be added in a separate column. Defaults to True.
+            purpose (bool, optional): Boolean identifier if purpose string info should be added in a separate column. Defaults to True.
         """
         if weekday:
             self._add_string_column_from_variable(col_name="weekday_string", var_name="trip_start_weekday")

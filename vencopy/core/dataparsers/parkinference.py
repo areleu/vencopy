@@ -12,6 +12,12 @@ from ...utils.utils import replace_vec
 
 class ParkInference:
     def __init__(self, configs) -> None:
+        """
+        _summary_
+
+        Args:
+            configs (_type_): _description_
+        """
         self.user_config = configs["user_config"]
         self.activities_raw = None
         self.overnight_splitter = OvernightSplitter()
@@ -72,6 +78,13 @@ class ParkInference:
     def _add_util_attributes(activities_raw: pd.DataFrame):
         """
         Adding additional attribute columns with previous and next unique_id.
+
+
+        Args:
+            activities_raw (pd.DataFrame): _description_
+
+        Returns:
+            _type_: _description_
         """
         activities_raw["previous_unique_id"] = activities_raw["unique_id"].shift(fill_value=0)
         activities_raw["is_first_activity"] = (
@@ -87,6 +100,13 @@ class ParkInference:
     def _add_park_act_before_first_trip(activities_raw: pd.DataFrame):
         """
         Adds park activities before first trips. Currently, it is assumed that all cars start home.
+
+
+        Args:
+            activities_raw (pd.DataFrame): _description_
+
+        Returns:
+            _type_: _description_
         """
         new_indeces = activities_raw.index[activities_raw["is_first_activity"]]
         df_add = activities_raw.loc[new_indeces, :]
@@ -103,6 +123,13 @@ class ParkInference:
     def _adjust_park_attrs(activities_raw: pd.DataFrame) -> pd.DataFrame:
         """
         Sets trip attribute values to zero where trip_id == NaN (i.e. for all parking activities).
+
+
+        Args:
+            activities_raw (pd.DataFrame): _description_
+
+        Returns:
+            pd.DataFrame: _description_
         """
         activities_raw.loc[
             activities_raw["trip_id"].isna(),
@@ -146,6 +173,13 @@ class ParkInference:
     def _remove_next_day_park_acts(activities_raw: pd.DataFrame) -> pd.DataFrame:
         """
         Checks for trips across day-limit and removing respective parking activities after ovenight trips.
+
+
+        Args:
+            activities_raw (pd.DataFrame): _description_
+
+        Returns:
+            pd.DataFrame: _description_
         """
         indeces_multi_day_activities = (
             activities_raw["is_last_activity"]
@@ -181,9 +215,11 @@ class ParkInference:
         Returns all parking activities except for the last one (return argument 1) and the first one (return argument
         2)
 
-        Return:
-            pd.Series: Parking activity indices without the last one
-            pd.Series: Parking activity indices without the first one
+        Args:
+            activities_raw (pd.DataFrame): _description_
+
+        Returns:
+            pd.DataFrame: Parking activity indices without the last one and parking activity indices without the first one
         """
         park_act = ~activities_raw["park_id"].isna()
         park_act = park_act.loc[park_act]
@@ -192,7 +228,14 @@ class ParkInference:
     @staticmethod
     def _update_park_start(activities_raw: pd.DataFrame, park_act_wo_first: pd.Series) -> pd.DataFrame:
         """
-        Updates park start timestamps for newly added rows
+        Updates park start timestamps for newly added rows.
+
+        Args:
+            activities_raw (pd.DataFrame): _description_
+            park_act_wo_first (pd.Series): _description_
+
+        Returns:
+            pd.DataFrame: _description_
         """
         set_timestamp = activities_raw.loc[park_act_wo_first.index - 1, "timestamp_end"]
         set_timestamp.index = activities_raw.loc[park_act_wo_first.index, "timestamp_start"].index
@@ -202,7 +245,14 @@ class ParkInference:
     @staticmethod
     def _update_park_end(activities_raw: pd.DataFrame, park_act_wo_last: pd.Series) -> pd.DataFrame:
         """
-        Updates park end timestamps for newly added rows
+        Updates park end timestamps for newly added rows.
+
+        Args:
+            activities_raw (pd.DataFrame): _description_
+            park_act_wo_last (pd.Series): _description_
+
+        Returns:
+            pd.DataFrame: _description_
         """
         set_timestamp = activities_raw.loc[park_act_wo_last.index + 1, "timestamp_start"]
         set_timestamp.index = activities_raw.loc[park_act_wo_last.index, "timestamp_end"].index
@@ -212,7 +262,13 @@ class ParkInference:
     @staticmethod
     def _update_timestamp_first_park_act(activities_raw: pd.DataFrame) -> pd.DataFrame:
         """
-        Updates park end timestamps for last activity in new park rows
+        Updates park end timestamps for last activity in new park rows.
+
+        Args:
+            activities_raw (pd.DataFrame): _description_
+
+        Returns:
+            pd.DataFrame: _description_
         """
         indeces_activities = ~(activities_raw["park_id"].isna()) & (activities_raw["is_first_activity"])
         activities_raw.loc[indeces_activities, "timestamp_start"] = replace_vec(
@@ -224,6 +280,12 @@ class ParkInference:
     def _update_timestamp_last_park_act(activities_raw: pd.DataFrame) -> pd.DataFrame:
         """
         Updates park end timestamps for last activity in new park rows
+
+        Args:
+            activities_raw (pd.DataFrame): _description_
+
+        Returns:
+            pd.DataFrame: _description_
         """
         indeces_activities = ~(activities_raw["park_id"].isna()) & (activities_raw["is_last_activity"])
         activities_raw.loc[indeces_activities, "timestamp_end"] = replace_vec(
@@ -233,6 +295,15 @@ class ParkInference:
 
     @staticmethod
     def _add_next_and_prev_ids(activities_raw: pd.DataFrame) -> pd.DataFrame:
+        """
+        _summary_
+
+        Args:
+            activities_raw (pd.DataFrame): _description_
+
+        Returns:
+            pd.DataFrame: _description_
+        """
         activities_raw.loc[~activities_raw["trip_id"].isna(), "activity_id"] = activities_raw["trip_id"]
         activities_raw.loc[~activities_raw["park_id"].isna(), "activity_id"] = activities_raw["park_id"]
         activities_raw.loc[~activities_raw["is_last_activity"], "next_activity_id"] = activities_raw.loc[
@@ -261,8 +332,14 @@ class ParkInference:
     @staticmethod
     def _set_overnight_var_false_for_last_act_trip(activities_raw: pd.DataFrame) -> pd.DataFrame:
         """
-        This function treats the edge case of trips being the last activity in the daily activity chain, i.e. trips
+        Function to treat the edge case of trips being the last activity in the daily activity chain, i.e. trips
         ending exactly at 00:00. They are falsely labelled as overnight trips which is corrected here.
+
+        Args:
+            activities_raw (pd.DataFrame): _description_
+
+        Returns:
+            pd.DataFrame: _description_
         """
         indeces_last_activity_is_trip = (activities_raw["is_last_activity"]) & ~(
             activities_raw["trip_id"].isna()
@@ -281,6 +358,12 @@ class ParkInference:
         Removes all overnight trips from the activities data set based on the column 'trip_end_next_day'. Updates
         timestamp end (to 00:00) and is_last_activity for the new last parking activities. Overwrites
         self.activities_raw.
+
+        Args:
+            activities_raw (pd.DataFrame): _description_
+
+        Returns:
+            _type_: _description_
         """
         # Column for lastActivity setting later
         activities_raw["next_trip_end_next_day"] = activities_raw["trip_end_next_day"].shift(
@@ -305,6 +388,12 @@ class ParkInference:
     def _add_timedelta_column(activities_raw: pd.DataFrame):
         """
         Adds column keeping the length information of the activity as a pandas time_delta.
+
+        Args:
+            activities_raw (pd.DataFrame): _description_
+
+        Returns:
+            _type_: _description_
         """
         activities_raw["time_delta"] = (
             activities_raw["timestamp_end"] - activities_raw["timestamp_start"]
@@ -313,6 +402,15 @@ class ParkInference:
 
     @staticmethod
     def _unique_indeces(activities_raw: pd.DataFrame):
+        """
+        _summary_
+
+        Args:
+            activities_raw (pd.DataFrame): _description_
+
+        Returns:
+            _type_: _description_
+        """
         activities_raw.drop(columns=["index"], inplace=True)
         activities_raw.reset_index(inplace=True)  # Due to copying and appending rows, the index has to be reset
         return activities_raw
@@ -320,6 +418,9 @@ class ParkInference:
 
 class OvernightSplitter:
     def __init__(self):
+        """
+        _summary_
+        """
         self.activities_raw = None
 
     def split_overnight_trips(self, activities_raw: pd.DataFrame) -> pd.DataFrame:
@@ -340,8 +441,14 @@ class OvernightSplitter:
         survey trip.
         These edge cases are documented and quantified in issue #358 'Sum of all distances of dataParser at end equals
         sum of all distances after filtering'.
+
+        Args:
+            activities_raw (pd.DataFrame): _description_
+
+        Returns:
+            pd.DataFrame: _description_
         """
-        self.activities_raw = trips
+        self.activities_raw = activities_raw
 
         # Split overnight trips and add next day distance in the morning (trip_id=0)
         is_overnight_trip, overnight_trips_add = self.__get_overnight_activities()
@@ -374,6 +481,12 @@ class OvernightSplitter:
         return self.activities_raw
 
     def __get_overnight_activities(self) -> tuple[pd.Series, pd.DataFrame]:
+        """
+        _summary_
+
+        Returns:
+            tuple[pd.Series, pd.DataFrame]: _description_
+        """
         indeces_overnight_actvities = (
             self.activities_raw["is_last_activity"]
             & self.activities_raw["trip_end_next_day"]
@@ -385,12 +498,24 @@ class OvernightSplitter:
         return indeces_overnight_actvities, self.activities_raw.loc[indeces_overnight_actvities, :]
 
     def __adjust_overnight_timestamps(self, trips: pd.DataFrame) -> pd.DataFrame:
+        """
+        _summary_
+
+        Args:
+            trips (pd.DataFrame): _description_
+
+        Returns:
+            pd.DataFrame: _description_
+        """
         tripsRes = trips.copy()
         tripsRes["timestamp_end"] = tripsRes.loc[:, "timestamp_end"] - pd.Timedelta(1, "d")
         tripsRes["timestamp_start"] = replace_vec(tripsRes.loc[:, "timestamp_end"], hour=0, minute=0)
         return tripsRes
 
     def __set_last_activities_end_timestamp_to_zero(self):
+        """
+        _summary_
+        """
         # Set timestamp end of evening part of overnight trip split to 00:00
         self.activities_raw.loc[self.activities_raw["is_last_activity"], "timestamp_end"] = replace_vec(
             self.activities_raw.loc[self.activities_raw["is_last_activity"], "timestamp_end"],
@@ -399,6 +524,15 @@ class OvernightSplitter:
         )
 
     def __set_overnight_trip_id_to_zero(self, trips: pd.DataFrame) -> pd.DataFrame:
+        """
+        _summary_
+
+        Args:
+            trips (pd.DataFrame): _description_
+
+        Returns:
+            pd.DataFrame: _description_
+        """
         trips["trip_id"] = 0
         trips["activity_id"] = 0
         trips["previous_activity_id"] = pd.NA
@@ -413,6 +547,16 @@ class OvernightSplitter:
         return trips
 
     def __adjust_morning_trip_distance(self, overnightTrips: pd.DataFrame, morning_trips: pd.DataFrame) -> pd.DataFrame:
+        """
+        _summary_
+
+        Args:
+            overnightTrips (pd.DataFrame): _description_
+            morning_trips (pd.DataFrame): _description_
+
+        Returns:
+            pd.DataFrame: _description_
+        """
         # Splitting the total distance to morning and evening trip time-share dependent
         morning_trips["timedelta_total"] = overnightTrips["timestamp_end"] - overnightTrips["timestamp_start"]
         morning_trips["timedelta_morning"] = morning_trips["timestamp_end"] - morning_trips["timestamp_start"]
@@ -425,16 +569,38 @@ class OvernightSplitter:
         return morning_trips
 
     def __adjust_evening_trip_distance(self, morning_trips: pd.DataFrame, is_overnight_trip: pd.Series):
+        """
+        _summary_
+
+        Args:
+            morning_trips (pd.DataFrame): _description_
+            is_overnight_trip (pd.Series): _description_
+        """
         self.activities_raw.loc[is_overnight_trip, "trip_distance"] = (
             morning_trips["time_share_evening"] * morning_trips["total_trip_distance"]
         )
 
     def __set_first_last_acts(self, morning_trips: pd.DataFrame):
+        """
+        _summary_
+
+        Args:
+            morning_trips (pd.DataFrame): _description_
+        """
         # Setting first and last activities
         morning_trips["is_first_activity"] = True
         morning_trips["is_last_activity"] = False
 
     def __get_prev_first_act(self, morning_trips: pd.DataFrame):
+        """
+        _summary_
+
+        Args:
+            morning_trips (pd.DataFrame): _description_
+
+        Returns:
+            _type_: _description_
+        """
         return (
             self.activities_raw["unique_id"].isin(morning_trips["unique_id"]) & self.activities_raw["is_first_activity"]
         )
@@ -442,6 +608,16 @@ class OvernightSplitter:
     def __neglect_overlap_morning_trips(
         self, morning_trips: pd.DataFrame, is_prev_first_acts: pd.DataFrame
     ) -> tuple[pd.DataFrame, pd.Series]:
+        """
+        _summary_
+
+        Args:
+            morning_trips (pd.DataFrame): _description_
+            is_prev_first_acts (pd.DataFrame): _description_
+
+        Returns:
+            tuple[pd.DataFrame, pd.Series]: _description_
+        """
         # Option 1 of treating overlaps: After concatenation in the end
         first_trips_end = self.activities_raw.loc[is_prev_first_acts, "timestamp_end"].copy()
         first_trips_end.index = morning_trips.index  # Adjust index for comparison
@@ -466,6 +642,14 @@ class OvernightSplitter:
     ) -> pd.DataFrame:
         """
         Sets start timestamp of previously first activity (parking) to end timestamp of morning split of overnight trip.
+
+        Args:
+            morning_trips (pd.DataFrame): _description_
+            is_overnight_trip (pd.Series): _description_
+            is_prev_first_acts (pd.DataFrame): _description_
+
+        Returns:
+            pd.DataFrame: _description_
         """
         timestamp_new = morning_trips.loc[is_overnight_trip, "timestamp_end"]
         timestamp_new.index = self.activities_raw.loc[is_prev_first_acts, "timestamp_start"].index
@@ -479,6 +663,16 @@ class OvernightSplitter:
         )
 
     def __update_next_activity_id(self, prev_first_acts: pd.DataFrame, morning_trips: pd.DataFrame) -> pd.DataFrame:
+        """
+        _summary_
+
+        Args:
+            prev_first_acts (pd.DataFrame): _description_
+            morning_trips (pd.DataFrame): _description_
+
+        Returns:
+            pd.DataFrame: _description_
+        """
         next_acts = prev_first_acts.loc[prev_first_acts["previous_activity_id"] == 0, "activity_id"]
         next_acts.index = morning_trips.index
         ret = morning_trips.copy()
@@ -488,6 +682,9 @@ class OvernightSplitter:
     def __add_morning_trips(self, morning_trips: pd.DataFrame):
         """
         Appends overnight morning trips.
+
+        Args:
+            morning_trips (pd.DataFrame): _description_
         """
         self.activities_raw = pd.concat([self.activities_raw, morning_trips])
 
@@ -520,6 +717,9 @@ class OvernightSplitter:
         self.__update_consolidated_act(id_neglect=unique_id)
 
     def __check_and_assert(self):
+        """
+        _summary_
+        """
         # Calculates the neglected trip distances from overnight split trips with regular morning trips
         distance = (
             self.activities_raw["trip_distance"].sum()
@@ -549,6 +749,9 @@ class OvernightSplitter:
     def __neglect_zero_trip_id_from_activities(self, id_neglect: pd.Series):
         """
         Filters out the activities with the given hhpid and trip_id 0.
+
+        Args:
+            id_neglect (pd.Series): _description_
         """
         neglect = (self.activities_raw["unique_id"].isin(id_neglect)) & (self.activities_raw["trip_id"] == 0)
         self.activities_raw = self.activities_raw.loc[~neglect, :]
@@ -556,7 +759,10 @@ class OvernightSplitter:
     def __update_consolidated_act(self, id_neglect: pd.Series):
         """
         Sets the start timestamp of the firstActivity of all hhpids given as argument to 00:00. Additionally
-        the previous_activity_id is set to pd.NA.
+        the previous_activity_id is set to pd.NA._summary_
+
+        Args:
+            id_neglect (pd.Series): _description_
         """
         indeces_consolidated_trips = (self.activities_raw["unique_id"].isin(id_neglect)) & (
             self.activities_raw["is_first_activity"]

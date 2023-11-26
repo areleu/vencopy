@@ -5,19 +5,24 @@ __status__ = "test"  # options are: dev, test, prod
 __license__ = "BSD-3-Clause"
 
 
-from pathlib import Path
 import pandas as pd
+
+from pathlib import Path
 
 from ..core.profileaggregators import ProfileAggregator
 from ..utils.utils import create_file_name, write_out
 
 
 class PostProcessor:
-    """
-    This class contains functions to post process aggregated venco.py profiles. As of now (August 2023), the class
-    contains cloning weekly profiles to year and normalizing it with different normalization bases.
-    """
     def __init__(self, configs: dict, profiles: ProfileAggregator):
+        """
+        This class contains functions to post process aggregated venco.py profiles. The class 
+        contains cloning weekly profiles to year and normalizing it with different normalization bases.
+
+        Args:
+            configs (dict): _description_
+            profiles (ProfileAggregator): _description_
+        """
         self.user_config = configs["user_config"]
         self.dev_config = configs["dev_config"]
         self.dataset = self.user_config["global"]["dataset"]
@@ -42,9 +47,25 @@ class PostProcessor:
         self.min_battery_level_normalised = None
 
     def __store_input(self, name: str, profile: pd.Series):
+        """
+        _summary_
+
+        Args:
+            name (str): _description_
+            profile (pd.Series): _description_
+        """
         self.input_profiles[name] = profile
 
     def __week_to_annual_profile(self, profile: pd.Series) -> pd.Series:
+        """
+        _summary_
+
+        Args:
+            profile (pd.Series): _description_
+
+        Returns:
+            pd.Series: _description_
+        """
         start_weekday = self.user_config["postprocessor"]["start_weekday"]  # (1: Monday, 7: Sunday)
         n_timeslots_per_day = len(list(self.time_index))
         # Shift input profiles to the right weekday and start with first bin of chosen weekday
@@ -53,12 +74,41 @@ class PostProcessor:
         return annual.drop(annual.tail(len(annual) - (n_timeslots_per_day - 1) * 365).index)
 
     def __normalize_flows(self, profile: pd.Series) -> pd.Series:
+        """
+        _summary_
+
+        Args:
+            profile (pd.Series): _description_
+
+        Returns:
+            pd.Series: _description_
+        """
         return profile / profile.sum()
 
     def __normalize_states(self, profile: pd.Series, base: int) -> pd.Series:
+        """
+        _summary_
+
+        Args:
+            profile (pd.Series): _description_
+            base (int): _description_
+
+        Returns:
+            pd.Series: _description_
+        """
         return profile / base
 
     def __normalize_charging_power(self, profile: pd.Series, base: int) -> pd.Series:
+        """
+        _summary_
+
+        Args:
+            profile (pd.Series): _description_
+            base (int): _description_
+
+        Returns:
+            pd.Series: _description_
+        """
         profile_normalised = []
         for day in range(0, 7):
             start = day * len(self.time_delta)
@@ -72,6 +122,12 @@ class PostProcessor:
         return profile
 
     def __write_out_profiles(self, filename_id: str):
+        """
+        _summary_
+
+        Args:
+            filename_id (str): _description_
+        """
         self.__write_output(profile_name="drain", profile=self.drain_normalised, filename_id=filename_id)
         self.__write_output(
             profile_name="uncontrolled_charging", profile=self.uncontrolled_charging_normalised, filename_id=filename_id
@@ -81,6 +137,14 @@ class PostProcessor:
         self.__write_output(profile_name="min_battery_level", profile=self.min_battery_level_normalised, filename_id=filename_id)
 
     def __write_output(self, profile_name: str, profile: pd.Series, filename_id: str):
+        """
+        _summary_
+
+        Args:
+            profile_name (str): _description_
+            profile (pd.Series): _description_
+            filename_id (str): _description_
+        """
         root = Path(self.user_config["global"]["absolute_path"]["vencopy_root"])
         folder = self.dev_config["global"]["relative_path"]["processor_output"]
         file_name = create_file_name(
@@ -93,6 +157,9 @@ class PostProcessor:
         write_out(data=profile, path=root / folder / file_name)
 
     def create_annual_profiles(self):
+        """
+        _summary_
+        """
         if self.user_config["profileaggregators"]['aggregation_timespan'] == "daily":
             print('The annual profiles cannot be generated as the aggregation was performed over a single day.')
         else:
@@ -108,6 +175,9 @@ class PostProcessor:
                     print("Run finished.")
 
     def normalise(self):
+        """
+        _summary_
+        """
         if self.user_config["profileaggregators"]['aggregation_timespan'] == "daily":
             print('The annual profiles cannot be normalised as the aggregation was performed over a single day.')
             print('Run finished.')

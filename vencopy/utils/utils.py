@@ -13,11 +13,14 @@ import os
 def load_configs(base_path: Path) -> dict:
     """
     Generic function to load and open yaml config files.
-    pathLib syntax for windows, max, linux compatibility,
+    Uses pathlib syntax for windows, max, linux compatibility,
     see https://realpython.com/python-pathlib/ for an introduction.
 
-    :param config_names: Tuple containing names of config files to be loaded
-    :return: Dictionary with opened yaml config files
+    Args:
+        base_path (Path): _description_
+
+    Returns:
+        configs (dict): Dictionary with opened yaml config files
     """
     config_names = ("user_config", "dev_config")
     config_path = Path(base_path) / "config"
@@ -35,9 +38,12 @@ def return_lowest_level_dict_keys(dictionary: dict, lst: list = None) -> list:
     as a list. The parameter lst is used as
     interface between recursion levels.
 
-    :param dictionary: Dictionary of variables
-    :param lst: empty list, used as interface between recursion levels
-    :return: Returns a list with all the bottom level dictionary keys
+    Args:
+        dictionary (dict): Dictionary of variables
+        lst (list, optional): List used as interface between recursion levels. Defaults to None.
+
+    Returns:
+        list: list with all the bottom level dictionary keys
     """
     if lst is None:
         lst = []
@@ -55,9 +61,12 @@ def return_lowest_level_dict_values(dictionary: dict, lst: list = None) -> list:
     (the bottom) of dictionary. The parameter
     lst is used as an interface between recursion levels.
 
-    :param dictionary: Dictionary of variables
-    :param lst: empty list, is used as interface to next recursion
-    :return: Returns a list with all the bottom dictionary values
+    Args:
+        dictionary (dict): Dictionary of variables
+        lst (list, optional): List used as interface to next recursion. Defaults to None.
+
+    Returns:
+        list: List with all the bottom dictionary values
     """
     if lst is None:
         lst = []
@@ -70,7 +79,22 @@ def return_lowest_level_dict_values(dictionary: dict, lst: list = None) -> list:
 
 
 def replace_vec(series, year=None, month=None, day=None, hour=None, minute=None, second=None) -> pd.Series:
-    return pd.to_datetime(
+    """
+    _summary_
+
+    Args:
+        series (_type_): _description_
+        year (_type_, optional): _description_. Defaults to None.
+        month (_type_, optional): _description_. Defaults to None.
+        day (_type_, optional): _description_. Defaults to None.
+        hour (_type_, optional): _description_. Defaults to None.
+        minute (_type_, optional): _description_. Defaults to None.
+        second (_type_, optional): _description_. Defaults to None.
+
+    Returns:
+        pd.Series: _description_
+    """
+    replacement = pd.to_datetime(
         {
             "year": series.dt.year if year is None else [year for i in range(len(series))],
             "month": series.dt.month if month is None else [month for i in range(len(series))],
@@ -78,16 +102,17 @@ def replace_vec(series, year=None, month=None, day=None, hour=None, minute=None,
             "hour": series.dt.hour if hour is None else [hour for i in range(len(series))],
             "minute": series.dt.minute if minute is None else [minute for i in range(len(series))],
             "second": series.dt.second if second is None else [second for i in range(len(series))],
-        }
-    )
+        })
+    return replacement
 
 
 def create_output_folders(configs: dict):
     """
     Function to crete vencopy output folder and subfolders
 
-    :param: config dictionary
-    :return: None
+
+    Args:
+        configs (dict): _description_
     """
     root = Path(configs["user_config"]["global"]["absolute_path"]["vencopy_root"])
     main_dir = "output"
@@ -106,12 +131,16 @@ def create_file_name(
     Generic method used for fileString compilation throughout the venco.py framework. This method does not write any
     files but just creates the file name including the filetype suffix.
 
-    :param user_config: user config file for paths
-    :param file_name_id: ID of respective data file as specified in global config
-    :param dataset: Manual specification of data set ID e.g. 'MiD17'
-    :param manual_label: Optional manual label to add to file_name
-    :param filetypeStr: filetype to be written to hard disk
-    :return: Full name of file to be written.
+    Args:
+        dev_config (dict): _description_
+        user_config (dict): _description_
+        file_name_id (str): ID of respective data file as specified in global config
+        dataset (str): Dataset
+        manual_label (str, optional):  Optional manual label to add to file_name. Defaults to "".
+        suffix (str, optional): _description_. Defaults to "csv".
+
+    Returns:
+        str: Full name of file to be written.
     """
     if dataset is None:
         return f"{dev_config['global']['disk_file_names'][file_name_id]}_{user_config['global']['run_label']}_{manual_label}.{suffix}"
@@ -121,6 +150,13 @@ def create_file_name(
 
 
 def write_out(data: pd.DataFrame, path: Path):
+    """
+    _summary_
+
+    Args:
+        data (pd.DataFrame): _description_
+        path (Path): _description_
+    """
     data.to_csv(path)
     print(f"Dataset written to {path}.")
 
