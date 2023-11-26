@@ -5,9 +5,10 @@ __status__ = "test"  # options are: dev, test, prod
 __license__ = "BSD-3-Clause"
 
 
+import pandas as pd
+
 from pathlib import Path
 
-import pandas as pd
 from ..utils.utils import create_file_name, write_out
 
 
@@ -268,9 +269,9 @@ class FlexEstimator:
             end_level (float or pd.Series): End battery level at end of simulation time (last_bin). Defaults to
             self.lower_battery_level, the minimum battery level. Can be either of type float (in first iteration) or pd.Series
             with respective unique_id in the index.
+
         Returns:
-            pd.DataFrame: Activity data set with the battery variables set for all last activities of the activity
-            chains
+            pd.DataFrame: Activity data set with the battery variables set for all last activities of the activity chains
         """
         # Last activities - parking and trips
         last_activities_in = self.activities.loc[self.activities["is_last_activity"], :].copy()
@@ -484,7 +485,8 @@ class FlexEstimator:
         return indeces_park_activities.reset_index()
 
     def _uncontrolled_charging(self):
-        """_summary_
+        """
+        _summary_
         """
         park_activities = self.activities.loc[self.activities["trip_id"].isna(), :].copy()
         park_activities["uncontrolled_charging"] = (
@@ -519,6 +521,17 @@ class FlexEstimator:
     def _calculate_charging_end_timestamp(
         self, start_timestamp: pd.Timestamp, start_battery_level: float, power: float
     ) -> pd.Timestamp:
+        """
+        _summary_
+
+        Args:
+            start_timestamp (pd.Timestamp): _description_
+            start_battery_level (float): _description_
+            power (float): _description_
+
+        Returns:
+            pd.Timestamp: _description_
+        """
         if power == 0:
             return pd.NA
         delta_battery_level = self.upper_battery_level - start_battery_level
@@ -526,6 +539,9 @@ class FlexEstimator:
         return start_timestamp + pd.Timedelta(value=time_for_charge, unit="h").round(freq="s")
 
     def _auxiliary_fuel_need(self):
+        """
+        _summary_
+        """
         self.activities["auxiliary_fuel_need"] = (
             self.activities["residual_need"]
             * self.user_config["flexestimators"]["fuel_consumption"]
@@ -561,6 +577,9 @@ class FlexEstimator:
         return activities_filter.reset_index()
 
     def __write_output(self):
+        """
+        _summary_
+        """
         if self.user_config["global"]["write_output_to_disk"]["flex_output"]:
             root = Path(self.user_config["global"]["absolute_path"]["vencopy_root"])
             folder = self.dev_config["global"]["relative_path"]["flex_output"]
