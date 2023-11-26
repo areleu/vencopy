@@ -100,16 +100,14 @@ class DataParser:
 
     def _load_encrypted_data(self, zip_path, path_zip_data):
         """
-        Since the MiD data sets are only accessible by an extensive data
-        security contract, venco.py provides the possibility to access
+        Function to provide the possibility to access
         encrypted zip files. An encryption password has to be given in
         user_config.yaml in order to access the encrypted file. Loaded data
         is stored in self.raw_data
 
-        :param zip_path: path from current working directory to the zip file
-                          or absolute path to zipfile
-        :param path_zip_data: Path to trip data file within the encrypted zipfile
-        :return: None
+        Args:
+            zip_path (_type_): Path from current working directory to the zip file or absolute path to zipfile
+            path_zip_data (_type_): Path to trip data file within the encrypted zipfile
         """
         with ZipFile(zip_path) as myzip:
             if ".dta" in path_zip_data:
@@ -138,9 +136,11 @@ class DataParser:
         """
         General check if data set ID is defined in dev_config.yaml
 
-        :param dataset: list of strings declaring the datasetIDs
-                          to be read in
-        :return: a string with a dataset name
+        Args:
+            dataset (str): String declaring all possible dataset 
+
+        Returns:
+            str: String with the dataset name
         """
         available_dataset_ids = self.dev_config["dataparsers"]["data_variables"]["dataset"]
         assert dataset in available_dataset_ids, (
@@ -156,8 +156,6 @@ class DataParser:
         given as specified in the mapping in dev_config['data_variables'].
         Since the MiD08 does not provide a combined household and person
         unique identifier, it is synthesized of the both IDs.
-
-        :return: None
         """
         replacement_dict = self._create_replacement_dict(self.dataset, self.dev_config["dataparsers"]["data_variables"])
         data_renamed = self.trips.rename(columns=replacement_dict)
@@ -194,7 +192,8 @@ class DataParser:
         Currently only checking if list of list str not typechecked
         all(map(self.__checkStr, val). Conditionally triggers an assert.
 
-        :return: None
+        Args:
+            dictionary (_type_): _description_
         """
         assert all(
             isinstance(val, list) for val in return_lowest_level_dict_values(dictionary)
@@ -206,9 +205,10 @@ class DataParser:
         including, excluding, greater_than and smaller_than.
         If a filters is defined with a different key, a warning is thrown.
         Filters are defined inclusively, thus boolean vectors will select
-        elements (TRUE) that stay in the data set.
+        elements (TRUE) that stay in the data set. The function operates on self.trips class-internally.
 
-        :return: None. The function operates on self.trips class-internally.
+        Args:
+            filters (dict, optional): _description_. Defaults to None.
         """
         print(f"Starting filtering, applying {len(return_lowest_level_dict_keys(filters))} filters.")
 
@@ -264,9 +264,12 @@ class DataParser:
         """
         Read-in function for include filter dict from dev_config.yaml
 
-        :param include_filter_dict: Dictionary of include filters defined
-                                in dev_config.yaml
-        :return: Returns a data frame including the variables specified
+        Args:
+            dataset (pd.DataFrame): _description_
+            include_filter_dict (dict): Dictionary of include filters defined in dev_config.yaml
+
+        Returns:
+            pd.DataFrame: Dataframe including the variables specified
         """
         inc_filter_cols = pd.DataFrame(index=dataset.index, columns=include_filter_dict.keys())
         for inc_col, inc_elements in include_filter_dict.items():
@@ -278,9 +281,12 @@ class DataParser:
         """
         Read-in function for exclude filter dict from dev_config.yaml
 
-        :param exclude_filter_dict: Dictionary of exclude filters defined
-                                  in dev_config.yaml
-        :return: Returns a filtered data frame with exclude filters
+        Args:
+            dataset (pd.DataFrame): _description_
+            exclude_filter_dict (dict): Dictionary of exclude filters defined in dev_config.yaml
+
+        Returns:
+            pd.DataFrame: Filtered dataframe
         """
         excl_filter_cols = pd.DataFrame(index=dataset.index, columns=exclude_filter_dict.keys())
         for exc_col, exc_elements in exclude_filter_dict.items():
@@ -292,9 +298,12 @@ class DataParser:
         """
         Read-in function for greater_than filter dict from dev_config.yaml
 
-        :param greater_than_filter_dict: Dictionary of greater than filters
-                                      defined in dev_config.yaml
-        :return:
+        Args:
+            dataset (pd.DataFrame): _description_
+            greater_than_filter_dict (dict): Dictionary of greater than filters defined in dev_config.yaml
+
+        Returns:
+            _type_: _description_
         """
         greater_than_filter_cols = pd.DataFrame(index=dataset.index, columns=greater_than_filter_dict.keys())
         for greater_col, greater_elements in greater_than_filter_dict.items():
@@ -311,9 +320,12 @@ class DataParser:
         """
         Read-in function for smaller_than filter dict from dev_config.yaml
 
-        :param smaller_than_filter_dict: Dictionary of smaller than filters
-               defined in dev_config.yaml
-        :return: Returns a data frame of
+        Args:
+            dataset (pd.DataFrame): _description_
+            smaller_than_filter_dict (dict): Dictionary of smaller than filters defined in dev_config.yaml
+
+        Returns:
+            pd.DataFrame: _description_
         """
         smaller_than_filter_cols = pd.DataFrame(index=dataset.index, columns=smaller_than_filter_dict.keys())
         for smaller_col, smaller_elements in smaller_than_filter_dict.items():
@@ -356,8 +368,13 @@ class DataParser:
         responses suggest that participants were travelling for the entire time they took for the whole purpose
         (driving and parking) and not just for the real travel.
 
-        :return: Boolean vector with observations marked True that should be
-        kept in the data set
+        Args:
+            dataset (pd.DataFrame): _description_
+            lower_speed_threshold (_type_): _description_
+            higher_speed_threshold (_type_): _description_
+
+        Returns:
+            pd.Series: Boolean vector with observations marked True that should be kept in the dataset
         """
         dataset["average_speed"] = dataset["trip_distance"] / (dataset["travel_time"] / 60)
         dataset = (dataset["average_speed"] > lower_speed_threshold) & (
@@ -372,8 +389,11 @@ class DataParser:
         to the travel time given by the interviewees. Selects observations where
         timestamps are consistent with the travel time given.
 
-        :return: Boolean vector with observations marked True that should be
-        kept in the data set
+        Args:
+            dataset_in (pd.DataFrame): 
+
+        Returns:
+            pd.Series: Boolean vector with observations marked True that should be kept in the dataset
         """
         dataset = dataset_in.copy()
         dataset["travel_time_ts"] = (
@@ -437,8 +457,9 @@ class DataParser:
         """
         Function supplies some aggregate info of the data after filtering to the user.
 
-        :param filter_data:
-        :return: None
+
+        Args:
+            filter_data (pd.DataFrame): _description_
         """
         len_data = sum(filter_data.all(axis="columns"))
         # bool_dict = {i_column: sum(filter_data[i_column]) for i_column in filter_data}
@@ -456,6 +477,9 @@ class DataParser:
         raise NotImplementedError("A process method for DataParser is not implemented.")
 
     def write_output(self):
+        """
+        _summary_
+        """
         if self.user_config["global"]["write_output_to_disk"]["parse_output"]:
             root = Path(self.user_config["global"]["absolute_path"]["vencopy_root"])
             folder = self.dev_config["global"]["relative_path"]["parse_output"]
@@ -474,12 +498,9 @@ class IntermediateParsing(DataParser):
         """
         Intermediate parsing class.
 
-        :param configs: venco.py config dictionary consisting at least of
-                           the config dictionaries.
-        :param dataset: A string identifying the MiD data set.
-        :param load_encrypted: Boolean. If True, data is read from encrypted
-                              file. For this, a possword has to be
-                              specified in user_config['PW'].
+        Args:
+            configs (dict): venco.py config dictionary consisting at least of the config dictionaries.
+            dataset (str): _description_
         """
         super().__init__(configs, dataset=dataset)
         self.filters = self.dev_config["dataparsers"]["filters"][self.dataset]
@@ -495,7 +516,8 @@ class IntermediateParsing(DataParser):
         only assessed in the MiD 2017 while it was not in the MiD 2008.
         This has to be mirrored by the filter dict for the respective dataset.
 
-        :return: List of variables
+        Returns:
+            list: List of variables
         """
         list_index = self.dev_config["dataparsers"]["data_variables"]["dataset"].index(self.dataset)
         variables = [
@@ -511,10 +533,10 @@ class IntermediateParsing(DataParser):
     def _remove_na(variables: list):
         """
         Removes all strings that can be capitalized to 'NA' from the list
-        of variables
+        of variables.
 
-        :param variables: List of variables of the mobility dataset
-        :return: Returns a list with non NA values
+        Args:
+            variables (list): List of variables of the mobility dataset
         """
         ivars = [i_variable.upper() for i_variable in variables]
         counter = 0
@@ -528,8 +550,6 @@ class IntermediateParsing(DataParser):
         Function to filter the raw_data for only relevant columns as specified
         by parseConfig and cleaned in self.compileVariablesList().
         Stores the subset of data in self.trips
-
-        :return: None
         """
         self.trips = self.raw_data.loc[:, self.columns]
 
@@ -540,8 +560,6 @@ class IntermediateParsing(DataParser):
         performance reasons. But also in order to avoid index values that are
         of type int to be cast to float. The function operates only on
         self.trips and writes back changes to self.trips
-
-        :return: None
         """
         conversion_dict = self.dev_config["dataparsers"]["input_data_types"][self.dataset]
         keys = {i_column for i_column in conversion_dict.keys() if i_column in self.trips.columns}
@@ -579,7 +597,11 @@ class IntermediateParsing(DataParser):
         """
         Filtering out records where starting timestamp is before end timestamp. These observations are data errors.
 
-        :return: Returns a boolean Series indicating erroneous rows (trips) with False.
+        Args:
+            dataset (_type_): _description_
+
+        Returns:
+            pd.Series: Boolean Series indicating erroneous rows (trips) with False.
         """
         ser = dataset["timestamp_start"] <= dataset["timestamp_end"]
         ser.name = "trip_start_after_end"
@@ -590,6 +612,12 @@ class IntermediateParsing(DataParser):
         """
         Filter out trips that start and end at same hour and minute but are not ending on next day (no 24-hour
         trips).
+
+        Args:
+            dataset (_type_): _description_
+
+        Returns:
+            pd.Series: _description_
         """
         ser = ~(
             (dataset.loc[:, "trip_start_hour"] == dataset.loc[:, "trip_end_hour"])
@@ -604,11 +632,9 @@ class IntermediateParsing(DataParser):
         Replaces each occurence of a MiD/KiD variable e.g. 1,2,...,7 for
         weekdays with an explicitly mapped string e.g. 'MON', 'TUE',...,'SUN'.
 
-        :param col_name: Name of the column in self.trips where the explicit
-                        string info is stored
-        :param var_name: Name of the venco.py internal variable given in
-                        dev_config/dataparsers['data_variables']
-        :return: None
+        Args:
+            col_name (str): Name of the column in self.trips where the explicit string info is stored
+            var_name (str): Name of the venco.py internal variable given in dev_config/dataparsers['data_variables']
         """
         self.trips.loc[:, col_name] = self.trips.loc[:, var_name].replace(
             self.dev_config["dataparsers"]["replacements"][self.dataset][var_name]
@@ -625,14 +651,19 @@ class IntermediateParsing(DataParser):
         col_name: str = None,
     ) -> pd.DatetimeIndex:
         """
-        :param data: a data frame
-        :param col_year: year of start of a particular trip
-        :param col_week: week of start of a particular trip
-        :param col_day: weekday of start of a particular trip
-        :param col_hour: hour of start of a particular trip
-        :param col_min: minute of start of a particular trip
-        :param col_name:
-        :return: Returns a detailed time stamp
+        _summary_
+
+        Args:
+            data (pd.DataFrame, optional): _description_. Defaults to None.
+            col_year (str, optional): _description_. Defaults to None.
+            col_week (str, optional): _description_. Defaults to None.
+            col_day (str, optional): _description_. Defaults to None.
+            col_hour (str, optional): _description_. Defaults to None.
+            col_min (str, optional): _description_. Defaults to None.
+            col_name (str, optional): _description_. Defaults to None.
+
+        Returns:
+            pd.DatetimeIndex: _description_
         """
         data[col_name] = (
             pd.to_datetime(data.loc[:, col_year], format="%Y")
@@ -645,7 +676,7 @@ class IntermediateParsing(DataParser):
 
     def _compose_start_and_end_timestamps(self):
         """
-        :return: Returns start and end time of a trip
+        _summary_
         """
         self._compose_timestamp(
             data=self.trips,
@@ -669,9 +700,14 @@ class IntermediateParsing(DataParser):
     @staticmethod
     def _update_end_timestamp(trips):
         """
-        Updates the end timestamp for overnight trips adding 1 day
+        Updates the end timestamp for overnight trips adding one day.
 
-        :return: datsets trips
+
+        Args:
+            trips (_type_): _description_
+
+        Returns:
+            _type_: _description_
         """
         ends_following_day = trips["trip_end_next_day"] == 1
         trips.loc[ends_following_day, "timestamp_end"] = trips.loc[
@@ -689,6 +725,9 @@ class IntermediateParsing(DataParser):
         print("Finished harmonization of ID variables.")
 
     def _subset_vehicle_segment(self):
+        """
+        _summary_
+        """
         if self.user_config["dataparsers"]["subset_vehicle_segment"]:
             self.activities = self.activities[
                 self.activities["vehicle_segment_string"]
