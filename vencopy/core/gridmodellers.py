@@ -102,7 +102,7 @@ class GridModeller:
 
     def __adjust_power_short_parking_time(self) -> pd.DataFrame:
         """
-        Adjusts charging power to zero if parking duration shorter than 15 minutes.
+        Adjusts charging power to zero if parking duration shorter than a minimum parking time.
         """
         # park_id != pd.NA and time_delta <= 15 minutes
         self.activities.loc[
@@ -137,6 +137,9 @@ class GridModeller:
             self.activities["available_power"] = self.activities["rated_power"]
 
     def __write_output(self):
+        """
+        _summary_
+        """
         if self.user_config["global"]["write_output_to_disk"]["grid_output"]:
             root = Path(self.user_config["global"]["absolute_path"]["vencopy_root"])
             folder = self.dev_config["global"]["relative_path"]["grid_output"]
@@ -150,6 +153,9 @@ class GridModeller:
             write_out(data=self.activities, path=root / folder / file_name)
 
     def __remove_activities_not_ending_home(self):
+        """
+        _summary_
+        """
         if self.dataset in ["MiD17", "VF"]:
             lastActsNotHome = self.activities.loc[
                 (self.activities["purpose_string"] != "HOME") & (self.activities["is_last_activity"]), :
