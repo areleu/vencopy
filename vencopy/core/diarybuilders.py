@@ -337,9 +337,8 @@ class TimeDiscretiser:
         """
         Calculates the bin values dynamically (e.g. for the battery level). It returns a
         non-linearly increasing list of values capped to upper and lower battery
-        capacity limitations. The list of values is alloacted to bins in the
-        function __allocate() in the same way as for value-per-bins. Operates
-        directly on class attributes thus neither input nor return attributes.
+        capacity limitations. The list of values is allocated to bins in the
+        function __allocate() in the same way as for value-per-bins.
         """
         self.__delta_battery_level_driving(data=self.data_to_discretise, column=self.column_to_discretise)
         self.__delta_battery_level_charging(data=self.data_to_discretise, column=self.column_to_discretise)
