@@ -3,7 +3,7 @@
 
 .. _core:
 
-venco.py Core
+Core venco.py Levels
 ===================================
 
 Below is a brief explanation of the six main venco.py classes. For a more detailed explanation about the internal workings and the specific outputs
