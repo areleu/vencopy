@@ -11,7 +11,7 @@ FlexEstimators Level
 	:align: center
 
 
-FlexEstimator Input
+FlexEstimators Input
 ---------------------------------------------------
 **Config File (user_config.yaml):**
 
@@ -32,7 +32,7 @@ FlexEstimator Input
 * GridModeller class output
 
 
-FlexEstimator Output
+FlexEstimators Output
 ---------------------------------------------------
 **Output Functions:**
 
@@ -48,6 +48,10 @@ FlexEstimator Output
  * Maximum battery energy level (.csv) `max_battery_level`
  * Minimum battery energy level (.csv) `min_battery_level`
 
+
+
+FlexEstimators Structure
+---------------------------------------------------
 
 
 FlexEstimator Class
@@ -175,14 +179,14 @@ This profile may later be scaled by the number of vehicles in an EV fleet to cal
 State Profiles
 **************
 
-Maximum state-of-charge profile `socMax`
+Maximum state-of-charge profile `max_battery_level`
 #################################################################
 Time series containing the maximum energy level of the vehicle batteries.
 
 **Units:** Profiles are in hourly values of kWh for the average fleet vehicle - usually close to the maximum (average) battery capacity of an average
 vehicle.
 
-Minimum state-of-charge profile `socMin`
+Minimum state-of-charge profile `min_battery_level`
 #################################################################
 Time series containing the minimum energy level of the vehicle batteries.
 
@@ -190,23 +194,5 @@ Time series containing the minimum energy level of the vehicle batteries.
 average vehicle.
 
 
-Filtering Functionalities in FlexEstimator
----------------------------------------------------
 
-In the following, filtering procedures in venco.py for individual profiles are documented. Filtering occurs after the completion of the main
-calculation steps using selectors. These are calculated based only on the four flow-related profiles (consumption, plugPower, uncontrolled_charging
-and auxilliaryFuelConsumption) in `calcProfileSelectors()` and applied to both flow-profiles and state-profiles.
-
-Four criteria are applied to select individual profiles that are eligible for load shifting.
-
-1.  Profiles that depend on auxilliary fuel are excluded. These are profiles where consumption is higher than available battery SOC for at least one
-    hour. This can also occur when vehicles drive only short distances but don't connect to the grid sufficiently.
-
-2.  A minimum daily mileage in km can be set in the non-profile data (per default VencoPy_scalarInput.xlsx) to filter out profiles where the mileage
-    is below a specified threshold. In the shipped file, this value is set to 0.
-
-3.  In case a fully charged battery does not suffice for the daily mileage of the respective profile, this profiles is excluded.
-
-4.  Available charging throughout the day doesn't supply sufficient energy for the driven distance. This may occur even though the profile is eligible
-    from criteria 3 e.g. when connection is never possible.
 

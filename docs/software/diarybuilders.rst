@@ -40,6 +40,10 @@ DiaryBuilders Output
  * Minimum battery energy level (.csv) `min_battery_level`
 
 
+DiaryBuilders Structure
+---------------------------------------------------
+
+
 DiaryBuilder Class
 #################################################################
 

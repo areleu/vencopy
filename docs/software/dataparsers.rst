@@ -6,7 +6,6 @@
 DataParsers Level
 ===================================
 
-
 .. image:: ../figures/IOdataparser.svg
 	:width: 800
 	:align: center
@@ -45,7 +44,7 @@ DataParsers Output
 
 
 DataParsers Structure
-#################################################################
+---------------------------------------------------
 
 DataParser (including IntermediateParsing) + ParkInference (including OVernightSplitter) + ParseMiD (specific dataset parsing)
 
@@ -59,5 +58,13 @@ ParkInference Class
 trip_id starts with 1 (real number from original dataset)
 park_id starts with 0 (creation in the code)
 
-Specific Dataset Parsing Class
+
+Specific Dataset Parsing Classes
 #################################################################
+
+**ParseMiD**
+
+**ParseKiD**
+
+
+**ParseVF**

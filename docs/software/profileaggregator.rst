@@ -3,7 +3,7 @@
 .. _profileaggregator:
 
 
-ProfileAggregator Class
+ProfileAggregators Level
 ===================================
 
 
@@ -11,7 +11,7 @@ ProfileAggregator Class
 	:width: 800
 	:align: center
 
-TripDiaryBuilder Input
+ProfileAggregators Input
 ---------------------------------------------------
 **Config File (user_config.yaml):**
 
@@ -22,15 +22,16 @@ TripDiaryBuilder Input
 
 **venco.py Classes:**
 
- * DiaryBuilder class output (5 profiles)
+ * ProfileAggregator class output (5 profiles)
 
 
-TripDiaryBuilder Output
+ProfileAggregators Output
 ---------------------------------------------------
 **Output Functions:**
 
- * profile = ProfileAggregator(configs=configs, activities=diary.activities, profiles=diary)
- * profile.aggregate_profiles()
+ * profiles = ProfileAggregator(configs=configs, activities=diary.activities, profiles=diary)
+ * profiles.aggregate_profiles()
+ * profiles.normalise()
 
 
 **Disk Files:**
@@ -42,24 +43,26 @@ TripDiaryBuilder Output
  * Minimum battery energy level (.csv)
 
 
-Aggregation Approaches
+DiaryBuilders Structure
 ---------------------------------------------------
+
+DiaryBuilder Class
+#################################################################
+
+TimeDiscretiser Class
+#################################################################
+
+**Aggregation Approaches**
+
 
 The aggregation approach implemented in venco.py varies according to the considered profile.
 Below the different approaches are illustrated.
 
 
-Profile for uncontrolled charging `uncontrolled_charging`
-#################################################################
+- Profile for uncontrolled charging `uncontrolled_charging`
 
+- Profile for the electric demand `drain`
 
-Profile for the electric demand `drain`
-#################################################################
+- Profile for the charging capacity of the fleet `charging_power`
 
-
-Profile for the charging capacity of the fleet `charging_power`
-############################################################
-
-
-Maximum and minimum battery level profile `max_battery_level` and `min_battery_level`
-#################################################################
+- Maximum and minimum battery level profile `max_battery_level` and `min_battery_level`

@@ -3,7 +3,7 @@
 .. _postprocessor:
 
 
-PostProcessor Class
+PostProcessors Level
 ===================================
 
 
@@ -12,7 +12,7 @@ PostProcessor Class
 	:align: center
 
 
-PostProcessor Input
+PostProcessors Input
 ---------------------------------------------------
 **Config File (user_config.yaml):**
 
@@ -24,7 +24,7 @@ PostProcessor Input
  * ProfileAggregator class output (5 profiles)
 
 
-PostProcessor Output
+PostProcessors Output
 ---------------------------------------------------
 **Output Functions:**
 
@@ -42,7 +42,11 @@ PostProcessor Output
  * Minimum battery energy level (.csv)
 
 
-Timeseries Creation and Normalisation
+PostProcessors Structure
 ---------------------------------------------------
+
+
+**Timeseries Creation and Normalisation**
+
 
 Weekly or annual timeseries and normalisation.
