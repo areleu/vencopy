@@ -69,9 +69,10 @@ parkingType(v, t).
 
 Aggregation to fleet level: :ref:`profileaggregators`
 ---------------------------------------------------
-In the ProfileAggregator, ...
+In the ProfileAggregator, single vehicle profiles are aggregated to fleet level. Depending on the profile, different aggregation approaches are used.
 
 
 Output postprocessing: :ref:`postprocessors`
 ---------------------------------------------------
-In the PostProcessor, ...
+In the PostProcessor, the aggregated weekly timeseries for the fleet are translated into annual timeseries.
+An option to normalise the profiles is also provided.
