@@ -50,3 +50,15 @@ DiaryBuilder Class
 
 TimeDiscretiser Class
 #################################################################
+The discretisation approach implemented in venco.py varies according to the
+considered profile. Below the different approaches are presented:
+
+- Profile for uncontrolled charging `uncontrolled_charging`: (function
+  :py:meth:`diarybuilders.TimeDiscretiser.__value_non_linear_charge`)
+- Profile for the electric demand `drain`: (function
+  :py:meth:`diarybuilders.TimeDiscretiser.__value_distribute`)
+- Profile for the charging capacity of the fleet `charging_power`: (function
+  :py:meth:`diarybuilders.TimeDiscretiser.__value_select`)
+- Maximum and minimum battery level profile `max_battery_level` and
+  `min_battery_level`: (function
+  :py:meth:`diarybuilders.TimeDiscretiser.__value_non_linear_level`)
