@@ -9,7 +9,7 @@ venco.py Core
 Below is a brief explanation of the six main venco.py classes. For a more detailed explanation about the internal workings and the specific outputs
 of each function, you can click on the hyperlink on the function name.
 
-Interface to the dataset: :ref:`dataparser`
+Interface to the dataset: :ref:`dataparsers`
 ---------------------------------------------------
 
 The first step in the venco.py framework for being able to estimate EV energy consumption implies accessing a travel survey data set, such as the MiD.
@@ -26,7 +26,7 @@ adapted to other travel survey numeric codes via the config-file. By applying a 
 entries representing motorised trips. The last operation in the parsing of raw travel survey data sets is a harmonization step.
 
 
-Charging infrastructure allocation: :ref:`gridmodeller`
+Charging infrastructure allocation: :ref:`gridmodellers`
 ---------------------------------------------------
 The charging infrastructure allocation makes use of a basic charging infrastructure model, which assumes the availability of charging stations when
 vehicles are parked. Since the analytical focus of the framework lies on a regional level (NUTS1-NUTS0), the infrastructure model is kept simple in
@@ -37,7 +37,7 @@ given parking purpose diary parkingType(v, t) is transferred into a binary grid 
 consisting only of TRUE/FALSE values.
 
 
-Flexibility estimation: :ref:`flexestimator`
+Flexibility estimation: :ref:`flexestimators`
 ---------------------------------------------------
 There are three integral inputs to the estimation: 1. a profile describing hourly distances for each vehicle 2. a boolean set of profiles describing
 if a vehicle is connected to the grid at a given hour 3. techno-economic input assumptions After some filtering and iteration steps, this yields the
@@ -51,7 +51,7 @@ where charging is not controlled an EVs charge as soon as a charging possibility
 additional fuel for trips that cannot be only by electricity.
 
 
-Daily travel diary composition: :ref:`diarybuilder`
+Daily travel diary composition: :ref:`diarybuilders`
 ---------------------------------------------------
 In the diaryBuilder, individual trips at the survey day are consolidated into person-specific travel diaries comprising multiple trips (carried out by
 car). The daily travel diary composition consists of three main steps: Reformatting the database, allocating trip purposes and merging the obtained
@@ -67,11 +67,11 @@ venco.py component TripDiaryBuilder, two intermediary data sets are available ei
 parkingType(v, t).
 
 
-Aggregation to fleet level: :ref:`profileaggregator`
+Aggregation to fleet level: :ref:`profileaggregators`
 ---------------------------------------------------
 In the ProfileAggregator, ...
 
 
-Output postprocessing: :ref:`postprocessor`
+Output postprocessing: :ref:`postprocessors`
 ---------------------------------------------------
 In the PostProcessor, ...

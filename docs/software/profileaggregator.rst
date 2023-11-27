@@ -3,7 +3,7 @@
 .. _profileaggregator:
 
 
-ProfileAggregator Class
+ProfileAggregators Level
 ===================================
 
 
@@ -11,7 +11,7 @@ ProfileAggregator Class
 	:width: 800
 	:align: center
 
-TripDiaryBuilder Input
+ProfileAggregators Input
 ---------------------------------------------------
 **Config File (user_config.yaml):**
 
@@ -22,15 +22,17 @@ TripDiaryBuilder Input
 
 **venco.py Classes:**
 
- * DiaryBuilder class output (5 profiles)
+ * ProfileAggregator class output (5 profiles)
 
 
-TripDiaryBuilder Output
+ProfileAggregators Output
 ---------------------------------------------------
 **Output Functions:**
 
- * profile = ProfileAggregator(configs=configs, activities=diary.activities, profiles=diary)
- * profile.aggregate_profiles()
+ * profiles = ProfileAggregator(configs=configs, activities=diary.activities,
+   profiles=diary)
+ * profiles.aggregate_profiles()
+ * profiles.normalise()
 
 
 **Disk Files:**
@@ -42,24 +44,33 @@ TripDiaryBuilder Output
  * Minimum battery energy level (.csv)
 
 
-Aggregation Approaches
+DiaryBuilders Structure
 ---------------------------------------------------
 
-The aggregation approach implemented in venco.py varies according to the considered profile.
-Below the different approaches are illustrated.
-
-
-Profile for uncontrolled charging `uncontrolled_charging`
+DiaryBuilder Class
 #################################################################
 
-
-Profile for the electric demand `drain`
+TimeDiscretiser Class
 #################################################################
 
-
-Profile for the charging capacity of the fleet `charging_power`
-############################################################
+**Aggregation Approaches**
 
 
-Maximum and minimum battery level profile `max_battery_level` and `min_battery_level`
-#################################################################
+The aggregation approach implemented in venco.py varies according to the
+considered profile. Below the different approaches are illustrated:
+
+- Profile for uncontrolled charging `uncontrolled_charging`: aggregated by
+  calculating the average value per day of the week (function
+  :py:meth:`profileaggregators.Aggregator.__calculate_average_flow_profiles`)
+- Profile for the electric demand `drain`: aggregated by calculating the average
+  value per day of the week (function
+  :py:meth:`profileaggregators.Aggregator.__calculate_average_flow_profiles`)
+- Profile for the charging capacity of the fleet `charging_power`: aggregated by
+  calculating the average value per day of the week (function
+  :py:meth:`profileaggregators.Aggregator.__calculate_average_flow_profiles`)
+- Maximum and minimum battery level profile `max_battery_level` and
+  `min_battery_level`: aggregated by selection (function
+  :py:meth:`profileaggregators.Aggregator.__aggregate_state_profiles`), using an
+  alpha value (100 - alpha), which represents the percentile from the maximum or
+  minimum batttery level at each hour. If alpha = 10, the 10% biggest (or
+  smallest) value is selected, and all other values beyond are disregarded.

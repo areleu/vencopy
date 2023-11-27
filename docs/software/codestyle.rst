@@ -6,6 +6,7 @@
 Codestyle Guideline
 ===================================
 
-venco.py uses PEP-8 standards with the exception of UpperCamelCase
-for class objects and black formatting.
-
+Coding standard: PEP-8 with the exception of UpperCamelCase for class objects
+Linter for formatting: black
+Docstrings format code: Google
+Docstrings format testing: GWT (Given-When-Then)

@@ -117,7 +117,7 @@ class Aggregator:
 
     def _aggregate_daily(self):
         """
-        _summary_
+        Function to aggregate all profiles across all days, independently of the day of the week.
 
         Raises:
             NotImplementedError: _description_
@@ -129,7 +129,6 @@ class Aggregator:
         )
         self.activities_weekday = pd.merge(self.profile, self.activities_subset, on="unique_id", how="inner")
         self.activities_weekday = self.activities_weekday.set_index("unique_id")
-        # Aggregate across all days, independently of day of the week
         if self.method == "flow":
             if self.weighted:
                 # weekday_subset = weekday_subset.drop("trip_start_weekday", axis=1)
@@ -156,10 +155,10 @@ class Aggregator:
 
     def _aggregate_weekly(self, by_column: str = "trip_start_weekday"):
         """
-        _summary_
+        Function to aggregate all profiles depending on the day of the week to be able to create a weekly profile.
 
         Args:
-            by_column (str, optional): _description_. Defaults to "trip_start_weekday".
+            by_column (str, optional): Column to be used to perform the aggregation. Defaults to "trip_start_weekday".
         """
         self.weekday_profiles = pd.DataFrame(columns=self.profile.columns, index=range(1, 8))
         cols = ["unique_id", "trip_weight"] + [by_column]

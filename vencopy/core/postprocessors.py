@@ -73,46 +73,50 @@ class PostProcessor:
         annual = pd.DataFrame(annual.to_list() * 53)
         return annual.drop(annual.tail(len(annual) - (n_timeslots_per_day - 1) * 365).index)
 
-    def __normalize_flows(self, profile: pd.Series) -> pd.Series:
+    @staticmethod
+    def __normalize_flows(profile: pd.Series) -> pd.Series:
         """
-        _summary_
+        Function to normalise a timeseries according to its annual sum. Used in venco.py for normalisation of uncontrolled charging and drain profiles.
 
         Args:
-            profile (pd.Series): _description_
+            profile (pd.Series): timeseries to be normalised
 
         Returns:
             pd.Series: _description_
         """
         return profile / profile.sum()
 
-    def __normalize_states(self, profile: pd.Series, base: int) -> pd.Series:
+    @staticmethod
+    def __normalize_states(profile: pd.Series, base: int) -> pd.Series:
         """
-        _summary_
+        Function to normalise a timeseries according to a baseline value. Used in venco.py for normalisation of the minimum and maximum battery level profiles based on the assumed vehicle battery capacity.
 
         Args:
-            profile (pd.Series): _description_
-            base (int): _description_
+            profile (pd.Series): timeseries to be normalised
+            base (int): normalisation basis
 
         Returns:
             pd.Series: _description_
         """
         return profile / base
 
-    def __normalize_charging_power(self, profile: pd.Series, base: int) -> pd.Series:
+    @staticmethod
+    def __normalize_charging_power(profile: pd.Series, base: int, time_delta) -> pd.Series:
         """
-        _summary_
+        Function to normalise a timeseries according to a baseline value for each weekday. Used in venco.py for normalisation of the charging power profiles based on the number of vehicle for each weekday.
 
         Args:
-            profile (pd.Series): _description_
-            base (int): _description_
+            profile (pd.Series): timeseries to be normalised
+            base (int): normalisation basis
+            time_delta (_type_): temporal resolution of the run
 
         Returns:
             pd.Series: _description_
         """
         profile_normalised = []
         for day in range(0, 7):
-            start = day * len(self.time_delta)
-            end = start + len(self.time_delta) - 1
+            start = day * len(time_delta)
+            end = start + len(time_delta) - 1
             profile_day = profile[start:end] / base[day]
             if profile_normalised == []:
                 profile_normalised = profile_day.to_list()
@@ -185,7 +189,7 @@ class PostProcessor:
             self.drain_normalised = self.__normalize_flows(self.input_profiles["drain"])
             self.uncontrolled_charging_normalised = self.__normalize_flows(self.input_profiles["uncontrolled_charging"])
             self.charging_power_normalised = self.__normalize_charging_power(
-                profile=self.input_profiles["charging_power"], base=self.vehicle_numbers
+                profile=self.input_profiles["charging_power"], base=self.vehicle_numbers, time_delta=self.time_delta
                 )
             self.max_battery_level_normalised = self.__normalize_states(
                 profile=self.input_profiles["max_battery_level"],

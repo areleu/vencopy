@@ -1,16 +1,16 @@
 .. venco.py documentation source file, created for sphinx
 
-.. _gridmodeller:
+.. _gridmodellers:
 
 
-GridModeller Class
+GridModellers Level
 ===================================
 
 .. image:: ../figures/IOgridmodeller.svg
 	:width: 800
 	:align: center
 
-GridModeller Input
+GridModellers Input
 ---------------------------------------------------
 **Config File (user_config.yaml):**
 
@@ -24,7 +24,7 @@ GridModeller Input
 
 
 
-GridModeller Output
+GridModellers Output
 ---------------------------------------------------
 **Output Functions:**
 
@@ -37,9 +37,9 @@ GridModeller Output
 
 
 
-Grid Modelling
-===================================
 
+GridModellers Structure
+---------------------------------------------------
 
 This file documents the GridModeller class of venco.py. It presents a methodology of allocation of charging infrastructure for every hour of a trip  and also calculation of transaction start hour.
 There are currently two ways for grid assignment in venco.py.
