@@ -196,6 +196,7 @@ dataparsers:
             include:
             exclude:
                 trip_start_date: ["-1"]
+                trip_start_clock: ["-1:-1"]
                 trip_purpose: [-1]
             greater_than:
             smaller_than:
