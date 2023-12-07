@@ -1,0 +1,45 @@
+#-*- coding:utf-8 -*-
+# __version__ = "1.0.0"
+# __maintainer__ = "Fabia Miorelli, Eugenio Salvador Arellano Ruiz"
+# __birthdate__ = "07.12.2023"
+# __status__ = "dev"  # options are: dev, test, prod
+# __license__ = "BSD-3-Clause"
+
+# This config holds specifications for default metadata.
+
+
+name: "vencopy"
+title: "Output profiles venco.py"
+id: https://gitlab.com/dlr-ve/esy/vencopy/vencopy # should be a doi referring to the dataset
+description: "Demand and flexibility potentials for future electric vehicle fleets generated with venco.py."
+language:
+  - "en-GB"
+subject:
+  - name: energy
+    path: https://openenergy-platform.org/ontology/oeo/OEO_00000150
+  - name: demand
+    path: https://openenergy-platform.org/ontology/oeo/placeholder
+  - name: mobility
+    path: https://openenergy-platform.org/ontology/oeo/placeholder
+context: 
+    homepage: https://gitlab.com/dlr-ve/esy/vencopy/vencopy
+    documentation: https://gitlab.com/dlr-ve/esy/vencopy/vencopy
+    sourcecode: https://gitlab.com/dlr-ve/esy/vencopy/vencopy
+    contact: vencopy@dlr.de
+sources:
+    - title: "MiD2017"
+      description: Mobilität in Deutschland...
+      path: somepath
+      licenses:
+        - name: MiD License
+          title: Some title
+          path: some path
+          attribution: Owner of the data
+          instruction: What does the license allows me to.
+licenses:
+    - name: Output data license
+      title: title of the license
+      path: some path
+      attribution: Owner of the data
+      instruction: What does the license allows me to.
+
