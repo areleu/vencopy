@@ -1,5 +1,5 @@
 __version__ = "1.0.0"
-__maintainer__ = "Niklas Wulff, Fabia Miorelli"
+__maintainer__ = "Fabia Miorelli"
 __birthdate__ = "01.08.2023"
 __status__ = "test"  # options are: dev, test, prod
 __license__ = "BSD-3-Clause"
@@ -11,6 +11,7 @@ from pathlib import Path
 
 from ..core.profileaggregators import ProfileAggregator
 from ..utils.utils import create_file_name, write_out
+from ..utils.metadata import generate_metadata
 
 
 class PostProcessor:
@@ -176,7 +177,9 @@ class PostProcessor:
                     self.__write_output(
                         profile_name=profile_name, profile=self.annual_profiles[profile_name], filename_id="output_postprocessor_annual"
                     )
-                    print("Run finished.")
+            
+            generate_metadata()
+            print("Run finished.")
 
     def normalise(self):
         """
