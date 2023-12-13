@@ -42,4 +42,34 @@ licenses:
       path: some path
       attribution: Owner of the data
       instruction: What does the license allows me to.
+resources:
+    - name: placeholder
+      title: placeholder
+      path: placeholder.csv
+      format: csv
+      encoding: utf-8
+      schema: 
+        fields: # for the ones that get printed
+        # 'index', 'unique_id', 'trip_id', 'is_driver', 'household_id',
+       # 'person_id', 'household_person_id', 'trip_weight', 'trip_scale_factor',
+       # 'trip_purpose', 'trip_distance', 'travel_time', 'trip_start_weekday',
+       # 'trip_end_next_day', 'trip_is_intermodal', 'weekday_string',
+       # 'purpose_string', 'timestamp_start', 'timestamp_end', 'park_id',
+       # 'is_first_activity', 'is_last_activity', 'activity_id',
+       # 'next_activity_id', 'previous_activity_id', 'time_delta', 'rated_power',
+       # 'available_power'
+          - name: id
+            type: integer
+            description: Unique identifier
+            isAbout:       
+                - name: commissioning date
+                  path: https://openenergy-platform.org/missing_term
+          - name: trip_id
+            type: integer
+            description: Unique identifier
+            isAbout:       
+                - name: commissioning date
+                  path: https://openenergy-platform.org/missing_term
+                    
+      
 

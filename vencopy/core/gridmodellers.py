@@ -10,6 +10,7 @@ import pandas as pd
 import numpy as np
 from scipy.stats.sampling import DiscreteAliasUrn
 from ..utils.utils import create_file_name, write_out
+from ..utils.metadata import read_metadata_config, write_out_metadata
 
 
 class GridModeller:
@@ -151,6 +152,8 @@ class GridModeller:
                 dataset=self.dataset,
             )
             write_out(data=self.activities, path=root / folder / file_name)
+            self._write_metadata(file_name=root / folder / file_name)
+
 
     def __remove_activities_not_ending_home(self):
         """
@@ -162,6 +165,24 @@ class GridModeller:
             ].copy()
             id_to_remove = lastActsNotHome["unique_id"].unique()
             self.activities = self.activities.loc[~self.activities["unique_id"].isin(id_to_remove), :].copy()
+
+    def generate_metadata(self, metadata_config, file_name):
+        reference_resource = metadata_config["resources"].pop()
+        this_resource = reference_resource.copy()
+        this_resource["name"] = file_name.rstrip(".csv")
+        this_resource["title"] = "National Travel Survey activities dataframe"
+        this_resource["path"] = file_name
+        these_fields = [f for f in reference_resource["schema"]["fields"] if f["name"] in self.activities.columns]
+        this_resource["schema"]["fields"] = these_fields
+        metadata_config["resources"].append(this_resource)
+        return metadata_config
+
+
+    def _write_metadata(self, file_name):
+        metadata_config = read_metadata_config()
+        class_metadata = self.generate_metadata(metadata_config=metadata_config, file_name=file_name.name)
+        write_out_metadata(metadata_yaml=class_metadata, file_name=file_name.as_posix().replace(".csv",".metadata.yaml"))
+
 
     def assign_grid(self, seed: int = 42) -> pd.DataFrame:
         """
@@ -189,3 +210,4 @@ class GridModeller:
             )
         self.__add_grid_losses()
         self.__write_output()
+

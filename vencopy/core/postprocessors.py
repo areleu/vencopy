@@ -11,7 +11,7 @@ from pathlib import Path
 
 from ..core.profileaggregators import ProfileAggregator
 from ..utils.utils import create_file_name, write_out
-from ..utils.metadata import generate_metadata
+#from ..utils.metadata import generate_metadata
 
 
 class PostProcessor:
@@ -177,8 +177,7 @@ class PostProcessor:
                     self.__write_output(
                         profile_name=profile_name, profile=self.annual_profiles[profile_name], filename_id="output_postprocessor_annual"
                     )
-            
-            generate_metadata()
+            generate_metadata(vencopy_class="postprocessor")
             print("Run finished.")
 
     def normalise(self):
