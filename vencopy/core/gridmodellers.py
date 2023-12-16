@@ -166,6 +166,7 @@ class GridModeller:
             id_to_remove = lastActsNotHome["unique_id"].unique()
             self.activities = self.activities.loc[~self.activities["unique_id"].isin(id_to_remove), :].copy()
 
+
     def generate_metadata(self, metadata_config, file_name):
         reference_resource = metadata_config["resources"].pop()
         this_resource = reference_resource.copy()
