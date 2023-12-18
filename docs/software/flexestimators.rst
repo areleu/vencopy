@@ -112,7 +112,7 @@ For each individual trip and plug profile, one uncontrolled charging profile is 
 battery under the assumption that the battery is fully charged at beginning of the day. If the battery SOC decreases through a trip and the vehicle is
 connected to the grid, charging occurs with full capacity until the battery is fully charged.
 
-**Units:** Profiles are in hourly values of kWh of the representative average vehicle.
+**Units:** Profiles are in kWh per chosen resolution of the representative average vehicle.
 
 Calculation steps
 *************************
@@ -148,7 +148,7 @@ Each trip profile implies a specific electricity consumption that represents the
 motor for the purpose of propulsion of the vehicle. In the calculation of the electric consumption profile, a potential additional fuel demand for
 longer trips than feasible with the assumed battery capacity is subtracted to result in the purely electric consumption.
 
-**Units:** Profiles are in hourly values of kWh of the representative average vehicle.
+**Units:** Profiles are in kWh of the representative average vehicle.
 
 Calculation steps
 *************************
@@ -183,14 +183,14 @@ Maximum state-of-charge profile `max_battery_level`
 #################################################################
 Time series containing the maximum energy level of the vehicle batteries.
 
-**Units:** Profiles are in hourly values of kWh for the average fleet vehicle - usually close to the maximum (average) battery capacity of an average
+**Units:** Profiles are in kWh for the average fleet vehicle - usually close to the maximum (average) battery capacity of an average
 vehicle.
 
 Minimum state-of-charge profile `min_battery_level`
 #################################################################
 Time series containing the minimum energy level of the vehicle batteries.
 
-**Units:** Profiles are in hourly values of kWh for the average fleet vehicle - usually close to the minimum (average) battery security margin of an
+**Units:** Profiles are in kWh for the average fleet vehicle - usually close to the minimum (average) battery security margin of an
 average vehicle.
 
 

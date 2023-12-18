@@ -32,6 +32,8 @@ global:
 dataparsers:
   encryption_password: "PW"
   split_overnight_trips: True
+  location_park_before_first_trip:
+    MiD17: "HOME"
   subset_vehicle_segment: True
   vehicle_segment:
       VF: "L" # options: "S" (65743), "M" (37999), "L" (13359)

@@ -162,7 +162,7 @@ class ParseKiD(IntermediateParsing):
         self._harmonize_variables_unique_id_names()
         self._change_separator(trips=self.trips)
         self._convert_types()
-        self._exclude_hours(trips=self.trips)
+        self.trips = self._exclude_hours(trips=self.trips)
         self._extract_timestamps(trips=self.trips)
         self.__add_string_columns()
         self._compose_start_and_end_timestamps()

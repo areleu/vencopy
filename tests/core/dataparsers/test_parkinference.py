@@ -27,6 +27,11 @@ def sample_configs():
                     'dataset2': '/path/to/dataset2'
                     }
                 },
+            'dataparsers': {
+                "location_park_before_first_trip": {
+                    "dataset1": "HOME",
+                    "dataset2": "HOME"}
+            },
             'diarybuilders': {
                 'time_resolution': 15
             }
@@ -87,9 +92,9 @@ def test_add_util_attributes(sample_activities):
     assert result["is_last_activity"].equals(pd.Series([False, True, False, True]))
 
 
-def test_add_park_act_before_first_trip(sample_activities):
+def test_add_park_act_before_first_trip(sample_activities, sample_configs):
     input_data = ParkInference._add_util_attributes(sample_activities)
-    result = ParkInference._add_park_act_before_first_trip(input_data)
+    result = ParkInference._add_park_act_before_first_trip(input_data, user_config=sample_configs["user_config"])
 
     assert "park_id" in result.columns
     assert "purpose_string" in result.columns
@@ -99,9 +104,9 @@ def test_add_park_act_before_first_trip(sample_activities):
     assert result.loc[result["is_first_activity"] & (result["park_id"] == 0), "trip_id"].equals(pd.Series([np.nan, np.nan], index=[0, 2]))
 
 
-def test_adjust_park_attrs(sample_activities):
+def test_adjust_park_attrs(sample_activities, sample_configs):
     input_data = ParkInference._add_util_attributes(sample_activities)
-    input_data = ParkInference._add_park_act_before_first_trip(input_data)
+    input_data = ParkInference._add_park_act_before_first_trip(input_data, user_config=sample_configs["user_config"])
     result = ParkInference._adjust_park_attrs(input_data)
 
     assert "trip_distance" in result.columns
@@ -118,9 +123,9 @@ def test_adjust_park_attrs(sample_activities):
     assert result["column_from_index"].equals(pd.Series(expected_column_from_index, index=[0, 0, 1, 2, 2, 3]))
 
 
-def test_drop_redundant_columns(sample_activities):
+def test_drop_redundant_columns(sample_activities, sample_configs):
     input_data = ParkInference._add_util_attributes(sample_activities)
-    input_data = ParkInference._add_park_act_before_first_trip(input_data)
+    input_data = ParkInference._add_park_act_before_first_trip(input_data, user_config=sample_configs["user_config"])
     input_data = ParkInference._adjust_park_attrs(input_data)
     input_data["trip_start_clock"] = pd.NA
     input_data["trip_start_year"] = pd.NA

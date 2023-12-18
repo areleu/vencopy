@@ -110,7 +110,6 @@ def create_output_folders(configs: dict):
     """
     Function to crete vencopy output folder and subfolders
 
-
     Args:
         configs (dict): _description_
     """
