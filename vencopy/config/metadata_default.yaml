@@ -8,10 +8,10 @@
 # This config holds specifications for default metadata.
 
 
-name: "vencopy"
-title: "Output profiles venco.py"
+name: _name_of_the_output_ # "vencopy"
+title: _title_of_the_output_ # "Output profiles venco.py"
 id: https://gitlab.com/dlr-ve/esy/vencopy/vencopy # should be a doi referring to the dataset
-description: "Demand and flexibility potentials for future electric vehicle fleets generated with venco.py."
+description: _description_of_the_output_ #"Demand and flexibility potentials for future electric vehicle fleets generated with venco.py."
 language:
   - "en-GB"
 subject:
@@ -21,21 +21,40 @@ subject:
     path: https://openenergy-platform.org/ontology/oeo/placeholder
   - name: mobility
     path: https://openenergy-platform.org/ontology/oeo/placeholder
+  - name: battery electric vehicle
+    path: https://openenergy-platform.org/ontology/oeo/OEO_00010024
 context: 
-    homepage: https://gitlab.com/dlr-ve/esy/vencopy/vencopy
+    homepage: _project_homepage_
     documentation: https://gitlab.com/dlr-ve/esy/vencopy/vencopy
     sourcecode: https://gitlab.com/dlr-ve/esy/vencopy/vencopy
     contact: vencopy@dlr.de
+# INPUT
 sources:
     - title: "MiD2017"
-      description: Mobilität in Deutschland...
-      path: somepath
+      description: Mobilität in Deutschland 2017
+      path: https://daten.clearingstelle-verkehr.de/279/
       licenses:
-        - name: MiD License
-          title: Some title
-          path: some path
-          attribution: Owner of the data
+        - title: MiD 2017
+          path: https://daten.clearingstelle-verkehr.de/279/
+          attribution: Bundesministerium für Verkehr und digitale Infrastruktur
+          instruction: Für die Nutzung der Daten ist die Unterzeichnung eines Nutzungsvertrags notwendig, der Ihnen nach einer Prüfung Ihrer Bestellung durch das BMDV von der Clearingstelle Verkehr zur Verfügung gestellt wird.
+    - title: "KiD"
+      description: Kraftfahrzeugverkehr in Deutschland
+      path: https://daten.clearingstelle-verkehr.de/240/
+      licenses:
+        - title: KiD 2010
+          path: https://www.dlr.de/cs/Portaldata/10/Resources/dokumente/verkehrsdaten/Vertrag_Regionalfile_KiD.pdf
+          attribution: Bundesministerium für Verkehr und digitale Infrastruktur
           instruction: What does the license allows me to.
+    - title: "VF"
+      description: Mobilität in Deutschland 2017
+      path: https://daten.clearingstelle-verkehr.de/279/
+      licenses:
+        - title: MiD 2017
+          path: https://daten.clearingstelle-verkehr.de/279/
+          attribution: Bundesministerium für Verkehr und digitale Infrastruktur
+          instruction: Für die Nutzung der Daten ist die Unterzeichnung eines Nutzungsvertrags notwendig, der Ihnen nach einer Prüfung Ihrer Bestellung durch das BMDV von der Clearingstelle Verkehr zur Verfügung gestellt wird.
+# OUTPUT
 licenses:
     - name: Output data license
       title: title of the license

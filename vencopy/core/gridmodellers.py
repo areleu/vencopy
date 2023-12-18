@@ -166,8 +166,10 @@ class GridModeller:
             id_to_remove = lastActsNotHome["unique_id"].unique()
             self.activities = self.activities.loc[~self.activities["unique_id"].isin(id_to_remove), :].copy()
 
-
     def generate_metadata(self, metadata_config, file_name):
+        metadata_config["name"] = file_name
+        metadata_config["title"] = "National Travel Survey activities dataframe"
+        metadata_config["description"] = "Trips and parking activities including available charging power from venco.py"
         reference_resource = metadata_config["resources"].pop()
         this_resource = reference_resource.copy()
         this_resource["name"] = file_name.rstrip(".csv")
@@ -178,12 +180,10 @@ class GridModeller:
         metadata_config["resources"].append(this_resource)
         return metadata_config
 
-
     def _write_metadata(self, file_name):
         metadata_config = read_metadata_config()
         class_metadata = self.generate_metadata(metadata_config=metadata_config, file_name=file_name.name)
         write_out_metadata(metadata_yaml=class_metadata, file_name=file_name.as_posix().replace(".csv",".metadata.yaml"))
-
 
     def assign_grid(self, seed: int = 42) -> pd.DataFrame:
         """
