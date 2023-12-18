@@ -8,8 +8,8 @@
 # This config holds specifications for default metadata.
 
 
-name: _name_of_the_output_ # "vencopy"
-title: _title_of_the_output_ # "Output profiles venco.py"
+name: _name_of_the_output_ 
+title: _title_of_the_output_ 
 id: https://gitlab.com/dlr-ve/esy/vencopy/vencopy # should be a doi referring to the dataset
 description: _description_of_the_output_ #"Demand and flexibility potentials for future electric vehicle fleets generated with venco.py."
 language:
