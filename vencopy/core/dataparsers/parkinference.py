@@ -42,7 +42,7 @@ class ParkInference:
         split_overnight_trips = self.user_config["dataparsers"]["split_overnight_trips"]
         self.activities_raw = self._copy_rows(trips=self.trips)
         self.activities_raw = self._add_util_attributes(activities_raw=self.activities_raw)
-        self.activities_raw = self._add_park_act_before_first_trip(activities_raw=self.activities_raw)
+        self.activities_raw = self._add_park_act_before_first_trip(activities_raw=self.activities_raw, user_config=self.user_config)
         self.activities_raw = self._adjust_park_attrs(activities_raw=self.activities_raw)
         self.activities_raw = self._drop_redundant_columns(activities_raw=self.activities_raw)
         self.activities_raw = self._remove_next_day_park_acts(activities_raw=self.activities_raw)
@@ -97,7 +97,7 @@ class ParkInference:
         return activities_raw
 
     @staticmethod
-    def _add_park_act_before_first_trip(activities_raw: pd.DataFrame):
+    def _add_park_act_before_first_trip(activities_raw: pd.DataFrame, user_config):
         """
         Adds park activities before first trips. Currently, it is assumed that all cars start home.
 
@@ -108,10 +108,11 @@ class ParkInference:
         Returns:
             _type_: _description_
         """
+        dataset = user_config["global"]["dataset"]
         new_indeces = activities_raw.index[activities_raw["is_first_activity"]]
         df_add = activities_raw.loc[new_indeces, :]
         df_add["park_id"] = 0
-        df_add["purpose_string"] = "HOME"  # Assumption
+        df_add["purpose_string"] = user_config["dataparsers"]["location_park_before_first_trip"][dataset]
         activities_raw.loc[new_indeces, "is_first_activity"] = False
         activities_raw = pd.concat([activities_raw, df_add]).sort_index()
         activities_raw.loc[
@@ -123,7 +124,6 @@ class ParkInference:
     def _adjust_park_attrs(activities_raw: pd.DataFrame) -> pd.DataFrame:
         """
         Sets trip attribute values to zero where trip_id == NaN (i.e. for all parking activities).
-
 
         Args:
             activities_raw (pd.DataFrame): _description_
@@ -173,7 +173,6 @@ class ParkInference:
     def _remove_next_day_park_acts(activities_raw: pd.DataFrame) -> pd.DataFrame:
         """
         Checks for trips across day-limit and removing respective parking activities after ovenight trips.
-
 
         Args:
             activities_raw (pd.DataFrame): _description_
