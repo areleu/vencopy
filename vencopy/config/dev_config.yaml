@@ -9,11 +9,11 @@
 
 global:
     relative_path:
-        parse_output: ./output/dataParser/
-        diary_output: ./output/diaryBuilder/
-        grid_output: ./output/gridModeler/
-        flex_output: ./output/flexEstimator/
-        aggregator_output: ./output/profileAggregator/
+        parse_output: ./output/dataparser/
+        diary_output: ./output/diarybuilder/
+        grid_output: ./output/gridmodeller/
+        flex_output: ./output/flexestimator/
+        aggregator_output: ./output/profileaggregator/
         processor_output: ./output/postprocessor/
         config: ./config/
     files:
