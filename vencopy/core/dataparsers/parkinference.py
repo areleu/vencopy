@@ -348,7 +348,8 @@ class ParkInference:
             & (activities_raw.loc[indeces_last_activity_is_trip, "timestamp_end"].dt.hour == 0)
             & (activities_raw.loc[indeces_last_activity_is_trip, "timestamp_end"].dt.minute == 0)
         )
-        activities_raw.loc[idx_last_trip_end_midnight, "trip_end_next_day"] = False
+        unique_id_last_trip_end_midnight = activities_raw.loc[idx_last_trip_end_midnight, "unique_id"]
+        activities_raw.loc[activities_raw["unique_id"].isin(unique_id_last_trip_end_midnight.unique()), "trip_end_next_day"] = False
         return activities_raw
 
     @staticmethod
