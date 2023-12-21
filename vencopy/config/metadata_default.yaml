@@ -82,13 +82,13 @@ resources:
             description: Unique identifier
             isAbout:       
                 - name: commissioning date
-                  path: https://openenergy-platform.org/missing_term
+                  path: https://openenergy-platform.org/ontology/oeo/missing_term
           - name: trip_id
             type: integer
             description: Unique identifier
             isAbout:       
                 - name: commissioning date
-                  path: https://openenergy-platform.org/missing_term
+                  path: https://openenergy-platform.org/ontology/oeo/missing_term
                     
       
 
