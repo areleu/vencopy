@@ -11,7 +11,7 @@ from pathlib import Path
 
 from ..core.profileaggregators import ProfileAggregator
 from ..utils.utils import create_file_name, write_out
-#from ..utils.metadata import generate_metadata
+from ..utils.metadata import read_metadata_config, write_out_metadata
 
 
 class PostProcessor:
@@ -140,6 +140,13 @@ class PostProcessor:
         self.__write_output(profile_name="charging_power", profile=self.charging_power_normalised, filename_id=filename_id)
         self.__write_output(profile_name="max_battery_level", profile=self.max_battery_level_normalised, filename_id=filename_id)
         self.__write_output(profile_name="min_battery_level", profile=self.min_battery_level_normalised, filename_id=filename_id)
+        self._write_metadata(file_name=(Path(self.user_config["global"]["absolute_path"]["vencopy_root"] / self.dev_config["global"]["relative_path"]["processor_output"] / create_file_name(
+            dev_config=self.dev_config,
+            user_config=self.user_config,
+            file_name_id=filename_id,
+            dataset=self.dataset,
+        ))))
+
 
     def __write_output(self, profile_name: str, profile: pd.Series, filename_id: str):
         """
@@ -160,6 +167,26 @@ class PostProcessor:
             dataset=self.dataset,
         )
         write_out(data=profile, path=root / folder / file_name)
+
+    def generate_metadata(self, metadata_config, file_name):
+        metadata_config["name"] = file_name
+        metadata_config["title"] = "National Travel Survey activities dataframe"
+        metadata_config["description"] = "Trips and parking activities including available charging power from venco.py"
+        reference_resource = metadata_config["resources"].pop()
+        this_resource = reference_resource.copy()
+        this_resource["name"] = file_name.rstrip(".csv")
+        this_resource["title"] = "National Travel Survey activities dataframe"
+        this_resource["path"] = file_name
+        these_fields = [f for f in reference_resource["schema"]["fields"] if f["name"] in self.activities.columns]
+        this_resource["schema"]["fields"] = these_fields
+        metadata_config["resources"].append(this_resource)
+        return metadata_config
+
+    def _write_metadata(self, file_name):
+        metadata_config = read_metadata_config()
+        class_metadata = self.generate_metadata(metadata_config=metadata_config, file_name=file_name.name)
+        write_out_metadata(metadata_yaml=class_metadata, file_name=file_name.as_posix().replace(".csv",".metadata.yaml"))
+
 
     def create_annual_profiles(self):
         """
