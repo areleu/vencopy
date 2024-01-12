@@ -103,6 +103,9 @@ class FlexEstimator:
         ]
         act_temp = pd.concat([first_parking_activities, first_trip_activities])
 
+        ## CONTINUE WORKING HERE:
+        # parking activities after overnight morning splits are currently not treated implying missing prev acts in calc_max_bat_trips for trip_id==1
+
         # Start and end for all trips and parkings in between
         set_acts = range(1, int(self.activities["park_id"].max()) + 1)
         subset_trip_activities = pd.DataFrame()  # Redundant?

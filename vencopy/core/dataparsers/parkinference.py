@@ -48,7 +48,7 @@ class ParkInference:
         self.activities_raw = self._remove_next_day_park_acts(activities_raw=self.activities_raw)
         self.__adjust_park_timestamps()
         self.activities_raw = self._add_next_and_prev_ids(activities_raw=self.activities_raw)
-        self.__overnight_split_decider(split=split_overnight_trips)
+        self.activities_raw = self.__overnight_split_decider(split=split_overnight_trips)
         self.activities_raw = self._add_timedelta_column(activities_raw=self.activities_raw)
         self.activities_raw = self._unique_indeces(activities_raw=self.activities_raw)
         print(
@@ -323,10 +323,10 @@ class ParkInference:
             such a way that the estimated trip distance the next day is appended in the morning hours of the survey day?
         """
         if split:
-            self.activities_raw = self.overnight_splitter.split_overnight_trips(activities_raw=self.activities_raw)
+            return self.overnight_splitter.split_overnight_trips(activities_raw=self.activities_raw)
         else:
             self.activities_raw = self._set_overnight_var_false_for_last_act_trip(activities_raw=self.activities_raw)
-            self.activities_raw = self._neglect_overnight_trips(activities_raw=self.activities_raw)
+            return self._neglect_overnight_trips(activities_raw=self.activities_raw)
 
     @staticmethod
     def _set_overnight_var_false_for_last_act_trip(activities_raw: pd.DataFrame) -> pd.DataFrame:
@@ -483,12 +483,13 @@ class OvernightSplitter:
         self.__set_is_first_trip_false(ids=ON_uids)
         self.__add_morning_trips(morning_trips=morning_trips_to_add)
         # self.__remove_first_parking_act() DEPRECATED
-        self.__merge_adjacent_trips()
+        neglected_trips = self.__merge_adjacent_trips()
         # Implement DELTA mileage check of overnight morning split trip distances
-        self.__check_and_assert()
+        self.__check_and_assert(neglected_trips=neglected_trips)
+        self.__clean_up_columns()
         self.__sort_activities()
 
-        return self.activities_raw
+        return self.activities
 
     def __is_first_trip(self):
         acts_idx = self.activities_raw.set_index(['unique_id', 'trip_id'])
@@ -679,7 +680,7 @@ class OvernightSplitter:
         self,
         morning_trips: pd.DataFrame,
         is_overnight_trip: pd.Series,
-        is_prev_first_acts: pd.DataFrame,
+        is_prev_first_acts: pd.Series,
     ) -> pd.DataFrame:
         """
         Sets start timestamp of previously first activity (parking) to end timestamp of morning split of overnight trip.
@@ -790,20 +791,19 @@ class OvernightSplitter:
         # set timestamp_start to 00:00 of previously first trip and previous activity id to pd.NA
         self.__update_consolidated_act(neglected_trips=neglected_trips, remaining_trips=remaining_first_trips)
 
-    def __check_and_assert(self):
+        return neglected_trips
+
+    def __check_and_assert(self, neglected_trips: pd.DataFrame):
         """
         _summary_
         """
         # Calculates the neglected trip distances from overnight split trips with regular morning trips
-        distance = (
-            self.activities["trip_distance"].sum()
-            - self.activities.loc[~self.activities["trip_id"].isna(), "trip_distance"].sum()
-        )
-        all_trip_distance = self.activities.loc[~self.activities["trip_id"].isna(), "trip_distance"].sum()
-        ratio = distance / all_trip_distance
+        total_distance = self.activities.loc[~self.activities["trip_id"].isna(), "trip_distance"].sum()
+        neglected_trip_distance = neglected_trips['trip_distance'].sum()
+        ratio = neglected_trip_distance / total_distance
         print(
-            f"From {round(all_trip_distance, 2)} km total mileage in the dataset after filtering, {round((ratio * 100), 2)}% were cropped "
-            f"because they corresponded to split-trips from overnight trips."
+            f"From {round(total_distance, 2)} km total mileage in the dataset after filtering, "
+            f"{round((ratio * 100), 2)} % were cropped because they corresponded to split-trips from overnight trips."
         )
         assert ratio < 0.01
 
@@ -829,13 +829,16 @@ class OvernightSplitter:
         # neglect = to_neglect[to_neglect]
         neglect_trips_idx = first_trips.loc[bool, :].index
         neglect_park_idx = first_park_activities.loc[bool, :].index
-        remain_trips_idx = next_trips.loc[bool, :].index
+        neglect_idx = neglect_trips_idx.union(neglect_park_idx)
+
+        # supposedly DEPRECATED
+        # remain_trips_idx = next_trips.loc[bool, :].index
 
         neglected_trips = first_trips[bool]
         remaining_first_trips = next_trips[bool]
 
         if any(bool):
-            remaining_activities = self.activities.loc[~neglect_idx, :]
+            remaining_activities = self.activities.loc[~self.activities.index.isin(neglect_idx), :]
         else:
             remaining_activities = self.activities
 
@@ -882,6 +885,11 @@ class OvernightSplitter:
         self.activities.loc[idx, "previous_activity_id"] = pd.NA
 
         # ToDo: Is the park activity in between adjacent trips already deleted?
+
+    def __clean_up_columns(self):
+        keep_col_bool = ~self.activities.columns.isin(
+            ['timedelta_total', 'timedelta_morning', 'time_share_morning', 'time_share_evening', 'total_trip_distance'])
+        self.activities = self.activities.loc[:, keep_col_bool]
 
     def __sort_activities(self):
         """
