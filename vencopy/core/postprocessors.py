@@ -174,18 +174,18 @@ class PostProcessor:
         metadata_config["description"] = "Trips and parking activities including available charging power from venco.py"
         reference_resource = metadata_config["resources"].pop()
         this_resource = reference_resource.copy()
-        this_resource["name"] = file_name.rstrip(".csv")
+        this_resource["name"] = file_name
         this_resource["title"] = "National Travel Survey activities dataframe"
         this_resource["path"] = file_name
-        these_fields = [f for f in reference_resource["schema"]["fields"] if f["name"] in self.activities.columns]
+        these_fields = [f for f in reference_resource["schema"]["fields"]["postprocessors"]]
         this_resource["schema"]["fields"] = these_fields
         metadata_config["resources"].append(this_resource)
         return metadata_config
 
     def _write_metadata(self, file_name):
         metadata_config = read_metadata_config()
-        class_metadata = self.generate_metadata(metadata_config=metadata_config, file_name=file_name.name)
-        write_out_metadata(metadata_yaml=class_metadata, file_name=file_name.as_posix().replace(".csv",".metadata.yaml"))
+        class_metadata = self.generate_metadata(metadata_config=metadata_config, file_name=("postprocessors" + file_name))
+        write_out_metadata(metadata_yaml=class_metadata, file_name=(file_name + "metadata.yaml"))
 
 
     def create_annual_profiles(self):
@@ -204,7 +204,7 @@ class PostProcessor:
                     self.__write_output(
                         profile_name=profile_name, profile=self.annual_profiles[profile_name], filename_id="output_postprocessor_annual"
                     )
-            generate_metadata(vencopy_class="postprocessor")
+            self._write_metadata(file_name=("vencopy_output_postprocessor_annual_" + str(self.dataset)))
             print("Run finished.")
 
     def normalise(self):
@@ -230,4 +230,5 @@ class PostProcessor:
             )
             if self.user_config["global"]["write_output_to_disk"]["processor_output"]["normalised_annual_profiles"]:
                 self.__write_out_profiles(filename_id="output_postprocessor_normalised")
+            self._write_metadata(file_name=("vencopy_output_postprocessor_normalised_" + str(self.dataset)))
             print("Run finished.")

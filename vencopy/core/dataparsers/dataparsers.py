@@ -498,7 +498,7 @@ class DataParser:
         this_resource["name"] = file_name.rstrip(".csv")
         this_resource["title"] = "National Travel Survey activities dataframe"
         this_resource["path"] = file_name
-        these_fields = [f for f in reference_resource["schema"]["fields"] if f["name"] in self.activities.columns]
+        these_fields = [f for f in reference_resource["schema"]["fields"]["dataparsers"] if f["name"] in self.activities.columns]
         this_resource["schema"]["fields"] = these_fields
         metadata_config["resources"].append(this_resource)
         return metadata_config

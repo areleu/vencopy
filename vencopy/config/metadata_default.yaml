@@ -77,18 +77,25 @@ resources:
        # 'is_first_activity', 'is_last_activity', 'activity_id',
        # 'next_activity_id', 'previous_activity_id', 'time_delta', 'rated_power',
        # 'available_power'
-          - name: id
-            type: integer
-            description: Unique identifier
-            isAbout:       
-                - name: commissioning date
-                  path: https://openenergy-platform.org/ontology/oeo/missing_term
-          - name: trip_id
-            type: integer
-            description: Unique identifier
-            isAbout:       
-                - name: commissioning date
-                  path: https://openenergy-platform.org/ontology/oeo/missing_term
-                    
+          - dataparsers:
+            - name: unique_id
+              type: integer
+              description: Unique identifier
+              isAbout:       
+                  - name: commissioning date
+                    path: https://openenergy-platform.org/ontology/oeo/missing_term
+            - name: trip_id
+              type: integer
+              description: Unique identifier
+              isAbout:       
+                  - name: commissioning date
+                    path: https://openenergy-platform.org/ontology/oeo/missing_term
+          - postprocessors:
+            - name: uncontrolled_charge
+              type: float
+              description: Unique identifier
+              isAbout:       
+                  - name: commissioning date
+                      
       
 
