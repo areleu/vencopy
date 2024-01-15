@@ -34,7 +34,7 @@ around those functions.
 Install using the environment management system conda, open the conda console,
 create a new environment and activate it by typing::
 
-	conda create -n <your environment name> python=3.9
+	conda create -n <your environment name> python=3.11
 	conda activate <your environment name>
 
 Install venco.py from the Python Package Index PyPI::
@@ -101,20 +101,19 @@ venco.py.
 2.  Set-up your environment. For this, open a conda console, navigate to the
     folder of your venco.py repo and enter the following command::
 
-        conda env create -f requirements.yml
+        conda create -n <your environment name> python=3.11
+	    conda activate <your environment name>
         conda activate vencopy
+        pip install -e .
 
 3.  Configure your config files if you want to use absolute links. This is only
     needed if you want to reference your own local data or want to post-process
     venco.py results and write them to a model input folder somewhere on your
-    drive. You will find your config file in your repo under
-    /config/config.yaml Input filenames are set to the example files shipped
-    with the repo. You may specify labels for file naming in the config under
+    drive. You will find your config file in your repo in the config folder.
+    You may specify labels for file naming in the config under
     the key "labels".
 
 4.  You're now ready to run venco.py for the first time by typing::
 
         python run.py
-
-5.  Have fun calculating electric vehicles flexibility!
 
