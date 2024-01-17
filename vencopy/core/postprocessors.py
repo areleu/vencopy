@@ -231,4 +231,5 @@ class PostProcessor:
             if self.user_config["global"]["write_output_to_disk"]["processor_output"]["normalised_annual_profiles"]:
                 self.__write_out_profiles(filename_id="output_postprocessor_normalised")
             self._write_metadata(file_name=("vencopy_output_postprocessor_normalised_" + str(self.dataset)))
+            #TODO: in metadata generation add normalisation basis for the timeseries
             print("Run finished.")
