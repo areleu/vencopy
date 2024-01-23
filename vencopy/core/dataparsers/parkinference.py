@@ -48,6 +48,7 @@ class ParkInference:
         self.activities_raw = self._remove_next_day_park_acts(activities_raw=self.activities_raw)
         self.__adjust_park_timestamps()
         self.activities_raw = self._add_next_and_prev_ids(activities_raw=self.activities_raw)
+        self.activities_raw = self._add_first_trip_park_columns(self.activities_raw)
         self.activities_raw = self.__overnight_split_decider(split=split_overnight_trips)
         self.activities_raw = self._add_timedelta_column(activities_raw=self.activities_raw)
         self.activities_raw = self._unique_indeces(activities_raw=self.activities_raw)
@@ -384,6 +385,29 @@ class ParkInference:
         activities_raw = activities_raw.drop(columns=["next_trip_end_next_day"])
         return activities_raw
 
+    def _add_first_trip_park_columns(self, activities_raw: pd.DataFrame):
+        acts = self.__is_first_trip(activities=activities_raw)
+        acts = self.__is_first_park_activity(activities=acts)
+        return acts
+
+    def __is_first_trip(self, activities: pd.DataFrame):
+        acts_idx = activities.set_index(['unique_id', 'trip_id'])
+        first_trip = activities[['unique_id', 'trip_id']].groupby(by='unique_id').min(numeric_only=True)
+        first_trip['is_first_trip'] = True
+        first_trip = first_trip.set_index('trip_id', append=True)
+        acts_idx['is_first_trip'] = first_trip  # index comprehension
+        acts_idx['is_first_trip'] = acts_idx['is_first_trip'].fillna(value=False)
+        return acts_idx.reset_index()
+
+    def __is_first_park_activity(self, activities: pd.DataFrame):
+        acts_idx = activities.set_index(['unique_id', 'park_id'])
+        first_park = activities[['unique_id', 'park_id']].groupby(by='unique_id').min(numeric_only=True)
+        first_park['is_first_park_activity'] = True
+        first_park = first_park.set_index('park_id', append=True)
+        acts_idx['is_first_park_activity'] = first_park  # index comprehension
+        acts_idx['is_first_park_activity'] = acts_idx['is_first_park_activity'].fillna(value=False)
+        return acts_idx.reset_index()
+
     @staticmethod
     def _add_timedelta_column(activities_raw: pd.DataFrame):
         """
@@ -451,10 +475,6 @@ class OvernightSplitter:
         """
         self.activities_raw = activities_raw
 
-        # Maybe move further forward later on
-        self.__is_first_trip()
-        self.__is_first_park_activity()
-
         # Split overnight trips and adjust last trip variables accordingly
         is_overnight_trip, overnight_trips_add, ON_uids = self.__get_overnight_activities()
         ON_trips_add_timestamp = self.__adjust_overnight_timestamps(trips=overnight_trips_add)
@@ -491,23 +511,7 @@ class OvernightSplitter:
 
         return self.activities
 
-    def __is_first_trip(self):
-        acts_idx = self.activities_raw.set_index(['unique_id', 'trip_id'])
-        first_trip = self.activities_raw[['unique_id', 'trip_id']].groupby(by='unique_id').min(numeric_only=True)
-        first_trip['is_first_trip'] = True
-        first_trip = first_trip.set_index('trip_id', append=True)
-        acts_idx['is_first_trip'] = first_trip  # index comprehension
-        acts_idx['is_first_trip'] = acts_idx['is_first_trip'].fillna(value=False)
-        self.activities_raw = acts_idx.reset_index()
 
-    def __is_first_park_activity(self):
-        acts_idx = self.activities_raw.set_index(['unique_id', 'park_id'])
-        first_park = self.activities_raw[['unique_id', 'park_id']].groupby(by='unique_id').min(numeric_only=True)
-        first_park['is_first_park_activity'] = True
-        first_park = first_park.set_index('park_id', append=True)
-        acts_idx['is_first_park_activity'] = first_park  # index comprehension
-        acts_idx['is_first_park_activity'] = acts_idx['is_first_park_activity'].fillna(value=False)
-        self.activities_raw = acts_idx.reset_index()
 
     def __get_overnight_activities(self) -> tuple[pd.Series, pd.DataFrame, pd.Series]:
         """
