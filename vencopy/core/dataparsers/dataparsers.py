@@ -404,7 +404,7 @@ class DataParser:
         return filt
 
     @staticmethod
-    def _filter_overlapping_trips(dataset, lookahead_periods: int = 1) -> pd.DataFrame:
+    def _filter_overlapping_trips(dataset, lookahead_periods: int = 7) -> pd.DataFrame:
         """
         Filter out trips carried out by the same car as next (second next, third next up to period next etc) trip but
         overlap with at least one of the period next trips.
@@ -423,9 +423,17 @@ class DataParser:
             ser = DataParser._identify_overlapping_trips(dataset, period=profile)
             ser.name = f"profile={profile}"
             lst.append(ser)
-        ret = pd.concat(lst, axis=1).all(axis=1)
-        ret.name = "no_overlap_next_trips"
-        return ret
+        ret = pd.concat(lst, axis=1).any(axis=1)
+        ret.name = "trip_ends_after_next_start"
+
+        d = dataset.copy()
+        d['overlap'] = ret
+        filter_ids = d[['unique_id', 'overlap']].groupby(by='unique_id').any()
+        d['index'] = d.index
+        d = d.set_index('unique_id', drop=False)
+        d['overlap'] = filter_ids
+        d = d.set_index('index')
+        return d['overlap']
 
     @staticmethod
     def _identify_overlapping_trips(dataset_in: pd.DataFrame, period: int) -> pd.Series:
@@ -739,3 +747,13 @@ class IntermediateParsing(DataParser):
                 f"The subset contains only vehicles of the class {segment} for a total of {n_vehicles} individual "
                 f"vehicles."
             )
+
+
+class VehicleParsing(DataParser):
+    def __init__(self, configs: dict, dataset: str):
+        super().__init__(configs, dataset)
+
+    def process(self):
+        self._load_data()
+        self._select_columns()
+        self._harmonise_variables()

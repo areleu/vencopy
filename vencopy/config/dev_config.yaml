@@ -15,7 +15,7 @@ global:
         flex_output: ./output/flexestimator/
         aggregator_output: ./output/profileaggregator/
         processor_output: ./output/postprocessor/
-        config: ./config/
+        config: ./vencopy/config/
     files:
         MiD17:
             enrypted_zip_file_B1: B1_Standard-DatensatzpaketEncrypted.zip
