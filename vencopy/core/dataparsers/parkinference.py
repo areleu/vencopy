@@ -511,8 +511,6 @@ class OvernightSplitter:
 
         return self.activities
 
-
-
     def __get_overnight_activities(self) -> tuple[pd.Series, pd.DataFrame, pd.Series]:
         """
         _summary_

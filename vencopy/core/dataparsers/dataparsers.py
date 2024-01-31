@@ -423,12 +423,12 @@ class DataParser:
             ser = DataParser._identify_overlapping_trips(dataset, period=profile)
             ser.name = f"profile={profile}"
             lst.append(ser)
-        ret = pd.concat(lst, axis=1).any(axis=1)
+        ret = pd.concat(lst, axis=1).all(axis=1)
         ret.name = "trip_ends_after_next_start"
 
         d = dataset.copy()
         d['overlap'] = ret
-        filter_ids = d[['unique_id', 'overlap']].groupby(by='unique_id').any()
+        filter_ids = d[['unique_id', 'overlap']].groupby(by='unique_id').all()
         d['index'] = d.index
         d = d.set_index('unique_id', drop=False)
         d['overlap'] = filter_ids
