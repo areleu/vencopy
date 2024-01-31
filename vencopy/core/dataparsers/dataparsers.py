@@ -438,7 +438,7 @@ class DataParser:
     @staticmethod
     def _identify_overlapping_trips(dataset_in: pd.DataFrame, period: int) -> pd.Series:
         """
-        Calculates a boolean vector of same length as dat that is True if the current trip overlaps with
+        Calculates a boolean vector of same length as dat that is True if the current trip does not overlap with
         the next trip. "Next" can relate to the consecutive trip (if period==1) or to a later trip defined by the
         period (e.g. for period==2 the trip after next). For determining if an overlap occurs, the end timestamp of the
         current trip is compared to the start timestamp of the "next" trip.
