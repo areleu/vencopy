@@ -358,7 +358,7 @@ class DataParser:
             )
         )
         complex_filters = complex_filters.join(self._filter_inconsistent_travel_times(dataset=data))
-        complex_filters = complex_filters.join(~self._filter_overlapping_trips(dataset=data))
+        complex_filters = complex_filters.join(self._filter_overlapping_trips(dataset=data))
         return complex_filters
 
     @staticmethod
@@ -438,9 +438,9 @@ class DataParser:
     @staticmethod
     def _identify_overlapping_trips(dataset_in: pd.DataFrame, period: int) -> pd.Series:
         """
-        Calculates a boolean vector of same length as dat that is True if the current trip does not overlap with
+        Calculates a boolean vector of same length as dat that is True if the current trip overlaps with
         the next trip. "Next" can relate to the consecutive trip (if period==1) or to a later trip defined by the
-        period (e.g. for period==2 the trip after next). For determining if a overlap occurs the end timestamp of the
+        period (e.g. for period==2 the trip after next). For determining if an overlap occurs, the end timestamp of the
         current trip is compared to the start timestamp of the "next" trip.
 
         Args:
@@ -458,7 +458,7 @@ class DataParser:
         dataset["trip_starts_after_previous_trip"] = dataset["timestamp_start"] >= dataset["timestamp_end"].shift(
             period
         )
-        return dataset["is_same_id_as_previous"] & ~dataset["trip_starts_after_previous_trip"]
+        return ~(dataset["is_same_id_as_previous"] & ~dataset["trip_starts_after_previous_trip"])
 
     @staticmethod
     def _filter_analysis(filter_data: pd.DataFrame):
@@ -595,7 +595,7 @@ class IntermediateParsing(DataParser):
             )
         )
         complex_filters = complex_filters.join(self._filter_inconsistent_travel_times(dataset_in=data))
-        complex_filters = complex_filters.join(~self._filter_overlapping_trips(dataset=data))
+        complex_filters = complex_filters.join(self._filter_overlapping_trips(dataset=data))
         complex_filters = complex_filters.join(self._filter_consistent_hours(dataset=data))
         complex_filters = complex_filters.join(self._filter_zero_length_trips(dataset=data))
         return complex_filters
