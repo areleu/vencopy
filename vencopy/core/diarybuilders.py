@@ -730,7 +730,7 @@ class TimeDiscretiser:
                 file_name_id="output_diarybuilder",
                 dataset=self.dataset,
             )
-            write_out(data=self.activities, path=root / folder / file_name)
+            write_out(data=self.discrete_data, path=root / folder / file_name)
 
     def discretise(self, activities, profile_name: str, method: str) -> pd.DataFrame:
         """
