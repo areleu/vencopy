@@ -16,5 +16,5 @@ def parse_data(configs: dict) -> Union[ParseMiD, ParseKiD, ParseVF]:
         Union[ParseMiD, ParseKiD, ParseVF]: _description_
     """
     dataset = configs["user_config"]["global"]["dataset"]
-    delegate = {"MiD17": ParseMiD, "KiD": ParseKiD, "VF": ParseVF}
+    delegate = {"MiD08": ParseMiD, "MiD17": ParseMiD, "KiD": ParseKiD, "VF": ParseVF}
     return delegate[dataset](configs=configs, dataset=dataset)
