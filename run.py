@@ -1,7 +1,4 @@
-__version__ = "1.0.0"
 __maintainer__ = "Niklas Wulff, Fabia Miorelli"
-__birthdate__ = "23.10.2020"
-__status__ = "prod"  # options are: dev, test, prod
 __license__ = "BSD-3-Clause"
 
 
