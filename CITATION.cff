@@ -12,13 +12,13 @@ authors:
     family-names: Wulff
     email: niklas.wulff@dlr.de
     affiliation: German Aerospace Center (DLR)
-    orcid: 'https://orcid.org/0000-0002-4659-6984'
+    orcid: "https://orcid.org/0000-0002-4659-6984"
   - given-names: Fabia
     family-names: Miorelli
     email: fabia.miorelli@dlr.de
     affiliation: German Aerospace Center (DLR)
-    orcid: 'https://orcid.org/0000-0001-5095-5401'
-repository-code: 'https://gitlab.com/dlr-ve/esy/vencopy/vencopy'
+    orcid: "https://orcid.org/0000-0001-5095-5401"
+repository-code: "https://gitlab.com/dlr-ve/esy/vencopy/vencopy"
 license: BSD-3-Clause
 version: 1.0.0
-date-released: '2023-10-09'
+date-released: "2024-02-01"

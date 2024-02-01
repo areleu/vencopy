@@ -1,8 +1,4 @@
 #-*- coding:utf-8 -*-
-# __version__ = "1.0.0"
-# __maintainer__ = "Niklas Wulff, Fabia Miorelli"
-# __birthdate__ = "15.08.2023"
-# __status__ = "test"  # options are: dev, test, prod
 # __license__ = "BSD-3-Clause"
 
 # This config holds specifications for a venco.py run that can be configured by the user.
@@ -36,7 +32,6 @@ dataparsers:
     MiD17: "HOME"
   subset_vehicle_segment: True
   vehicle_segment:
-      VF: "L" # options: "S" (65743), "M" (37999), "L" (13359)
       KiD: "Car" # options: "Light motorised vehicle", "Car", "Van", "Truck", "Tractor unit", "Coach", "Other tractor unit", "Agriculture and forestry tractor unit", "Other"
 
 
