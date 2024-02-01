@@ -14,33 +14,26 @@
 
 ## Description
 
-A data processing tool offering hourly demand and flexibility profiles for future electric vehicle fleets in an aggregated manner.
+A data processing tool estimating hourly electric demand and flexibility profiles for future 
+electric vehicle fleets. Profiles are targeted to be scalable for the use in large-scale
+energy system models. 
 
 ## Installation
 
-Depending on if you want to use venco.py or if you want to contribute, there are
-two different installation procedures described in venco.py's documentation:
-
-[I want to apply the tool](https://vencopy.readthedocs.io/en/latest/gettingstarted/installation.html#installation-for-users)
-
-[I want to contribute to the codebase, the documentation or the tutorials](https://vencopy.readthedocs.io/en/latest/gettingstarted/installation.html#installation-for-developers)
-
-In order to start using venco.py, check out our [tutorials](https://vencopy.readthedocs.io/en/latest/gettingstarted/start.html#getting-started-and-tutorials). For this you won't need any additional data.
-
-To run venco.py in full mode, you will need the data set Mobilität in Deutschland (German for mobility in Germany). You
-can request it here from the clearingboard transport: https://daten.clearingstelle-verkehr.de/order-form.html Currently,
-venco.py is so far only tested with the B2 data set of MiD 2008 and MiD 2017.
-
-Enjoy the tool, we're happy to receive feedback!
+After around 2 years after the initial public commit, we currently go through the release of 
+our re-iteration of the tool providing more flexibility regarding temporal resolution. 
+The documentation will be updatet and the PyPI package will be uploaded in the coming weeks. 
 
 ## Codestyle
 
-We use PEP-8, with the exception of lowerCamelCase for method and variable names as well as UpperCamelCase for classes.
+We use PEP-8, with the exception of UpperCamelCase for classes.
 
 ## Documentation
 
-The documentation can be found here: https://vencopy.readthedocs.io/en/latest/index.html
-To build the documentation from a conda bash with an activated environment type:
+The documentation of the previous release (0.1.5) can be found 
+here: https://vencopy.readthedocs.io/en/latest/index.html.
+To locally build the documentation from a conda bash with an activated 
+environment type:
 
 ```python
 sphinx-build -b html ./docs/ ./build/
@@ -48,9 +41,9 @@ sphinx-build -b html ./docs/ ./build/
 
 ## Useful Links
 
-- Documentation: https://vencopy.readthedocs.io/en/latest/index.html#
+- Documentation: Available soon
 - Source code: https://gitlab.com/dlr-ve/vencopy
-- PyPI release: https://pypi.org/project/vencopy
+- PyPI release: Available soon
 - Licence: https://opensource.org/licenses/BSD-3-Clause
 
 ## Want to contribute?
