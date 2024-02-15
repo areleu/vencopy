@@ -17,9 +17,14 @@ fleets is a pre-requisite for modelling sector-coupled energy systems and
 drawing respective policy-relevant conclusions. Vehicle Energy Consumption in
 Python (venco.py) is a tool that provides boundary conditions for load shifting
 and vehicle-to-grid potentials based on transport demand data and
-techno-economic assumptions. It has so far been applied to the German travel
-survey (Mobilität in Deutschland) on a national scale to derive hourly
-load-shifting constraining profiles for the energy system optimization model
+techno-economic assumptions. The main structural assumption is that 
+mobility patterns will remain similar to nowadays patterns. Profiles are created 
+to be scalable with fleet scenario development data. Also, profiles are provided
+following a perfect-foresight approach.
+
+venco.py has so far been applied to the German, Dutch, 
+UK and French national travel surveys to derive hourly load-shifting-
+constraining profiles for the energy system optimization model
 `REMix <https://gitlab.com/dlr-ve/esy/remix/framework>`_.
 
 
