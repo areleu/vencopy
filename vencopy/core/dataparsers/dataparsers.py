@@ -491,14 +491,16 @@ class DataParser:
     def generate_metadata(self, metadata_config, file_name):
         metadata_config["name"] = file_name
         metadata_config["title"] = "National Travel Survey activities dataframe"
-        metadata_config["description"] = "Trips and parking activities including available charging power from venco.py"
-        reference_resource = metadata_config["resources"].pop()
+        metadata_config["description"] = "Trips and parking activities from venco.py"
+        reference_resource = metadata_config["resources"]
         this_resource = reference_resource.copy()
         this_resource["name"] = file_name.rstrip(".csv")
         this_resource["title"] = "National Travel Survey activities dataframe"
         this_resource["path"] = file_name
-        these_fields = [f for f in reference_resource["schema"]["fields"]["dataparsers"] if f["name"] in self.activities.columns]
+        these_fields = [f for f in reference_resource["schema"][self.dataset]["fields"]["dataparsers"] if f["name"] in self.activities.columns]
         this_resource["schema"]["fields"] = these_fields
+        #TODO: pop all metadata related to other datasets
+        metadata_config["resources"].pop()
         metadata_config["resources"].append(this_resource)
         return metadata_config
 
