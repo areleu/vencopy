@@ -488,7 +488,6 @@ class DataParser:
             write_out(data=self.activities, path=root / folder / file_name)
             self._write_metadata(file_name=root / folder / file_name)
 
-
     def generate_metadata(self, metadata_config, file_name):
         metadata_config["name"] = file_name
         metadata_config["title"] = "National Travel Survey activities dataframe"
