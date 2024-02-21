@@ -17,7 +17,7 @@ from vencopy.utils.utils import load_configs, create_output_folders
 if __name__ == "__main__":
     start_time = time.time()
 
-    base_path = Path(__file__).parent / 'vencopy'
+    base_path = Path(__file__).parent / "vencopy"
     configs = load_configs(base_path=base_path)
     create_output_folders(configs=configs)
 
@@ -33,7 +33,9 @@ if __name__ == "__main__":
     diary = DiaryBuilder(configs=configs, activities=flex.activities)
     diary.create_diaries()
 
-    profiles = ProfileAggregator(configs=configs, activities=diary.activities, profiles=diary)
+    profiles = ProfileAggregator(
+        configs=configs, activities=diary.activities, profiles=diary
+    )
     profiles.aggregate_profiles()
 
     post = PostProcessor(configs=configs, profiles=profiles)

@@ -7,6 +7,6 @@ Codestyle Guideline
 ===================================
 
 - Coding standard: PEP-8 with the exception of UpperCamelCase for class objects
-- Linter for formatting: black
+- We use black for autoformatting and flake8 for linting
 - Docstrings format code: Google
 - Docstrings format testing: GWT (Given-When-Then)
