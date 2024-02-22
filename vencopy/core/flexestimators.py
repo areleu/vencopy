@@ -50,7 +50,8 @@ class FlexEstimator:
                 "min_residual_need",
                 "max_overshoot",
                 "min_undershoot",
-                "auxiliary_fuel_need",
+                "max_auxiliary_fuel_need",
+                "min_auxiliary_fuel_need"
             ]
         ] = None
         self.activities_without_residual = None
@@ -310,7 +311,7 @@ class FlexEstimator:
             other=self.upper_battery_level,
         )
         residual_need = last_activities.loc[is_trip, "min_battery_level_start_unlimited"] - self.upper_battery_level
-        last_activities.loc[is_trip, "residual_need"] = residual_need.where(residual_need >= 0, other=0).astype(float)
+        last_activities.loc[is_trip, "min_residual_need"] = residual_need.where(residual_need >= 0, other=0).astype(float)
         return last_activities
 
     def __calculate_max_battery_level_trip(
@@ -554,10 +555,16 @@ class FlexEstimator:
 
     def _auxiliary_fuel_need(self):
         """
-        _summary_
+        function calculates the auxiliary fuel needed for the trips that require residual 
         """
-        self.activities["auxiliary_fuel_need"] = (
-                self.activities["residual_need"]
+        self.activities["max_auxiliary_fuel_need"] = (
+                self.activities["max_residual_need"]
+                * self.user_config["flexestimators"]["fuel_consumption"]
+                / self.user_config["flexestimators"]["electric_consumption"]
+        )
+
+        self.activities["min_auxiliary_fuel_need"] = (
+                self.activities["min_residual_need"]
                 * self.user_config["flexestimators"]["fuel_consumption"]
                 / self.user_config["flexestimators"]["electric_consumption"]
         )
