@@ -35,49 +35,90 @@ end of the process, a clean chain of activities is provided switching between pa
 
 Charging infrastructure allocation: :ref:`gridmodellers`
 ---------------------------------------------------
-The charging infrastructure allocation makes use of a basic charging infrastructure model, which assumes the
-availability of charging stations when vehicles are parked. Since the analytical focus of the framework lies on a 
-regional level (NUTS1-NUTS0), the infrastructure model is kept simple in the current version. Charging availability is
-allocated based on a binary TRUE/FALSE mapping to a respective trip purpose in the venco.py user-config. Thus, different
-scenarios describing different charging availabilities, e.g. at home or at home and at work etc. can be distinguished,
-but neither a regional differentiation nor a charging availability probability or distribution are assumed. At the end
-of the application of the GridModeller, a given parking purpose diary parkingType(v, t) is transferred into a binary
-grid connection diary connectgrid (v, t) with the same format but consisting only of TRUE/FALSE values.
+The charging infrastructure allocation makes use of a basic charging infrastructure model, which infers the
+availability of charging stations from parking purposes (e.g. HOME or SHOPPING). These again are inferred from the
+purposes of previously carried out trips.
+There are two mapping approaches of parking categories to charging station rated power that can be selected in the
+gridmodellers section of the user-config, in the option grid_model: Simple and probability-based. 
+In the simple model, charging availability is allocated based on a binary TRUE/FALSE mapping to a respective parking
+activity purpose in the venco.py user-config. Thus, scenarios describing different charging availabilities, e.g.
+at home or at home and at work etc. can be distinguished. Charging is then assumed to be available with a single given
+rated power (e.g. 11 kW) for all park activities.   
+The second model "probability", refines the simple model in two regards: Firstly, multiple rated powers can be given 
+per parking purpose, e.g. HOME charging can be available through single-phase, 16 A (3.7 kW), triple-phase, 16 A (11 kW)
+or triple-phase, 32 A (22 kW) chargers. Secondly, top-down probabilities can be given to each rated power for each 
+parking activity, e.g. there is a 20% probability of HOME chargers to be triple-phase, 16 A chargers. Here, the
+probability of no charging at HOME has to be taken into account. We have to be transparent that despite the
+methodological refinement of this second approach, data justifying the specific values of this approach is scarce and
+values are mostly future scenarios (relevant possibilities).
+At the end of the application of the GridModeller, an additional column "rated_power" is added to the activities data
+and filled for each parking activity. 
 
 
 Flexibility estimation: :ref:`flexestimators`
 ---------------------------------------------------
-There are three integral inputs to the estimation: 1. a profile describing hourly distances for each vehicle 2. a boolean set of profiles describing
-if a vehicle is connected to the grid at a given hour 3. techno-economic input assumptions After some filtering and iteration steps, this yields the
-minimum and maximum battery constraints. After these steps, six profiles are provided to the user: a battery drain profile (the electricity that flows
-out of the vehicle battery each hour for driving), a charging capacity profile (the maximum electricity available for charging in each hour), a
-minimum and a maximum SoC (upper and lower limits for the battery SoC), an uncontrolled charging profile (the electricity flow from grid to vehicle
-when no control is exerted) and a fuel consumption profile.
+The flexibility estimation starts with the activity trip chains of single vehicles and the rated powers. Before the core
+estimation, the drain per trip as well as the maximum possible charged energy volume per parking activity are
+calculated. 
+Then, two cases are differentiated: maximum battery level and minimum battery level, that will make up the mobility-
+constrained technical flexibility of the individual vehicle batteries to fulfill their individual electricity demands
+for driving. The maximum battery level case follows the logic that charging always takes place as soon as possible and
+to the largest extent (highest SOC) possible. The variable for uncontrolled charging is then calculated based on this 
+logic. The minimum battery level case on the opposite assumes that energy is charged as late as possible and only to
+fulfill the driving demands. 
+In order to incorporate the needs, the two logics are applied chronologically from the first activity (may be either
+activity_id 0 or 1) to the last activity (for maximum battery level) and anti-chronologically from the last activity to
+the first activity. The second approach is needed, because later trips need to be taken into account in first parking
+activities in case no charging is available throughout the day. 
+Both approaches are implemented as loops over the activity ids (maximum 20 loops per logic per iteration). The variable
+calculations for each activity_id is then implemented in a vectorized manner for performance concerns. 
+Boundary conditions for state-of-charge (that the SOC at beginning and end of each activity chain are equal) are 
+enforced by a number of iterations within which the previous steps are repeated with the start SOC set to the end SOC of
+the previous iteration. An auxiliary fuel demand is calculated to identify activity chains that cannot be fulfilled 
+purely with battery-based electricity (for the given battery capacity from the user_config).  
 
-The first four profiles can be used as constraints for other models to determine optimal charging strategies, the fifth profile simulates a case,
-where charging is not controlled an EVs charge as soon as a charging possibility is available. Lastly, the sixth profile quantifies the demand for
-additional fuel for trips that cannot be only by electricity.
+Six variables are provided in the activity dataset for each activity (not yet time-discretized profiles) after running 
+FlexEstimator.estimate_technical_flexibility_through_iteration(): 
+#. drain: Demand for driving of each trip in kWh.
+#. rated_power / available_power: Available or rated power for charging for each parking activity in kW.
+#. max_battery_level_start / max_battery_level_end: Absolute battery levels for maximum battery level logic at start and
+end of each activity (trip AND park activities) as battery state in kWh
+#. min_battery_level_start / min_battery_level_end: Absolute battery levels for minimum battery level logic at start and
+end of each activity (trip AND park activities) as battery state in kWh
+#. uncontrolled_charging: Demand per park activity for charging, if uncontrolled charging is assumed as flow into
+battery in kWh. 
+#. max_auxiliary_fuel_need / min_auxiliary_fuel_need: Fuel needed additionally to battery energy per trip in l.
+
+The first four profiles can be used as constraints for other models to determine optimal charging strategies, the fifth
+profile simulates a case, where charging is not controlled an electric vehicles charge as soon as a charging possibility
+is available. Lastly, the sixth profile quantifies the demand for additional fuel for trips that cannot be supplied only
+by electricity.
 
 
 Daily travel diary composition: :ref:`diarybuilders`
 ---------------------------------------------------
-In the diaryBuilder, individual trips at the survey day are consolidated into person-specific travel diaries comprising multiple trips (carried out by
-car). The daily travel diary composition consists of three main steps: Reformatting the database, allocating trip purposes and merging the obtained
-dataframe with other relevant variables from the original database. In the first step, reformatting, the time dimension is transferred from the raw
-data (usually in minutes) to the necessary output format (e.g. hours). Each trip is split into shares, which are then assigned to the respective hour
-in which they took place, generating an hourly dataframe with a timestamp instead of a dataframe containing single trip entries. Similarly, mileages
-driven and the trip purpose are allocated to their respective hour and merged into daily travel diaries. Trips are assumed to determine the respective
-person’s stay in the consecutive hours up to the next trip and therefore are related to the charging availability between two trips. Trip purposes
-included in surveys may comprise trips carried out for work or education reasons, trips returning to home, trips to shopping facilities and other
-leisure activities. Currently, trips whose purpose is not specified are allocated to trips returning to the own household. At the end of the second
-venco.py component TripDiaryBuilder, two intermediary data sets are available either directly from the class within Python or from the hard-drive as
-.csv files. The first one comprises mileage travel diaries d(v, t) and the second one comprises parking place types derived from trip purposes
-parkingType(v, t).
+
+In the DiaryBuilder, activity-specific variables are consolidated into vehicle-specific, time-discrete profiles 
+describing e.g. the drain in each 15-minute interval of the day. The temporal resolution is set in the user_config in 
+the DiaryBuilder option "time_resolution" in minutes.
+The DiaryBuilder is a wrapper class that has an instance of the subclass TimeDiscretizer with again a main function 
+TimeDiscretizer.discretize(). In the wrapper class, this function is now applied to each variable (column) of the 
+activities dataset that is needed as an output from venco.py. Since in the current application constant, these variables
+are always the same (see section :ref:`flexestimators`), they are currently hard-coded in the main function of the 
+DiaryBuilder, DiaryBuilder.create_diaries().
+There are three different approaches to discretization depending on the variable subject to discretization: distribute,
+select and dynamic. The method distribute is applied for energy volumes (in kWh) that shall be allocated to the
+different time intervals that represent the whole activity. "select" is used for power values (in kW) such as rated
+power. Dynamic is used for battery levels variables and uncontrolled charging, as these have more specific or more 
+complex allocation procedures.     
+The resulting profiles are one per given variable and contain around 100,000 time-discretized profiles (rows) in the 
+temporal resolution specified in the config. Every pofile has the same amount of rows. 
 
 
 Aggregation to fleet level: :ref:`profileaggregators`
 ---------------------------------------------------
-In the ProfileAggregator, single vehicle profiles are aggregated to fleet level. Depending on the profile, different aggregation approaches are used.
+In the ProfileAggregator, single vehicle profiles are aggregated to fleet level. Depending on the profile, different
+aggregation approaches are used.
 
 
 Output postprocessing: :ref:`postprocessors`
