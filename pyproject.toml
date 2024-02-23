@@ -3,10 +3,10 @@ name = "vencopy"
 version = "1.0.0"
 description = "Vehicle Energy Consumption in Python: A tool to simulate load flexibility of electric vehicle fleets."
 authors = [
-    {name = "Niklas Wulff", email = "niklas.wulff@dlr.de"},
-    {name = "Fabia Miorelli", email = "fabia.miorelli@dlr.de"}
-    ]
-maintainers = [{name = "Niklas Wulff", email = "niklas.wulff@dlr.de"}]
+    { name = "Niklas Wulff", email = "niklas.wulff@dlr.de" },
+    { name = "Fabia Miorelli", email = "fabia.miorelli@dlr.de" },
+]
+maintainers = [{ name = "Niklas Wulff", email = "niklas.wulff@dlr.de" }]
 license = "BSD-3-Clause"
 readme = "README.md"
 
@@ -42,31 +42,18 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-docs = [
-    "sphinx",
-    "sphinx-rtd-theme",
-    "rst2pdf"
-]
+docs = ["sphinx", "sphinx-rtd-theme", "rst2pdf"]
 
-test = [
-    "pytest >= 7.4.1",
-    "coverage"
-]
+test = ["pytest >= 7.4.1", "coverage"]
 
-dev = [
-    "black"
-]
+dev = ["black"]
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.pytest.ini_options]
-python_files = [
-    "test_*.py",
-    "*_test.py",
-    "tests.py",
-]
+python_files = ["test_*.py", "*_test.py", "tests.py"]
 
 [tool.coverage.run]
 branch = true
@@ -75,4 +62,3 @@ source = ["vencopy"]
 [tool.coverage.report]
 show_missing = true
 precision = 2
-
