@@ -15,7 +15,7 @@ Below are some examples of the main application context of venco.py:
   - Role of synthetic fuels for transport
   - Evaluation of new mobility concepts
 
-- *Comparison of modelling approches*
+- *Comparison of modelling approaches*
 
   - Systematic comparison of energy system models
   - Comparison of flexibility options (Power system oriented vs user oriented charging)
