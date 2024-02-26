@@ -12,7 +12,7 @@ name: _name_of_the_output_
 title: _title_of_the_output_ 
 id: https://gitlab.com/dlr-ve/esy/vencopy/vencopy # should be a doi referring to the dataset
 description: _description_of_the_output_ #"Demand and flexibility potentials for future electric vehicle fleets generated with venco.py."
-language: "en-GB"
+language: [en-GB]
 subject:
   - name: energy
     path: https://openenergy-platform.org/ontology/oeo/OEO_00000150
@@ -25,48 +25,44 @@ subject:
 context: 
     homepage: _project_homepage_
     documentation: https://gitlab.com/dlr-ve/esy/vencopy/vencopy
-    sourcecode: https://gitlab.com/dlr-ve/esy/vencopy/vencopy
+    sourceCode: https://gitlab.com/dlr-ve/esy/vencopy/vencopy
     contact: vencopy@dlr.de
 # INPUT
 sources:
-    - title: "MiD2017"
-      description: Mobilität in Deutschland 2017
+    - title: MiD17
+      description: Mobilität in Deutschland (MiD) 2017
       path: https://daten.clearingstelle-verkehr.de/279/
       licenses:
-        - title: MiD 2017
-          path: https://daten.clearingstelle-verkehr.de/279/
+        - path: https://daten.clearingstelle-verkehr.de/279/
           attribution: Bundesministerium für Verkehr und digitale Infrastruktur
           instruction: Für die Nutzung der Daten ist die Unterzeichnung eines Nutzungsvertrags notwendig, der Ihnen nach einer Prüfung Ihrer Bestellung durch das BMDV von der Clearingstelle Verkehr zur Verfügung gestellt wird.
-    - title: "KiD2010"
-      description: Kraftfahrzeugverkehr in Deutschland
+    - title: KiD
+      description: Kraftfahrzeugverkehr in Deutschland (KiD)
       path: https://daten.clearingstelle-verkehr.de/240/
       licenses:
-        - title: KiD 2010
-          path: https://www.dlr.de/cs/Portaldata/10/Resources/dokumente/verkehrsdaten/Vertrag_Regionalfile_KiD.pdf
+        - path: https://www.dlr.de/cs/Portaldata/10/Resources/dokumente/verkehrsdaten/Vertrag_Regionalfile_KiD.pdf
           attribution: Bundesministerium für Verkehr und digitale Infrastruktur
           instruction: What does the license allows me to.
-    - title: "VF"
+    - title: VF
       description: Mobilität in Deutschland 2017
       path: https://daten.clearingstelle-verkehr.de/279/
       licenses:
-        - title: MiD 2017
-          path: https://daten.clearingstelle-verkehr.de/279/
+        - path: https://daten.clearingstelle-verkehr.de/279/
           attribution: Bundesministerium für Verkehr und digitale Infrastruktur
           instruction: Für die Nutzung der Daten ist die Unterzeichnung eines Nutzungsvertrags notwendig, der Ihnen nach einer Prüfung Ihrer Bestellung durch das BMDV von der Clearingstelle Verkehr zur Verfügung gestellt wird.
 # OUTPUT
 licenses:
-    - name: Output data license
-      title: title of the license
-      path: some path
-      attribution: Owner of the data
-      instruction: What does the license allows me to.
+    - name: CC BY 4.0
+      title: Attribution 4.0 International
+      path: https://creativecommons.org/licenses/by/4.0
+      attribution: Copyright (c) 2024 German Aerospace Center (DLR)
+      instruction: You are free to copy and redistribute the material in any medium or format. You are free to remix, transform, and build upon the material for any purpose, even commercially.
 resources:
-      name: placeholder
-      title: placeholder
+    - name: placeholder
       path: placeholder.csv
       format: csv
       encoding: utf-8
-      schema: 
+      schema:
         MiD17:
           fields: # for the ones that get printed
           # 'index', 'unique_id', 'trip_id', 'is_driver', 'household_id',
@@ -80,7 +76,7 @@ resources:
             dataparsers:
               - name: unique_id
                 type: integer
-                description: Unique identifier
+                description: Unique identifier for person
                 isAbout:       
                     - name: commissioning date
                       path: https://openenergy-platform.org/ontology/oeo/missing_term
@@ -95,7 +91,8 @@ resources:
                 type: float
                 description: Unique identifier
                 isAbout:       
-                    - name: commissioning date
+                    - name:
+                      path: https://openenergy-platform.org/ontology/oeo/missing_term
         KiD:
           fields: # for the ones that get printed
             dataparsers:
@@ -103,19 +100,20 @@ resources:
               type: integer
               description: Unique identifier
               isAbout:       
-                  - name: commissioning date
+                  - name: 
                     path: https://openenergy-platform.org/ontology/oeo/missing_term
             - name: trip_id
               type: integer
               description: Unique identifier
               isAbout:       
-                  - name: commissioning date
+                  - name: 
                     path: https://openenergy-platform.org/ontology/oeo/missing_term
             postprocessors:
             - name: uncontrolled_charge
               type: float
               description: Unique identifier
               isAbout:       
-                  - name: commissioning date
+                  - name:
+                    path: https://openenergy-platform.org/ontology/oeo/missing_term
                     
     
