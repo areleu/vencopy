@@ -237,6 +237,37 @@ resources:
                   isAbout:       
                       - name: battery level
                         path: https://openenergy-platform.org/ontology/oeo/missing_term
+              fleet:
+                - name: uncontrolled_charge
+                  type: float
+                  description: Uncontrolled charging profile in kWh for the specified fleet size and geographical scope.
+                  isAbout:       
+                      - name: uncontrolled charging
+                        path: https://openenergy-platform.org/ontology/oeo/missing_term
+                - name: charging_power
+                  type: float
+                  description: Available nominal charging power in kW for the specified fleet size and geographical scope.
+                  isAbout:       
+                      - name: uncontrolled charging
+                        path: https://openenergy-platform.org/ontology/oeo/missing_term
+                - name: drain
+                  type: float
+                  description: Electricity drain from the vehicle battery in kWh for the specified fleet size and geographical scope.
+                  isAbout:       
+                      - name: electric consumption
+                        path: https://openenergy-platform.org/ontology/oeo/missing_term
+                - name: max_battery_level
+                  type: float
+                  description: Maximum battery level of the vehicle battery in kWh for the specified fleet size and geographical scope.
+                  isAbout:       
+                      - name: battery level
+                        path: https://openenergy-platform.org/ontology/oeo/missing_term
+                - name: min_battery_level
+                  type: float
+                  description: Minimum battery level of the vehicle battery in kWh for the specified fleet size and geographical scope.
+                  isAbout:       
+                      - name: battery level
+                        path: https://openenergy-platform.org/ontology/oeo/missing_term
         KiD:
           fields:
             dataparsers:
