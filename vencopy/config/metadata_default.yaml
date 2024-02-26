@@ -37,7 +37,7 @@ sources:
           attribution: Bundesministerium für Verkehr und digitale Infrastruktur
           instruction: Für die Nutzung der Daten ist die Unterzeichnung eines Nutzungsvertrags notwendig, der Ihnen nach einer Prüfung Ihrer Bestellung durch das BMDV von der Clearingstelle Verkehr zur Verfügung gestellt wird.
     - title: KiD
-      description: Kraftfahrzeugverkehr in Deutschland (KiD)
+      description: Kraftfahrzeugverkehr in Deutschland (KiD) 2010
       path: https://daten.clearingstelle-verkehr.de/240/
       licenses:
         - path: https://www.dlr.de/cs/Portaldata/10/Resources/dokumente/verkehrsdaten/Vertrag_Regionalfile_KiD.pdf
@@ -78,23 +78,123 @@ resources:
                 type: integer
                 description: Unique identifier for person
                 isAbout:       
-                    - name: commissioning date
+                    - name: unique identifier
                       path: https://openenergy-platform.org/ontology/oeo/missing_term
               - name: trip_id
                 type: integer
                 description: Unique identifier
                 isAbout:       
-                    - name: commissioning date
+                    - name: trip id
+                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+            gridmodellers:
+              - name: unique_id
+                type: integer
+                description: Unique identifier for person
+                isAbout:       
+                    - name: unique identifier
+                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+              - name: trip_id
+                type: integer
+                description: Unique identifier
+                isAbout:       
+                    - name: trip id
+                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+            flexestimators:
+              - name: unique_id
+                type: integer
+                description: Unique identifier for person
+                isAbout:       
+                    - name: unique identifier
+                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+              - name: trip_id
+                type: integer
+                description: Unique identifier
+                isAbout:       
+                    - name: trip id
+                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+            diarybuilders:
+              - name: uncontrolled_charge
+                type: float
+                description: Uncontrolled charging profile in kWh, representing an as soon as possible charging strategy.
+                isAbout:       
+                    - name: uncontrolled charging
+                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+              - name: charging_power
+                type: float
+                description: Available nominal charging power in kW.
+                isAbout:       
+                    - name: uncontrolled charging
+                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+              - name: drain
+                type: float
+                description: Electricity drain from the vehicle battery in kWh.
+                isAbout:       
+                    - name: electric consumption
+                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+              - name: max_battery_level
+                type: float
+                description: Maximum battery level of the vehicle battery in kWh.
+                isAbout:       
+                    - name: battery level
+                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+              - name: min_battery_level
+                type: float
+                description: Minimum battery level of the vehicle battery in kWh.
+                isAbout:       
+                    - name: battery level
+                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+            profileaggregators:
+              - name: uncontrolled_charge
+                type: float
+                description: Uncontrolled charging profile in kWh, representing an as soon as possible charging strategy.
+                isAbout:       
+                    - name: uncontrolled charging
+                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+              - name: charging_power
+                type: float
+                description: Available nominal charging power in kW.
+                isAbout:       
+                    - name: uncontrolled charging
+                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+              - name: drain
+                type: float
+                description: Electricity drain from the vehicle battery in kWh.
+                isAbout:       
+                    - name: electric consumption
+                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+              - name: max_battery_level
+                type: float
+                description: Maximum battery level of the vehicle battery in kWh.
+                isAbout:       
+                    - name: battery level
+                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+              - name: min_battery_level
+                type: float
+                description: Minimum battery level of the vehicle battery in kWh.
+                isAbout:       
+                    - name: battery level
                       path: https://openenergy-platform.org/ontology/oeo/missing_term
             postprocessors:
               - name: uncontrolled_charge
                 type: float
-                description: Unique identifier
+                description: Uncontrolled charging profile in kWh, representing an as soon as possible charging strategy.
                 isAbout:       
-                    - name:
+                    - name: uncontrolled charging
+                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+              - name: charging_power
+                type: float
+                description: Available nominal charging power in kW.
+                isAbout:       
+                    - name: uncontrolled charging
+                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+              - name: charging_power
+                type: float
+                description: Available nominal charging power in kW.
+                isAbout:       
+                    - name: uncontrolled charging
                       path: https://openenergy-platform.org/ontology/oeo/missing_term
         KiD:
-          fields: # for the ones that get printed
+          fields:
             dataparsers:
             - name: unique_id
               type: integer

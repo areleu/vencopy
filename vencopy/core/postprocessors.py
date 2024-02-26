@@ -159,10 +159,10 @@ class PostProcessor:
         """
         root = Path(self.user_config["global"]["absolute_path"]["vencopy_root"])
         folder = self.dev_config["global"]["relative_path"]["processor_output"]
+        self.user_config["global"]["run_label"] = "_" + profile_name + "_"
         file_name = create_file_name(
             dev_config=self.dev_config,
             user_config=self.user_config,
-            manual_label=profile_name,
             file_name_id=filename_id,
             dataset=self.dataset,
         )
@@ -171,14 +171,15 @@ class PostProcessor:
     def generate_metadata(self, metadata_config, file_name):
         metadata_config["name"] = file_name
         metadata_config["title"] = "National Travel Survey activities dataframe"
-        metadata_config["description"] = "Trips and parking activities including available charging power from venco.py"
-        reference_resource = metadata_config["resources"].pop()
+        metadata_config["description"] = "Time discrete profile at single vehicle level."
+        metadata_config["sources"] = [f for f in metadata_config["sources"] if f["title"] in self.dataset]
+        reference_resource = metadata_config["resources"][0]
         this_resource = reference_resource.copy()
-        this_resource["name"] = file_name
-        this_resource["title"] = "National Travel Survey activities dataframe"
+        this_resource["name"] = file_name.rstrip(".csv")
         this_resource["path"] = file_name
-        these_fields = [f for f in reference_resource["schema"]["fields"]["postprocessors"]]
-        this_resource["schema"]["fields"] = these_fields
+        these_fields = [f for f in reference_resource["schema"][self.dataset]["fields"]["postprocessors"] if f["name"] in self.activities.columns]
+        this_resource["schema"] = {"fields": these_fields}
+        metadata_config["resources"].pop()
         metadata_config["resources"].append(this_resource)
         return metadata_config
 

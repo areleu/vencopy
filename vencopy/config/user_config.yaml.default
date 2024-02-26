@@ -11,7 +11,7 @@ global:
   dataset: MiD17 # options are MiD08, MiD17, VF, KiD
   debug: True
   number_lines_debug: 5000
-  run_label:
+  run_label: "" #_PutYourRunLabelBetweenUnderscores_
   write_output_to_disk:
       parse_output: False
       grid_output: False

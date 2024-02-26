@@ -147,7 +147,6 @@ class GridModeller:
             file_name = create_file_name(
                 dev_config=self.dev_config,
                 user_config=self.user_config,
-                manual_label="",
                 file_name_id="output_gridmodeller",
                 dataset=self.dataset,
             )
@@ -170,20 +169,21 @@ class GridModeller:
         metadata_config["name"] = file_name
         metadata_config["title"] = "National Travel Survey activities dataframe"
         metadata_config["description"] = "Trips and parking activities including available charging power from venco.py"
-        reference_resource = metadata_config["resources"].pop()
+        metadata_config["sources"] = [f for f in metadata_config["sources"] if f["title"] in self.dataset]
+        reference_resource = metadata_config["resources"][0]
         this_resource = reference_resource.copy()
         this_resource["name"] = file_name.rstrip(".csv")
-        this_resource["title"] = "National Travel Survey activities dataframe"
         this_resource["path"] = file_name
-        these_fields = [f for f in reference_resource["schema"]["fields"] if f["name"] in self.activities.columns]
-        this_resource["schema"]["fields"] = these_fields
+        these_fields = [f for f in reference_resource["schema"][self.dataset]["fields"]["gridmodellers"] if f["name"] in self.activities.columns]
+        this_resource["schema"] = {"fields": these_fields}
+        metadata_config["resources"].pop()
         metadata_config["resources"].append(this_resource)
         return metadata_config
 
     def _write_metadata(self, file_name):
         metadata_config = read_metadata_config()
         class_metadata = self.generate_metadata(metadata_config=metadata_config, file_name=file_name.name)
-        write_out_metadata(metadata_yaml=class_metadata, file_name=file_name.as_posix().replace(".csv",".metadata.yaml"))
+        write_out_metadata(metadata_yaml=class_metadata, file_name=file_name.as_posix().replace(".csv", ".metadata.yaml"))
 
     def assign_grid(self, seed: int = 42) -> pd.DataFrame:
         """

@@ -452,7 +452,6 @@ class DataParser:
         """
         Function supplies some aggregate info of the data after filtering to the user.
 
-
         Args:
             filter_data (pd.DataFrame): _description_
         """
@@ -482,8 +481,7 @@ class DataParser:
                 dev_config=self.dev_config,
                 user_config=self.user_config,
                 file_name_id="output_dataparser",
-                dataset=self.dataset,
-                manual_label="",
+                dataset=self.dataset
             )
             write_out(data=self.activities, path=root / folder / file_name)
             self._write_metadata(file_name=root / folder / file_name)
@@ -506,7 +504,7 @@ class DataParser:
     def _write_metadata(self, file_name):
         metadata_config = read_metadata_config()
         class_metadata = self.generate_metadata(metadata_config=metadata_config, file_name=file_name.name)
-        write_out_metadata(metadata_yaml=class_metadata, file_name=file_name.as_posix().replace(".csv",".metadata.yaml"))   
+        write_out_metadata(metadata_yaml=class_metadata, file_name=file_name.as_posix().replace(".csv", ".metadata.yaml"))  
 
 
 class IntermediateParsing(DataParser):
