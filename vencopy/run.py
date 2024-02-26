@@ -42,6 +42,6 @@ if __name__ == "__main__":
     post = PostProcessor(configs=configs, profiles=profiles)
     post.create_annual_profiles()
     post.normalise()
-    
+
     elapsed_time = time.time() - start_time
     print(f"Elapsed time: {elapsed_time}.")

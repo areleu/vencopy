@@ -125,7 +125,7 @@ def create_output_folders(configs: dict):
 
 
 def create_file_name(
-    dev_config: dict, user_config: dict, file_name_id: str, dataset: str, manual_label: str = "", suffix: str = "csv"
+    dev_config: dict, user_config: dict, file_name_id: str, dataset: str, suffix: str = "csv"
 ) -> str:
     """
     Generic method used for fileString compilation throughout the venco.py framework. This method does not write any
@@ -142,11 +142,12 @@ def create_file_name(
     Returns:
         str: Full name of file to be written.
     """
+    run_label = user_config['global']['run_label']
     if dataset is None:
-        return f"{dev_config['global']['disk_file_names'][file_name_id]}_{user_config['global']['run_label']}_{manual_label}.{suffix}"
-    if len(manual_label) == 0:
-        return f"{dev_config['global']['disk_file_names'][file_name_id]}_{user_config['global']['run_label']}_{dataset}.{suffix}"
-    return f"{dev_config['global']['disk_file_names'][file_name_id]}_{user_config['global']['run_label']}_{manual_label}_{dataset}.{suffix}"
+        return f"{dev_config['global']['disk_file_names'][file_name_id]}_{user_config['global']['run_label']}_{run_label}.{suffix}"
+    if len(run_label) == 0:
+        return f"{dev_config['global']['disk_file_names'][file_name_id]}_{dataset}.{suffix}"
+    return f"{dev_config['global']['disk_file_names'][file_name_id]}_{run_label}_{dataset}.{suffix}"
 
 
 def write_out(data: pd.DataFrame, path: Path):
