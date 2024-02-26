@@ -175,24 +175,68 @@ resources:
                     - name: battery level
                       path: https://openenergy-platform.org/ontology/oeo/missing_term
             postprocessors:
-              - name: uncontrolled_charge
-                type: float
-                description: Uncontrolled charging profile in kWh, representing an as soon as possible charging strategy.
-                isAbout:       
-                    - name: uncontrolled charging
-                      path: https://openenergy-platform.org/ontology/oeo/missing_term
-              - name: charging_power
-                type: float
-                description: Available nominal charging power in kW.
-                isAbout:       
-                    - name: uncontrolled charging
-                      path: https://openenergy-platform.org/ontology/oeo/missing_term
-              - name: charging_power
-                type: float
-                description: Available nominal charging power in kW.
-                isAbout:       
-                    - name: uncontrolled charging
-                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+              annual:
+                - name: uncontrolled_charge
+                  type: float
+                  description: Uncontrolled charging profile in kWh, representing an as soon as possible charging strategy.
+                  isAbout:       
+                      - name: uncontrolled charging
+                        path: https://openenergy-platform.org/ontology/oeo/missing_term
+                - name: charging_power
+                  type: float
+                  description: Available nominal charging power in kW.
+                  isAbout:       
+                      - name: uncontrolled charging
+                        path: https://openenergy-platform.org/ontology/oeo/missing_term
+                - name: drain
+                  type: float
+                  description: Electricity drain from the vehicle battery in kWh.
+                  isAbout:       
+                      - name: electric consumption
+                        path: https://openenergy-platform.org/ontology/oeo/missing_term
+                - name: max_battery_level
+                  type: float
+                  description: Maximum battery level of the vehicle battery in kWh.
+                  isAbout:       
+                      - name: battery level
+                        path: https://openenergy-platform.org/ontology/oeo/missing_term
+                - name: min_battery_level
+                  type: float
+                  description: Minimum battery level of the vehicle battery in kWh.
+                  isAbout:       
+                      - name: battery level
+                        path: https://openenergy-platform.org/ontology/oeo/missing_term
+              normalised:
+                - name: uncontrolled_charge
+                  type: float
+                  description: Uncontrolled charging profile in kWh normalised over the annual sum.
+                  isAbout:       
+                      - name: uncontrolled charging
+                        path: https://openenergy-platform.org/ontology/oeo/missing_term
+                - name: charging_power
+                  type: float
+                  description: Available nominal charging power in kW normalised according to the number of vehicle for each weekday.
+                  isAbout:       
+                      - name: uncontrolled charging
+                        path: https://openenergy-platform.org/ontology/oeo/missing_term
+                - name: drain
+                  type: float
+                  description: Electricity drain from the vehicle battery in kWh normalised over the annual sum.
+                  isAbout:       
+                      - name: electric consumption
+                        path: https://openenergy-platform.org/ontology/oeo/missing_term
+                - name: max_battery_level
+                  type: float
+                  description: Maximum battery level of the vehicle battery in kWh normalised according to the assumed vehicle battery capacity.
+                  isAbout:       
+                      - name: battery level
+                        path: https://openenergy-platform.org/ontology/oeo/missing_term
+                - name: min_battery_level
+                  type: float
+                  description: Minimum battery level of the vehicle battery in kWh normalised according to the assumed vehicle battery capacity.
+                  isAbout:       
+                      - name: battery level
+                        path: https://openenergy-platform.org/ontology/oeo/missing_term
         KiD:
           fields:
             dataparsers:

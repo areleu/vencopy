@@ -30,5 +30,3 @@ def write_out_metadata(metadata_yaml, file_name):
     with open(file_name, "w", encoding="utf-8") as f:
         yaml.Dumper.ignore_aliases = lambda *args: True
         yaml.dump(metadata_yaml, f, sort_keys=False, allow_unicode=True)
-    
-
