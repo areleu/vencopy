@@ -97,7 +97,7 @@ class FlexEstimator:
             activity chain
         """
         print("Starting maximum battery level calculation.")
-        print(f"Calculating maximum battery level for first activities.")
+        print("Calculating maximum battery level for first activities.")
 
         act_temp = self.__first_activities(start_level=start_level)
 
