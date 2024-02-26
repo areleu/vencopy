@@ -144,7 +144,7 @@ def create_file_name(
     """
     run_label = user_config['global']['run_label']
     if dataset is None:
-        return f"{dev_config['global']['disk_file_names'][file_name_id]}_{user_config['global']['run_label']}_{run_label}.{suffix}"
+        return f"{dev_config['global']['disk_file_names'][file_name_id]}_{run_label}.{suffix}"
     if len(run_label) == 0:
         return f"{dev_config['global']['disk_file_names'][file_name_id]}_{dataset}.{suffix}"
     return f"{dev_config['global']['disk_file_names'][file_name_id]}_{run_label}_{dataset}.{suffix}"
