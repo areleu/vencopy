@@ -117,11 +117,30 @@ temporal resolution specified in the config. Every pofile has the same amount of
 
 Aggregation to fleet level: :ref:`profileaggregators`
 ---------------------------------------------------
-In the ProfileAggregator, single vehicle profiles are aggregated to fleet level. Depending on the profile, different
-aggregation approaches are used.
+In the ProfileAggregator, single vehicle profiles are aggregated across all vehicles to gain fleet level profiles. 
+Depending on the profile type, different aggregation approaches are used. 
+The design pattern is similar as in the diarybuilders. There is one wrapper class, ProfileAggregator, that has an 
+instance of the class Aggregator as attribute. This attribute's method perform_aggregation() is then called for each 
+profile relevant for the analysis, specifying the profile type as a parameter ('flow' or 'state'). The profiles for 
+drain, availability and uncontrolled charging are all flow profiles, whereas the battery level profiles are state 
+profiles and thus, are aggregated differently. 
+Two options can be given in the user_config for refining profile aggregation: The timespan and the aggregation weights. 
+The timespan can be given in the option 'aggregation_timespan', specifying if the resulting profile is a daily profile 
+or a weekly profile.
+The flow profiles are aggregated using means or weighted means which can be specified in the profileaggregators section
+of the user_config under the option 'weight_flow_profiles'. The aggregation does not change the temporal resolution, it
+is only related to aggregate the charging profiles from around 100,000 single-vehicle profiles to fleet profiles. Thus,
+after aggregation, there are 5 profiles with the temporal timespan (daily or weekly) and the temporal resolution
+selected in the diary builder before (e.g. 24 values for daily profiles with hourly resolution). 
 
 
 Output postprocessing: :ref:`postprocessors`
 ---------------------------------------------------
-In the PostProcessor, the aggregated weekly timeseries for the fleet are translated into annual timeseries.
-An option to normalise the profiles is also provided.
+In the PostProcessor, two steps happen. First, the aggregated weekly timeseries for the fleet are translated into annual
+timeseries by cloning e.g. a week by around 52 times to span a full year. The second purpose is to normalize the 
+aggregated fleet profiles in order to provide profiles independent of the specific input and to be able to scale the 
+venco.py output in a consecutive stept with feet scenarios or annual energy demands. For the flow profiles, two
+normalization bases are applied: The drain and uncontrolled charging profiles are normalized to the annual energy volume
+of the profiles to be scaled with an annual energy demand. The charging power profile is normalized by the number of 
+vehicles to retrieve a rated charging power per representative vehicle. The two state profiles - minimum and maximum
+battery level profiles - are normalized using the battery capacity given in the flexestimaros part of the user_config. 
