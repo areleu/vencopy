@@ -1,7 +1,4 @@
-__version__ = "1.0.0"
 __maintainer__ = "Fabia Miorelli"
-__birthdate__ = "17.08.2023"
-__status__ = "test"  # options are: dev, test, prod
 __license__ = "BSD-3-Clause"
 
 
@@ -173,7 +170,7 @@ class ParseKiD(IntermediateParsing):
         self._harmonize_variables_unique_id_names()
         self._change_separator(trips=self.trips)
         self._convert_types()
-        self._exclude_hours(trips=self.trips)
+        self.trips = self._exclude_hours(trips=self.trips)
         self._extract_timestamps(trips=self.trips)
         self.__add_string_columns()
         self._compose_start_and_end_timestamps()
@@ -187,4 +184,4 @@ class ParseKiD(IntermediateParsing):
         self.write_output()
         print("Parsing KiD dataset completed.")
         return self.activities
-    
+

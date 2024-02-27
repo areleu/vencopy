@@ -14,7 +14,9 @@
 
 ## Description
 
-A data processing tool offering hourly demand and flexibility profiles for future electric vehicle fleets in an aggregated manner.
+A data processing tool estimating hourly electric demand and flexibility profiles for future 
+electric vehicle fleets. Profiles are targeted to be scalable for the use in large-scale
+energy system models. 
 
 ## Installation
 
@@ -28,10 +30,9 @@ two different installation procedures described in venco.py's documentation:
 In order to start using venco.py, check out our [tutorials](https://dlr-ve.gitlab.io/esy/vencopy/vencopy/gettingstarted/start.html). For this you won't need any additional data.
 
 To run venco.py in full mode, you will need the data set Mobilität in Deutschland (German for mobility in Germany). You
-can request it here from the clearingboard transport: https://daten.clearingstelle-verkehr.de/order-form.html Currently,
-venco.py is so far only tested with the B2 data set of MiD 2008 and MiD 2017.
+can request it here from the clearingboard transport: https://daten.clearingstelle-verkehr.de/order-form.html 
+Alternatively you can use venco.py with any National Travel Survey or mobility pattern dataset.
 
-Enjoy the tool, we're happy to receive feedback!
 
 ## Codestyle
 
@@ -50,7 +51,7 @@ sphinx-build -b html ./docs/ ./build/
 
 - Documentation: https://dlr-ve.gitlab.io/esy/vencopy/vencopy/
 - Source code: https://gitlab.com/dlr-ve/vencopy
-- PyPI release: https://pypi.org/project/vencopy
+- PyPI release: https://pypi.org/project/vencopy/
 - Licence: https://opensource.org/licenses/BSD-3-Clause
 
 ## Want to contribute?

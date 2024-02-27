@@ -26,6 +26,7 @@ def sample_configs():
                     }
                 },
             'profileaggregators': {
+                'aggregation_timespan': 'weekly',
                 'weight_flow_profiles': False,
                 'alpha': 10
             }

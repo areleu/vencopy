@@ -1,7 +1,4 @@
-__version__ = "1.0.X"
 __maintainer__ = "Niklas Wulff, Fabia Miorelli"
-__birthdate__ = "01.07.2021"
-__status__ = "test"  # options are: dev, test, prod
 __license__ = "BSD-3-Clause"
 
 import pandas as pd
@@ -109,7 +106,6 @@ def replace_vec(series, year=None, month=None, day=None, hour=None, minute=None,
 def create_output_folders(configs: dict):
     """
     Function to crete vencopy output folder and subfolders
-
 
     Args:
         configs (dict): _description_

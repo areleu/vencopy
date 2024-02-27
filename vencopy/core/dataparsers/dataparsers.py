@@ -1,7 +1,4 @@
-__version__ = "1.0.0"
 __maintainer__ = "Niklas Wulff, Fabia Miorelli"
-__birthdate__ = "17.08.2023"
-__status__ = "test"  # options are: dev, test, prod
 __license__ = "BSD-3-Clause"
 
 
@@ -353,7 +350,7 @@ class DataParser:
             )
         )
         complex_filters = complex_filters.join(self._filter_inconsistent_travel_times(dataset=data))
-        complex_filters = complex_filters.join(~self._filter_overlapping_trips(dataset=data))
+        complex_filters = complex_filters.join(self._filter_overlapping_trips(dataset=data))
         return complex_filters
 
     @staticmethod
@@ -399,7 +396,7 @@ class DataParser:
         return filt
 
     @staticmethod
-    def _filter_overlapping_trips(dataset, lookahead_periods: int = 1) -> pd.DataFrame:
+    def _filter_overlapping_trips(dataset, lookahead_periods: int = 7) -> pd.DataFrame:
         """
         Filter out trips carried out by the same car as next (second next, third next up to period next etc) trip but
         overlap with at least one of the period next trips.
@@ -419,15 +416,23 @@ class DataParser:
             ser.name = f"profile={profile}"
             lst.append(ser)
         ret = pd.concat(lst, axis=1).all(axis=1)
-        ret.name = "no_overlap_next_trips"
-        return ret
+        ret.name = "trip_ends_after_next_start"
+
+        d = dataset.copy()
+        d['overlap'] = ret
+        filter_ids = d[['unique_id', 'overlap']].groupby(by='unique_id').all()
+        d['index'] = d.index
+        d = d.set_index('unique_id', drop=False)
+        d['overlap'] = filter_ids
+        d = d.set_index('index')
+        return d['overlap']
 
     @staticmethod
     def _identify_overlapping_trips(dataset_in: pd.DataFrame, period: int) -> pd.Series:
         """
         Calculates a boolean vector of same length as dat that is True if the current trip does not overlap with
         the next trip. "Next" can relate to the consecutive trip (if period==1) or to a later trip defined by the
-        period (e.g. for period==2 the trip after next). For determining if a overlap occurs the end timestamp of the
+        period (e.g. for period==2 the trip after next). For determining if an overlap occurs, the end timestamp of the
         current trip is compared to the start timestamp of the "next" trip.
 
         Args:
@@ -445,7 +450,7 @@ class DataParser:
         dataset["trip_starts_after_previous_trip"] = dataset["timestamp_start"] >= dataset["timestamp_end"].shift(
             period
         )
-        return dataset["is_same_id_as_previous"] & ~dataset["trip_starts_after_previous_trip"]
+        return ~(dataset["is_same_id_as_previous"] & ~dataset["trip_starts_after_previous_trip"])
 
     @staticmethod
     def _filter_analysis(filter_data: pd.DataFrame):
@@ -601,7 +606,7 @@ class IntermediateParsing(DataParser):
             )
         )
         complex_filters = complex_filters.join(self._filter_inconsistent_travel_times(dataset_in=data))
-        complex_filters = complex_filters.join(~self._filter_overlapping_trips(dataset=data))
+        complex_filters = complex_filters.join(self._filter_overlapping_trips(dataset=data))
         complex_filters = complex_filters.join(self._filter_consistent_hours(dataset=data))
         complex_filters = complex_filters.join(self._filter_zero_length_trips(dataset=data))
         return complex_filters
@@ -753,3 +758,13 @@ class IntermediateParsing(DataParser):
                 f"The subset contains only vehicles of the class {segment} for a total of {n_vehicles} individual "
                 f"vehicles."
             )
+
+
+class VehicleParsing(DataParser):
+    def __init__(self, configs: dict, dataset: str):
+        super().__init__(configs, dataset)
+
+    def process(self):
+        self._load_data()
+        self._select_columns()
+        self._harmonise_variables()

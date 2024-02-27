@@ -235,7 +235,7 @@ def test_filter_overlapping_trips(sample_data_frame_other_filters):
     assert isinstance(result, pd.Series)
     assert len(result) == len(sample_data_frame_other_filters)
 
-    expected_result = pd.Series([False, True, False, False, False])
+    expected_result = pd.Series([False, False, True, True, True])
     assert result.equals(expected_result)
 
 
@@ -245,7 +245,7 @@ def test_identify_overlapping_trips(sample_data_frame_other_filters):
     assert isinstance(result, pd.Series)
     assert len(result) == len(sample_data_frame_other_filters)
 
-    expected_result = pd.Series([False, True, False, False, False])
+    expected_result = pd.Series([True, False, True, True, True])
     assert result.equals(expected_result)
 
 
