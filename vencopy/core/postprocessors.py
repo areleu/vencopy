@@ -136,13 +136,6 @@ class PostProcessor:
         self.__write_output(profile_name="charging_power", profile=self.charging_power_normalised, filename_id=filename_id)
         self.__write_output(profile_name="max_battery_level", profile=self.max_battery_level_normalised, filename_id=filename_id)
         self.__write_output(profile_name="min_battery_level", profile=self.min_battery_level_normalised, filename_id=filename_id)
-        # self._write_metadata(file_name=(Path(self.user_config["global"]["absolute_path"]["vencopy_root"] / self.dev_config["global"]["relative_path"]["processor_output"] / create_file_name(
-        #     dev_config=self.dev_config,
-        #     user_config=self.user_config,
-        #     file_name_id=filename_id,
-        #     dataset=self.dataset,
-        # ))))
-
 
     def __write_output(self, profile_name: str, profile: pd.Series, filename_id: str):
         """
@@ -175,7 +168,7 @@ class PostProcessor:
         metadata_config["sources"] = [f for f in metadata_config["sources"] if f["title"] in self.dataset]
         reference_resource = metadata_config["resources"][0]
         this_resource = reference_resource.copy()
-        this_resource["name"] = file_name.rstrip(".csv")
+        this_resource["name"] = file_name.rstrip(".metadata.yaml")
         this_resource["path"] = file_name
         if "normalised" in file_name:
             these_fields = [f for f in reference_resource["schema"][self.dataset]["fields"]["postprocessors"]["normalised"]]
@@ -189,7 +182,7 @@ class PostProcessor:
     def _write_metadata(self, file_name):
         metadata_config = read_metadata_config()
         class_metadata = self.generate_metadata(metadata_config=metadata_config, file_name=file_name.name)
-        write_out_metadata(metadata_yaml=class_metadata, file_name=file_name.as_posix().replace(".csv", ".metadata.yaml"))
+        write_out_metadata(metadata_yaml=class_metadata, file_name=file_name)
 
     def create_annual_profiles(self):
         """
@@ -209,7 +202,8 @@ class PostProcessor:
                     )
             root = Path(self.user_config["global"]["absolute_path"]["vencopy_root"])
             folder = self.dev_config["global"]["relative_path"]["processor_output"]
-            self._write_metadata(file_name=root / folder / ("vencopy_output_postprocessor_annual_" + str(self.dataset)))
+            file_name = "vencopy_output_postprocessor_annual_" + self.dataset + ".metadata.yaml"
+            self._write_metadata(file_name=root / folder / file_name)
 
     def normalise(self):
         """
@@ -236,5 +230,6 @@ class PostProcessor:
                 self.__write_out_profiles(filename_id="output_postprocessor_normalised")
             root = Path(self.user_config["global"]["absolute_path"]["vencopy_root"])
             folder = self.dev_config["global"]["relative_path"]["processor_output"]
-            self._write_metadata(file_name=root / folder /("vencopy_output_postprocessor_normalised_" + str(self.dataset)))
+            file_name = "vencopy_output_postprocessor_normalised_" + self.dataset + ".metadata.yaml"
+            self._write_metadata(file_name=root / folder / file_name)
             print("Run finished.")
