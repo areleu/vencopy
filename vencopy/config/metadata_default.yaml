@@ -581,18 +581,6 @@ resources:
               isAbout:       
                   - name: 
                     path: https://openenergy-platform.org/ontology/oeo/missing_term
-            - name: trip_id
-              type: integer
-              description: Unique identifier
-              isAbout:       
-                  - name: 
-                    path: https://openenergy-platform.org/ontology/oeo/missing_term
-            postprocessors:
-            - name: uncontrolled_charging
-              type: float
-              description: Unique identifier
-              isAbout:       
-                  - name:
-                    path: https://openenergy-platform.org/ontology/oeo/missing_term
+
                     
     

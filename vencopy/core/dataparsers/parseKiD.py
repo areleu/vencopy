@@ -135,10 +135,9 @@ class ParseKiD(IntermediateParsing):
         return trips
 
     @staticmethod
-    #TODO: check if methods works properly: removes not when both are off but when any is off
     def _exclude_hours(trips):
         """
-        Removes trips where both start and end trip time are missing. KID-specific function.
+        Removes trips where either start and end trip time are missing. KID-specific function.
 
         Args:
             trips (_type_): _description_
@@ -146,11 +145,23 @@ class ParseKiD(IntermediateParsing):
         Returns:
             _type_: _description_
         """
-        trips = trips.loc[
-            (trips["trip_start_clock"] != "-1:-1") & (trips["trip_end_clock"] != "-1:-1"),
-            :,
-        ]
+        trips.drop(trips.loc[trips["trip_start_clock"].str.contains("-1")].index, inplace=True)
+        trips.drop(trips.loc[trips["trip_end_clock"].str.contains("-1")].index, inplace=True)
         return trips
+    
+    @staticmethod
+    def _cleanup_dataset(activities):
+        activities.drop(
+            columns=['is_driver',
+                     'household_id',
+                     'person_id',
+                     'household_person_id',
+                     'trip_scale_factor',
+                     'trip_end_next_day',
+                     'trip_is_intermodal',
+                     'trip_purpose',
+                     'weekday_string'], inplace=True)
+        return activities
 
     def process(self) -> pd.DataFrame:
         """
@@ -172,6 +183,7 @@ class ParseKiD(IntermediateParsing):
         self._filter_consistent_hours(dataset=self.trips)
         self.activities = self.park_inference.add_parking_rows(trips=self.trips)
         self._subset_vehicle_segment()
+        self.activities = self._cleanup_dataset(activities=self.activities)
         self.write_output()
         print("Parsing KiD dataset completed.")
         return self.activities
