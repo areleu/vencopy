@@ -64,19 +64,11 @@ resources:
       encoding: utf-8
       schema:
         MiD17:
-          fields: # for the ones that get printed
-          # 'index', 'unique_id', 'trip_id', 'is_driver', 'household_id',
-          # 'person_id', 'household_person_id', 'trip_weight', 'trip_scale_factor',
-          # 'trip_purpose', 'trip_distance', 'travel_time', 'trip_start_weekday',
-          # 'trip_end_next_day', 'trip_is_intermodal', 'weekday_string',
-          # 'purpose_string', 'timestamp_start', 'timestamp_end', 'park_id',
-          # 'is_first_activity', 'is_last_activity', 'activity_id',
-          # 'next_activity_id', 'previous_activity_id', 'time_delta', 'rated_power',
-          # 'available_power'
+          fields: 
             dataparsers:
               - name: unique_id
                 type: integer
-                description: Unique identifier for person
+                description: Unique identifier for the person in the household.
                 isAbout:       
                     - name: unique identifier
                       path: https://openenergy-platform.org/ontology/oeo/missing_term
@@ -86,32 +78,101 @@ resources:
                 isAbout:       
                     - name: trip id
                       path: https://openenergy-platform.org/ontology/oeo/missing_term
-            gridmodellers:
+              - name: trip_weight
+                type: integer
+                description:
+                isAbout:       
+                    - name: 
+                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+              - name: trip_distance
+                type: integer
+                description:
+                isAbout:       
+                    - name: 
+                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+              - name: travel_time
+                type: integer
+                description:
+                isAbout:       
+                    - name: 
+                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+              - name: trip_start_weekday
+                type: integer
+                description:
+                isAbout:       
+                    - name: 
+                      path: https://openenergy-platform.org/ontology/oeo/missing_term                      
+              - name: purpose_string
+                type: integer
+                description:
+                isAbout:       
+                    - name: 
+                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+              - name: timestamp_start
+                type: integer
+                description:
+                isAbout:       
+                    - name: 
+                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+              - name: timestamp_end
+                type: integer
+                description:
+                isAbout:       
+                    - name: 
+                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+              - name: park_id
+                type: integer
+                description:
+                isAbout:       
+                    - name: 
+                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+              - name: is_first_activity
+                type: integer
+                description:
+                isAbout:       
+                    - name: 
+                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+              - name: is_last_activity
+                type: integer
+                description:
+                isAbout:       
+                    - name: 
+                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+              - name: activity_id
+                type: integer
+                description:
+                isAbout:       
+                    - name: 
+                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+              - name: next_activity_id
+                type: integer
+                description:
+                isAbout:       
+                    - name: 
+                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+              - name: previous_activity_id
+                type: integer
+                description:
+                isAbout:       
+                    - name: 
+                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+              - name: time_delta
+                type: integer
+                description:
+                isAbout:       
+                    - name: 
+                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+            gridmodellers: # + rated_power + available_power
+              - name: 
+
+            flexestimators: # add
+            # max_battery_level_start, min_battery_level_start, min_battery_level_end
+            # uncontrolled_charging, drain, timestamp_end_uncontrolled_charging, residual_need
+
+            # remove 
+            # 
               - name: unique_id
-                type: integer
-                description: Unique identifier for person
-                isAbout:       
-                    - name: unique identifier
-                      path: https://openenergy-platform.org/ontology/oeo/missing_term
-              - name: trip_id
-                type: integer
-                description: Unique identifier
-                isAbout:       
-                    - name: trip id
-                      path: https://openenergy-platform.org/ontology/oeo/missing_term
-            flexestimators:
-              - name: unique_id
-                type: integer
-                description: Unique identifier for person
-                isAbout:       
-                    - name: unique identifier
-                      path: https://openenergy-platform.org/ontology/oeo/missing_term
-              - name: trip_id
-                type: integer
-                description: Unique identifier
-                isAbout:       
-                    - name: trip id
-                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+
             diarybuilders:
               - name: uncontrolled_charge
                 type: float

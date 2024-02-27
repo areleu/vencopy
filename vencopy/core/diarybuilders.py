@@ -199,7 +199,7 @@ class TimeDiscretiser:
         )
         if is_week:
             self.time_delta = pd.timedelta_range(start="00:00:00", end="168:00:00", freq=f"{self.time_resolution}T")
-            self.weekdays = self.activities["weekday_string"].unique()
+            self.weekdays = self.activities["trip_start_weekday"].unique()
         else:  # is Day
             self.time_delta = pd.timedelta_range(start="00:00:00", end="24:00:00", freq=f"{self.time_resolution}T")
         self.time_index = list(self.time_delta)
@@ -266,7 +266,7 @@ class TimeDiscretiser:
             "previous_activity_id",
         ] + [self.column_to_discretise]
         if self.is_week:
-            necessary_columns = necessary_columns + ["weekday_string"]
+            necessary_columns = necessary_columns + ["trip_start_weekday"]
         if self.column_to_discretise == "uncontrolled_charging":
             necessary_columns = necessary_columns + ["available_power", "timestamp_end_uncontrolled_charging"]
         self.data_to_discretise = self.activities[necessary_columns].copy()

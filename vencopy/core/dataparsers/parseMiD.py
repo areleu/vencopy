@@ -58,6 +58,19 @@ class ParseMiD(IntermediateParsing):
         if purpose:
             self._add_string_column_from_variable(col_name="purpose_string", var_name="trip_purpose")
 
+    @staticmethod
+    def _cleanup_dataset(activities):
+        activities.drop(
+            columns=['is_driver',
+                     'household_id',
+                     'person_id',
+                     'household_person_id',
+                     'trip_scale_factor',
+                     'trip_end_next_day',
+                     'trip_is_intermodal',
+                     'trip_purpose',
+                     'weekday_string'], inplace=True)
+        return activities
 
     def process(self) -> pd.DataFrame:
         """
@@ -74,6 +87,7 @@ class ParseMiD(IntermediateParsing):
         self._check_filter_dict(dictionary=self.filters)
         self._filter(filters=self.filters)
         self.activities = self.park_inference.add_parking_rows(trips=self.trips)
+        self.activities = self._cleanup_dataset(activities=self.activities)
         self.write_output()
         print("Parsing MiD dataset completed.")
         return self.activities

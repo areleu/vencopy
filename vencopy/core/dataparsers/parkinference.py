@@ -412,7 +412,7 @@ class ParkInference:
             _type_: _description_
         """
         activities_raw.drop(columns=["index"], inplace=True)
-        activities_raw.reset_index(inplace=True)  # Due to copying and appending rows, the index has to be reset
+        activities_raw.reset_index(inplace=True, drop=True)  # Due to copying and appending rows, the index has to be reset
         return activities_raw
 
 

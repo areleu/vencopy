@@ -718,6 +718,24 @@ class FlexEstimator:
         print("Technical flexibility estimation ended.")
         return self.activities
 
+    @staticmethod
+    def _cleanup_dataset(activities):
+        activities.drop(
+            columns=['max_battery_level_end',
+                     'max_battery_level_end_unlimited',
+                     'max_battery_level_end_unlimited',
+                     'timestamp_end_uncontrolled_charging_unlimited',
+                     'min_battery_level_end_unlimited',
+                     'min_battery_level_end_unlimited',
+                     'max_residual_need',
+                     'min_residual_need',
+                     'max_overshoot',
+                     'min_undershoot',
+                     'auxiliary_fuel_need',
+                     'max_charge_volume',
+                     'min_battery_level_start_unlimited'], inplace=True)
+        return activities
+
     def estimate_technical_flexibility_through_iteration(self) -> pd.DataFrame:
         """
         Main run function for the class WeekFlexEstimator. Calculates uncontrolled charging as well as technical
@@ -739,6 +757,7 @@ class FlexEstimator:
         self._auxiliary_fuel_need()
         if self.user_config["flexestimators"]["filter_fuel_need"]:
             self.activities = self._filter_residual_need(activities=self.activities, index_columns=["unique_id"])
+        self.activities = self._cleanup_dataset(activities=self.activities)
         if self.user_config["global"]["write_output_to_disk"]["flex_output"]:
             self.__write_output()
         print("Technical flexibility estimation ended.")
