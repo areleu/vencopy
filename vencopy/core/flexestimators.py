@@ -722,6 +722,7 @@ class FlexEstimator:
     def _cleanup_dataset(activities):
         activities.drop(
             columns=['max_battery_level_end',
+                     'min_battery_level_start',
                      'max_battery_level_end_unlimited',
                      'max_battery_level_end_unlimited',
                      'timestamp_end_uncontrolled_charging_unlimited',

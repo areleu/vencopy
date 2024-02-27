@@ -192,8 +192,8 @@ class PostProcessor:
 
     def _write_metadata(self, file_name):
         metadata_config = read_metadata_config()
-        class_metadata = self.generate_metadata(metadata_config=metadata_config, file_name=("postprocessors" + file_name))
-        write_out_metadata(metadata_yaml=class_metadata, file_name=(file_name + ".metadata.yaml"))
+        class_metadata = self.generate_metadata(metadata_config=metadata_config, file_name=file_name.name)
+        write_out_metadata(metadata_yaml=class_metadata, file_name=file_name.as_posix().replace(".csv", ".metadata.yaml"))
 
     def create_annual_profiles(self):
         """
@@ -211,9 +211,9 @@ class PostProcessor:
                     self.__write_output(
                         profile_name=profile_name, profile=self.annual_profiles[profile_name], filename_id="output_postprocessor_annual"
                     )
-            root = self.user_config["global"]["absolute_path"]["vencopy_root"]
+            root = Path(self.user_config["global"]["absolute_path"]["vencopy_root"])
             folder = self.dev_config["global"]["relative_path"]["processor_output"]
-            self._write_metadata(file_name=root + folder + ("vencopy_output_postprocessor_annual_" + str(self.dataset)))
+            self._write_metadata(file_name=root / folder / ("vencopy_output_postprocessor_annual_" + str(self.dataset)))
 
     def normalise(self):
         """
@@ -238,7 +238,7 @@ class PostProcessor:
             )
             if self.user_config["global"]["write_output_to_disk"]["processor_output"]["normalised_annual_profiles"]:
                 self.__write_out_profiles(filename_id="output_postprocessor_normalised")
-            root = self.user_config["global"]["absolute_path"]["vencopy_root"]
+            root = Path(self.user_config["global"]["absolute_path"]["vencopy_root"])
             folder = self.dev_config["global"]["relative_path"]["processor_output"]
-            self._write_metadata(file_name=root + folder + ("vencopy_output_postprocessor_normalised_" + str(self.dataset)))
+            self._write_metadata(file_name=root / folder /("vencopy_output_postprocessor_normalised_" + str(self.dataset)))
             print("Run finished.")
