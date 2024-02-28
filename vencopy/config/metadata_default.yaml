@@ -1,8 +1,4 @@
 #-*- coding:utf-8 -*-
-# __version__ = "1.0.0"
-# __maintainer__ = "Fabia Miorelli, Eugenio Salvador Arellano Ruiz"
-# __birthdate__ = "07.12.2023"
-# __status__ = "dev"  # options are: dev, test, prod
 # __license__ = "BSD-3-Clause"
 
 # This config holds specifications for default metadata.
@@ -70,14 +66,14 @@ resources:
                 type: integer
                 description: Unique identifier for the person in the household.
                 isAbout:       
-                    - name: unique identifier
-                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+                    - name: identifier
+                      path: https://www.dublincore.org/specifications/dublin-core/dcmi-terms/elements11/identifier/
               - name: trip_id
                 type: float
                 description: Increasing value identifying trips for every single vehicle.
                 isAbout:       
-                    - name: trip id
-                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+                    - name: identifier
+                      path: https://www.dublincore.org/specifications/dublin-core/dcmi-terms/elements11/identifier/
               - name: trip_weight
                 type: float
                 description: Weighting factor for specific trip.
@@ -112,20 +108,24 @@ resources:
                 type: string
                 description: Time and day in which the trip started according to ISO 8601-1:2019.
                 isAbout:       
-                    - name: 
-                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+                    - name: time stamp
+                      path: http://openenergy-platform.org/ontology/oeo/OEO_00140043/
+                    - name: start time
+                      path: http://openenergy-platform.org/ontology/oeo/OEO_00030031
               - name: timestamp_end
                 type: string
                 description: Time and day in which the trip ended according to ISO 8601-1:2019.
                 isAbout:       
-                    - name: 
-                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+                    - name: time stamp
+                      path: http://openenergy-platform.org/ontology/oeo/OEO_00140043/
+                    - name: ending time
+                      path: http://openenergy-platform.org/ontology/oeo/OEO_00030032
               - name: park_id
                 type: float
                 description: Increasing value identifying parking for every single vehicle.
                 isAbout:       
-                    - name: 
-                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+                    - name: identifier
+                      path: https://www.dublincore.org/specifications/dublin-core/dcmi-terms/elements11/identifier/
               - name: is_first_activity
                 type: boolean
                 description: Identifier of whether the selected activity (park or trip) is the first of the day for the vehicle.
@@ -142,8 +142,8 @@ resources:
                 type: float
                 description: Increasing value identifying both trip and parking activities for every single vehicle.
                 isAbout:       
-                    - name: 
-                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+                    - name: identifier
+                      path: https://www.dublincore.org/specifications/dublin-core/dcmi-terms/elements11/identifier/
               - name: next_activity_id
                 type: float
                 description: Value identifying the number of the following activity for every single vehicle.
@@ -154,27 +154,27 @@ resources:
                 type: float
                 description: Value identifying the number of the previous activity for every single vehicle.
                 isAbout:       
-                    - name: 
-                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+                    - name: identifier
+                      path: https://www.dublincore.org/specifications/dublin-core/dcmi-terms/elements11/identifier/
               - name: time_delta
                 type: string
                 description: Lenght in time of an activity according to ISO 8601-1:2019.
                 isAbout:       
-                    - name: 
-                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+                    - name: time span
+                      path: http://openenergy-platform.org/ontology/oeo/OEO_00030035
             gridmodellers:
               - name: unique_id
                 type: integer
                 description: Unique identifier for the person in the household.
                 isAbout:       
-                    - name: unique identifier
-                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+                    - name: identifier
+                      path: https://www.dublincore.org/specifications/dublin-core/dcmi-terms/elements11/identifier/
               - name: trip_id
                 type: float
                 description: Increasing value identifying trips for every single vehicle.
                 isAbout:       
-                    - name: trip id
-                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+                    - name: identifier
+                      path: https://www.dublincore.org/specifications/dublin-core/dcmi-terms/elements11/identifier/
               - name: trip_weight
                 type: float
                 description: Weighting factor for specific trip.
@@ -209,20 +209,24 @@ resources:
                 type: string
                 description: Time and day in which the trip started according to ISO 8601-1:2019.
                 isAbout:       
-                    - name: 
-                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+                    - name: time stamp
+                      path: http://openenergy-platform.org/ontology/oeo/OEO_00140043/
+                    - name: start time
+                      path: http://openenergy-platform.org/ontology/oeo/OEO_00030031
               - name: timestamp_end
                 type: string
                 description: Time and day in which the trip ended according to ISO 8601-1:2019.
                 isAbout:       
-                    - name: 
-                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+                    - name: time stamp
+                      path: http://openenergy-platform.org/ontology/oeo/OEO_00140043/
+                    - name: ending time
+                      path: http://openenergy-platform.org/ontology/oeo/OEO_00030032
               - name: park_id
                 type: float
                 description: Increasing value identifying parking for every single vehicle.
                 isAbout:       
-                    - name: 
-                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+                    - name: identifier
+                      path: https://www.dublincore.org/specifications/dublin-core/dcmi-terms/elements11/identifier/
               - name: is_first_activity
                 type: boolean
                 description: Identifier of whether the selected activity (park or trip) is the first of the day for the vehicle.
@@ -239,26 +243,26 @@ resources:
                 type: float
                 description: Increasing value identifying both trip and parking activities for every single vehicle.
                 isAbout:       
-                    - name: 
-                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+                    - name: identifier
+                      path: https://www.dublincore.org/specifications/dublin-core/dcmi-terms/elements11/identifier/
               - name: next_activity_id
                 type: float
                 description: Value identifying the number of the following activity for every single vehicle.
                 isAbout:       
-                    - name: 
-                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+                    - name: identifier
+                      path: https://www.dublincore.org/specifications/dublin-core/dcmi-terms/elements11/identifier/
               - name: previous_activity_id
                 type: float
                 description: Value identifying the number of the previous activity for every single vehicle.
                 isAbout:       
-                    - name: 
-                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+                    - name: identifier
+                      path: https://www.dublincore.org/specifications/dublin-core/dcmi-terms/elements11/identifier/
               - name: time_delta
                 type: string
                 description: Lenght in time of an activity according to ISO 8601-1:2019.
                 isAbout:       
-                    - name: 
-                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+                    - name: time span
+                      path: http://openenergy-platform.org/ontology/oeo/OEO_00030035
               - name: rated_power
                 type: float
                 description: Rated power for charging in kW.
@@ -300,8 +304,8 @@ resources:
                 type: float
                 description: Travel time in minutes.
                 isAbout:       
-                    - name: 
-                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+                    - name: time span
+                      path: http://openenergy-platform.org/ontology/oeo/OEO_00030035
               - name: trip_start_weekday
                 type: integer
                 description: Weekday (1 equals Monday).
@@ -318,14 +322,18 @@ resources:
                 type: string
                 description: Time and day in which the trip started according to ISO 8601-1:2019.
                 isAbout:       
-                    - name: 
-                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+                    - name: time stamp
+                      path: http://openenergy-platform.org/ontology/oeo/OEO_00140043/
+                    - name: start time
+                      path: http://openenergy-platform.org/ontology/oeo/OEO_00030031
               - name: timestamp_end
                 type: string
                 description: Time and day in which the trip ended according to ISO 8601-1:2019.
                 isAbout:       
-                    - name: 
-                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+                    - name: time stamp
+                      path: http://openenergy-platform.org/ontology/oeo/OEO_00140043/
+                    - name: ending time
+                      path: http://openenergy-platform.org/ontology/oeo/OEO_00030032
               - name: park_id
                 type: float
                 description: Increasing value identifying parking for every single vehicle.
@@ -366,50 +374,56 @@ resources:
                 type: string
                 description: Lenght in time of an activity according to ISO 8601-1:2019.
                 isAbout:       
-                    - name: 
-                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+                    - name: time span
+                      path: http://openenergy-platform.org/ontology/oeo/OEO_00030035
               - name: rated_power
                 type: float
-                description: Rated power for charging in kW.
+                description: Rated power for charging (at charging station level) in kW.
                 isAbout:       
-                    - name: 
-                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+                    - name: power rating
+                      path: http://openenergy-platform.org/ontology/oeo/OEO_00230001
               - name: available_power
                 type: float
                 description: Available power for charging in kW.
                 isAbout:       
-                    - name: 
-                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+                    - name: charging
+                      path: http://openenergy-platform.org/ontology/oeo/OEO_00320064
+                    - name: power
+                      path: http://openenergy-platform.org/ontology/oeo/OEO_00000333
               - name: max_battery_level_start
                 type: float
                 description: 
                 isAbout:       
-                    - name: 
-                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+                    - name: energy storage content
+                      path: http://openenergy-platform.org/ontology/oeo/OEO_00330012/
               - name: min_battery_level_end
                 type: float
                 description: 
                 isAbout:       
-                    - name: 
-                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+                    - name: energy storage content
+                      path: http://openenergy-platform.org/ontology/oeo/OEO_00330012/
               - name: uncontrolled_charging
                 type: float
-                description: Uncontrolled charging profile in kWh, representing an as soon as possible charging strategy.
+                description: Uncontrolled charging profile in kWh, representing a demand for an as soon as possible charging strategy.
                 isAbout:       
-                    - name: 
-                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+                    - name: electricity demand
+                      path: http://openenergy-platform.org/ontology/oeo/OEO_00320062/
               - name: drain
                 type: float
                 description: Electricity drain from the vehicle battery in kWh.
                 isAbout:       
-                    - name: 
-                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+                    - name: electricity demand
+                      path: http://openenergy-platform.org/ontology/oeo/OEO_00320062/
               - name: timestamp_end_uncontrolled_charging
                 type: float
                 description: 
                 isAbout:       
-                    - name: 
-                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+                    - name: time stamp
+                      path: http://openenergy-platform.org/ontology/oeo/OEO_00140043/
+                    - name: ending time
+                      path: http://openenergy-platform.org/ontology/oeo/OEO_00030032
+                    - name: electricity demand
+                      path: http://openenergy-platform.org/ontology/oeo/OEO_00320062/
               - name: residual_need
                 type: float
                 description: 
@@ -419,159 +433,169 @@ resources:
             diarybuilders:
               - name: uncontrolled_charging
                 type: float
-                description: Uncontrolled charging profile in kWh, representing an as soon as possible charging strategy.
+                description: Uncontrolled charging profile in kWh, representing a demand for an as soon as possible charging strategy.
                 isAbout:       
-                    - name: uncontrolled charging
-                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+                    - name: electricity demand
+                      path: http://openenergy-platform.org/ontology/oeo/OEO_00320062/
               - name: charging_power
                 type: float
                 description: Available power for charging in kW.
                 isAbout:       
-                    - name: charging power
-                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+                      - name: charging
+                        path: http://openenergy-platform.org/ontology/oeo/OEO_00320064
+                      - name: power
+                        path: http://openenergy-platform.org/ontology/oeo/OEO_00000333
               - name: drain
                 type: float
                 description: Electricity drain from the vehicle battery in kWh.
                 isAbout:       
-                    - name: electric consumption
-                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+                    - name: electricity demand
+                      path: http://openenergy-platform.org/ontology/oeo/OEO_00320062/
               - name: max_battery_level
                 type: float
                 description: Maximum battery level of the vehicle battery in kWh.
                 isAbout:       
-                    - name: battery level
-                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+                    - name: energy storage content
+                      path: http://openenergy-platform.org/ontology/oeo/OEO_00330012/
               - name: min_battery_level
                 type: float
                 description: Minimum battery level of the vehicle battery in kWh.
                 isAbout:       
-                    - name: battery level
-                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+                    - name: energy storage content
+                      path: http://openenergy-platform.org/ontology/oeo/OEO_00330012/
             profileaggregators:
               - name: uncontrolled_charging
                 type: float
-                description: Uncontrolled charging profile in kWh, representing an as soon as possible charging strategy.
+                description: Uncontrolled charging profile in kWh, representing a demand for an as soon as possible charging strategy.
                 isAbout:       
-                    - name: uncontrolled charging
-                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+                    - name: electricity demand
+                      path: http://openenergy-platform.org/ontology/oeo/OEO_00320062/
               - name: charging_power
                 type: float
                 description: Available power for charging in kW.
                 isAbout:       
-                    - name: uncontrolled charging
-                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+                      - name: charging
+                        path: http://openenergy-platform.org/ontology/oeo/OEO_00320064
+                      - name: power
+                        path: http://openenergy-platform.org/ontology/oeo/OEO_00000333
               - name: drain
                 type: float
                 description: Electricity drain from the vehicle battery in kWh.
                 isAbout:       
-                    - name: electric consumption
-                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+                    - name: electricity demand
+                      path: http://openenergy-platform.org/ontology/oeo/OEO_00320062/
               - name: max_battery_level
                 type: float
                 description: Maximum battery level of the vehicle battery in kWh.
                 isAbout:       
-                    - name: battery level
-                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+                    - name: energy storage content
+                      path: http://openenergy-platform.org/ontology/oeo/OEO_00330012/
               - name: min_battery_level
                 type: float
                 description: Minimum battery level of the vehicle battery in kWh.
                 isAbout:       
-                    - name: battery level
-                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+                    - name: energy storage content
+                      path: http://openenergy-platform.org/ontology/oeo/OEO_00330012/
             postprocessors:
               annual:
                 - name: uncontrolled_charging
                   type: float
-                  description: Uncontrolled charging profile in kWh, representing an as soon as possible charging strategy.
+                  description: Uncontrolled charging profile in kWh, representing a demand for an as soon as possible charging strategy.
                   isAbout:       
-                      - name: uncontrolled charging
-                        path: https://openenergy-platform.org/ontology/oeo/missing_term
+                      - name: electricity demand
+                        path: http://openenergy-platform.org/ontology/oeo/OEO_00320062/
                 - name: charging_power
                   type: float
                   description: Available power for charging in kW.
                   isAbout:       
-                      - name: uncontrolled charging
-                        path: https://openenergy-platform.org/ontology/oeo/missing_term
+                      - name: charging
+                        path: http://openenergy-platform.org/ontology/oeo/OEO_00320064
+                      - name: power
+                        path: http://openenergy-platform.org/ontology/oeo/OEO_00000333
                 - name: drain
                   type: float
                   description: Electricity drain from the vehicle battery in kWh.
                   isAbout:       
-                      - name: electric consumption
-                        path: https://openenergy-platform.org/ontology/oeo/missing_term
+                      - name: electricity demand
+                        path: http://openenergy-platform.org/ontology/oeo/OEO_00320062/
                 - name: max_battery_level
                   type: float
                   description: Maximum battery level of the vehicle battery in kWh.
                   isAbout:       
-                      - name: battery level
-                        path: https://openenergy-platform.org/ontology/oeo/missing_term
+                      - name: energy storage content
+                        path: http://openenergy-platform.org/ontology/oeo/OEO_00330012/
                 - name: min_battery_level
                   type: float
                   description: Minimum battery level of the vehicle battery in kWh.
                   isAbout:       
-                      - name: battery level
-                        path: https://openenergy-platform.org/ontology/oeo/missing_term
+                      - name: energy storage content
+                        path: http://openenergy-platform.org/ontology/oeo/OEO_00330012/
               normalised:
                 - name: uncontrolled_charging
                   type: float
-                  description: Uncontrolled charging profile in kWh normalised over the annual sum.
+                  description: Uncontrolled charging profile in kWh, representing a demand for an as soon as possible charging strategy.
                   isAbout:       
-                      - name: uncontrolled charging
-                        path: https://openenergy-platform.org/ontology/oeo/missing_term
+                      - name: electricity demand
+                        path: http://openenergy-platform.org/ontology/oeo/OEO_00320062/
                 - name: charging_power
                   type: float
                   description: Available nominal charging power in kW normalised according to the number of vehicle for each weekday.
                   isAbout:       
-                      - name: uncontrolled charging
-                        path: https://openenergy-platform.org/ontology/oeo/missing_term
+                      - name: charging
+                        path: http://openenergy-platform.org/ontology/oeo/OEO_00320064
+                      - name: power
+                        path: http://openenergy-platform.org/ontology/oeo/OEO_00000333
                 - name: drain
                   type: float
                   description: Electricity drain from the vehicle battery in kWh normalised over the annual sum.
                   isAbout:       
-                      - name: electric consumption
-                        path: https://openenergy-platform.org/ontology/oeo/missing_term
+                      - name: electricity demand
+                        path: http://openenergy-platform.org/ontology/oeo/OEO_00320062/
                 - name: max_battery_level
                   type: float
                   description: Maximum battery level of the vehicle battery in kWh normalised according to the assumed vehicle battery capacity.
                   isAbout:       
-                      - name: battery level
-                        path: https://openenergy-platform.org/ontology/oeo/missing_term
+                      - name: energy storage content
+                        path: http://openenergy-platform.org/ontology/oeo/OEO_00330012/
                 - name: min_battery_level
                   type: float
                   description: Minimum battery level of the vehicle battery in kWh normalised according to the assumed vehicle battery capacity.
                   isAbout:       
-                      - name: battery level
-                        path: https://openenergy-platform.org/ontology/oeo/missing_term
+                      - name: energy storage content
+                        path: http://openenergy-platform.org/ontology/oeo/OEO_00330012/
               fleet:
                 - name: uncontrolled_charging
                   type: float
-                  description: Uncontrolled charging profile in kWh for the specified fleet size and geographical scope.
+                  description: Uncontrolled charging profile in kWh, representing a demand for an as soon as possible charging strategy.
                   isAbout:       
-                      - name: uncontrolled charging
-                        path: https://openenergy-platform.org/ontology/oeo/missing_term
+                      - name: electricity demand
+                        path: http://openenergy-platform.org/ontology/oeo/OEO_00320062/
                 - name: charging_power
                   type: float
                   description: Available nominal charging power in kW for the specified fleet size and geographical scope.
                   isAbout:       
-                      - name: uncontrolled charging
-                        path: https://openenergy-platform.org/ontology/oeo/missing_term
+                      - name: charging
+                        path: http://openenergy-platform.org/ontology/oeo/OEO_00320064
+                      - name: power
+                        path: http://openenergy-platform.org/ontology/oeo/OEO_00000333
                 - name: drain
                   type: float
                   description: Electricity drain from the vehicle battery in kWh for the specified fleet size and geographical scope.
                   isAbout:       
-                      - name: electric consumption
-                        path: https://openenergy-platform.org/ontology/oeo/missing_term
+                      - name: electricity demand
+                        path: http://openenergy-platform.org/ontology/oeo/OEO_00320062/
                 - name: max_battery_level
                   type: float
                   description: Maximum battery level of the vehicle battery in kWh for the specified fleet size and geographical scope.
                   isAbout:       
-                      - name: battery level
-                        path: https://openenergy-platform.org/ontology/oeo/missing_term
+                      - name: energy storage content
+                        path: http://openenergy-platform.org/ontology/oeo/OEO_00330012/
                 - name: min_battery_level
                   type: float
                   description: Minimum battery level of the vehicle battery in kWh for the specified fleet size and geographical scope.
                   isAbout:       
-                      - name: battery level
-                        path: https://openenergy-platform.org/ontology/oeo/missing_term
+                      - name: energy storage content
+                        path: http://openenergy-platform.org/ontology/oeo/OEO_00330012/
         KiD:
           fields:
             dataparsers:

@@ -145,15 +145,11 @@ class ParseKiD(IntermediateParsing):
         trips.drop(trips.loc[trips["trip_start_clock"].str.contains("-1")].index, inplace=True)
         trips.drop(trips.loc[trips["trip_end_clock"].str.contains("-1")].index, inplace=True)
         return trips
-    
+
     @staticmethod
     def _cleanup_dataset(activities):
         activities.drop(
-            columns=['is_driver',
-                     'household_id',
-                     'person_id',
-                     'household_person_id',
-                     'trip_scale_factor',
+            columns=['trip_scale_factor',
                      'trip_end_next_day',
                      'trip_is_intermodal',
                      'trip_purpose',

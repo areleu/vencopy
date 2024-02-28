@@ -369,7 +369,8 @@ class ParkInference:
         )
 
         # Get rid of overnight trips
-        indeces_no_overnight_trip = ~(activities_raw["trip_end_next_day"].fillna(False))
+        #indeces_no_overnight_trip = ~(activities_raw["trip_end_next_day"].fillna(False))
+        indeces_no_overnight_trip = (activities_raw["trip_end_next_day"].fillna(False))
         activities_raw = activities_raw.loc[indeces_no_overnight_trip, :]
 
         # Update is_last_activity and timestamp_end variables and clean-up column
