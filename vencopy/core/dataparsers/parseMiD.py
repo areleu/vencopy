@@ -16,7 +16,7 @@ class ParseMiD(IntermediateParsing):
         such as filters. Specific class for the German MiD B2 dataset.
 
         Args:
-            configs (dict): A dictionary containing multiple yaml config files.
+            configs (dict): A dictionary containing a user_config dictionary and a dev_config dictionary.
             dataset (str): Abbreviation of the National Travel Survey to be
             parsed.
         """

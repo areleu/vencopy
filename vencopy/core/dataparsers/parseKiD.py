@@ -18,9 +18,8 @@ class ParseKiD(IntermediateParsing):
         such as filters. Specific class for the German KiD dataset.
 
         Args:
-            configs (dict): A dictionary containing a user_config dictionary and
-            a dev_config dictionary. dataset (str): Abbreviation of the National
-            Travel Survey to be parsed.
+            configs (dict): A dictionary containing a user_config dictionary and a dev_config dictionary.
+            dataset (str): Abbreviation of the National Travel Survey to be parsed.
         """
         super().__init__(configs=configs, dataset=dataset)
         self.park_inference = ParkInference(configs=configs)
@@ -76,12 +75,9 @@ class ParseKiD(IntermediateParsing):
         Adds string columns for either weekday or purpose.
 
         Args:
-            weekday (bool, optional): Boolean identifier if weekday should be
-            added in a separate column as string. Defaults to True. purpose
-            (bool, optional): Boolean identifier if purpose should be added in a
-            separate column as string. Defaults to True. vehicle_segment (bool,
-            optional): Boolean identifier if the vehicle segment should be added
-            in a separate column as string. Defaults to True.
+            weekday (bool, optional): Boolean identifier if weekday should be added in a separate column as string. Defaults to True.
+            purpose (bool, optional): Boolean identifier if purpose should be added in a separate column as string. Defaults to True.
+            vehicle_segment (bool, optional): Boolean identifier if the vehicle segment should be added in a separate column as string. Defaults to True.
         """
         if weekday:
             self._add_string_column_from_variable(col_name="weekday_string", var_name="trip_start_weekday")
