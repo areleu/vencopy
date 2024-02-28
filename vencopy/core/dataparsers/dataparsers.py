@@ -758,13 +758,3 @@ class IntermediateParsing(DataParser):
                 f"The subset contains only vehicles of the class {segment} for a total of {n_vehicles} individual "
                 f"vehicles."
             )
-
-
-class VehicleParsing(DataParser):
-    def __init__(self, configs: dict, dataset: str):
-        super().__init__(configs, dataset)
-
-    def process(self):
-        self._load_data()
-        self._select_columns()
-        self._harmonise_variables()
