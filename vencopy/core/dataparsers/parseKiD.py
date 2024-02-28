@@ -149,7 +149,12 @@ class ParseKiD(IntermediateParsing):
     @staticmethod
     def _cleanup_dataset(activities):
         activities.drop(
-            columns=['trip_scale_factor',
+            columns=['vehicle_id',
+                     'vehicle_segment',
+                     'vehicle_segment_string',
+                     'trip_start_date',
+                     'trip_start_day',
+                     'trip_scale_factor',
                      'trip_end_next_day',
                      'trip_is_intermodal',
                      'trip_purpose',

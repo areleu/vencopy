@@ -599,12 +599,106 @@ resources:
         KiD:
           fields:
             dataparsers:
-            - name: unique_id
-              type: integer
-              description: Unique identifier
-              isAbout:       
-                  - name: 
-                    path: https://openenergy-platform.org/ontology/oeo/missing_term
+              - name: unique_id
+                type: integer
+                description: Unique identifier for the person in the household.
+                isAbout:       
+                    - name: identifier
+                      path: https://www.dublincore.org/specifications/dublin-core/dcmi-terms/elements11/identifier/
+              - name: trip_id
+                type: float
+                description: Increasing value identifying trips for every single vehicle.
+                isAbout:       
+                    - name: identifier
+                      path: https://www.dublincore.org/specifications/dublin-core/dcmi-terms/elements11/identifier/
+              - name: trip_weight
+                type: float
+                description: Weighting factor for specific trip.
+                isAbout:       
+                    - name: 
+                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+              - name: trip_distance
+                type: float
+                description: Distance fo each trip in km.
+                isAbout:       
+                    - name: 
+                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+              - name: travel_time
+                type: float
+                description: Travel time in minutes.
+                isAbout:       
+                    - name: 
+                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+              - name: trip_start_weekday
+                type: integer
+                description: Weekday (1 equals Monday).
+                isAbout:       
+                    - name: 
+                      path: https://openenergy-platform.org/ontology/oeo/missing_term                      
+              - name: purpose_string
+                type: string
+                description: Purpose of the trip as in the MiD dataset.
+                isAbout:       
+                    - name: 
+                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+              - name: timestamp_start
+                type: string
+                description: Time and day in which the trip started according to ISO 8601-1:2019.
+                isAbout:       
+                    - name: time stamp
+                      path: http://openenergy-platform.org/ontology/oeo/OEO_00140043/
+                    - name: start time
+                      path: http://openenergy-platform.org/ontology/oeo/OEO_00030031
+              - name: timestamp_end
+                type: string
+                description: Time and day in which the trip ended according to ISO 8601-1:2019.
+                isAbout:       
+                    - name: time stamp
+                      path: http://openenergy-platform.org/ontology/oeo/OEO_00140043/
+                    - name: ending time
+                      path: http://openenergy-platform.org/ontology/oeo/OEO_00030032
+              - name: park_id
+                type: float
+                description: Increasing value identifying parking for every single vehicle.
+                isAbout:       
+                    - name: identifier
+                      path: https://www.dublincore.org/specifications/dublin-core/dcmi-terms/elements11/identifier/
+              - name: is_first_activity
+                type: boolean
+                description: Identifier of whether the selected activity (park or trip) is the first of the day for the vehicle.
+                isAbout:       
+                    - name: 
+                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+              - name: is_last_activity
+                type: boolean
+                description: Identifier of whether the selected activity (park or trip) is the last of the day for the vehicle.
+                isAbout:       
+                    - name: 
+                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+              - name: activity_id
+                type: float
+                description: Increasing value identifying both trip and parking activities for every single vehicle.
+                isAbout:       
+                    - name: identifier
+                      path: https://www.dublincore.org/specifications/dublin-core/dcmi-terms/elements11/identifier/
+              - name: next_activity_id
+                type: float
+                description: Value identifying the number of the following activity for every single vehicle.
+                isAbout:       
+                    - name: 
+                      path: https://openenergy-platform.org/ontology/oeo/missing_term
+              - name: previous_activity_id
+                type: float
+                description: Value identifying the number of the previous activity for every single vehicle.
+                isAbout:       
+                    - name: identifier
+                      path: https://www.dublincore.org/specifications/dublin-core/dcmi-terms/elements11/identifier/
+              - name: time_delta
+                type: string
+                description: Lenght in time of an activity according to ISO 8601-1:2019.
+                isAbout:       
+                    - name: time span
+                      path: http://openenergy-platform.org/ontology/oeo/OEO_00030035
 
                     
     

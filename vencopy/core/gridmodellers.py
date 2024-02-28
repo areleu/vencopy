@@ -98,7 +98,7 @@ class GridModeller:
         home_activities = home_activities.join(households, on="household_id")
         return home_activities
 
-    def __adjust_power_short_parking_time(self) -> pd.DataFrame:
+    def __adjust_power_short_parking_time(self):
         """
         Adjusts charging power to zero if parking duration shorter than a minimum parking time.
         """
