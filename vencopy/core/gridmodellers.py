@@ -43,9 +43,8 @@ class GridModeller:
         filled for each parking activity.
 
         Args:
-            configs (dict): A dictionary containing multiple yaml config files.
-            activities (pd.DataFrame): A dataframe containing all trip and
-            parking activities.
+            configs (dict): A dictionary containing a user_config dictionary and a dev_config dictionary.
+            activities (pd.DataFrame): A dataframe containing all trip and parking activities.
         """
         self.user_config = configs["user_config"]
         self.dev_config = configs["dev_config"]
