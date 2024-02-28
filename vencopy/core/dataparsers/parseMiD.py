@@ -11,16 +11,14 @@ from ...core.dataparsers.parkinference import ParkInference
 class ParseMiD(IntermediateParsing):
     def __init__(self, configs: dict, dataset: str):
         """
-        Class for parsing MiD data sets. The venco.py configs globalConfig,
-        parseConfig and localPathConfig have to be given on instantiation as
-        well as the data set ID, e.g. 'MiD2017' that is used as key in the
-        config lookups. Also, an option can be specified to load the file from
-        an encrypted ZIP-file. For this, a password has to be given in the
-        parseConfig.
+        Inherited data class to differentiate between abstract interfaces such
+        as vencopy internal variable namings and data set specific functions
+        such as filters. Specific class for the German MiD B2 dataset.
 
         Args:
-            configs (dict): _description_
-            dataset (str): _description_
+            configs (dict): A dictionary containing a user_config dictionary and a dev_config dictionary.
+            dataset (str): Abbreviation of the National Travel Survey to be
+            parsed.
         """
         super().__init__(configs=configs, dataset=dataset)
         self.park_inference = ParkInference(configs=configs)
@@ -28,9 +26,9 @@ class ParseMiD(IntermediateParsing):
     def _harmonise_variables(self):
         """
         Harmonizes the input data variables to match internal venco.py names
-        given as specified in the mapping in parseConfig['data_variables'].
-        So far mappings for MiD08 and MiD17 are given. Since the MiD08 does
-        not provide a combined household and person unique identifier, it is
+        given as specified in the mapping in parseConfig['data_variables']. So
+        far mappings for MiD08 and MiD17 are given. Since the MiD08 does not
+        provide a combined household and person unique identifier, it is
         synthesized of the both IDs.
         """
         replacement_dict = self._create_replacement_dict(self.dataset, self.dev_config["dataparsers"]["data_variables"])
@@ -47,8 +45,10 @@ class ParseMiD(IntermediateParsing):
         Adds string columns for either weekday or purpose.
 
         Args:
-            weekday (bool, optional): Boolean identifier if weekday string info should be added in a separate column. Defaults to True.
-            purpose (bool, optional): Boolean identifier if purpose string info should be added in a separate column. Defaults to True.
+            weekday (bool, optional): Boolean identifier if weekday should be
+            added in a separate column as string. Defaults to True. purpose
+            (bool, optional): Boolean identifier if purpose should be added in a
+            separate column as string. Defaults to True.
         """
         if weekday:
             self._add_string_column_from_variable(col_name="weekday_string", var_name="trip_start_weekday")
@@ -58,7 +58,8 @@ class ParseMiD(IntermediateParsing):
 
     def process(self) -> pd.DataFrame:
         """
-        Wrapper function for harmonising and filtering the trips dataset as well as adding parking rows.
+        Wrapper function for harmonising and filtering the trips dataset as well
+        as adding parking rows.
         """
         self._load_data()
         self._select_columns()
