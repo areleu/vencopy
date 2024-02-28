@@ -17,8 +17,7 @@ class ParseMiD(IntermediateParsing):
 
         Args:
             configs (dict): A dictionary containing a user_config dictionary and a dev_config dictionary.
-            dataset (str): Abbreviation of the National Travel Survey to be
-            parsed.
+            dataset (str): Abbreviation of the National Travel Survey to be parsed.
         """
         super().__init__(configs=configs, dataset=dataset)
         self.park_inference = ParkInference(configs=configs)
