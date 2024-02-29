@@ -75,7 +75,9 @@ def return_lowest_level_dict_values(dictionary: dict, lst: list = None) -> list:
     return lst
 
 
-def replace_vec(series, year=None, month=None, day=None, hour=None, minute=None, second=None) -> pd.Series:
+def replace_vec(
+    series, year=None, month=None, day=None, hour=None, minute=None, second=None
+) -> pd.Series:
     """
     _summary_
 
@@ -93,13 +95,30 @@ def replace_vec(series, year=None, month=None, day=None, hour=None, minute=None,
     """
     replacement = pd.to_datetime(
         {
-            "year": series.dt.year if year is None else [year for i in range(len(series))],
-            "month": series.dt.month if month is None else [month for i in range(len(series))],
+            "year": (
+                series.dt.year if year is None else [year for i in range(len(series))]
+            ),
+            "month": (
+                series.dt.month
+                if month is None
+                else [month for i in range(len(series))]
+            ),
             "day": series.dt.day if day is None else [day for i in range(len(series))],
-            "hour": series.dt.hour if hour is None else [hour for i in range(len(series))],
-            "minute": series.dt.minute if minute is None else [minute for i in range(len(series))],
-            "second": series.dt.second if second is None else [second for i in range(len(series))],
-        })
+            "hour": (
+                series.dt.hour if hour is None else [hour for i in range(len(series))]
+            ),
+            "minute": (
+                series.dt.minute
+                if minute is None
+                else [minute for i in range(len(series))]
+            ),
+            "second": (
+                series.dt.second
+                if second is None
+                else [second for i in range(len(series))]
+            ),
+        }
+    )
     return replacement
 
 
@@ -114,15 +133,20 @@ def create_output_folders(configs: dict):
     main_dir = "output"
     if not os.path.exists(Path(root / main_dir)):
         os.mkdir(Path(root / main_dir))
-    sub_dirs = ("dataparser", "diarybuilder", "gridmodeller", "flexestimator", "profileaggregator", "postprocessor")
+    sub_dirs = (
+        "dataparser",
+        "diarybuilder",
+        "gridmodeller",
+        "flexestimator",
+        "profileaggregator",
+        "postprocessor",
+    )
     for sub_dir in sub_dirs:
         if not os.path.exists(Path(root / main_dir / sub_dir)):
             os.mkdir(Path(root / main_dir / sub_dir))
 
 
-def create_file_name(
-    dev_config: dict, user_config: dict, file_name_id: str, dataset: str, suffix: str = "csv"
-) -> str:
+def create_file_name(dev_config: dict, user_config: dict, file_name_id: str, dataset: str, suffix: str = "csv") -> str:
     """
     Generic method used for fileString compilation throughout the venco.py framework. This method does not write any
     files but just creates the file name including the filetype suffix.
@@ -148,12 +172,11 @@ def create_file_name(
 
 def write_out(data: pd.DataFrame, path: Path):
     """
-    _summary_
+    Utility function to write the DataFrame given in data to the location given in path.
 
     Args:
-        data (pd.DataFrame): _description_
-        path (Path): _description_
+        data (pd.DataFrame): Any DataFrame to write to disk
+        path (Path): Location on the disk
     """
     data.to_csv(path)
     print(f"Dataset written to {path}.")
-

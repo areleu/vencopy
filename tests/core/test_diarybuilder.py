@@ -64,7 +64,7 @@ def test_diarybuilder_init(sample_configs):
 def test_correct_timestamps(sample_configs, sample_activities):
     builder = DiaryBuilder(configs=sample_configs, activities=sample_activities)
     time_resolution = 15
-    result = builder._correct_timestamps(dataset=sample_activities, time_resolution=time_resolution)
+    result = builder._correct_timestamps(activities=sample_activities, time_resolution=time_resolution)
     expected_result = pd.DataFrame({
         "timestamp_start_corrected": pd.DatetimeIndex(["2023-09-12 08:00:00", "2023-09-12 10:30:00", "2023-09-12 10:30:00", "2023-09-12 10:00:00"]),
         "timestamp_end_corrected": pd.DatetimeIndex(["2023-09-12 09:15:00", "2023-09-12 11:45:00", "2023-09-12 10:30:00", "2023-09-12 10:45:00"])
@@ -75,6 +75,6 @@ def test_correct_timestamps(sample_configs, sample_activities):
 
 
 def test_removes_zero_length_activities(sample_activities):
-    result = DiaryBuilder._removes_zero_length_activities(dataset=sample_activities)
+    result = DiaryBuilder._removes_zero_length_activities(activities=sample_activities)
 
     assert len(result) == 3

@@ -3,9 +3,12 @@ __license__ = "BSD-3-Clause"
 
 
 from pathlib import Path
+
 import pandas as pd
 import numpy as np
+
 from scipy.stats.sampling import DiscreteAliasUrn
+
 from ..utils.utils import create_file_name, write_out
 from ..utils.metadata import read_metadata_config, write_out_metadata
 
@@ -13,11 +16,36 @@ from ..utils.metadata import read_metadata_config, write_out_metadata
 class GridModeller:
     def __init__(self, configs: dict, activities):
         """
-        _summary_
+        The charging infrastructure allocation makes use of a basic charging
+        infrastructure model, which infers the availability of charging stations
+        from parking purposes (e.g. home or shopping). These again are inferred
+        from the purposes of previously carried out trips. There are two mapping
+        approaches of parking categories to charging station rated power that
+        can be selected in the gridmodellers section of the user-config, in the
+        option grid_model: Simple and probability-based. In the simple model,
+        charging availability is allocated based on a binary TRUE/FALSE mapping
+        to a respective parking activity purpose in the venco.py user-config.
+        Thus, scenarios describing different charging availabilities, e.g. at
+        home or at home and at work etc. can be distinguished. Charging is then
+        assumed to be available with a single given rated power (e.g. 11 kW) for
+        all park activities. The second model “probability”, refines the simple
+        model in two regards: Firstly, multiple rated powers can be given per
+        parking purpose, e.g. home charging can be available through
+        single-phase, 16 A (3.7 kW), triple-phase, 16 A (11 kW) or triple-phase,
+        32 A (22 kW) chargers. Secondly, top-down probabilities can be given to
+        each rated power for each parking activity, e.g. there is a 20%
+        probability of home chargers to be triple-phase, 16 A chargers. Here,
+        the probability of no charging at home has to be taken into account. We
+        have to be transparent that despite the methodological refinement of
+        this second approach, data justifying the specific values of this
+        approach is scarce and values are mostly future scenarios (relevant
+        possibilities). At the end of the application of the GridModeller, an
+        additional column “rated_power” is added to the activities data and
+        filled for each parking activity.
 
         Args:
-            configs (dict): _description_
-            activities (_type_): _description_
+            configs (dict): A dictionary containing a user_config dictionary and a dev_config dictionary.
+            activities (pd.DataFrame): A dataframe containing all trip and parking activities.
         """
         self.user_config = configs["user_config"]
         self.dev_config = configs["dev_config"]
@@ -32,8 +60,9 @@ class GridModeller:
 
     def __assign_grid_via_purposes(self):
         """
-        Assigns the grid connection power using the trip purposes though a true/false mapping in the user_config.yaml
-        to represent the charging station availability for each individual vehicle.
+        Assigns the grid connection power using the trip purposes though a
+        true/false mapping in the user_config.yaml to represent the charging
+        station availability for each individual vehicle.
         """
         print("Starting with charge connection replacement of location purposes.")
         self.charging_availability = self.activities.purpose_string.replace(self.grid_availability_simple)
@@ -44,10 +73,11 @@ class GridModeller:
 
     def __assign_grid_via_probabilities(self, set_seed: int):
         """
-        Assigns the grid usig probability distributions defined in user_config.yaml.
+        Assigns the grid usig probability distributions defined in
+        user_config.yaml.
 
         Args:
-            set_seed (int): Seed for reproducing random number
+            set_seed (int): Seed for reproducing random number.
         """
         activities_no_home = []
         print("Starting with charge connection replacement of location purposes.")
@@ -72,16 +102,20 @@ class GridModeller:
 
     def __home_probability_distribution(self, set_seed: int) -> pd.DataFrame:
         """
-        Adds condition that charging at home in the morning has the same rated capacity as in the evening
-        if first and/or last parking ar at home, instead of reiterating the home distribution (or separate home from
-        the main function) it assign the home charging probability based on unique household IDs instead of
-        dataset entries -> each HH always has same rated power
+        Adds condition that charging at home in the morning has the same rated
+        capacity as in the evening if first and/or last parking ar at home,
+        instead of reiterating the home distribution (or separate home from the
+        main function) it assign the home charging probability based on unique
+        household IDs instead of dataset entries -> each household always has
+        same rated power.
 
         Args:
-            set_seed (int): Optional argument for sampling of household rated powers.
+            set_seed (int): Seed used when using the universal non-uniform
+            random number generator.
 
         Returns:
-            pd.DataFrame: Activity data set with sampled and harmonized home charging rated powers.
+            pd.DataFrame: Activities data set with sampled and harmonized home
+            charging rated powers.
         """
         purpose = "HOME"
         home_activities = self.activities.loc[self.activities.purpose_string == purpose].copy()
@@ -100,9 +134,9 @@ class GridModeller:
 
     def __adjust_power_short_parking_time(self):
         """
-        Adjusts charging power to zero if parking duration shorter than a minimum parking time.
+        Adjusts charging power to zero if parking duration shorter than a
+        minimum parking time set in the config file.
         """
-        # park_id != pd.NA and time_delta <= 15 minutes
         self.activities.loc[
             (
                 (self.activities["park_id"].notna())
@@ -114,15 +148,14 @@ class GridModeller:
             "rated_power",
         ] = 0
 
-    def __add_grid_losses(self) -> pd.DataFrame:
+    def __add_grid_losses(self):
         """
-        Function applying a reduction of rated power capacities to the rated powers after sampling. The
-        factors for reducing the rated power are given in the gridConfig with keys being floats of rated powers
-        and values being floats between 0 and 1. The factor is the LOSS FACTOR not the EFFICIENCY, thus 0.1 applied to
-        a rated power of 11 kW will yield an available power of 9.9 kW.
-
-        Returns:
-            pd.DataFrame: _description_
+        Function applying a reduction of rated power capacities to the rated
+        powers after sampling. The factors for reducing the rated power are
+        given in the gridConfig with keys being floats of rated powers and
+        values being floats between 0 and 1. The factor is aloss factor and not
+        the efficiency, thus 0.1 applied to a rated power of 11 kW will yield an
+        available power of 9.9 kW.
         """
         if self.user_config["gridmodellers"]["losses"]:
             self.activities["available_power"] = self.activities["rated_power"] - (
@@ -136,7 +169,7 @@ class GridModeller:
 
     def __write_output(self):
         """
-        _summary_
+        Function to write output to disk.
         """
         if self.user_config["global"]["write_output_to_disk"]["grid_output"]:
             root = Path(self.user_config["global"]["absolute_path"]["vencopy_root"])
@@ -153,13 +186,13 @@ class GridModeller:
 
     def __remove_activities_not_ending_home(self):
         """
-        _summary_
+        Removes activity which are not ending at home.
         """
         if self.dataset in ["MiD17", "VF"]:
-            lastActsNotHome = self.activities.loc[
+            last_activities_not_home = self.activities.loc[
                 (self.activities["purpose_string"] != "HOME") & (self.activities["is_last_activity"]), :
             ].copy()
-            id_to_remove = lastActsNotHome["unique_id"].unique()
+            id_to_remove = last_activities_not_home["unique_id"].unique()
             self.activities = self.activities.loc[~self.activities["unique_id"].isin(id_to_remove), :].copy()
 
     def generate_metadata(self, metadata_config, file_name):
@@ -185,14 +218,12 @@ class GridModeller:
     def assign_grid(self, seed: int = 42) -> pd.DataFrame:
         """
         Wrapper function for grid assignment. The number of iterations for
-        assignGridViaProbabilities() and seed for
-        reproduction of random numbers can be specified here.
+        assignGridViaProbabilities() and seed for reproduction of random numbers
+        can be specified here.
 
         Args:
-            seed (int, optional): _description_. Defaults to 42.
-
-        Returns:
-            pd.DataFrame: _description_
+            seed (int, optional): Seed used when using the universal non-uniform
+            random number generator. Defaults to 42.
         """
         if self.grid_model == "simple":
             self.__assign_grid_via_purposes()

@@ -13,11 +13,12 @@ from ..utils.metadata import read_metadata_config, write_out_metadata
 class FlexEstimator:
     def __init__(self, configs: dict, activities: pd.DataFrame):
         """
-        _summary_
+        In the Flexestimator, the previously defined activities are calculated one after the other. A further iteration loop is executed in the outer iteration cycle iterative_battrey_calculation. In the inner iteration loop, each activity id is processed one after the other. Firstly in a maximum consideration, which implies that as much as possible is always charged according to the usage profile. The minimum profile is then determined, which simulates a utilisation profile in which only as much is charged as is needed for the next planned trips. The two profiles and the resulting difference in battery level serve as a prerequisite for starting the next outer iteration loop and calling up the maximum and minimum profile with adjustment of the start variables. The __get_delta function is used to calculate both a max_delta and a min_delta depending on the start/end line of the min/max_battery_leve_start/end. As soon as the two delta values are below the selected epsilon value, the iteration is interrupted. Finally, the auxilliary_fuel_need is calculated in the flexestimator from the residual_need calculated for each trip and an output is generated.
+        More detailed information on the different functions can be found in the documentation.
 
         Args:
-            configs (dict): _description_
-            activities (pd.DataFrame): _description_
+            configs (dict): A dictionary containing a user_config_dictionary and a dev_config_dictionary
+            activities (pd.DataFrame): a dataframe containing all trip and parking activities
         """
         self.dataset = configs["user_config"]["global"]["dataset"]
         self.user_config = configs["user_config"]
@@ -63,10 +64,7 @@ class FlexEstimator:
 
     def _drain(self):
         """
-        _summary_
-
-        Returns:
-            _type_: _description_
+        This function calculates the consumption of a specific trip according to its length based on the user's electrical consumption rate.
         """
         self.activities["drain"] = (
             self.activities["trip_distance"]
@@ -76,7 +74,7 @@ class FlexEstimator:
 
     def _max_charge_volume_per_parking_activity(self):
         """
-        _summary_
+        This function uses the available_power of the charging process assigned by the gridmodeller to calculate the amount of energy that can be charged in the time available for the parking activity.
         """
         self.activities.loc[self.is_park, "max_charge_volume"] = (
             self.activities.loc[self.is_park, "available_power"]
@@ -96,6 +94,9 @@ class FlexEstimator:
         Args:
             start_level (float): Battery start level for first activity of the
             activity chain
+
+        Returns:
+            pd.Series: activities dataframe with updated values for battery levels
         """
         print("Starting maximum battery level calculation.")
         print("Calculating maximum battery level for first activities.")
@@ -156,10 +157,10 @@ class FlexEstimator:
         first.
 
         Args:
-            end_level (pd.Series): _description_
+            end_level (pd.Series): A series containing the battery_end levels to start the battery_level_min
 
         Returns:
-            pd.Series: _description_
+            pd.Series: The activities dataframe with updated batter_level_min_end/start values
         """
         print("Starting minimum battery level calculation.")
         print("Calculate minimum battery level for last activities.")
@@ -216,7 +217,16 @@ class FlexEstimator:
 
     def __first_activities(
         self, start_level: Union[float, pd.Series]
-    ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    ) -> pd.DataFrame:
+        """
+        This function filters for all first activities and calls the _calculate_max_battery_level_first_activity function, that handels all first activities, parking as well as trips. If over_night_spliiting is activated there is an additional calculation of the battery level for parking activities that do not have the activity_id= 0. But due to overnight splitting they are first activities.
+
+        Args:
+            start_level (Union[float, pd.Series]): A float or Series that contains battery_levels used to start the activity calculation
+
+        Returns:
+            pd.DataFrame: updated dataframe that contains all handeld first activities 
+        """
         first_activities = self._calculate_max_battery_level_first_activity(
             start_level=start_level
         )
@@ -262,8 +272,7 @@ class FlexEstimator:
             respective unique_ids in the index.
 
         Returns:
-            pd.DataFrame: First activities with all battery level columns as anchor for the consecutive calculation
-                          of maximum charge
+            pd.DataFrame: First activities with all battery level columns as anchor for the consecutive calculation of maximum charge
         """
         # First activities - parking and trips
         first_activities = self.activities.loc[
@@ -294,6 +303,15 @@ class FlexEstimator:
     def __calc_first_park_activities(
         self, first_park_activities: pd.DataFrame
     ) -> pd.DataFrame:
+        """
+        Function to handle all first parking activities. Calculates max_battery_level_end of this parking activity by adding te max_charge_volume, and the max_battery_level_end_unlimited by ignoring the maximum battery capycity.
+
+        Args:
+            first_park_activities (pd.DataFrame): A dataframe containing only first park activities from the activities dataframe
+
+        Returns:
+            pd.DataFrame: dataframe containing only first park activities with new updated max_battery_levels
+        """
         first_park_activities.loc[:, "max_battery_level_end_unlimited"] = (
             first_park_activities["max_battery_level_start"]
             + first_park_activities["max_charge_volume"]
@@ -315,6 +333,15 @@ class FlexEstimator:
     def __calc_first_trip_activities(
         self, first_trip_activities: pd.DataFrame
     ) -> pd.DataFrame:
+        """
+        Function that handles all first activities being a trip (only happening with over night splitting). Function substracts the drain from every max_battery_level_start of the trip and calculates the max_battery_level_end as well as max_battery_level_end_unlimited if the drain exceeds the battery capacity and there fore residual need will result.
+
+        Args:
+            first_trip_activities (pd.DataFrame): dataframe containing only first trip activities 
+
+        Returns:
+            pd.DataFrame: dataframe containing only first trip activities with new calculated max_battery_level_end
+        """
         first_trip_activities.loc[:, "max_battery_level_end_unlimited"] = (
             first_trip_activities.loc[:, "max_battery_level_start"]
             - first_trip_activities.loc[:, "drain"]
@@ -351,8 +378,7 @@ class FlexEstimator:
             pd.Series with respective unique_id in the index.
 
         Returns:
-            pd.DataFrame: Activity data set with the battery variables set for all last activities of the activity
-                chains
+            pd.DataFrame: Activity data set with the battery variables set for all last activities of the activity chains
         """
         # Last activities - parking and trips
         last_activities_in = self.activities.loc[
@@ -396,12 +422,12 @@ class FlexEstimator:
         previous_park_activities: pd.DataFrame = None,
     ) -> pd.DataFrame:
         """
-        _summary_
+        Function that handles activities with current trip_id= act. Function substracts the drain from every max_battery_level_start that is based on the previous parking (charging) activity of the trip and calculates the max_battery_level_end as well as max_battery_level_end_unlimited if the drain exceeds the battery capacity and there fore residual need will result.
 
         Args:
-            activity_id (int): _description_
-            trip_activities (pd.DataFrame): _description_
-            previous_park_activities (pd.DataFrame, optional): _description_. Defaults to None.
+            activity_id (int): the current id of activity that is handeld 
+            trip_activities (pd.DataFrame): dataframe that contains all trips with trip_id = current act
+            previous_park_activities (pd.DataFrame, optional): dataframe that stores all previous park activities that have same act_id as the current trip_id
 
         Returns:
             pd.DataFrame: _description_
@@ -466,7 +492,7 @@ class FlexEstimator:
         next_park_activities: pd.DataFrame = None,
     ) -> pd.DataFrame:
         """
-        _summary_
+        Function that handles activities with current trip_id= act. Function adds the drain from on every min_battery_level_end, based on the min_battery_level_start of the next parking activity of the trip and calculates the min_battery_level_start as well as min_battery_level_start_unlimited if the drain exceeds the battery capacity and therefore residual need will result.
 
         Args:
             activity_id (int): _description_
@@ -652,7 +678,7 @@ class FlexEstimator:
 
     def _uncontrolled_charging(self):
         """
-        _summary_
+        calculates the difference between the start and end level of a battery resuting in the realistic value of energy that was charged into the battery
         """
         park_activities = self.activities.loc[
             self.activities["trip_id"].isna(), :
@@ -694,15 +720,15 @@ class FlexEstimator:
         self, start_timestamp: pd.Timestamp, start_battery_level: float, power: float
     ) -> pd.Timestamp:
         """
-        _summary_
+        Function calculates an end_timp_stamp where the realistic charging has stopped for the specific parking act. This can be due to the battery being full or the vehcile taking its next trip and is therefore being plugged off the grid.
 
         Args:
-            start_timestamp (pd.Timestamp): _description_
-            start_battery_level (float): _description_
-            power (float): _description_
+            start_timestamp (pd.Timestamp): timestamp where the charging process begins
+            start_battery_level (float): battery level at te start timestamp
+            power (float): available power for the individual parking activity based on the grid 
 
         Returns:
-            pd.Timestamp: _description_
+            pd.Timestamp: dataframe containing all end timestamps for each charging activity
         """
         if power == 0:
             return pd.NA
@@ -771,7 +797,7 @@ class FlexEstimator:
 
     def __write_output(self):
         """
-        _summary_
+        Writes the output of the flexestimator calculation to the specified disk path
         """
         if self.user_config["global"]["write_output_to_disk"]["flex_output"]:
             root = Path(self.user_config["global"]["absolute_path"]["vencopy_root"])
@@ -904,14 +930,14 @@ class FlexEstimator:
 
     def __get_delta(self, start_column: str, end_column: str) -> float:
         """
-        _summary_
+        Function calculates an absolute delta from the column max/min_battery_level_end of all last activies and the column max/min_battery_level_start of all first activities.
 
         Args:
-            start_column (str): _description_
-            end_column (str): _description_
+            start_column (str): name of start_column to call (max/min_battery_level_start) 
+            end_column (str): name of end column to call (max/min_battery_level_end)
 
         Returns:
-            float: _description_
+            float: absolute delta
         """
         delta = abs(
             self.activities.loc[self.activities["is_last_activity"], end_column].values
