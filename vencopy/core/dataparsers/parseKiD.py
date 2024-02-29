@@ -158,7 +158,8 @@ class ParseKiD(IntermediateParsing):
                      'trip_end_next_day',
                      'trip_is_intermodal',
                      'trip_purpose',
-                     'weekday_string'], inplace=True)
+                     'weekday_string',
+                     'is_first_trip'], inplace=True)
         return activities
 
     def process(self) -> pd.DataFrame:

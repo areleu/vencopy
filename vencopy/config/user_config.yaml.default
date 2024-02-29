@@ -32,6 +32,7 @@ dataparsers:
     MiD08: "HOME"
     MiD17: "HOME"
     KiD: "HOME"
+    VF: "HOME"
   subset_vehicle_segment: True
   vehicle_segment:
       KiD: "Car" # options: "Light motorised vehicle", "Car", "Van", "Truck", "Tractor unit", "Coach", "Other tractor unit", "Agriculture and forestry tractor unit", "Other"

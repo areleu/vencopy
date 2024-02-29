@@ -963,7 +963,7 @@ class FlexEstimator:
                      'min_residual_need',
                      'max_overshoot',
                      'min_undershoot',
-                     'auxiliary_fuel_need',
+                     # 'auxiliary_fuel_need',
                      'max_charge_volume',
                      'min_battery_level_start_unlimited'], inplace=True)
         return activities
