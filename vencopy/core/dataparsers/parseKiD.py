@@ -15,18 +15,18 @@ class ParseKiD(IntermediateParsing):
         """
         Inherited data class to differentiate between abstract interfaces such
         as vencopy internal variable namings and data set specific functions
-        such as filters etc.
+        such as filters. Specific class for the German KiD dataset.
 
         Args:
-            configs (dict): _description_
-            dataset (str): _description_
+            configs (dict): A dictionary containing a user_config dictionary and a dev_config dictionary.
+            dataset (str): Abbreviation of the National Travel Survey to be parsed.
         """
         super().__init__(configs=configs, dataset=dataset)
         self.park_inference = ParkInference(configs=configs)
 
     def _load_unencrypted_data(self):
         """
-        _summary_
+        Loads the dataset specified in the user_config.
         """
         raw_data_path_trips = (
             Path(self.user_config["global"]["absolute_path"][self.dataset])
@@ -59,10 +59,10 @@ class ParseKiD(IntermediateParsing):
         Replaces commas with dots in the dataset (German datasets).
 
         Args:
-            trips (_type_): _description_
+            trips (pd.DataFrame): A dataframe containing all trips.
 
         Returns:
-            _type_: _description_
+            pd.DataFrame: A dataframe containing all trips.
         """
         for i, x in enumerate(list(trips.trip_distance)):
             trips.at[i, "trip_distance"] = x.replace(",", ".")
@@ -73,11 +73,11 @@ class ParseKiD(IntermediateParsing):
     def __add_string_columns(self, weekday=True, purpose=True, vehicle_segment=True):
         """
         Adds string columns for either weekday or purpose.
- 
+
         Args:
-            weekday (bool, optional): Boolean identifier if weekday string info should be added in a separate column. Defaults to True.
-            purpose (bool, optional): Boolean identifier if purpose string info should be added in a separate column. Defaults to True.
-            vehicle_segment (bool, optional): _description_. Defaults to True.
+            weekday (bool, optional): Boolean identifier if weekday should be added in a separate column as string. Defaults to True.
+            purpose (bool, optional): Boolean identifier if purpose should be added in a separate column as string. Defaults to True.
+            vehicle_segment (bool, optional): Boolean identifier if the vehicle segment should be added in a separate column as string. Defaults to True.
         """
         if weekday:
             self._add_string_column_from_variable(col_name="weekday_string", var_name="trip_start_weekday")
@@ -89,13 +89,13 @@ class ParseKiD(IntermediateParsing):
     @staticmethod
     def _extract_timestamps(trips):
         """
-        _summary_
+        Extracts timestamps from the trip start date.
 
         Args:
-            trips (_type_): _description_
+            trips (pd.DataFrame): A dataframe containing all trips.
 
         Returns:
-            _type_: _description_
+            pd.DataFrame: A dataframe containing all trips.
         """
         trips["trip_start_date"] = pd.to_datetime(trips["trip_start_date"], format="%d.%m.%Y")
         trips["trip_start_year"] = trips["trip_start_date"].dt.year
@@ -115,12 +115,11 @@ class ParseKiD(IntermediateParsing):
         """
         Separate implementation for the KID dataset. Overwrites parent method.
 
-
         Args:
-            trips (_type_): _description_
+            trips (pd.DataFrame): A dataframe containing all trips.
 
         Returns:
-            _type_: _description_
+            pd.DataFrame: A dataframe containing all trips.
         """
         day_end = trips["timestamp_end"].dt.day
         day_start = trips["timestamp_start"].dt.day
@@ -132,16 +131,18 @@ class ParseKiD(IntermediateParsing):
         return trips
 
     @staticmethod
-    #TODO: check if methods works properly: removes not when both are off but when any is off
+    #TODO: check if methods works properly: removes not when both are off but
+    #when any is off
     def _exclude_hours(trips):
         """
-        Removes trips where both start and end trip time are missing. KID-specific function.
+        Removes trips where both start and end trip time are missing.
+        KID-specific function.
 
         Args:
-            trips (_type_): _description_
+            trips (pd.DataFrame): A dataframe containing all trips.
 
         Returns:
-            _type_: _description_
+            pd.DataFrame: A dataframe containing all trips.
         """
         trips = trips.loc[
             (trips["trip_start_clock"] != "-1:-1") & (trips["trip_end_clock"] != "-1:-1"),
@@ -151,7 +152,8 @@ class ParseKiD(IntermediateParsing):
 
     def process(self) -> pd.DataFrame:
         """
-        Wrapper function for harmonising and filtering the dataset.
+        Wrapper function for harmonising and filtering the trips dataset as well
+        as adding parking rows.
         """
         self._load_data()
         self._select_columns()
@@ -172,4 +174,4 @@ class ParseKiD(IntermediateParsing):
         self.write_output()
         print("Parsing KiD dataset completed.")
         return self.activities
-    
+

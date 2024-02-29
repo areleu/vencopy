@@ -26,11 +26,11 @@ Frequently Asked Questions (FAQs)
    accounted for in the calculation of the electricity consumption.
 
 
-5. Can representative profiles be derived in order not to have to do an aggregation to fleet level? It is possible to use indiviual profile by
+5. Can representative profiles be derived in order not to have to do an aggregation to fleet level? It is possible to use individual profile by
    avoiding the aggregation step in the flexEstimator class.
 
 
-6. Are multi-day SOC and plugging behavior accounted for? Plugging behaviour and multi-day SoC are currently not included.
+6. Are multi-day SOC and plugging behaviour accounted for? Plugging behaviour and multi-day SoC are currently not included.
 
 
 7. Are charging availabilities and distributions modelled? The grid infrastructure is currently based on a simple binary True-False mapping based on

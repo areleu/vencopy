@@ -35,7 +35,7 @@ a solution to a problem. These priorities are listed in the table below.
    * - 1. Learnability
      - The highest priority of venco.py is to provide an easy-to-apply tool for scientists (not primarily developers) to
        estimate electric vehicle fleets' load shifting potential. Hence, easy to understand approaches, code structures
-       and explicit formulations are favored.
+       and explicit formulations are favoured.
    * - 2. Readability
      - The readability of the code, especially the linear flow structure of the main venco.py file should be preserved.
        Source code and equations should be easy to read and understand. Splitting of statements is favored over 
@@ -48,7 +48,7 @@ a solution to a problem. These priorities are listed in the table below.
    * - 4. Reliability
      - The software has to operate without crashes and should terminate early, if scientific requirements are not met.
        Testing and asserting expectations in code is encouraged.
-   * - 5.Performance
+   * - 5. Performance
      - Performance is not a high priority, since venco.py is not a live-application. However, basic performance
        considerations like efficient formulation and application of libraries and algorithms should be considered.
 

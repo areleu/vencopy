@@ -22,28 +22,28 @@ and consistent variable naming. The naming convention for the input data variabl
 can be specified in the dev-config file. Of the 22 variables, four variables are used for indexing, 11 variables 
 characterize the trip time within the year, two variables are used for filtering and five variables characterize the
 trip itself. The representation of time may vary between travel surveys. Most travel surveys include motorised, 
-non-motorised as well as multi-modal trips. We only select trips that were carried out with a motorized individual 
+non-motorised as well as multi-modal trips. We only select trips that were carried out with a motorised individual 
 vehicle as a driver by using a filter defined in the dev_config. Similarly, trips with missing (e.g. missing trip_id,
 missing start or end time etc.) or invalid information (e.g. implausible trip distance or inferred speed) are filtered
 out. Filters can be easily adapted to other travel survey numeric codes via the config-file. By applying a set of 
 filters, the initial database is subset to only contain valid entries representing motorised trips. The last operation
 in the parsing of raw travel survey data sets is a harmonization step.
-After this steps of creating clean trip chains per vehicle, they are enrhiched by park activities that fill the times in
-between the trips and whose locations (e.g. HOME or SHOPPING) are based on the trip purposes of previous trips. At the
+After this steps of creating clean trip chains per vehicle, they are enriched by park activities that fill the times in
+between the trips and whose locations (e.g. home or shopping) are based on the trip purposes of previous trips. At the
 end of the process, a clean chain of activities is provided switching between park and trip activities.
 
 
 Charging infrastructure allocation: :ref:`gridmodellers`
 ---------------------------------------------------
 The charging infrastructure allocation makes use of a basic charging infrastructure model, which infers the
-availability of charging stations from parking purposes (e.g. HOME or SHOPPING). These again are inferred from the
+availability of charging stations from parking purposes (e.g. home or shopping). These again are inferred from the
 purposes of previously carried out trips.
 There are two mapping approaches of parking categories to charging station rated power that can be selected in the
 gridmodellers section of the user-config, in the option grid_model: Simple and probability-based. 
 In the simple model, charging availability is allocated based on a binary TRUE/FALSE mapping to a respective parking
 activity purpose in the venco.py user-config. Thus, scenarios describing different charging availabilities, e.g.
 at home or at home and at work etc. can be distinguished. Charging is then assumed to be available with a single given
-rated power (e.g. 11 kW) for all park activities.   
+rated power (e.g. 11 kW) for all park activities.
 The second model "probability", refines the simple model in two regards: Firstly, multiple rated powers can be given 
 per parking purpose, e.g. HOME charging can be available through single-phase, 16 A (3.7 kW), triple-phase, 16 A (11 kW)
 or triple-phase, 32 A (22 kW) chargers. Secondly, top-down probabilities can be given to each rated power for each 
@@ -61,11 +61,11 @@ The flexibility estimation starts with the activity trip chains of single vehicl
 estimation, the drain per trip as well as the maximum possible charged energy volume per parking activity are
 calculated. 
 Then, two cases are differentiated: maximum battery level and minimum battery level, that will make up the mobility-
-constrained technical flexibility of the individual vehicle batteries to fulfill their individual electricity demands
+constrained technical flexibility of the individual vehicle batteries to fulfil their individual electricity demands
 for driving. The maximum battery level case follows the logic that charging always takes place as soon as possible and
 to the largest extent (highest SOC) possible. The variable for uncontrolled charging is then calculated based on this 
 logic. The minimum battery level case on the opposite assumes that energy is charged as late as possible and only to
-fulfill the driving demands. 
+fulfil the driving demands. 
 In order to incorporate the needs, the two logics are applied chronologically from the first activity (may be either
 activity_id 0 or 1) to the last activity (for maximum battery level) and anti-chronologically from the last activity to
 the first activity. The second approach is needed, because later trips need to be taken into account in first parking
@@ -101,7 +101,7 @@ Daily travel diary composition: :ref:`diarybuilders`
 In the DiaryBuilder, activity-specific variables are consolidated into vehicle-specific, time-discrete profiles 
 describing e.g. the drain in each 15-minute interval of the day. The temporal resolution is set in the user_config in 
 the DiaryBuilder option "time_resolution" in minutes.
-The DiaryBuilder is a wrapper class that has an instance of the subclass TimeDiscretizer with again a main function 
+The DiaryBuilder is a wrapper class that has an instance of the subclass TimeDiscretiser with again a main function 
 TimeDiscretizer.discretize(). In the wrapper class, this function is now applied to each variable (column) of the 
 activities dataset that is needed as an output from venco.py. Since in the current application constant, these variables
 are always the same (see section :ref:`flexestimators`), they are currently hard-coded in the main function of the 
@@ -112,7 +112,7 @@ different time intervals that represent the whole activity. "select" is used for
 power. Dynamic is used for battery levels variables and uncontrolled charging, as these have more specific or more 
 complex allocation procedures.     
 The resulting profiles are one per given variable and contain around 100,000 time-discretized profiles (rows) in the 
-temporal resolution specified in the config. Every pofile has the same amount of rows. 
+temporal resolution specified in the config. Every profile has the same amount of rows. 
 
 
 Aggregation to fleet level: :ref:`profileaggregators`
@@ -139,8 +139,8 @@ Output postprocessing: :ref:`postprocessors`
 In the PostProcessor, two steps happen. First, the aggregated weekly timeseries for the fleet are translated into annual
 timeseries by cloning e.g. a week by around 52 times to span a full year. The second purpose is to normalize the 
 aggregated fleet profiles in order to provide profiles independent of the specific input and to be able to scale the 
-venco.py output in a consecutive stept with feet scenarios or annual energy demands. For the flow profiles, two
+venco.py output in a consecutive step with feet scenarios or annual energy demands. For the flow profiles, two
 normalization bases are applied: The drain and uncontrolled charging profiles are normalized to the annual energy volume
 of the profiles to be scaled with an annual energy demand. The charging power profile is normalized by the number of 
 vehicles to retrieve a rated charging power per representative vehicle. The two state profiles - minimum and maximum
-battery level profiles - are normalized using the battery capacity given in the flexestimaros part of the user_config. 
+battery level profiles - are normalized using the battery capacity given in the flexestimators part of the user_config. 

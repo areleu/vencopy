@@ -56,7 +56,10 @@ class DataParser:
 
     def _load_data(self):
         """
-        _missing_
+        Checks the load_encrypted value and then loads the data specified in self.raw_data_path 
+        and stores it in self.raw_data.
+        Checks the number_of_debug value only takes on those rows in the self.raw_data.
+
         """
         number_lines_debug = self.user_config["global"]["number_lines_debug"]
         load_encrypted = False
@@ -73,8 +76,7 @@ class DataParser:
     def _load_unencrypted_data(self) -> pd.DataFrame:
         """
         Loads data specified in self.raw_data_path and stores it in self.raw_data.
-        Raises an exception if a invalid suffix is specified in
-        self.raw_data_path.
+        Raises an exception if a invalid suffix is specified in self.raw_data_path.
 
         Returns:
             pd.DataFrame: raw_data
@@ -97,14 +99,13 @@ class DataParser:
 
     def _load_encrypted_data(self, zip_path, path_zip_data):
         """
-        Function to provide the possibility to access
-        encrypted zip files. An encryption password has to be given in
-        user_config.yaml in order to access the encrypted file. Loaded data
-        is stored in self.raw_data
+        Function to provide the possibility to access encrypted zip files. 
+        An encryption password has to be given in user_config.yaml in order to access the encrypted file. 
+        Loaded data is stored in self.raw_data.
 
         Args:
-            zip_path (_type_): Path from current working directory to the zip file or absolute path to zipfile
-            path_zip_data (_type_): Path to trip data file within the encrypted zipfile
+            zip_path : Path from current working directory to the zip file or absolute path to zipfile
+            path_zip_data : Path to trip data file within the encrypted zipfile
         """
         with ZipFile(zip_path) as myzip:
             if ".dta" in path_zip_data:
@@ -152,7 +153,7 @@ class DataParser:
         Harmonizes the input data variables to match internal venco.py names
         given as specified in the mapping in dev_config['data_variables'].
         Since the MiD08 does not provide a combined household and person
-        unique identifier, it is synthesized of the both IDs.
+        unique identifier in the child class, it is synthesized of the both IDs.
         """
         replacement_dict = self._create_replacement_dict(self.dataset, self.dev_config["dataparsers"]["data_variables"])
         data_renamed = self.trips.rename(columns=replacement_dict)
@@ -168,14 +169,13 @@ class DataParser:
 
         Args:
             dataset (str): A list of strings declaring the dataset_id to be read
-            data_variables (dict): _description_
+            data_variables (dict): data_variables contain the column names from the dataset
 
         Raises:
-            ValueError: _description_
+            ValueError: Raises a value error if the dataset is not specified in the dev_config
 
         Returns:
-            dict: A dictionary with internal names as keys and raw data column
-                 names as values.
+            dict: A dictionary with internal names as keys and raw data column names as values
         """
         if dataset not in data_variables["dataset"]:
             raise ValueError(f"Dataset {dataset} not specified in dev_config variable dictionary.")
@@ -190,7 +190,7 @@ class DataParser:
         all(map(self.__checkStr, val). Conditionally triggers an assert.
 
         Args:
-            dictionary (_type_): _description_
+            dictionary : Dictionary containing filters in the dev_config dictionary
         """
         assert all(
             isinstance(val, list) for val in return_lowest_level_dict_values(dictionary)
@@ -205,7 +205,7 @@ class DataParser:
         elements (TRUE) that stay in the data set. The function operates on self.trips class-internally.
 
         Args:
-            filters (dict, optional): _description_. Defaults to None.
+            filters (dict, optional): Defaults to None
         """
         print(f"Starting filtering, applying {len(return_lowest_level_dict_keys(filters))} filters.")
 
@@ -225,8 +225,8 @@ class DataParser:
         Apply single-column scalar value filtering as defined in the config.
 
         Returns:
-            pd.DataFrame: DataFrame with boolean columns for include, exclude, greater_than and smaller_than filters. True
-            means keep the row.
+            pd.DataFrame: DataFrame with boolean columns for include, exclude, greater_than and smaller_than filters, True
+            means keep the row
         """
         simple_filter = pd.DataFrame(index=self.trips.index)
 
@@ -262,7 +262,7 @@ class DataParser:
         Read-in function for include filter dict from dev_config.yaml
 
         Args:
-            dataset (pd.DataFrame): _description_
+            dataset (pd.DataFrame): dataframe on which the include filter can be added
             include_filter_dict (dict): Dictionary of include filters defined in dev_config.yaml
 
         Returns:
@@ -279,7 +279,7 @@ class DataParser:
         Read-in function for exclude filter dict from dev_config.yaml
 
         Args:
-            dataset (pd.DataFrame): _description_
+            dataset (pd.DataFrame): dataframe on which the exclude filter can be added
             exclude_filter_dict (dict): Dictionary of exclude filters defined in dev_config.yaml
 
         Returns:
@@ -296,11 +296,11 @@ class DataParser:
         Read-in function for greater_than filter dict from dev_config.yaml
 
         Args:
-            dataset (pd.DataFrame): _description_
+            dataset (pd.DataFrame): dataframe on which the greater than filter can be added
             greater_than_filter_dict (dict): Dictionary of greater than filters defined in dev_config.yaml
 
         Returns:
-            _type_: _description_
+            _type_: Filtered dataframe
         """
         greater_than_filter_cols = pd.DataFrame(index=dataset.index, columns=greater_than_filter_dict.keys())
         for greater_col, greater_elements in greater_than_filter_dict.items():
@@ -318,11 +318,11 @@ class DataParser:
         Read-in function for smaller_than filter dict from dev_config.yaml
 
         Args:
-            dataset (pd.DataFrame): _description_
+            dataset (pd.DataFrame): dataframe on which the smaller_than filter can be added
             smaller_than_filter_dict (dict): Dictionary of smaller than filters defined in dev_config.yaml
 
         Returns:
-            pd.DataFrame: _description_
+            pd.DataFrame: Filtered dataframe
         """
         smaller_than_filter_cols = pd.DataFrame(index=dataset.index, columns=smaller_than_filter_dict.keys())
         for smaller_col, smaller_elements in smaller_than_filter_dict.items():
@@ -341,8 +341,8 @@ class DataParser:
         return argument.
 
         Returns:
-            pd.DataFrame: DataFrame with a boolean column per complex filter. True means keep the row in the trips
-            data set.
+            pd.DataFrame: DataFrame with a boolean column per complex filter, 'True' means keep the row in the trips
+            data set
         """
         complex_filters = pd.DataFrame(index=data.index)
         lower_speed_threshold = self.dev_config["dataparsers"]["filters"]["lower_speed_threshold"]
@@ -366,9 +366,9 @@ class DataParser:
         (driving and parking) and not just for the real travel.
 
         Args:
-            dataset (pd.DataFrame): _description_
-            lower_speed_threshold (_type_): _description_
-            higher_speed_threshold (_type_): _description_
+            dataset (pd.DataFrame): dataframe on which the inconsistent speed filter can be added
+            lower_speed_threshold : Dictionary of lower speed threshold filters defined in dev_config.yaml
+            higher_speed_threshold : Dictionary of higher speed threshold filters defined in dev_config.yaml
 
         Returns:
             pd.Series: Boolean vector with observations marked True that should be kept in the dataset
@@ -387,7 +387,7 @@ class DataParser:
         timestamps are consistent with the travel time given.
 
         Args:
-            dataset_in (pd.DataFrame): 
+            dataset_in (pd.DataFrame): dataframe on which the inconsistent travel time filter can be added
 
         Returns:
             pd.Series: Boolean vector with observations marked True that should be kept in the dataset
@@ -413,7 +413,7 @@ class DataParser:
         Returns:
             Pandas DataFrame containing periods columns comparing each trip to their following trips. If True, the
             trip does not overlap with the trip following after period trips (e.g. period==1 signifies no overlap with
-            next trip, period==2 no overlap with second next trip etc.).
+            next trip, period==2 no overlap with second next trip etc.)
         """
         lst = []
         for profile in range(1, lookahead_periods + 1):
@@ -442,13 +442,13 @@ class DataParser:
 
         Args:
             dataset (pd.DataFrame): A trip data set containing consecutive trips containing at least the columns id_col,
-                timestamp_start, timestamp_end.
+                timestamp_start, timestamp_end
             period (int): Forward looking period to compare trip overlap. Should be the maximum number of trip that one
-                vehicle carries out in a time interval (e.g. day) in the data set.
+                vehicle carries out in a time interval (e.g. day) in the data set
 
         Returns:
             pd.Series: A boolean vector that is True if the trip does not overlap with the period-next trip but belongs
-                to the same vehicle.
+                to the same vehicle
         """
         dataset = dataset_in.copy()
         dataset["is_same_id_as_previous"] = dataset["unique_id"] == dataset["unique_id"].shift(period)
@@ -460,11 +460,10 @@ class DataParser:
     @staticmethod
     def _filter_analysis(filter_data: pd.DataFrame):
         """
-        Function supplies some aggregate info of the data after filtering to the user.
-
+        Function returns the total number of remaining rows after applying the filters.
 
         Args:
-            filter_data (pd.DataFrame): _description_
+            filter_data (pd.DataFrame): dataframe after all filters have been applied
         """
         len_data = sum(filter_data.all(axis="columns"))
         # bool_dict = {i_column: sum(filter_data[i_column]) for i_column in filter_data}
@@ -483,7 +482,7 @@ class DataParser:
 
     def write_output(self):
         """
-        _summary_
+        This saves the output from the dataparser class to a csv file.
         """
         if self.user_config["global"]["write_output_to_disk"]["parse_output"]:
             root = Path(self.user_config["global"]["absolute_path"]["vencopy_root"])
@@ -504,8 +503,8 @@ class IntermediateParsing(DataParser):
         Intermediate parsing class.
 
         Args:
-            configs (dict): venco.py config dictionary consisting at least of the config dictionaries.
-            dataset (str): _description_
+            configs (dict): venco.py config dictionary consisting at least of the config dictionaries
+            dataset (str): dataset to be processed
         """
         super().__init__(configs, dataset=dataset)
         self.filters = self.dev_config["dataparsers"]["filters"][self.dataset]
@@ -579,7 +578,7 @@ class IntermediateParsing(DataParser):
 
         Returns:
             pd.DataFrame: DataFrame with a boolean column per complex filter. True means keep the row in the activities
-            data set.
+            data set
         """
         complex_filters = pd.DataFrame(index=data.index)
         lower_speed_threshold = self.dev_config["dataparsers"]["filters"]["lower_speed_threshold"]
@@ -603,10 +602,10 @@ class IntermediateParsing(DataParser):
         Filtering out records where starting timestamp is before end timestamp. These observations are data errors.
 
         Args:
-            dataset (_type_): _description_
+            dataset : dataframe on which we would perform operations to find out the erroneous data
 
         Returns:
-            pd.Series: Boolean Series indicating erroneous rows (trips) with False.
+            pd.Series: Boolean Series indicating erroneous rows (trips having start time after end time) with False
         """
         ser = dataset["timestamp_start"] <= dataset["timestamp_end"]
         ser.name = "trip_start_after_end"
@@ -619,10 +618,10 @@ class IntermediateParsing(DataParser):
         trips).
 
         Args:
-            dataset (_type_): _description_
+            dataset : dataframe on which we would perform operations to find out the erroneous data
 
         Returns:
-            pd.Series: _description_
+            pd.Series: Boolean Series indicating erroneous rows (trips having exact same start time and end time) with False
         """
         ser = ~(
             (dataset.loc[:, "trip_start_hour"] == dataset.loc[:, "trip_end_hour"])
@@ -656,19 +655,19 @@ class IntermediateParsing(DataParser):
         col_name: str = None,
     ) -> pd.DatetimeIndex:
         """
-        _summary_
+        Generating pandas timestamp and storing in a new column
 
         Args:
-            data (pd.DataFrame, optional): _description_. Defaults to None.
-            col_year (str, optional): _description_. Defaults to None.
-            col_week (str, optional): _description_. Defaults to None.
-            col_day (str, optional): _description_. Defaults to None.
-            col_hour (str, optional): _description_. Defaults to None.
-            col_min (str, optional): _description_. Defaults to None.
-            col_name (str, optional): _description_. Defaults to None.
+            data (pd.DataFrame, optional): Defaults to None
+            col_year (str, optional): Defaults to None
+            col_week (str, optional): Defaults to None
+            col_day (str, optional): Defaults to None
+            col_hour (str, optional): Defaults to None
+            col_min (str, optional): Defaults to None
+            col_name (str, optional): Defaults to None
 
         Returns:
-            pd.DatetimeIndex: _description_
+            pd.DatetimeIndex: modified dataframe with the new column containing the pandas timestamp values
         """
         data[col_name] = (
             pd.to_datetime(data.loc[:, col_year], format="%Y")
@@ -709,10 +708,10 @@ class IntermediateParsing(DataParser):
 
 
         Args:
-            trips (_type_): _description_
+            trips : Dataframe containing details about the trip
 
         Returns:
-            _type_: _description_
+            _type_: Returns the modified dataframe after adding an extra day because of the overnight journey
         """
         ends_following_day = trips["trip_end_next_day"] == 1
         trips.loc[ends_following_day, "timestamp_end"] = trips.loc[
@@ -731,7 +730,7 @@ class IntermediateParsing(DataParser):
 
     def _subset_vehicle_segment(self):
         """
-        _summary_
+        Dividing the vehicles into vechicle segments (eg: S, M, L in case of VF and car, van truck etc. in case of KiD).
         """
         if self.user_config["dataparsers"]["subset_vehicle_segment"]:
             self.activities = self.activities[
@@ -748,6 +747,12 @@ class IntermediateParsing(DataParser):
 
 class VehicleParsing(DataParser):
     def __init__(self, configs: dict, dataset: str):
+        """
+
+        Args:
+            configs (dict): 
+            dataset (str): 
+        """
         super().__init__(configs, dataset)
 
     def process(self):
