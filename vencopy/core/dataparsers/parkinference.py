@@ -229,22 +229,12 @@ class ParkInference:
         the beginning. First and last activities have to be treated separately since their dates have to match with
         their daily activity chain.
         """
-        self.activities_raw = self.activities_raw.reset_index()
-        park_act_wo_first, park_act_wo_last = self._get_park_acts_wo_first_and_last(
-            activities_raw=self.activities_raw
-        )
-        self.activities_raw = self._update_park_start(
-            activities_raw=self.activities_raw, park_act_wo_first=park_act_wo_first
-        )
-        self.activities_raw = self._update_park_end(
-            activities_raw=self.activities_raw, park_act_wo_last=park_act_wo_last
-        )
-        self.activities_raw = self._update_timestamp_first_park_act(
-            activities_raw=self.activities_raw
-        )
-        self.activities_raw = self._update_timestamp_last_park_act(
-            activities_raw=self.activities_raw
-        )
+        self.activities_raw = self.activities_raw.reset_index(drop=True)
+        park_act_wo_first, park_act_wo_last = self._get_park_acts_wo_first_and_last(activities_raw=self.activities_raw)
+        self.activities_raw = self._update_park_start(activities_raw=self.activities_raw,park_act_wo_first=park_act_wo_first)
+        self.activities_raw = self._update_park_end(activities_raw=self.activities_raw, park_act_wo_last=park_act_wo_last)
+        self.activities_raw = self._update_timestamp_first_park_act(activities_raw=self.activities_raw)
+        self.activities_raw = self._update_timestamp_last_park_act(activities_raw=self.activities_raw)
         print("Completed park timestamp adjustments.")
 
     @staticmethod
@@ -449,14 +439,9 @@ class ParkInference:
         ].shift(-1, fill_value=False)
 
         # Get rid of overnight trips
-        if isinstance(activities_raw["trip_end_next_day"], bool):
-            indeces_no_overnight_trip = ~(
-                activities_raw["trip_end_next_day"].fillna(False)
-            )
-        else:
-            raise TypeError(
-                "Column trip_end_next_day should be a boolean column, but is not."
-            )
+        indeces_no_overnight_trip = ~(
+            activities_raw["trip_end_next_day"].fillna(False)
+        )
         activities_raw = activities_raw.loc[indeces_no_overnight_trip, :]
 
         # Update is_last_activity and timestamp_end variables and clean-up column
@@ -472,36 +457,28 @@ class ParkInference:
         return activities_raw
 
     def _add_first_trip_park_columns(self, activities_raw: pd.DataFrame):
-        acts = self.__is_first_trip(activities=activities_raw)
-        acts = self.__is_first_park_activity(activities=acts)
-        return acts
+        activities_raw = self._is_first_trip(activities_raw=activities_raw)
+        activities_raw = self._is_first_park_activity(activities_raw=activities_raw)
+        return activities_raw
 
-    def __is_first_trip(self, activities: pd.DataFrame):
-        acts_idx = activities.set_index(["unique_id", "trip_id"])
-        first_trip = (
-            activities[["unique_id", "trip_id"]]
-            .groupby(by="unique_id")
-            .min(numeric_only=True)
-        )
-        first_trip["is_first_trip"] = True
-        first_trip = first_trip.set_index("trip_id", append=True)
-        acts_idx["is_first_trip"] = first_trip  # index comprehension
-        acts_idx["is_first_trip"] = acts_idx["is_first_trip"].fillna(value=False)
+    @staticmethod
+    def _is_first_trip(activities_raw: pd.DataFrame):
+        acts_idx = activities_raw.set_index(['unique_id', 'trip_id'])
+        first_trip = activities_raw[['unique_id', 'trip_id']].groupby(by='unique_id').min(numeric_only=True)
+        first_trip['is_first_trip'] = True
+        first_trip = first_trip.set_index('trip_id', append=True)
+        acts_idx['is_first_trip'] = first_trip  # index comprehension
+        acts_idx['is_first_trip'] = acts_idx['is_first_trip'].fillna(value=False)
         return acts_idx.reset_index()
 
-    def __is_first_park_activity(self, activities: pd.DataFrame):
-        acts_idx = activities.set_index(["unique_id", "park_id"])
-        first_park = (
-            activities[["unique_id", "park_id"]]
-            .groupby(by="unique_id")
-            .min(numeric_only=True)
-        )
-        first_park["is_first_park_activity"] = True
-        first_park = first_park.set_index("park_id", append=True)
-        acts_idx["is_first_park_activity"] = first_park  # index comprehension
-        acts_idx["is_first_park_activity"] = acts_idx["is_first_park_activity"].fillna(
-            value=False
-        )
+    @staticmethod
+    def _is_first_park_activity(activities_raw: pd.DataFrame):
+        acts_idx = activities_raw.set_index(['unique_id', 'park_id'])
+        first_park = activities_raw[['unique_id', 'park_id']].groupby(by='unique_id').min(numeric_only=True)
+        first_park['is_first_park_activity'] = True
+        first_park = first_park.set_index('park_id', append=True)
+        acts_idx['is_first_park_activity'] = first_park  # index comprehension
+        acts_idx['is_first_park_activity'] = acts_idx['is_first_park_activity'].fillna(value=False)
         return acts_idx.reset_index()
 
     @staticmethod
@@ -531,10 +508,7 @@ class ParkInference:
         Returns:
             _type_: _description_
         """
-        activities_raw.drop(columns=["index"], inplace=True)
-        activities_raw.reset_index(
-            inplace=True
-        )  # Due to copying and appending rows, the index has to be reset
+        activities_raw.reset_index(inplace=True, drop=True)  # Due to copying and appending rows, the index has to be reset
         return activities_raw
 
 

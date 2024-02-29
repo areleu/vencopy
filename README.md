@@ -20,20 +20,28 @@ energy system models.
 
 ## Installation
 
-After around 2 years after the initial public commit, we currently go through the release of 
-our re-iteration of the tool providing more flexibility regarding temporal resolution. 
-The documentation will be updatet and the PyPI package will be uploaded in the coming weeks. 
+Depending on if you want to use venco.py or if you want to contribute, there are
+two different installation procedures described in venco.py's documentation:
+
+[I want to apply the tool](https://dlr-ve.gitlab.io/esy/vencopy/vencopy/gettingstarted/installation.html#installation-for-users)
+
+[I want to contribute to the codebase, the documentation or the tutorials](https://dlr-ve.gitlab.io/esy/vencopy/vencopy/gettingstarted/installation.html#installation-for-developers)
+
+In order to start using venco.py, check out our [tutorials](https://dlr-ve.gitlab.io/esy/vencopy/vencopy/gettingstarted/start.html). For this you won't need any additional data.
+
+To run venco.py in full mode, you will need the data set Mobilität in Deutschland (German for mobility in Germany). You
+can request it here from the clearingboard transport: https://daten.clearingstelle-verkehr.de/order-form.html 
+Alternatively you can use venco.py with any National Travel Survey or mobility pattern dataset.
+
 
 ## Codestyle
 
-We use PEP-8, with the exception of UpperCamelCase for classes.
+We use PEP-8, with the exception of UpperCamelCase for class names.
 
 ## Documentation
 
-The documentation of the previous release (0.1.5) can be found 
-here: https://vencopy.readthedocs.io/en/latest/index.html.
-To locally build the documentation from a conda bash with an activated 
-environment type:
+The documentation can be found here: https://dlr-ve.gitlab.io/esy/vencopy/vencopy/
+To build the documentation from a conda bash with an activated environment type:
 
 ```python
 sphinx-build -b html ./docs/ ./build/
@@ -41,9 +49,9 @@ sphinx-build -b html ./docs/ ./build/
 
 ## Useful Links
 
-- Documentation: Available soon
+- Documentation: https://dlr-ve.gitlab.io/esy/vencopy/vencopy/
 - Source code: https://gitlab.com/dlr-ve/vencopy
-- PyPI release: Available soon
+- PyPI release: https://pypi.org/project/vencopy/
 - Licence: https://opensource.org/licenses/BSD-3-Clause
 
 ## Want to contribute?

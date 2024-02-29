@@ -36,7 +36,7 @@ global:
         output_diarybuilder: vencopy_output_diarybuilder
         output_profileaggregator: vencopy_output_profileaggregator
         output_postprocessor_annual: vencopy_output_postprocessor_annual
-        output_postprocessor_normalised: vencopy_output_postprocessor_normalized
+        output_postprocessor_normalised: vencopy_output_postprocessor_normalised
 
 dataparsers:
     data_variables:

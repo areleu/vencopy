@@ -3,11 +3,18 @@
 
 .. _core:
 
-Core venco.py Levels
+Core venco.py levels
 ===================================
 
 Below is a brief explanation of the six main venco.py classes. For a more detailed explanation about the internal 
 workings and the specific outputs of each function, you can click on the hyperlink on the function name.
+
+
+
+.. note:: 
+To access more detailed description of each core level you can click on the class name in each heading.
+
+
 
 Interface to the dataset: :ref:`dataparsers`
 ---------------------------------------------------

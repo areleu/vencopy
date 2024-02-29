@@ -217,19 +217,19 @@ def test_create_file_name():
 
     # Test when dataset is None, manual_label is empty, and suffix is 'csv'
     result = create_file_name(dev_config=dev_config, user_config=user_config, file_name_id="file1", dataset=None, suffix="csv")
-    assert result == "file1_dev_run123_.csv"
+    assert result == "file1_dev_run123.csv"
 
     # Test when dataset is provided, manual_label is empty, and suffix is 'txt'
     result = create_file_name(dev_config=dev_config, user_config=user_config, file_name_id="file1", dataset="dataset1", suffix="txt")
     assert result == "file1_dev_run123_dataset1.txt"
 
     # Test when manual_label is provided, and dataset and suffix are None
-    result = create_file_name(dev_config=dev_config, user_config=user_config, file_name_id="file1", dataset=None, manual_label="label123")
-    assert result == "file1_dev_run123_label123.csv"
+    result = create_file_name(dev_config=dev_config, user_config=user_config, file_name_id="file1", dataset=None)
+    assert result == "file1_dev_run123.csv"
 
     # Test when all parameters are provided
-    result = create_file_name(dev_config=dev_config, user_config=user_config, file_name_id="file1", dataset="dataset1", manual_label="label123", suffix="txt")
-    assert result == "file1_dev_run123_label123_dataset1.txt"
+    result = create_file_name(dev_config=dev_config, user_config=user_config, file_name_id="file1", dataset="dataset1", suffix="txt")
+    assert result == "file1_dev_run123_dataset1.txt"
 
 
 def test_write_out(tmp_path, capsys):

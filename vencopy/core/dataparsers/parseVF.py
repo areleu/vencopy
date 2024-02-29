@@ -132,6 +132,24 @@ class ParseVF(IntermediateParsing):
             inplace=True,
         )
 
+    @staticmethod
+    def _cleanup_dataset(activities):
+        activities.drop(
+            columns=['household_id',
+                     'person_id',
+                     'vehicle_id',
+                     'household_person_id',
+                     'trip_scale_factor',
+                     'trip_end_next_day',
+                     'trip_is_intermodal',
+                     'trip_purpose',
+                     'weekday_string',
+                     'is_first_trip',
+                     'vehicle_segment',
+                     'vehicle_segment_string',
+                     'drivetrain'], inplace=True)
+        return activities
+
     def process(self) -> pd.DataFrame:
         """
         Wrapper function for harmonising and filtering the trips dataset as well
@@ -152,7 +170,7 @@ class ParseVF(IntermediateParsing):
         # self._filter_consistent_hours(dataset=self.trips)
         self.activities = self.park_inference.add_parking_rows(trips=self.trips)
         self._subset_vehicle_segment()
-        # self._cleanup_dataset(dataset=self.activities)
+        self.activities = self._cleanup_dataset(activities=self.activities)
         self.write_output()
         print("Parsing VF dataset completed.")
         return self.activities

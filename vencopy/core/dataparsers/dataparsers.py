@@ -9,13 +9,8 @@ from zipfile import ZipFile
 import pandas as pd
 
 
-from ...utils.utils import (
-    create_file_name,
-    write_out,
-    return_lowest_level_dict_keys,
-    return_lowest_level_dict_values,
-)
-
+from ...utils.utils import create_file_name, write_out, return_lowest_level_dict_keys, return_lowest_level_dict_values
+from ...utils.metadata import read_metadata_config, write_out_metadata
 
 class DataParser:
     def __init__(self, configs: dict, dataset: str):
@@ -460,7 +455,11 @@ class DataParser:
     @staticmethod
     def _filter_analysis(filter_data: pd.DataFrame):
         """
+<<<<<<< HEAD
+        Function supplies some aggregate info of the data after filtering to the user.
+=======
         Function returns the total number of remaining rows after applying the filters.
+>>>>>>> main
 
         Args:
             filter_data (pd.DataFrame): dataframe after all filters have been applied
@@ -491,10 +490,30 @@ class DataParser:
                 dev_config=self.dev_config,
                 user_config=self.user_config,
                 file_name_id="output_dataparser",
-                dataset=self.dataset,
-                manual_label="",
+                dataset=self.dataset
             )
             write_out(data=self.activities, path=root / folder / file_name)
+            self._write_metadata(file_name=root / folder / file_name)
+
+    def generate_metadata(self, metadata_config, file_name):
+        metadata_config["name"] = file_name
+        metadata_config["title"] = "National Travel Survey activities dataframe"
+        metadata_config["description"] = "Trips and parking activities from venco.py"
+        metadata_config["sources"] = [f for f in metadata_config["sources"] if f["title"] in self.dataset]
+        reference_resource = metadata_config["resources"][0]
+        this_resource = reference_resource.copy()
+        this_resource["name"] = file_name.rstrip(".csv")
+        this_resource["path"] = file_name
+        these_fields = [f for f in reference_resource["schema"][self.dataset]["fields"]["dataparsers"] if f["name"] in self.activities.columns]
+        this_resource["schema"] = {"fields": these_fields}
+        metadata_config["resources"].pop()
+        metadata_config["resources"].append(this_resource)
+        return metadata_config
+
+    def _write_metadata(self, file_name):
+        metadata_config = read_metadata_config()
+        class_metadata = self.generate_metadata(metadata_config=metadata_config, file_name=file_name.name)
+        write_out_metadata(metadata_yaml=class_metadata, file_name=file_name.as_posix().replace(".csv", ".metadata.yaml"))  
 
 
 class IntermediateParsing(DataParser):
@@ -743,19 +762,3 @@ class IntermediateParsing(DataParser):
                 f"The subset contains only vehicles of the class {segment} for a total of {n_vehicles} individual "
                 f"vehicles."
             )
-
-
-class VehicleParsing(DataParser):
-    def __init__(self, configs: dict, dataset: str):
-        """
-
-        Args:
-            configs (dict): 
-            dataset (str): 
-        """
-        super().__init__(configs, dataset)
-
-    def process(self):
-        self._load_data()
-        self._select_columns()
-        self._harmonise_variables()

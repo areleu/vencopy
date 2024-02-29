@@ -1,13 +1,13 @@
 __maintainer__ = "Niklas Wulff, Fabia Miorelli"
 __license__ = "BSD-3-Clause"
 
-
 import pandas as pd
 
 from pathlib import Path
 
 from ..core.profileaggregators import ProfileAggregator
 from ..utils.utils import create_file_name, write_out
+from ..utils.metadata import read_metadata_config, write_out_metadata
 
 
 class PostProcessor:
@@ -197,14 +197,41 @@ class PostProcessor:
         """
         root = Path(self.user_config["global"]["absolute_path"]["vencopy_root"])
         folder = self.dev_config["global"]["relative_path"]["processor_output"]
+        self.user_config["global"]["run_label"] = "_" + profile_name + "_"
         file_name = create_file_name(
             dev_config=self.dev_config,
             user_config=self.user_config,
-            manual_label=profile_name,
             file_name_id=filename_id,
             dataset=self.dataset,
         )
         write_out(data=profile, path=root / folder / file_name)
+
+    def generate_metadata(self, metadata_config, file_name):
+        metadata_config["name"] = file_name
+        if "normalised" in file_name:
+            metadata_config["title"] = "Annual normalised timeseries with venco.py output profiles at fleet level"
+            metadata_config["description"] = "Annual normalised timeseries at fleet level."
+        elif "annual" in file_name:
+            metadata_config["title"] = "Annual timeseries with venco.py output profiles at fleet level"
+            metadata_config["description"] = "Annual timeseries at fleet level."
+        metadata_config["sources"] = [f for f in metadata_config["sources"] if f["title"] in self.dataset]
+        reference_resource = metadata_config["resources"][0]
+        this_resource = reference_resource.copy()
+        this_resource["name"] = file_name.rstrip(".metadata.yaml")
+        this_resource["path"] = file_name
+        if "normalised" in file_name:
+            these_fields = [f for f in reference_resource["schema"][self.dataset]["fields"]["postprocessors"]["normalised"]]
+        elif "annual" in file_name:
+            these_fields = [f for f in reference_resource["schema"][self.dataset]["fields"]["postprocessors"]["annual"]]
+        this_resource["schema"] = {"fields": these_fields}
+        metadata_config["resources"].pop()
+        metadata_config["resources"].append(this_resource)
+        return metadata_config
+
+    def _write_metadata(self, file_name):
+        metadata_config = read_metadata_config()
+        class_metadata = self.generate_metadata(metadata_config=metadata_config, file_name=file_name.name)
+        write_out_metadata(metadata_yaml=class_metadata, file_name=file_name)
 
     def create_annual_profiles(self):
         """
@@ -243,7 +270,10 @@ class PostProcessor:
                         profile=self.annual_profiles[profile_name],
                         filename_id="output_postprocessor_annual",
                     )
-                    print("Run finished.")
+            root = Path(self.user_config["global"]["absolute_path"]["vencopy_root"])
+            folder = self.dev_config["global"]["relative_path"]["processor_output"]
+            file_name = "vencopy_output_postprocessor_annual_" + self.dataset + ".metadata.yaml"
+            self._write_metadata(file_name=root / folder / file_name)
 
     def normalise(self):
         """
@@ -279,4 +309,8 @@ class PostProcessor:
                 "normalised_annual_profiles"
             ]:
                 self.__write_out_profiles(filename_id="output_postprocessor_normalised")
+            root = Path(self.user_config["global"]["absolute_path"]["vencopy_root"])
+            folder = self.dev_config["global"]["relative_path"]["processor_output"]
+            file_name = "vencopy_output_postprocessor_normalised_" + self.dataset + ".metadata.yaml"
+            self._write_metadata(file_name=root / folder / file_name)
             print("Run finished.")

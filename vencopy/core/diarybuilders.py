@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Optional
 
 from ..utils.utils import create_file_name, write_out
+from ..utils.metadata import read_metadata_config, write_out_metadata
 
 
 class DiaryBuilder:
@@ -88,6 +89,36 @@ class DiaryBuilder:
         )
         return activities
 
+    def generate_metadata(self, metadata_config, file_name):
+        """
+        _summary_
+
+        Args:
+            metadata_config (_type_): _description_
+            file_name (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """
+        metadata_config["name"] = file_name
+        metadata_config["title"] = "Discetised timeseries with venco.py output profiles at single vehicle level"
+        metadata_config["description"] = "Time discrete profile at single vehicle level."
+        metadata_config["sources"] = [f for f in metadata_config["sources"] if f["title"] in self.dataset]
+        reference_resource = metadata_config["resources"][0]
+        this_resource = reference_resource.copy()
+        this_resource["name"] = file_name.rstrip(".csv")
+        this_resource["path"] = file_name
+        these_fields = [f for f in reference_resource["schema"][self.dataset]["fields"]["diarybuilders"]]
+        this_resource["schema"] = {"fields": these_fields}
+        metadata_config["resources"].pop()
+        metadata_config["resources"].append(this_resource)
+        return metadata_config
+
+    def _write_metadata(self, file_name):
+        metadata_config = read_metadata_config()
+        class_metadata = self.generate_metadata(metadata_config=metadata_config, file_name=file_name.name)
+        write_out_metadata(metadata_yaml=class_metadata, file_name=file_name.as_posix().replace(".csv", ".metadata.yaml"))
+
     def create_diaries(self):
         """
         Wrapper function to discretise the profiles.
@@ -107,6 +138,17 @@ class DiaryBuilder:
         self.min_battery_level = self.distributor.discretise(
             activities=self.activities, profile_name="min_battery_level_end", method="dynamic"
         )
+        if self.user_config["global"]["write_output_to_disk"]["diary_output"]:
+            root = Path(self.user_config["global"]["absolute_path"]["vencopy_root"])
+            folder = self.dev_config["global"]["relative_path"]["diary_output"]
+            self.user_config["global"]["run_label"] = ""
+            file_name = create_file_name(
+                dev_config=self.dev_config,
+                user_config=self.user_config,
+                file_name_id="output_diarybuilder",
+                dataset=self.dataset
+            )
+            self._write_metadata(file_name=root / folder / file_name)
         needed_time = time.time() - start_time
         print(f"Needed time to discretise all columns: {needed_time}.")
 
@@ -143,7 +185,7 @@ class TimeDiscretiser:
         )
         if is_week:
             self.time_delta = pd.timedelta_range(start="00:00:00", end="168:00:00", freq=f"{self.time_resolution}T")
-            self.weekdays = self.activities["weekday_string"].unique()
+            self.weekdays = self.activities["trip_start_weekday"].unique()
         else:  # is Day
             self.time_delta = pd.timedelta_range(start="00:00:00", end="24:00:00", freq=f"{self.time_resolution}T")
         self.time_index = list(self.time_delta)
@@ -207,7 +249,7 @@ class TimeDiscretiser:
             "previous_activity_id",
         ] + [self.column_to_discretise]
         if self.is_week:
-            necessary_columns = necessary_columns + ["weekday_string"]
+            necessary_columns = necessary_columns + ["trip_start_weekday"]
         if self.column_to_discretise == "uncontrolled_charging":
             necessary_columns = necessary_columns + ["available_power", "timestamp_end_uncontrolled_charging"]
         self.data_to_discretise = self.activities[necessary_columns].copy()
@@ -700,10 +742,10 @@ class TimeDiscretiser:
         if self.user_config["global"]["write_output_to_disk"]["diary_output"]:
             root = Path(self.user_config["global"]["absolute_path"]["vencopy_root"])
             folder = self.dev_config["global"]["relative_path"]["diary_output"]
+            self.user_config["global"]["run_label"] = self.column_to_discretise
             file_name = create_file_name(
                 dev_config=self.dev_config,
                 user_config=self.user_config,
-                manual_label=self.column_to_discretise,
                 file_name_id="output_diarybuilder",
                 dataset=self.dataset,
             )

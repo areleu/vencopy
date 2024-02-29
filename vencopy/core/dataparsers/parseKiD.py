@@ -121,22 +121,18 @@ class ParseKiD(IntermediateParsing):
         Returns:
             pd.DataFrame: A dataframe containing all trips.
         """
-        day_end = trips["timestamp_end"].dt.day
-        day_start = trips["timestamp_start"].dt.day
-        trips["trip_end_next_day"] = day_end.where(day_end > day_start, 0).where(day_end <= day_start, 1)
-        ends_following_day = trips["trip_end_next_day"] == 1
+        trips["trip_end_next_day"] = False
+        trips["trip_end_next_day"] = trips["trip_end_next_day"].where(~(trips["timestamp_start"] > trips["timestamp_end"]), True)
+        ends_following_day = trips["trip_end_next_day"] == True 
         trips.loc[ends_following_day, "timestamp_end"] = trips.loc[
             ends_following_day, "timestamp_end"
         ] + pd.offsets.Day(1)
         return trips
 
     @staticmethod
-    #TODO: check if methods works properly: removes not when both are off but
-    #when any is off
     def _exclude_hours(trips):
         """
-        Removes trips where both start and end trip time are missing.
-        KID-specific function.
+        Removes trips where either start and end trip time are missing. KID-specific function.
 
         Args:
             trips (pd.DataFrame): A dataframe containing all trips.
@@ -144,11 +140,25 @@ class ParseKiD(IntermediateParsing):
         Returns:
             pd.DataFrame: A dataframe containing all trips.
         """
-        trips = trips.loc[
-            (trips["trip_start_clock"] != "-1:-1") & (trips["trip_end_clock"] != "-1:-1"),
-            :,
-        ]
+        trips.drop(trips.loc[trips["trip_start_clock"].str.contains("-1")].index, inplace=True)
+        trips.drop(trips.loc[trips["trip_end_clock"].str.contains("-1")].index, inplace=True)
         return trips
+
+    @staticmethod
+    def _cleanup_dataset(activities):
+        activities.drop(
+            columns=['vehicle_id',
+                     'vehicle_segment',
+                     'vehicle_segment_string',
+                     'trip_start_date',
+                     'trip_start_day',
+                     'trip_scale_factor',
+                     'trip_end_next_day',
+                     'trip_is_intermodal',
+                     'trip_purpose',
+                     'weekday_string',
+                     'is_first_trip'], inplace=True)
+        return activities
 
     def process(self) -> pd.DataFrame:
         """
@@ -171,6 +181,7 @@ class ParseKiD(IntermediateParsing):
         self._filter_consistent_hours(dataset=self.trips)
         self.activities = self.park_inference.add_parking_rows(trips=self.trips)
         self._subset_vehicle_segment()
+        self.activities = self._cleanup_dataset(activities=self.activities)
         self.write_output()
         print("Parsing KiD dataset completed.")
         return self.activities

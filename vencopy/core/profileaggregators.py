@@ -8,6 +8,7 @@ import pandas as pd
 
 from ..core.diarybuilders import DiaryBuilder
 from ..utils.utils import create_file_name, write_out
+from ..utils.metadata import read_metadata_config, write_out_metadata
 
 
 class ProfileAggregator:
@@ -59,6 +60,36 @@ class ProfileAggregator:
             weighted=self.weighted,
         )
 
+    def generate_metadata(self, metadata_config, file_name):
+        """
+        _summary_
+
+        Args:
+            metadata_config (_type_): _description_
+            file_name (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """
+        metadata_config["name"] = file_name
+        metadata_config["title"] = "Discetised timeseries with venco.py output profiles at fleet level"
+        metadata_config["description"] = "Time discrete profile at fleet level."
+        metadata_config["sources"] = [f for f in metadata_config["sources"] if f["title"] in self.dataset]
+        reference_resource = metadata_config["resources"][0]
+        this_resource = reference_resource.copy()
+        this_resource["name"] = file_name.rstrip(".csv")
+        this_resource["path"] = file_name
+        these_fields = [f for f in reference_resource["schema"][self.dataset]["fields"]["profileaggregators"]]
+        this_resource["schema"] = {"fields": these_fields}
+        metadata_config["resources"].pop()
+        metadata_config["resources"].append(this_resource)
+        return metadata_config
+
+    def _write_metadata(self, file_name):
+        metadata_config = read_metadata_config()
+        class_metadata = self.generate_metadata(metadata_config=metadata_config, file_name=file_name.name)
+        write_out_metadata(metadata_yaml=class_metadata, file_name=file_name.as_posix().replace(".csv", ".metadata.yaml"))
+
     def aggregate_profiles(self):
         """
         Wrapper method for the ProfileAggregator class. This method is supposed to be called in the overarching venco.py
@@ -85,7 +116,18 @@ class ProfileAggregator:
             profile_name="min_battery_level",
             method="state",
         )
-        print("Aggregation finished for all profiles.")
+        if self.user_config["global"]["write_output_to_disk"]["aggregator_output"]:
+            root = Path(self.user_config["global"]["absolute_path"]["vencopy_root"])
+            folder = self.dev_config["global"]["relative_path"]["aggregator_output"]
+            self.user_config["global"]["run_label"] = ""
+            file_name = create_file_name(
+                dev_config=self.dev_config,
+                user_config=self.user_config,
+                file_name_id="output_profileaggregator",
+                dataset=self.dataset
+            )
+            self._write_metadata(file_name=root / folder / file_name)
+            print("Aggregation finished for all profiles.")
 
 
 class Aggregator:
@@ -113,10 +155,8 @@ class Aggregator:
         self.user_config = user_config
         self.dev_config = dev_config
         self.alpha = self.user_config["profileaggregators"]["alpha"]
-        self.aggregation_scope = user_config["profileaggregators"][
-            "aggregation_timespan"
-        ]
-        self.profile_agg = None
+        self.aggregation_scope = user_config["profileaggregators"]["aggregation_timespan"]
+        self.weekday_profiles = None
 
     def _extract_weights(self):
         """
@@ -176,21 +216,19 @@ class Aggregator:
                 )
                 daily_subset_weight = daily_subset_weight.drop("trip_weight", axis=1)
                 daily_subset_weight_agg = daily_subset_weight.sum() / weight_sum
-                self.profile_agg = daily_subset_weight_agg
+                self.weekday_profiles = daily_subset_weight_agg
             else:
-                daily_subset = self.activities_weekday.drop(
-                    columns=["trip_weight"], axis=1
-                ).reset_index(drop=True)
-                self.profile_agg = daily_subset.mean(axis=0)
+                daily_subset = self.activities_weekday.drop(columns=["trip_weight"], axis=1).reset_index(drop=True)
+                self.weekday_profiles = daily_subset.mean(axis=0)
         elif self.method == "state":
             daily_subset = self.activities_weekday.drop(
                 columns=["trip_weight"]
             ).reset_index(drop=True)
             daily_subset = daily_subset.convert_dtypes()
             if self.profile_name == "max_battery_level":
-                self.profile_agg = daily_subset.quantile(1 - (self.alpha / 100))
+                self.weekday_profiles = daily_subset.quantile(1 - (self.alpha / 100))
             elif self.profile_name == "min_battery_level":
-                self.profile_agg = daily_subset.quantile(self.alpha / 100)
+                self.weekday_profiles = daily_subset.quantile(self.alpha / 100)
             else:
                 raise NotImplementedError(
                     f"An unknown profile {self.profile_name} was selected."
@@ -208,8 +246,8 @@ class Aggregator:
         """
         # Deprecated
         # self.weekday_profiles = pd.DataFrame(columns=self.profile.columns, index=range(1, 8))
-
-        self.profile_agg = pd.DataFrame(columns=self.profile.columns, index=range(1, 8))
+        
+        self.weekday_profiles = pd.DataFrame(columns=self.profile.columns, index=range(1, 8))
         cols = ["unique_id", "trip_weight"] + [by_column]
         self.activities_subset = (
             self.activities[cols]
@@ -252,7 +290,7 @@ class Aggregator:
                 columns=["trip_start_weekday", "trip_weight"], axis=1
             )
             weekday_subset_agg = weekday_subset.mean(axis=0)
-            self.profile_agg.iloc[idate - 1] = weekday_subset_agg
+            self.weekday_profiles.iloc[idate - 1] = weekday_subset_agg
 
     def __calculate_weighted_mean_flow_profiles(self, by_column: str):
         """
@@ -274,7 +312,7 @@ class Aggregator:
             )
             weekday_subset_weight = weekday_subset_weight.drop("trip_weight", axis=1)
             weekday_subset_weight_agg = weekday_subset_weight.sum() / weight_sum
-            self.profile_agg.iloc[idate - 1] = weekday_subset_weight_agg
+            self.weekday_profiles.iloc[idate - 1] = weekday_subset_weight_agg
 
     def __aggregate_state_profiles(self, by_column: str, alpha: int = 10):
         """
@@ -299,11 +337,9 @@ class Aggregator:
             )
             weekday_subset = weekday_subset.convert_dtypes()
             if self.profile_name == "max_battery_level":
-                self.profile_agg.iloc[idate - 1] = weekday_subset.quantile(alpha / 100)
+                self.weekday_profiles.iloc[idate - 1] = weekday_subset.quantile(alpha / 100)
             elif self.profile_name == "min_battery_level":
-                self.profile_agg.iloc[idate - 1] = weekday_subset.quantile(
-                    1 - (alpha / 100)
-                )
+                self.weekday_profiles.iloc[idate - 1] = weekday_subset.quantile(1 - (alpha / 100))
             else:
                 raise NotImplementedError(
                     f"An unknown profile {self.profile_name} was selected."
@@ -314,31 +350,26 @@ class Aggregator:
         Input is self.weekday_profiles. Method only works if aggregation is weekly. Check if any day of the week is not
         filled, copy line above in that case
         """
-        if self.profile_agg.isna().any(axis=1).any():
-            index_empty_rows = (
-                self.weekday_profiles[self.weekday_profiles.isna().any(axis=1)].index
-                - 1
-            )
+        if self.weekday_profiles.isna().any(axis=1).any():
+            index_empty_rows = self.weekday_profiles[self.weekday_profiles.isna().any(axis=1)].index - 1
             for empty_row in index_empty_rows:
                 if empty_row == 6:
                     self.weekday_profiles.iloc[empty_row] = self.weekday_profiles.iloc[
                         empty_row - 1
                     ]
                 else:
-                    self.weekday_profiles.iloc[empty_row] = self.weekday_profiles.iloc[
-                        empty_row + 1
-                    ]
-        self.profile_agg.index.name = "weekday"
-        self.profile_agg = self.profile_agg.stack().unstack(0)
-        self.profile_agg = pd.concat(
+                    self.weekday_profiles.iloc[empty_row] = self.weekday_profiles.iloc[empty_row + 1]
+        self.weekday_profiles.index.name = "weekday"
+        self.weekday_profiles = self.weekday_profiles.stack().unstack(0)
+        self.weekday_profiles = pd.concat(
             [
-                self.profile_agg[1],
-                self.profile_agg[2],
-                self.profile_agg[3],
-                self.profile_agg[4],
-                self.profile_agg[5],
-                self.profile_agg[6],
-                self.profile_agg[7],
+                self.weekday_profiles[1],
+                self.weekday_profiles[2],
+                self.weekday_profiles[3],
+                self.weekday_profiles[4],
+                self.weekday_profiles[5],
+                self.weekday_profiles[6],
+                self.weekday_profiles[7],
             ],
             ignore_index=True,
         )
@@ -351,14 +382,14 @@ class Aggregator:
         if self.user_config["global"]["write_output_to_disk"]["aggregator_output"]:
             root = Path(self.user_config["global"]["absolute_path"]["vencopy_root"])
             folder = self.dev_config["global"]["relative_path"]["aggregator_output"]
+            self.user_config["global"]["run_label"] = "_" + self.profile_name + "_"
             file_name = create_file_name(
                 dev_config=self.dev_config,
                 user_config=self.user_config,
-                manual_label=self.profile_name,
                 file_name_id="output_profileaggregator",
                 dataset=self.dataset,
             )
-            write_out(data=self.profile_agg, path=root / folder / file_name)
+            write_out(data=self.weekday_profiles, path=root / folder / file_name)
 
     def perform_aggregation(
         self, profile: pd.DataFrame, profile_name: str, method: str
@@ -392,4 +423,4 @@ class Aggregator:
         self.profile = None
         self.profile_name = None
         self.method = None
-        return self.profile_agg
+        return self.weekday_profiles

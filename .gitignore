@@ -36,10 +36,3 @@ make.bat
 /docs/_build/
 *.code-workspace
 .dist/
-
-# Tutorials - they should not be changed for backwards compatibility reasons
-./tutorials
-
-# Personal ignore files
-Untitled.ipynb
-activities.csv

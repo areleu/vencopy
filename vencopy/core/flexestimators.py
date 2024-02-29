@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Union
 
 from ..utils.utils import create_file_name, write_out
+from ..utils.metadata import read_metadata_config, write_out_metadata
 
 
 class FlexEstimator:
@@ -804,11 +805,31 @@ class FlexEstimator:
             file_name = create_file_name(
                 user_config=self.user_config,
                 dev_config=self.dev_config,
-                manual_label="",
                 file_name_id="output_flexestimator",
                 dataset=self.dataset,
             )
             write_out(data=self.activities, path=root / folder / file_name)
+            self._write_metadata(file_name=root / folder / file_name)
+
+    def generate_metadata(self, metadata_config, file_name):
+        metadata_config["name"] = file_name
+        metadata_config["title"] = "National Travel Survey activities dataframe"
+        metadata_config["description"] = "Trips and parking activities from venco.py including profiles representing the available charging power, an uncontrolled charging profile, the battery drain, and the maximum and minum battery level."
+        metadata_config["sources"] = [f for f in metadata_config["sources"] if f["title"] in self.dataset]
+        reference_resource = metadata_config["resources"][0]
+        this_resource = reference_resource.copy()
+        this_resource["name"] = file_name.rstrip(".csv")
+        this_resource["path"] = file_name
+        these_fields = [f for f in reference_resource["schema"][self.dataset]["fields"]["flexestimators"] if f["name"] in self.activities.columns]
+        this_resource["schema"] = {"fields": these_fields}
+        metadata_config["resources"].pop()
+        metadata_config["resources"].append(this_resource)
+        return metadata_config
+
+    def _write_metadata(self, file_name):
+        metadata_config = read_metadata_config()
+        class_metadata = self.generate_metadata(metadata_config=metadata_config, file_name=file_name.name)
+        write_out_metadata(metadata_yaml=class_metadata, file_name=file_name.as_posix().replace(".csv", ".metadata.yaml"))
 
     def __iterative_battery_level_calculation(
         self,
@@ -954,6 +975,25 @@ class FlexEstimator:
         print("Technical flexibility estimation ended.")
         return self.activities
 
+    @staticmethod
+    def _cleanup_dataset(activities):
+        activities.drop(
+            columns=['max_battery_level_end',
+                     'min_battery_level_start',
+                     'max_battery_level_end_unlimited',
+                     'max_battery_level_end_unlimited',
+                     'timestamp_end_uncontrolled_charging_unlimited',
+                     'min_battery_level_end_unlimited',
+                     'min_battery_level_end_unlimited',
+                     'max_residual_need',
+                     'min_residual_need',
+                     'max_overshoot',
+                     'min_undershoot',
+                     # 'auxiliary_fuel_need',
+                     'max_charge_volume',
+                     'min_battery_level_start_unlimited'], inplace=True)
+        return activities
+
     def estimate_technical_flexibility_through_iteration(self) -> pd.DataFrame:
         """
         Main run function for the class WeekFlexEstimator. Calculates uncontrolled charging as well as technical
@@ -974,9 +1014,8 @@ class FlexEstimator:
         )
         self._auxiliary_fuel_need()
         if self.user_config["flexestimators"]["filter_fuel_need"]:
-            self.activities = self._filter_residual_need(
-                activities=self.activities, index_columns=["unique_id"]
-            )
+            self.activities = self._filter_residual_need(activities=self.activities, index_columns=["unique_id"])
+        self.activities = self._cleanup_dataset(activities=self.activities)
         if self.user_config["global"]["write_output_to_disk"]["flex_output"]:
             self.__write_output()
         print("Technical flexibility estimation ended.")

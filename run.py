@@ -33,9 +33,7 @@ if __name__ == "__main__":
     diary = DiaryBuilder(configs=configs, activities=flex.activities)
     diary.create_diaries()
 
-    profiles = ProfileAggregator(
-        configs=configs, activities=diary.activities, profiles=diary
-    )
+    profiles = ProfileAggregator(configs=configs, activities=diary.activities, profiles=diary)
     profiles.aggregate_profiles()
 
     post = PostProcessor(configs=configs, profiles=profiles)

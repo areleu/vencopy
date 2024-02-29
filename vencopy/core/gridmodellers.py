@@ -10,6 +10,7 @@ import numpy as np
 from scipy.stats.sampling import DiscreteAliasUrn
 
 from ..utils.utils import create_file_name, write_out
+from ..utils.metadata import read_metadata_config, write_out_metadata
 
 
 class GridModeller:
@@ -131,7 +132,7 @@ class GridModeller:
         home_activities = home_activities.join(households, on="household_id")
         return home_activities
 
-    def __adjust_power_short_parking_time(self) -> pd.DataFrame:
+    def __adjust_power_short_parking_time(self):
         """
         Adjusts charging power to zero if parking duration shorter than a
         minimum parking time set in the config file.
@@ -176,11 +177,12 @@ class GridModeller:
             file_name = create_file_name(
                 dev_config=self.dev_config,
                 user_config=self.user_config,
-                manual_label="",
                 file_name_id="output_gridmodeller",
                 dataset=self.dataset,
             )
             write_out(data=self.activities, path=root / folder / file_name)
+            self._write_metadata(file_name=root / folder / file_name)
+
 
     def __remove_activities_not_ending_home(self):
         """
@@ -193,7 +195,27 @@ class GridModeller:
             id_to_remove = last_activities_not_home["unique_id"].unique()
             self.activities = self.activities.loc[~self.activities["unique_id"].isin(id_to_remove), :].copy()
 
-    def assign_grid(self, seed: int = 42):
+    def generate_metadata(self, metadata_config, file_name):
+        metadata_config["name"] = file_name
+        metadata_config["title"] = "National Travel Survey activities dataframe"
+        metadata_config["description"] = "Trips and parking activities including available charging power from venco.py"
+        metadata_config["sources"] = [f for f in metadata_config["sources"] if f["title"] in self.dataset]
+        reference_resource = metadata_config["resources"][0]
+        this_resource = reference_resource.copy()
+        this_resource["name"] = file_name.rstrip(".csv")
+        this_resource["path"] = file_name
+        these_fields = [f for f in reference_resource["schema"][self.dataset]["fields"]["gridmodellers"] if f["name"] in self.activities.columns]
+        this_resource["schema"] = {"fields": these_fields}
+        metadata_config["resources"].pop()
+        metadata_config["resources"].append(this_resource)
+        return metadata_config
+
+    def _write_metadata(self, file_name):
+        metadata_config = read_metadata_config()
+        class_metadata = self.generate_metadata(metadata_config=metadata_config, file_name=file_name.name)
+        write_out_metadata(metadata_yaml=class_metadata, file_name=file_name.as_posix().replace(".csv", ".metadata.yaml"))
+
+    def assign_grid(self, seed: int = 42) -> pd.DataFrame:
         """
         Wrapper function for grid assignment. The number of iterations for
         assignGridViaProbabilities() and seed for reproduction of random numbers
@@ -217,3 +239,4 @@ class GridModeller:
             )
         self.__add_grid_losses()
         self.__write_output()
+
