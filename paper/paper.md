@@ -140,7 +140,7 @@ the metadata requirements of the Open Energy Platform (OEP)
 [@Booshehri.2021], which enables the fulfilment of the FAIR (Findable,
 Accessible, Interoperable, Reusable) principles [@Wilkinson.2016].
 
-![Structure of venco.py.](vencopy_structure_simple.pdf)
+![Structure of venco.py.](figures/vencopy_structure_simple.pdf)
 
 
 # Projects and Publications
