@@ -369,8 +369,7 @@ class ParkInference:
         )
 
         # Get rid of overnight trips
-        #indeces_no_overnight_trip = ~(activities_raw["trip_end_next_day"].fillna(False))
-        indeces_no_overnight_trip = (activities_raw["trip_end_next_day"].fillna(False))
+        indeces_no_overnight_trip = ~(activities_raw["trip_end_next_day"].fillna(False))
         activities_raw = activities_raw.loc[indeces_no_overnight_trip, :]
 
         # Update is_last_activity and timestamp_end variables and clean-up column
@@ -435,7 +434,6 @@ class ParkInference:
         Returns:
             _type_: _description_
         """
-        activities_raw.drop(columns=["index"], inplace=True)
         activities_raw.reset_index(inplace=True, drop=True)  # Due to copying and appending rows, the index has to be reset
         return activities_raw
 

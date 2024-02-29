@@ -115,7 +115,6 @@ class ParseKiD(IntermediateParsing):
         """
         Separate implementation for the KID dataset. Overwrites parent method.
 
-
         Args:
             trips (_type_): _description_
 
@@ -124,8 +123,9 @@ class ParseKiD(IntermediateParsing):
         """
         day_end = trips["timestamp_end"].dt.day
         day_start = trips["timestamp_start"].dt.day
-        trips["trip_end_next_day"] = day_end.where(day_end > day_start, 0).where(day_end <= day_start, 1)
-        ends_following_day = trips["trip_end_next_day"] == 1
+        trips["trip_end_next_day"] = False
+        trips["trip_end_next_day"] = trips["trip_end_next_day"].where(~(day_end > day_start), True)
+        ends_following_day = trips["trip_end_next_day"] == True 
         trips.loc[ends_following_day, "timestamp_end"] = trips.loc[
             ends_following_day, "timestamp_end"
         ] + pd.offsets.Day(1)
