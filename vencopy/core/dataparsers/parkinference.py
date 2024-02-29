@@ -439,14 +439,9 @@ class ParkInference:
         ].shift(-1, fill_value=False)
 
         # Get rid of overnight trips
-        if isinstance(activities_raw["trip_end_next_day"], bool):
-            indeces_no_overnight_trip = ~(
-                activities_raw["trip_end_next_day"].fillna(False)
-            )
-        else:
-            raise TypeError(
-                "Column trip_end_next_day should be a boolean column, but is not."
-            )
+        indeces_no_overnight_trip = ~(
+            activities_raw["trip_end_next_day"].fillna(False)
+        )
         activities_raw = activities_raw.loc[indeces_no_overnight_trip, :]
 
         # Update is_last_activity and timestamp_end variables and clean-up column
