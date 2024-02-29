@@ -26,6 +26,8 @@ DiaryBuilders Input
 
 DiaryBuilders Output
 ---------------------------------------------------
+
+
 **Output Functions:**
 
  * diary = DiaryBuilder(configs=configs, activities=flex.activities)
@@ -63,7 +65,7 @@ considered profile. Below the different approaches are presented:
   driving (function
   :py:meth:`diarybuilders.TimeDiscretiser.__uncontrolled_charging_driving`) or are parked (function
   :py:meth:`diarybuilders.TimeDiscretiser.__uncontrolled_charging_parking`).  
-- Profile for the electric demand `drain`: The discretisation and timseries
+- Profile for the electric demand `drain`: The discretisation and timeseries
   creation for the drain profiles is carried out by distributing the value for
   the profile equally across the number of timestamp in which there is an
   electric consumption (function

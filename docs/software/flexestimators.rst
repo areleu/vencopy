@@ -34,6 +34,8 @@ FlexEstimators Input
 
 FlexEstimators Output
 ---------------------------------------------------
+
+
 **Output Functions:**
 
 * flex = FlexEstimator(configs=configs, activities=grid.activities)

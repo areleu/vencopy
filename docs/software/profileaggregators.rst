@@ -27,6 +27,8 @@ ProfileAggregators Input
 
 ProfileAggregators Output
 ---------------------------------------------------
+
+
 **Output Functions:**
 
  * profiles = ProfileAggregator(configs=configs, activities=diary.activities,

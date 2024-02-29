@@ -18,7 +18,7 @@ DataParsers Input
 * encryption_password: <password> - Uses the password to read in the dataset
 * split_overnight_trips: bool - Boolean to select whether to split overnight trips
 * subset_vehicle_segment: bool - Boolena to decide whether to subset for specific vehicle class
-* vehicle_segment - Specify which vehicel segment to consider
+* vehicle_segment - Specify which vehicle segment to consider
 
 
 **Config File (dev_config.yaml):**
@@ -27,7 +27,7 @@ DataParsers Input
 * id_variables_names - Selects the name of unique identifiers of the vehicle/person carrying out the trip
 * input_data_types - Specifies the data type of the data variables
 * filters - Assigns values to the filters, which include inclusion, exclusion and equality relationships
-* replacements - Replaces numeric variables with more explicita variables
+* replacements - Replaces numeric variables with more explicit variables
 
 **Disk Files: (dataset with mobility patterns)**
 
@@ -37,6 +37,8 @@ DataParsers Input
 
 DataParsers Output
 ---------------------------------------------------
+
+
 **Output Functions:**
 
 * data = parse_data(configs=configs)
