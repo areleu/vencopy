@@ -121,10 +121,8 @@ class ParseKiD(IntermediateParsing):
         Returns:
             _type_: _description_
         """
-        day_end = trips["timestamp_end"].dt.day
-        day_start = trips["timestamp_start"].dt.day
         trips["trip_end_next_day"] = False
-        trips["trip_end_next_day"] = trips["trip_end_next_day"].where(~(day_end > day_start), True)
+        trips["trip_end_next_day"] = trips["trip_end_next_day"].where(~(trips["timestamp_start"] > trips["timestamp_end"]), True)
         ends_following_day = trips["trip_end_next_day"] == True 
         trips.loc[ends_following_day, "timestamp_end"] = trips.loc[
             ends_following_day, "timestamp_end"

@@ -131,8 +131,8 @@ def test_update_end_timestamp():
 
     expected_result = pd.DataFrame({
         "timestamp_start": pd.DatetimeIndex(["2023-09-01 08:00:00", "2023-09-01 09:30:00", "2023-09-02 23:15:00"]),
-        "timestamp_end": pd.DatetimeIndex(["2023-09-01 08:45:00", "2023-09-01 10:00:00", "2023-09-02 00:30:00"]),
-        "trip_end_next_day": [0, 0, 0]})
+        "timestamp_end": pd.DatetimeIndex(["2023-09-01 08:45:00", "2023-09-01 10:00:00", "2023-09-03 00:30:00"]),
+        "trip_end_next_day": [False, False, True]})
     pd.testing.assert_frame_equal(result, expected_result)
 
 
